@@ -28,7 +28,11 @@ def test_database_migration_contains_foundation_tables() -> None:
 
 def test_domain_does_not_depend_on_upper_layers() -> None:
     domain_root = ROOT / "src/shema_platform/domain"
-    forbidden = ("shema_platform.application", "shema_platform.adapters", "shema_platform.infrastructure")
+    forbidden = (
+        "shema_platform.application",
+        "shema_platform.adapters",
+        "shema_platform.infrastructure",
+    )
     for path in domain_root.rglob("*.py"):
         content = path.read_text()
         assert not any(token in content for token in forbidden)
@@ -36,7 +40,11 @@ def test_domain_does_not_depend_on_upper_layers() -> None:
 
 def test_foundation_does_not_depend_on_upper_layers() -> None:
     foundation_root = ROOT / "src/shema_platform/foundation"
-    forbidden = ("shema_platform.domain", "shema_platform.application", "shema_platform.adapters")
+    forbidden = (
+        "shema_platform.domain",
+        "shema_platform.application",
+        "shema_platform.adapters",
+    )
     for path in foundation_root.rglob("*.py"):
         content = path.read_text()
         assert not any(token in content for token in forbidden)
