@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "product": "Commercial Intelligence & Execution OS",
+  "runtime": "modular_monolith",
+  "transactional_authority": "postgresql",
+  "layers": {
+    "experience": [],
+    "application": ["domain", "foundation"],
+    "domain": ["foundation"],
+    "foundation": [],
+    "adapters": ["application", "foundation"],
+    "platform": []
+  },
+  "critical_invariants": [
+    "identity_before_critical_commercial_action",
+    "evidence_for_external_critical_claims",
+    "adapters_cannot_mutate_domain_truth",
+    "ai_cannot_bypass_policy_or_evidence",
+    "critical_writes_are_idempotent",
+    "external_calls_are_outside_core_transaction",
+    "state_change_and_outbox_are_atomic",
+    "retries_are_at_least_once_and_handlers_idempotent",
+    "uncertain_identity_or_evidence_is_quarantined",
+    "audit_is_append_only",
+    "configuration_and_policy_are_versioned",
+    "self_healing_never_rewrites_business_truth",
+    "max_is_an_adapter"
+  ],
+  "legacy": {
+    "airtable": "transition_data_only",
+    "replit_migration_frozen_until": "2026-10-13",
+    "bitrix24_migration": "frozen_without_date"
+  }
+}

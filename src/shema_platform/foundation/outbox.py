@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 from enum import StrEnum
 from typing import Any
 
+from .errors import IntegrityViolation
+
 
 class OutboxStatus(StrEnum):
     PENDING = "pending"
@@ -29,8 +31,11 @@ class OutboxStore:
         self._events: dict[str, OutboxEvent] = {}
 
     def append(self, event: OutboxEvent) -> OutboxEvent:
-        if event.event_id in self._events:
-            return self._events[event.event_id]
+        existing = self._events.get(event.event_id)
+        if existing is not None:
+            if existing != event:
+                raise IntegrityViolation("outbox event_id collision with different event")
+            return existing
         self._events[event.event_id] = event
         return event
 

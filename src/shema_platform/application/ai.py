@@ -49,11 +49,15 @@ class AIGateway:
     ) -> AIRun:
         if task.evidence_required and not evidence_refs:
             raise ValueError("evidence is required for this AI task")
+
         run = self._provider.run(task, input_refs=input_refs)
+
         if run.task_id != task.task_id:
             raise ValueError("AI provider returned mismatched task_id")
         if run.prompt_version != task.prompt_version:
             raise ValueError("AI provider returned mismatched prompt_version")
+        if task.evidence_required and not set(run.evidence_refs).issubset(evidence_refs):
+            raise ValueError("AI provider returned unsupported evidence references")
         if run.tokens < 0 or run.cost < 0 or run.duration_seconds < 0:
             raise ValueError("AI provider returned invalid usage metrics")
         return run
