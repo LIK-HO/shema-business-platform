@@ -36,10 +36,10 @@ class Identity:
         if self.state not in {IdentityState.VERIFIED, IdentityState.ACTIVE}:
             raise QuarantineRequired("critical action requires verified identity")
 
-    def can_merge(self, other: "Identity") -> bool:
+    def can_merge(self, other: Identity) -> bool:
         return bool(self.tax_id and other.tax_id and self.tax_id == other.tax_id)
 
-    def resolve_with(self, other: "Identity") -> Resolution:
+    def resolve_with(self, other: Identity) -> Resolution:
         if self.identity_id == other.identity_id:
             return Resolution.MATCH
         if self.can_merge(other):
