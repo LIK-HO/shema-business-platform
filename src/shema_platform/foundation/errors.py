@@ -3,20 +3,20 @@ class DomainError(Exception):
 
 
 class AuthorizationError(DomainError):
-    pass
+    """Actor is not authorized to execute the requested command."""
 
 
 class PolicyDenied(DomainError):
-    pass
+    """A domain/application policy rejected an operation."""
 
 
 class IntegrityViolation(DomainError):
-    pass
+    """State or data integrity invariant was violated."""
 
 
 class IdempotencyConflict(DomainError):
-    pass
+    """An idempotency key was reused for a different request."""
 
 
 class QuarantineRequired(DomainError):
-    pass
+    """The subject is too uncertain for a critical operation."""

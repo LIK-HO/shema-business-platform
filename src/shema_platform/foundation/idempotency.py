@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from hashlib import sha256
 
+from .errors import IdempotencyConflict
+
 
 @dataclass(frozen=True, slots=True)
 class IdempotencyRecord:
@@ -24,6 +26,8 @@ class IdempotencyStore:
     def reserve(self, key: str, request_hash: str, result_ref: str) -> IdempotencyRecord:
         existing = self._records.get(key)
         if existing is not None:
+            if existing.request_hash != request_hash:
+                raise IdempotencyConflict("idempotency key reused with different request")
             return existing
 
         record = IdempotencyRecord(key=key, request_hash=request_hash, result_ref=result_ref)

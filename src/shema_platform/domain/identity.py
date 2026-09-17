@@ -44,4 +44,6 @@ class Identity:
             return Resolution.MATCH
         if self.can_merge(other):
             return Resolution.MERGE
+        if not self.tax_id or not other.tax_id:
+            return Resolution.QUARANTINE
         return Resolution.MANUAL_REVIEW
