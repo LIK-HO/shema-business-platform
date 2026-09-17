@@ -1,11 +1,15 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
-from shema_platform.application.commands import Actor, CommercialActionCommand, CommandService
+from shema_platform.application.commands import Actor, CommandService, CommercialActionCommand
 from shema_platform.domain.identity import Identity, IdentityState, Resolution
-from shema_platform.foundation.errors import IdempotencyConflict, IntegrityViolation, QuarantineRequired
-from shema_platform.foundation.evidence import Evidence, TruthClass, TrustLevel
+from shema_platform.foundation.errors import (
+    IdempotencyConflict,
+    IntegrityViolation,
+    QuarantineRequired,
+)
+from shema_platform.foundation.evidence import Evidence, TrustLevel, TruthClass
 from shema_platform.foundation.idempotency import IdempotencyStore
 from shema_platform.foundation.outbox import OutboxEvent, OutboxStatus, OutboxStore
 from shema_platform.foundation.policy import PolicyEngine
@@ -33,7 +37,12 @@ def test_unverified_identity_cannot_execute_critical_action() -> None:
     command = CommercialActionCommand(
         command_id="cmd-1",
         actor=Actor("operator-1", trust_level=2),
-        identity=Identity("1", "ООО Альфа", IdentityState.CANDIDATE, tax_id="7700000000"),
+        identity=Identity(
+            "1",
+            "ООО Альфа",
+            IdentityState.CANDIDATE,
+            tax_id="7700000000",
+        ),
         evidence_level=2,
         request_hash="hash-1",
     )
@@ -67,8 +76,8 @@ def test_evidence_rejects_invalid_confidence() -> None:
             subject_ref="identity:1",
             claim="Claim",
             source_ref="source:1",
-            observed_at=datetime.now(timezone.utc),
-            captured_at=datetime.now(timezone.utc),
+            observed_at=datetime.now(UTC),
+            captured_at=datetime.now(UTC),
             truth_class=TruthClass.FACT,
             trust_level=TrustLevel.T2_VERIFIED,
             confidence=1.5,
@@ -83,7 +92,7 @@ def test_outbox_is_idempotent_and_pending_until_published() -> None:
         aggregate_type="identity",
         aggregate_id="1",
         payload={"state": "verified"},
-        occurred_at=datetime.now(timezone.utc),
+        occurred_at=datetime.now(UTC),
     )
     assert store.append(event) == event
     assert store.append(event) == event
@@ -94,13 +103,27 @@ def test_outbox_is_idempotent_and_pending_until_published() -> None:
 
 def test_outbox_rejects_event_id_collision() -> None:
     store = OutboxStore()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     store.append(
-        OutboxEvent("evt-1", "identity.verified", "identity", "1", {"state": "verified"}, now)
+        OutboxEvent(
+            "evt-1",
+            "identity.verified",
+            "identity",
+            "1",
+            {"state": "verified"},
+            now,
+        )
     )
     with pytest.raises(IntegrityViolation):
         store.append(
-            OutboxEvent("evt-1", "identity.changed", "identity", "1", {"state": "active"}, now)
+            OutboxEvent(
+                "evt-1",
+                "identity.changed",
+                "identity",
+                "1",
+                {"state": "active"},
+                now,
+            )
         )
 
 
