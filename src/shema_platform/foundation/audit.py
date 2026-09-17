@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -23,9 +23,17 @@ class AuditLog:
     def __init__(self) -> None:
         self._records: list[AuditRecord] = []
 
-    def append(self, *, audit_id: str, actor_id: str, action: str,
-               resource_type: str, resource_id: str | None, outcome: str,
-               metadata: dict[str, Any] | None = None) -> AuditRecord:
+    def append(
+        self,
+        *,
+        audit_id: str,
+        actor_id: str,
+        action: str,
+        resource_type: str,
+        resource_id: str | None,
+        outcome: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> AuditRecord:
         record = AuditRecord(
             audit_id=audit_id,
             actor_id=actor_id,
@@ -33,7 +41,7 @@ class AuditLog:
             resource_type=resource_type,
             resource_id=resource_id,
             outcome=outcome,
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
             metadata=dict(metadata or {}),
         )
         self._records.append(record)
