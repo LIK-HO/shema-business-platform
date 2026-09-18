@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import json
+from uuid import uuid4
 
-from shema_platform.domain.identity import Identity, IdentityState
-from shema_platform.domain.search import SearchHit
 from shema_platform.application.ports import IdentityRepository, QuarantineRepository
+from shema_platform.domain.identity import Identity, IdentityState
 from shema_platform.platform.postgres import DBConnection
 
 
@@ -81,9 +81,10 @@ class PostgresQuarantineRepository(QuarantineRepository):
                 reason_code,
                 payload
             )
-            values (gen_random_uuid(), %s, %s, %s, %s::jsonb)
+            values (%s, %s, %s, %s, %s::jsonb)
             """,
             (
+                str(uuid4()),
                 object_type,
                 object_ref,
                 reason_code,
