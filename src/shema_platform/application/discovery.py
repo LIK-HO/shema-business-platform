@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from shema_platform.application.identity import IdentityDirectory, IdentityMatch, IdentityResolution
+from shema_platform.application.identity import (
+    IdentityDirectory,
+    IdentityMatch,
+    IdentityResolution,
+)
 from shema_platform.domain.identity import Identity, IdentityState
 from shema_platform.domain.qualification import (
     QualificationDecision,
@@ -52,11 +56,7 @@ class DiscoveryService:
             if resolution.match is IdentityMatch.NEW:
                 identity = self._identities.register(provisional)
             elif resolution.existing_identity_ids:
-                identity = next(
-                    item
-                    for item in self._identities.all()
-                    if item.identity_id == resolution.existing_identity_ids[0]
-                )
+                identity = self._identities.get(resolution.existing_identity_ids[0])
             else:
                 identity = None
         else:
