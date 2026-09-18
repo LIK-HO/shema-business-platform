@@ -35,11 +35,14 @@ class SearchCriteria:
 
 @dataclass(frozen=True, slots=True)
 class SearchHit:
-    identity_id: str
+    candidate_ref: str
     name: str
     region: str
     industries: frozenset[str]
     source_ref: str
+    tax_id: str | None = None
+    registration_id: str | None = None
+    contact_refs: tuple[str, ...] = ()
 
 
 class SearchProvider:
@@ -59,31 +62,39 @@ class SearchService:
         accepted: list[SearchHit] = []
 
         for hit in hits:
-            identity_id = hit.identity_id.strip()
+            candidate_ref = hit.candidate_ref.strip()
             name = hit.name.strip()
             region = hit.region.strip()
             source_ref = hit.source_ref.strip()
+            tax_id = hit.tax_id.strip() if hit.tax_id else None
+            registration_id = hit.registration_id.strip() if hit.registration_id else None
             industries = frozenset(
                 item.strip().lower() for item in hit.industries if item.strip()
             )
+            contact_refs = tuple(ref.strip() for ref in hit.contact_refs if ref.strip())
 
-            if not identity_id or not name or not source_ref:
+            if not candidate_ref or not name or not source_ref:
                 continue
             if region != criteria.region:
                 continue
             if not industries.intersection(criteria.industries):
                 continue
-            if identity_id in seen:
+
+            dedupe_key = tax_id or candidate_ref
+            if dedupe_key in seen:
                 continue
 
-            seen.add(identity_id)
+            seen.add(dedupe_key)
             accepted.append(
                 SearchHit(
-                    identity_id=identity_id,
+                    candidate_ref=candidate_ref,
                     name=name,
                     region=region,
                     industries=industries,
                     source_ref=source_ref,
+                    tax_id=tax_id,
+                    registration_id=registration_id,
+                    contact_refs=contact_refs,
                 )
             )
             if len(accepted) >= criteria.limit:
