@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -9,6 +10,10 @@ from shema_platform.domain.economics import (
 )
 from shema_platform.domain.money import Money
 from shema_platform.domain.order import Order, OrderLine, OrderStatus
+
+
+def now() -> datetime:
+    return datetime.now(UTC)
 
 
 def make_order() -> Order:
@@ -53,6 +58,15 @@ def test_invalid_order_transition_is_rejected() -> None:
         make_order().start()
 
 
+def test_negative_unit_price_is_rejected() -> None:
+    with pytest.raises(ValueError, match="unit price"):
+        OrderLine("line-1", "Работа", Decimal("1"), Money(-1, "RUB"))
+
+
+def test_money_float_conversion_is_deterministic() -> None:
+    assert Money(0.1, "RUB") == Money("0.10", "RUB")
+
+
 def test_economics_summary_tracks_revenue_and_costs() -> None:
     entries = (
         EconomicEntry(
@@ -61,7 +75,7 @@ def test_economics_summary_tracks_revenue_and_costs() -> None:
             EconomicKind.REVENUE,
             Money(6000, "RUB"),
             "order:order-1",
-            __import__("datetime").datetime.now(__import__("datetime").UTC),
+            now(),
         ),
         EconomicEntry(
             "e2",
@@ -69,7 +83,7 @@ def test_economics_summary_tracks_revenue_and_costs() -> None:
             EconomicKind.ORDER_COST,
             Money(2500, "RUB"),
             "cost:order-1",
-            __import__("datetime").datetime.now(__import__("datetime").UTC),
+            now(),
         ),
     )
 
@@ -80,6 +94,44 @@ def test_economics_summary_tracks_revenue_and_costs() -> None:
     assert summary.gross_margin == Money(3500, "RUB")
 
 
+def test_negative_revenue_is_rejected() -> None:
+    with pytest.raises(ValueError, match="cannot be negative"):
+        EconomicEntry(
+            "e1",
+            "order-1",
+            EconomicKind.REVENUE,
+            Money(-1, "RUB"),
+            "adjustment:bad",
+            now(),
+        )
+
+
+def test_positive_adjustment_changes_revenue_lineage() -> None:
+    entries = (
+        EconomicEntry(
+            "e1",
+            "order-1",
+            EconomicKind.REVENUE,
+            Money(6000, "RUB"),
+            "order:order-1",
+            now(),
+        ),
+        EconomicEntry(
+            "e2",
+            "order-1",
+            EconomicKind.ADJUSTMENT,
+            Money(-500, "RUB"),
+            "refund:order-1",
+            now(),
+        ),
+    )
+
+    summary = EconomicsService().summarize(entries)
+
+    assert summary.revenue == Money(5500, "RUB")
+    assert summary.gross_margin == Money(5500, "RUB")
+
+
 def test_economics_rejects_currency_mismatch() -> None:
     entry = EconomicEntry(
         "e1",
@@ -87,7 +139,7 @@ def test_economics_rejects_currency_mismatch() -> None:
         EconomicKind.REVENUE,
         Money(6000, "RUB"),
         "order:order-1",
-        __import__("datetime").datetime.now(__import__("datetime").UTC),
+        now(),
     )
 
     with pytest.raises(ValueError, match="currency mismatch"):
