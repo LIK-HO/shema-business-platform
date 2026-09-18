@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Callable
 
 
 class DiagnosticStatus(StrEnum):
@@ -21,7 +21,10 @@ class DiagnosticResult:
 class Diagnostics:
     """Deterministic internal reconciliation/check framework."""
 
-    def run(self, checks: dict[str, Callable[[], DiagnosticResult]]) -> tuple[DiagnosticResult, ...]:
+    def run(
+        self,
+        checks: dict[str, Callable[[], DiagnosticResult]],
+    ) -> tuple[DiagnosticResult, ...]:
         results: list[DiagnosticResult] = []
         for check_id, check in checks.items():
             result = check()
