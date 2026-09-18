@@ -20,7 +20,14 @@ class FakeSearchProvider(SearchProvider):
 
 def test_search_filters_wrong_region_industry_invalid_candidate_and_duplicates() -> None:
     hits = (
-        SearchHit("candidate-1", "Company 1", "Moscow", frozenset({"logistics"}), "source:1", "7700000000"),
+        SearchHit(
+            "candidate-1",
+            "Company 1",
+            "Moscow",
+            frozenset({"logistics"}),
+            "source:1",
+            "7700000000",
+        ),
         SearchHit(
             "candidate-1-duplicate",
             "Company 1 duplicate",
@@ -29,8 +36,20 @@ def test_search_filters_wrong_region_industry_invalid_candidate_and_duplicates()
             "source:dup",
             "7700000000",
         ),
-        SearchHit("candidate-2", "Company 2", "Moscow", frozenset({"manufacturing"}), "source:2"),
-        SearchHit("candidate-3", "Company 3", "SPB", frozenset({"logistics"}), "source:3"),
+        SearchHit(
+            "candidate-2",
+            "Company 2",
+            "Moscow",
+            frozenset({"manufacturing"}),
+            "source:2",
+        ),
+        SearchHit(
+            "candidate-3",
+            "Company 3",
+            "SPB",
+            frozenset({"logistics"}),
+            "source:3",
+        ),
         SearchHit("", "Invalid", "Moscow", frozenset({"logistics"}), "source:4"),
         SearchHit("candidate-4", "No source", "Moscow", frozenset({"logistics"}), ""),
     )
