@@ -1,8 +1,8 @@
-import json
-import pathlib
+from json import loads
+from pathlib import Path
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def read(path: str) -> str:
@@ -14,7 +14,7 @@ def test_architecture_baseline_exists() -> None:
 
 
 def test_machine_readable_architecture_contract_exists() -> None:
-    contract = json.loads(read("architecture/contract.json"))
+    contract = loads(read("architecture/contract.json"))
     assert contract["runtime"] == "modular_monolith"
     assert contract["transactional_authority"] == "postgresql"
     assert "max_is_an_adapter" in contract["critical_invariants"]
