@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from shema_platform.domain.identity import Identity
+from shema_platform.foundation.authorization import Permission, RBACAuthorizer
 from shema_platform.foundation.errors import AuthorizationError, PolicyDenied
 from shema_platform.foundation.idempotency import IdempotencyStore
 from shema_platform.foundation.policy import Decision, PolicyContext, PolicyEngine
@@ -24,15 +25,25 @@ class CommercialActionCommand:
 
 
 class CommandService:
-    """Canonical command boundary for a critical commercial action."""
+    """Critical command boundary: authorization → policy → idempotency → execution."""
 
-    def __init__(self, policy: PolicyEngine, idempotency: IdempotencyStore) -> None:
+    def __init__(
+        self,
+        policy: PolicyEngine,
+        idempotency: IdempotencyStore,
+        authorizer: RBACAuthorizer,
+    ) -> None:
         self._policy = policy
         self._idempotency = idempotency
+        self._authorizer = authorizer
 
     def authorize(self, command: CommercialActionCommand) -> None:
         if not command.actor.actor_id:
             raise AuthorizationError("actor is required")
+        self._authorizer.require(
+            command.actor.actor_id,
+            Permission.COMMERCIAL_ACTION_CREATE,
+        )
 
     def execute(self, command: CommercialActionCommand) -> str:
         self.authorize(command)
