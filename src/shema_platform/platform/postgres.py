@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Protocol, Self
 
 
@@ -18,7 +19,7 @@ class PostgresUnitOfWork:
     application and domain layers remain unaware of the driver.
     """
 
-    def __init__(self, connection_factory: callable[[], DBConnection]) -> None:
+    def __init__(self, connection_factory: Callable[[], DBConnection]) -> None:
         self._connection_factory = connection_factory
         self._connection: DBConnection | None = None
 
