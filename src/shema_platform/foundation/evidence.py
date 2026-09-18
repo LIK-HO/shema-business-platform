@@ -33,9 +33,13 @@ class Evidence:
     confidence: float
 
     def __post_init__(self) -> None:
-        if not 0.0 <= self.confidence <= 1.0:
-            raise ValueError("confidence must be between 0 and 1")
+        if not self.evidence_id.strip() or not self.subject_ref.strip():
+            raise ValueError("evidence_id and subject_ref are required")
         if not self.claim.strip():
             raise ValueError("claim must not be empty")
         if not self.source_ref.strip():
             raise ValueError("source_ref must not be empty")
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError("confidence must be between 0 and 1")
+        if self.captured_at < self.observed_at:
+            raise ValueError("captured_at cannot precede observed_at")
