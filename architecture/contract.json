@@ -1,5 +1,5 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "product": "Commercial Intelligence & Execution OS",
   "runtime": "modular_monolith",
   "transactional_authority": "postgresql",
@@ -10,6 +10,25 @@
     "foundation": [],
     "adapters": ["application", "domain", "foundation"],
     "platform": []
+  },
+  "persistence": {
+    "canonical": [
+      "identity",
+      "evidence",
+      "idempotency_key",
+      "audit_log",
+      "outbox_event"
+    ],
+    "source_observation": [
+      "search_candidate"
+    ],
+    "uncertain_state": [
+      "quarantine_record"
+    ],
+    "migrations": [
+      "0001_foundation.sql",
+      "0002_discovery.sql"
+    ]
   },
   "critical_invariants": [
     "identity_before_critical_commercial_action",
@@ -26,6 +45,7 @@
     "self_healing_never_rewrites_business_truth",
     "canonical_search_is_shared_by_all_clients",
     "qualification_cannot_silently_promote_uncertain_records",
+    "source_candidate_is_not_canonical_identity",
     "max_is_an_adapter"
   ],
   "business_loop": [
@@ -36,7 +56,8 @@
     "commercial_action",
     "order",
     "economic_result",
-    "learning"
+    "learning",
+    "search_improvement"
   ],
   "identity_lifecycle": [
     "raw",
@@ -46,6 +67,16 @@
     "active",
     "inactive",
     "unknown"
+  ],
+  "quality_gates": [
+    "architecture_contract",
+    "lint",
+    "compile",
+    "unit_tests",
+    "integration_tests",
+    "security_tests",
+    "recovery_drills",
+    "controlled_release"
   ],
   "legacy": {
     "airtable": "transition_data_only",
