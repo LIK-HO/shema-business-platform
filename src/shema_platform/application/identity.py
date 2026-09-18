@@ -35,6 +35,9 @@ class IdentityDirectory:
     def all(self) -> tuple[Identity, ...]:
         return tuple(self._identities.values())
 
+    def get(self, identity_id: str) -> Identity | None:
+        return self._identities.get(identity_id)
+
     def find_by_tax_id(self, tax_id: str) -> tuple[Identity, ...]:
         normalized_tax_id = tax_id.strip()
         if not normalized_tax_id:
