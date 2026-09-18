@@ -12,7 +12,12 @@ from shema_platform.foundation.errors import (
     PolicyDenied,
     QuarantineRequired,
 )
-from shema_platform.foundation.evidence import Evidence, TrustLevel, TruthClass
+from shema_platform.foundation.evidence import (
+    Evidence,
+    EvidenceLifecycle,
+    TruthClass,
+    TrustLevel,
+)
 from shema_platform.foundation.idempotency import IdempotencyStore
 from shema_platform.foundation.outbox import OutboxEvent, OutboxStatus, OutboxStore
 from shema_platform.foundation.policy import PolicyEngine
@@ -142,6 +147,60 @@ def test_evidence_rejects_invalid_timeline() -> None:
             trust_level=TrustLevel.T2_VERIFIED,
             confidence=1,
         )
+
+
+def test_evidence_preserves_provenance_and_currentness() -> None:
+    observed = datetime.now(UTC)
+    evidence = Evidence(
+        evidence_id="e1",
+        subject_ref="identity:1",
+        claim="Current contact exists",
+        source_ref="provider:registry",
+        observed_at=observed,
+        captured_at=observed + timedelta(seconds=1),
+        truth_class=TruthClass.FACT,
+        trust_level=TrustLevel.T2_VERIFIED,
+        confidence=0.95,
+        provenance={
+            "provider": "registry",
+            "source_url": "https://example.test/source",
+        },
+        expires_at=observed + timedelta(days=1),
+    )
+
+    assert evidence.provenance["provider"] == "registry"
+    assert evidence.is_current(observed + timedelta(hours=1))
+
+
+def test_expired_or_quarantined_evidence_is_not_current() -> None:
+    observed = datetime.now(UTC)
+    expired = Evidence(
+        evidence_id="e1",
+        subject_ref="identity:1",
+        claim="Old fact",
+        source_ref="provider:registry",
+        observed_at=observed,
+        captured_at=observed,
+        truth_class=TruthClass.FACT,
+        trust_level=TrustLevel.T2_VERIFIED,
+        confidence=1,
+        expires_at=observed + timedelta(hours=1),
+    )
+    quarantined = Evidence(
+        evidence_id="e2",
+        subject_ref="identity:1",
+        claim="Conflicting fact",
+        source_ref="provider:registry",
+        observed_at=observed,
+        captured_at=observed,
+        truth_class=TruthClass.FACT,
+        trust_level=TrustLevel.T1_OBSERVED,
+        confidence=0.5,
+        lifecycle=EvidenceLifecycle.QUARANTINED,
+    )
+
+    assert not expired.is_current(observed + timedelta(hours=2))
+    assert not quarantined.is_current(observed)
 
 
 def test_outbox_is_idempotent_and_pending_until_published() -> None:
