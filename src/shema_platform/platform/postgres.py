@@ -4,8 +4,18 @@ from collections.abc import Callable
 from typing import Protocol, Self
 
 
+class DBCursor(Protocol):
+    def fetchone(self) -> tuple[object, ...] | None: ...
+
+
 class DBConnection(Protocol):
-    """Minimal connection contract required by the platform UoW."""
+    """Minimal DB-API contract required by the platform."""
+
+    def execute(
+        self,
+        statement: str,
+        parameters: tuple[object, ...] = (),
+    ) -> DBCursor: ...
 
     def commit(self) -> None: ...
     def rollback(self) -> None: ...
