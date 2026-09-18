@@ -35,6 +35,8 @@ class ProviderCapability:
     healthy: bool = True
 
     def __post_init__(self) -> None:
+        if not self.provider_id.strip():
+            raise ValueError("provider_id is required")
         if self.cost_per_call < 0 or self.max_requests_per_second <= 0:
             raise ValueError("provider capability has invalid cost/rate limits")
         if self.estimated_tokens_per_call < 0 or self.estimated_latency_seconds < 0:
@@ -49,6 +51,16 @@ class ProviderResult:
     cost: float
     latency_seconds: float
     tokens: int = 0
+
+    def __post_init__(self) -> None:
+        if not self.provider_id.strip():
+            raise ValueError("provider_id is required")
+        if self.cost < 0 or self.latency_seconds < 0 or self.tokens < 0:
+            raise ValueError("provider result usage metrics cannot be negative")
+        if any(not ref.strip() for ref in self.source_refs):
+            raise ValueError("source references cannot be empty")
+        if self.claims and not self.source_refs:
+            raise ValueError("claims require at least one source reference")
 
 
 class ResearchProvider(Protocol):
