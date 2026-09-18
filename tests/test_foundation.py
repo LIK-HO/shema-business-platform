@@ -9,6 +9,7 @@ from shema_platform.foundation.errors import (
     AuthorizationError,
     IdempotencyConflict,
     IntegrityViolation,
+    PolicyDenied,
     QuarantineRequired,
 )
 from shema_platform.foundation.evidence import Evidence, TrustLevel, TruthClass
@@ -101,7 +102,7 @@ def test_untrusted_actor_is_denied_by_policy_after_authorization() -> None:
         request_hash="hash-1",
     )
 
-    with pytest.raises(Exception, match="actor_not_trusted"):
+    with pytest.raises(PolicyDenied, match="actor_not_trusted"):
         service().execute(command)
 
 
