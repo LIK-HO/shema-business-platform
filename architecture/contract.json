@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "product": "Commercial Intelligence & Execution OS",
   "runtime": "modular_monolith",
   "transactional_authority": "postgresql",
@@ -8,7 +8,7 @@
     "application": ["domain", "foundation"],
     "domain": ["foundation"],
     "foundation": [],
-    "adapters": ["application", "foundation"],
+    "adapters": ["application", "domain", "foundation"],
     "platform": []
   },
   "critical_invariants": [
@@ -24,7 +24,28 @@
     "audit_is_append_only",
     "configuration_and_policy_are_versioned",
     "self_healing_never_rewrites_business_truth",
+    "canonical_search_is_shared_by_all_clients",
+    "qualification_cannot_silently_promote_uncertain_records",
     "max_is_an_adapter"
+  ],
+  "business_loop": [
+    "search",
+    "intelligence",
+    "evidence",
+    "qualification",
+    "commercial_action",
+    "order",
+    "economic_result",
+    "learning"
+  ],
+  "identity_lifecycle": [
+    "raw",
+    "candidate",
+    "identified",
+    "verified",
+    "active",
+    "inactive",
+    "unknown"
   ],
   "legacy": {
     "airtable": "transition_data_only",
