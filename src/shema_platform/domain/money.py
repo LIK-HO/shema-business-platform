@@ -11,21 +11,22 @@ class Money:
 
     def __post_init__(self) -> None:
         try:
-            amount = Decimal(self.amount)
+            amount = Decimal(str(self.amount))
         except (InvalidOperation, ValueError, TypeError) as exc:
             raise ValueError("amount must be a valid decimal") from exc
 
+        currency = self.currency.strip().upper()
         if not amount.is_finite():
             raise ValueError("amount must be finite")
-        if len(self.currency) != 3 or not self.currency.isalpha():
-            raise ValueError("currency must be a 3-letter code")
+        if len(currency) != 3 or not currency.isascii() or not currency.isalpha():
+            raise ValueError("currency must be a 3-letter ASCII code")
 
         object.__setattr__(
             self,
             "amount",
             amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
         )
-        object.__setattr__(self, "currency", self.currency.upper())
+        object.__setattr__(self, "currency", currency)
 
     def add(self, other: Money) -> Money:
         self._require_same_currency(other)
