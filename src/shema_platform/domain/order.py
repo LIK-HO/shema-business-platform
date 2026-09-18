@@ -28,6 +28,8 @@ class OrderLine:
             raise ValueError("order line identifiers and description are required")
         if self.quantity <= 0:
             raise ValueError("quantity must be positive")
+        if self.unit_price.amount < 0:
+            raise ValueError("unit price cannot be negative")
 
     @property
     def total(self) -> Money:
@@ -47,6 +49,8 @@ class Order:
             raise ValueError("order_id is required")
         if not self.identity_id.strip():
             raise ValueError("identity_id is required")
+        if not self.source_action_id.strip():
+            raise ValueError("source_action_id is required")
         if not self.lines:
             raise ValueError("order must contain at least one line")
 
