@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -81,6 +81,22 @@ def test_evidence_rejects_invalid_confidence() -> None:
             truth_class=TruthClass.FACT,
             trust_level=TrustLevel.T2_VERIFIED,
             confidence=1.5,
+        )
+
+
+def test_evidence_rejects_invalid_timeline() -> None:
+    observed = datetime.now(UTC)
+    with pytest.raises(ValueError):
+        Evidence(
+            evidence_id="e1",
+            subject_ref="identity:1",
+            claim="Claim",
+            source_ref="source:1",
+            observed_at=observed,
+            captured_at=observed - timedelta(seconds=1),
+            truth_class=TruthClass.FACT,
+            trust_level=TrustLevel.T2_VERIFIED,
+            confidence=1,
         )
 
 
