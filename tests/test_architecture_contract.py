@@ -26,6 +26,14 @@ def test_database_migration_contains_foundation_tables() -> None:
         assert f"create table if not exists {table}" in migration
 
 
+def test_discovery_migration_contains_candidate_and_quarantine_tables() -> None:
+    migration = read("db/migrations/0002_discovery.sql")
+    for table in ("search_candidate", "quarantine_record"):
+        assert f"create table if not exists {table}" in migration
+    assert "ux_search_candidate_source_ref" in migration
+    assert "ix_quarantine_open" in migration
+
+
 def test_domain_does_not_depend_on_upper_layers() -> None:
     domain_root = ROOT / "src/shema_platform/domain"
     forbidden = (
