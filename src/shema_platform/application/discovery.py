@@ -51,7 +51,6 @@ class DiscoveryService:
 
             if resolution.match is IdentityMatch.NEW:
                 identity = self._identities.register(provisional)
-                identity = identity
             elif resolution.existing_identity_ids:
                 identity = next(
                     item
