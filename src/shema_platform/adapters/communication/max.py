@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
@@ -61,18 +63,26 @@ class MaxAdapter:
             payload=dict(event.payload),
         )
 
+    @staticmethod
+    def _fingerprint(request: CommunicationSendRequest) -> str:
+        canonical = json.dumps(
+            {
+                "action_id": request.action_id,
+                "channel": request.channel,
+                "contact_ref": request.contact_ref,
+                "body": request.body,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        return hashlib.sha256(canonical).hexdigest()
+
     def send(self, request: CommunicationSendRequest) -> CommunicationSendResult:
         if request.channel != self.channel:
             raise ValueError("request channel does not match MAX")
 
-        fingerprint = "|".join(
-            (
-                request.action_id,
-                request.channel,
-                request.contact_ref,
-                request.body,
-            )
-        )
+        fingerprint = self._fingerprint(request)
         existing = self._sent.get(request.idempotency_key)
 
         if existing is not None:
