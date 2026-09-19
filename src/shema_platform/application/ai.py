@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 from datetime import UTC, datetime
 from typing import Protocol
 from uuid import uuid4
@@ -35,8 +36,13 @@ class AIBudget:
     def __post_init__(self) -> None:
         if self.max_tokens < 0:
             raise ValueError("max_tokens cannot be negative")
-        if self.max_cost < 0 or self.max_duration_seconds < 0:
-            raise ValueError("AI budget values cannot be negative")
+        if (
+            not isfinite(self.max_cost)
+            or not isfinite(self.max_duration_seconds)
+            or self.max_cost < 0
+            or self.max_duration_seconds < 0
+        ):
+            raise ValueError("AI budget values must be finite and non-negative")
 
 
 @dataclass(frozen=True, slots=True)
