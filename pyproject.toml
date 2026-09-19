@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "shema-business-platform"
-version = "0.1.0"
+version = "1.4.0"
 description = "Commercial Intelligence & Execution OS"
 requires-python = ">=3.12"
 dependencies = [
