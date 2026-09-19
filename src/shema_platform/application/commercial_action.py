@@ -53,16 +53,18 @@ class CommercialActionService:
         if decision.decision is not Decision.ALLOW:
             raise PolicyDenied(decision.reason)
 
-        self._idempotency.reserve(
-            key=action_id,
-            request_hash=request_hash,
-            result_ref=action_id,
-        )
-
-        return CommercialAction(
+        action = CommercialAction(
             action_id=action_id,
             identity_id=identity.identity_id,
             contact_ref=contact_ref,
             channel=channel,
             evidence_refs=evidence_refs,
         ).mark_ready()
+
+        self._idempotency.reserve(
+            key=action_id,
+            request_hash=request_hash,
+            result_ref=action_id,
+        )
+
+        return action
