@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from hashlib import sha256
+from uuid import NAMESPACE_URL, uuid5
 
 from shema_platform.application.commands import Actor
 from shema_platform.application.communication import (
@@ -117,11 +118,12 @@ class CommercialActionSendWorkflow:
                 sent = current.mark_sent()
                 uow.commercial_actions.save(sent)
 
+                event_key = (
+                    "commercial-action.sent:"
+                    f"{action_id}:{result.external_message_id}"
+                )
                 event = OutboxEvent(
-                    event_id=(
-                        "commercial-action.sent:"
-                        f"{action_id}:{result.external_message_id}"
-                    ),
+                    event_id=str(uuid5(NAMESPACE_URL, event_key)),
                     event_type="commercial_action.sent",
                     aggregate_type="commercial_action",
                     aggregate_id=action_id,
@@ -137,9 +139,11 @@ class CommercialActionSendWorkflow:
 
                 uow.audits.append(
                     AuditRecord(
-                        audit_id=(
-                            "audit:commercial-action.sent:"
-                            f"{action_id}:{result.external_message_id}"
+                        audit_id=str(
+                            uuid5(
+                                NAMESPACE_URL,
+                                f"audit:{event_key}",
+                            )
                         ),
                         actor_id="system:commercial-send",
                         action="commercial_action.sent",
