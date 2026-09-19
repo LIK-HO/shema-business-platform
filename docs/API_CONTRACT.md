@@ -1,4 +1,4 @@
-# v1 Canonical API Contract
+# v1.4 Canonical API Contract
 
 ## Purpose
 
