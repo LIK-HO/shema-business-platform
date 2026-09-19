@@ -80,7 +80,11 @@ class IntelligenceService:
         now = datetime.now(UTC)
         evidence: list[Evidence] = []
         for result in results:
-            source_ref = result.source_refs[0] if result.source_refs else f"provider:{result.provider_id}"
+            source_ref = (
+                result.source_refs[0]
+                if result.source_refs
+                else f"provider:{result.provider_id}"
+            )
             provenance = {
                 "provider": result.provider_id,
                 "source_class": result.source_class,
