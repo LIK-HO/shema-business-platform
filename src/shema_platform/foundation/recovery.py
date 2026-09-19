@@ -1,15 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
-
-
-class JobState(StrEnum):
-    QUEUED = "queued"
-    RUNNING = "running"
-    SUCCEEDED = "succeeded"
-    RETRYABLE_FAILURE = "retryable_failure"
-    FAILED = "failed"
+from datetime import UTC, datetime, timedelta
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,3 +25,15 @@ class RetryPolicy:
 
     def is_retryable(self, attempt: int) -> bool:
         return attempt < self.max_attempts
+
+    def next_available_at(
+        self,
+        attempt: int,
+        now: datetime | None = None,
+    ) -> datetime:
+        if not self.is_retryable(attempt):
+            raise ValueError("retry limit reached")
+        current = now or datetime.now(UTC)
+        if current.tzinfo is None:
+            raise ValueError("now must be timezone-aware")
+        return current + timedelta(seconds=self.delay_for(attempt))
