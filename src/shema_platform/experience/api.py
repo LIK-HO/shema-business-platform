@@ -276,8 +276,8 @@ def create_app(
     )
     async def send_commercial_action(
         request: Request,
-        action_id: str = Path(alias="actionId"),
         payload: CommercialActionSendRequest,
+        action_id: str = Path(alias="actionId"),
         idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> CommunicationResult:
         return services(request).send_commercial_action(
