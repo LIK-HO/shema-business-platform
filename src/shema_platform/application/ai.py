@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from typing import Protocol
 from uuid import uuid4
 
-from shema_platform.application.ports import AuditRepository
+from shema_platform.application.ports import AIRunRepository, AuditRepository
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
 from shema_platform.foundation.errors import PolicyDenied
@@ -97,11 +97,13 @@ class AIGateway:
         authorizer: RBACAuthorizer,
         policy: PolicyEngine,
         audit_repository: AuditRepository,
+        run_repository: AIRunRepository,
     ) -> None:
         self._provider = provider
         self._authorizer = authorizer
         self._policy = policy
         self._audit = audit_repository
+        self._runs = run_repository
 
     def execute(
         self,
@@ -152,6 +154,8 @@ class AIGateway:
             raise ValueError("AI provider exceeded cost budget")
         if run.duration_seconds > budget.max_duration_seconds:
             raise ValueError("AI provider exceeded duration budget")
+
+        self._runs.add(run)
 
         self._audit.append(
             AuditRecord(
