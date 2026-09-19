@@ -130,6 +130,10 @@ MAX API details remain isolated in the adapter. Changes in MAX API versioning, w
 
 `Research → Provider Cost → AI Cost → Evidence → Qualification → Commercial Action → Order → Cost → Revenue → Margin`
 
+## v1.4 kernel workstream
+
+The detailed 12-element kernel sequence is maintained in `docs/V1.4_KERNEL.md`. The architecture sequence below intentionally groups Order and Economics for higher-level reporting.
+
 ## v1.4 vertical slice
 
 Current implementation sequence:
