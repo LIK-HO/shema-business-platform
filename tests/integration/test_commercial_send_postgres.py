@@ -73,10 +73,10 @@ def test_postgres_commercial_send_workflow_round_trip() -> None:
 
         PostgresCommercialActionRepository(setup).add(action)
         setup.commit()
-
-        factory = lambda: PostgresUnitOfWork(
-            lambda: psycopg.connect(DATABASE_URL)
-        )
+        def factory() -> PostgresUnitOfWork:
+            return PostgresUnitOfWork(
+                lambda: psycopg.connect(DATABASE_URL)
+            )
         workflow = CommercialActionSendWorkflow(
             factory,
             CommunicationGateway(FakeAdapter()),
