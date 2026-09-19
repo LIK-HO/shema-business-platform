@@ -15,9 +15,20 @@ def test_architecture_baseline_exists() -> None:
 
 def test_machine_readable_architecture_contract_exists() -> None:
     contract = loads(read("architecture/contract.json"))
+    assert contract["version"] == "1.4"
     assert contract["runtime"] == "modular_monolith"
     assert contract["transactional_authority"] == "postgresql"
     assert "max_is_an_adapter" in contract["critical_invariants"]
+
+
+def test_database_migrations_are_forward_only_and_declared() -> None:
+    contract = loads(read("architecture/contract.json"))
+    assert contract["persistence"]["migrations"] == [
+        "0001_foundation.sql",
+        "0002_discovery.sql",
+        "0003_audit_context.sql",
+    ]
+    assert "correlation_id" in read("db/migrations/0003_audit_context.sql")
 
 
 def test_database_migration_contains_foundation_tables() -> None:
