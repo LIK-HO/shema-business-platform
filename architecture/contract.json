@@ -46,7 +46,8 @@
   "execution_contracts": [
     "permission_then_policy",
     "commercial_action_ready_before_external_send",
-    "external_effect_outside_core_transaction"
+    "external_effect_outside_core_transaction",
+    "order_requires_sent_or_completed_action"
   ],
   "intelligence": {
     "research_depths": ["R1", "R2", "R3", "R4"],
