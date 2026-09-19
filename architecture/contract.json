@@ -27,13 +27,15 @@
       "commercial_action",
       "order_header",
       "order_line",
-      "economic_entry"
+      "economic_entry",
+      "ai_run"
     ],
     "migrations": [
       "0001_foundation.sql",
       "0002_discovery.sql",
       "0003_audit_context.sql",
-      "0004_commercial_execution.sql"
+      "0004_commercial_execution.sql",
+      "0005_ai_run.sql"
     ]
   },
   "operational_controls": [
