@@ -14,6 +14,7 @@ if TYPE_CHECKING:
         IdentityRepository,
         OrderRepository,
         OutboxRepository,
+        JobRepository,
     )
 
 
@@ -52,6 +53,7 @@ class PostgresUnitOfWork:
         self.audits: AuditRepository | None = None
         self.idempotency: IdempotencyRepository | None = None
         self.outbox: OutboxRepository | None = None
+        self.jobs: JobRepository | None = None
         self.commercial_actions: CommercialActionRepository | None = None
         self.orders: OrderRepository | None = None
         self.economics: EconomicEntryRepository | None = None
@@ -78,6 +80,7 @@ class PostgresUnitOfWork:
             PostgresIdentityRepository,
             PostgresOrderRepository,
             PostgresOutboxRepository,
+            PostgresJobRepository,
         )
 
         connection = self.connection
@@ -86,6 +89,7 @@ class PostgresUnitOfWork:
         self.audits = PostgresAuditRepository(connection)
         self.idempotency = PostgresIdempotencyRepository(connection)
         self.outbox = PostgresOutboxRepository(connection)
+        self.jobs = PostgresJobRepository(connection)
         self.commercial_actions = PostgresCommercialActionRepository(connection)
         self.orders = PostgresOrderRepository(connection)
         self.economics = PostgresEconomicEntryRepository(connection)
@@ -100,6 +104,7 @@ class PostgresUnitOfWork:
         self.audits = None
         self.idempotency = None
         self.outbox = None
+        self.jobs = None
         self.commercial_actions = None
         self.orders = None
         self.economics = None
