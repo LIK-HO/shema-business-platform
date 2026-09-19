@@ -163,7 +163,7 @@ def test_ai_gateway_requires_explicit_permission_before_provider() -> None:
     gateway_instance = AIGateway(
         FakeAIProvider(),
         authorizer,
-        __import__("shema_platform.foundation.policy", fromlist=["PolicyEngine"]).PolicyEngine(),
+        PolicyEngine(),
         audit,
     )
 
