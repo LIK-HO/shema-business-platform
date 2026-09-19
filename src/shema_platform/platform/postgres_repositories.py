@@ -16,7 +16,7 @@ from shema_platform.domain.identity import Identity, IdentityState
 from shema_platform.domain.search import SearchHit
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.errors import IdempotencyConflict, IntegrityViolation
-from shema_platform.foundation.evidence import Evidence, EvidenceLifecycle, TruthClass, TrustLevel
+from shema_platform.foundation.evidence import Evidence
 from shema_platform.foundation.idempotency import IdempotencyRecord
 from shema_platform.foundation.outbox import OutboxEvent, OutboxStatus
 from shema_platform.platform.postgres import DBConnection
