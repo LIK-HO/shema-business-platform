@@ -29,6 +29,11 @@ from shema_platform.foundation.authentication import (
 from shema_platform.foundation.errors import QuarantineRequired
 
 
+class RejectingAuthenticator(AuthenticationPort):
+    def authenticate(self, authorization: str | None) -> AuthenticatedActor:
+        raise AuthenticationRequired()
+
+    
 class FakeAuthenticator(AuthenticationPort):
     def authenticate(self, authorization: str | None) -> AuthenticatedActor:
         if authorization == "Bearer test-token":
