@@ -1,7 +1,20 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Protocol, Self
+from typing import TYPE_CHECKING, Protocol, Self
+
+if TYPE_CHECKING:
+    from shema_platform.application.ports import (
+        AuditRepository,
+        CommercialActionRepository,
+        EconomicEntryRepository,
+        EvidenceRepository,
+        IdentityRepository,
+        IdempotencyRepository,
+        OrderRepository,
+        OutboxRepository,
+        AIRunRepository,
+    )
 
 
 class DBCursor(Protocol):
@@ -34,6 +47,15 @@ class PostgresUnitOfWork:
     def __init__(self, connection_factory: Callable[[], DBConnection]) -> None:
         self._connection_factory = connection_factory
         self._connection: DBConnection | None = None
+        self.identities: IdentityRepository | None = None
+        self.evidence: EvidenceRepository | None = None
+        self.audits: AuditRepository | None = None
+        self.idempotency: IdempotencyRepository | None = None
+        self.outbox: OutboxRepository | None = None
+        self.commercial_actions: CommercialActionRepository | None = None
+        self.orders: OrderRepository | None = None
+        self.economics: EconomicEntryRepository | None = None
+        self.ai_runs: AIRunRepository | None = None
 
     @property
     def connection(self) -> DBConnection:
@@ -45,11 +67,43 @@ class PostgresUnitOfWork:
         if self._connection is not None:
             raise RuntimeError("unit of work is already active")
         self._connection = self._connection_factory()
+
+        from shema_platform.platform.postgres_repositories import (
+            PostgresAIRunRepository,
+            PostgresAuditRepository,
+            PostgresCommercialActionRepository,
+            PostgresEconomicEntryRepository,
+            PostgresEvidenceRepository,
+            PostgresIdentityRepository,
+            PostgresIdempotencyRepository,
+            PostgresOrderRepository,
+            PostgresOutboxRepository,
+        )
+
+        connection = self.connection
+        self.identities = PostgresIdentityRepository(connection)
+        self.evidence = PostgresEvidenceRepository(connection)
+        self.audits = PostgresAuditRepository(connection)
+        self.idempotency = PostgresIdempotencyRepository(connection)
+        self.outbox = PostgresOutboxRepository(connection)
+        self.commercial_actions = PostgresCommercialActionRepository(connection)
+        self.orders = PostgresOrderRepository(connection)
+        self.economics = PostgresEconomicEntryRepository(connection)
+        self.ai_runs = PostgresAIRunRepository(connection)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> bool:
         connection = self._connection
         self._connection = None
+        self.identities = None
+        self.evidence = None
+        self.audits = None
+        self.idempotency = None
+        self.outbox = None
+        self.commercial_actions = None
+        self.orders = None
+        self.economics = None
+        self.ai_runs = None
         if connection is None:
             return False
 
