@@ -63,6 +63,7 @@ def test_running_job_can_fail_retryably_or_permanently() -> None:
     assert running.fail(retryable=True).state is JobState.RETRYABLE_FAILURE
     assert running.fail(retryable=False).state is JobState.FAILED
 
+
 def test_job_rejects_expired_lease_at_start() -> None:
     job = queued_job()
     lease = JobLease(
