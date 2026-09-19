@@ -23,7 +23,6 @@ from shema_platform.platform.postgres_repositories import (
     PostgresAuditRepository,
 )
 
-
 pytestmark = pytest.mark.integration
 
 DATABASE_URL = os.getenv("DATABASE_URL")
