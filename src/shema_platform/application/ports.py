@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Protocol, Self
 
 from shema_platform.domain.commercial_action import CommercialAction
@@ -10,6 +11,7 @@ from shema_platform.domain.search import SearchHit
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.evidence import Evidence
 from shema_platform.foundation.idempotency import IdempotencyRecord
+from shema_platform.foundation.jobs import JobRecord
 from shema_platform.foundation.outbox import OutboxEvent
 
 if TYPE_CHECKING:
@@ -71,6 +73,35 @@ class OutboxRepository(Protocol):
     def pending(self) -> tuple[OutboxEvent, ...]: ...
 
     def mark_published(self, event_id: str) -> OutboxEvent: ...
+
+
+class JobRepository(Protocol):
+    """Persistence port for durable worker execution state."""
+
+    def enqueue(self, record: JobRecord) -> JobRecord: ...
+
+    def get(self, job_id: str) -> JobRecord | None: ...
+
+    def claim_next(
+        self,
+        worker_id: str,
+        *,
+        lease_seconds: int,
+        now: datetime,
+    ) -> JobRecord | None: ...
+
+    def complete(self, job_id: str, worker_id: str, *, now: datetime) -> JobRecord: ...
+
+    def fail(
+        self,
+        job_id: str,
+        worker_id: str,
+        *,
+        retryable: bool,
+        error: str,
+        available_at: datetime,
+        now: datetime,
+    ) -> JobRecord: ...
 
 
 class CommercialActionRepository(Protocol):
