@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 from typing import Protocol
 
 
@@ -20,8 +21,8 @@ class ResearchBudget:
             self.time_budget_seconds,
         ) < 0:
             raise ValueError("research budget values cannot be negative")
-        if self.api_cost_limit < 0:
-            raise ValueError("api_cost_limit cannot be negative")
+        if not isfinite(self.api_cost_limit) or self.api_cost_limit < 0:
+            raise ValueError("api_cost_limit must be finite and non-negative")
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,7 +41,12 @@ class ProviderCapability:
             raise ValueError("provider_id is required")
         if not self.source_class.strip():
             raise ValueError("source_class is required")
-        if self.cost_per_call < 0 or self.max_requests_per_second <= 0:
+        if (
+            not isfinite(self.cost_per_call)
+            or not isfinite(self.max_requests_per_second)
+            or self.cost_per_call < 0
+            or self.max_requests_per_second <= 0
+        ):
             raise ValueError("provider capability has invalid cost/rate limits")
         if self.estimated_tokens_per_call < 0 or self.estimated_latency_seconds < 0:
             raise ValueError("provider estimates cannot be negative")
@@ -64,8 +70,14 @@ class ProviderResult:
             raise ValueError("source_class is required")
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError("confidence must be between 0 and 1")
-        if self.cost < 0 or self.latency_seconds < 0 or self.tokens < 0:
-            raise ValueError("provider result usage metrics cannot be negative")
+        if (
+            not isfinite(self.cost)
+            or not isfinite(self.latency_seconds)
+            or self.cost < 0
+            or self.latency_seconds < 0
+            or self.tokens < 0
+        ):
+            raise ValueError("provider result usage metrics are invalid")
         if any(not ref.strip() for ref in self.source_refs):
             raise ValueError("source references cannot be empty")
         if self.claims and not self.source_refs:
