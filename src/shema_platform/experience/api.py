@@ -26,7 +26,6 @@ from shema_platform.experience.api_models import (
     SearchRequest,
     SearchResponse,
 )
-
 from shema_platform.foundation.authentication import (
     AuthenticatedActor,
     AuthenticationPort,
@@ -41,6 +40,7 @@ from shema_platform.foundation.errors import (
 
 
 BEARER_SECURITY = HTTPBearer(auto_error=False)
+BEARER_DEPENDENCY = Security(BEARER_SECURITY)
 
 
 class ApplicationUnavailable(RuntimeError):
@@ -199,7 +199,7 @@ def create_app(
     app.add_middleware(CorrelationMiddleware)
 
     async def require_bearer(
-        credentials: HTTPAuthorizationCredentials | None = Security(BEARER_SECURITY),
+        credentials: HTTPAuthorizationCredentials | None = BEARER_DEPENDENCY,
     ) -> None:
         if credentials is None:
             raise AuthenticationRequired
