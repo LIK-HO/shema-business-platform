@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from uuid import uuid4
 
 from shema_platform.application.ai import AIRun
@@ -14,6 +15,7 @@ from shema_platform.application.ports import (
     IdentityRepository,
     OrderRepository,
     OutboxRepository,
+    JobRepository,
     QuarantineRepository,
     SearchCandidateRepository,
 )
@@ -27,6 +29,7 @@ from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.errors import IdempotencyConflict, IntegrityViolation
 from shema_platform.foundation.evidence import Evidence
 from shema_platform.foundation.idempotency import IdempotencyRecord
+from shema_platform.foundation.jobs import JobExecution, JobLease, JobRecord, JobState
 from shema_platform.foundation.outbox import OutboxEvent, OutboxStatus
 from shema_platform.platform.postgres import DBConnection
 
@@ -428,6 +431,224 @@ class PostgresOutboxRepository(OutboxRepository):
                 if published_at is not None
                 else OutboxStatus.PENDING
             ),
+        )
+
+
+class PostgresJobRepository(JobRepository):
+    """Durable worker execution state with lease-safe claiming and completion."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def enqueue(self, record: JobRecord) -> JobRecord:
+        cursor = self._connection.execute(
+            """
+            insert into job_execution (
+                job_id, job_type, attempt, state, idempotency_key, payload,
+                available_at, worker_id, lease_until, last_error
+            )
+            values (%s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s)
+            on conflict (job_id) do nothing
+            returning
+                job_id, job_type, attempt, state, idempotency_key, payload,
+                available_at, worker_id, lease_until, last_error
+            """,
+            (
+                record.execution.job_id,
+                record.execution.job_type,
+                record.execution.attempt,
+                record.execution.state.value,
+                record.execution.idempotency_key,
+                json.dumps(dict(record.payload), ensure_ascii=False, sort_keys=True),
+                record.available_at,
+                record.execution.lease.worker_id if record.execution.lease else None,
+                record.execution.lease.leased_until if record.execution.lease else None,
+                record.last_error,
+            ),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            existing = self.get(record.execution.job_id)
+            if existing is None:
+                raise IntegrityViolation("job disappeared after enqueue collision")
+            if existing != record:
+                raise IntegrityViolation("job_id collision with different execution")
+            return existing
+        return self._to_record(row)
+
+    def get(self, job_id: str) -> JobRecord | None:
+        cursor = self._connection.execute(
+            """
+            select
+                job_id, job_type, attempt, state, idempotency_key, payload,
+                available_at, worker_id, lease_until, last_error
+            from job_execution
+            where job_id = %s
+            """,
+            (job_id,),
+        )
+        row = cursor.fetchone()
+        return None if row is None else self._to_record(row)
+
+    def claim_next(
+        self,
+        worker_id: str,
+        *,
+        lease_seconds: int,
+        now: datetime,
+    ) -> JobRecord | None:
+        if not worker_id.strip():
+            raise ValueError("worker_id is required")
+        if lease_seconds <= 0:
+            raise ValueError("lease_seconds must be > 0")
+        if now.tzinfo is None:
+            raise ValueError("now must be timezone-aware")
+
+        cursor = self._connection.execute(
+            """
+            with candidate as (
+                select job_id
+                from job_execution
+                where (
+                    state in ('queued', 'retryable_failure')
+                    and available_at <= %s
+                )
+                or (
+                    state = 'running'
+                    and lease_until is not null
+                    and lease_until <= %s
+                )
+                order by available_at, created_at, job_id
+                for update skip locked
+                limit 1
+            )
+            update job_execution as job
+            set state = 'running',
+                attempt = case
+                    when job.state = 'queued' and job.attempt = 1 then job.attempt
+                    else job.attempt + 1
+                end,
+                worker_id = %s,
+                lease_until = %s + (%s * interval '1 second'),
+                updated_at = %s,
+                last_error = null
+            from candidate
+            where job.job_id = candidate.job_id
+            returning
+                job.job_id, job.job_type, job.attempt, job.state, job.idempotency_key,
+                job.payload, job.available_at, job.worker_id, job.lease_until, job.last_error
+            """,
+            (now, now, worker_id, now, lease_seconds, now),
+        )
+        row = cursor.fetchone()
+        return None if row is None else self._to_record(row)
+
+    def complete(self, job_id: str, worker_id: str, *, now: datetime) -> JobRecord:
+        cursor = self._connection.execute(
+            """
+            update job_execution
+            set state = 'succeeded',
+                worker_id = null,
+                lease_until = null,
+                completed_at = %s,
+                updated_at = %s
+            where job_id = %s
+              and state = 'running'
+              and worker_id = %s
+              and lease_until > %s
+            returning
+                job_id, job_type, attempt, state, idempotency_key, payload,
+                available_at, worker_id, lease_until, last_error
+            """,
+            (now, now, job_id, worker_id, now),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise IntegrityViolation("job completion rejected: missing or expired lease")
+        return self._to_record(row)
+
+    def fail(
+        self,
+        job_id: str,
+        worker_id: str,
+        *,
+        retryable: bool,
+        error: str,
+        available_at: datetime,
+        now: datetime,
+    ) -> JobRecord:
+        if not error.strip():
+            raise ValueError("error is required")
+        state = "retryable_failure" if retryable else "failed"
+        completed_at = None if retryable else now
+        cursor = self._connection.execute(
+            """
+            update job_execution
+            set state = %s,
+                worker_id = null,
+                lease_until = null,
+                last_error = %s,
+                available_at = %s,
+                completed_at = %s,
+                updated_at = %s
+            where job_id = %s
+              and state = 'running'
+              and worker_id = %s
+              and lease_until > %s
+            returning
+                job_id, job_type, attempt, state, idempotency_key, payload,
+                available_at, worker_id, lease_until, last_error
+            """,
+            (
+                state,
+                error,
+                available_at,
+                completed_at,
+                now,
+                job_id,
+                worker_id,
+                now,
+            ),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise IntegrityViolation("job failure rejected: missing or expired lease")
+        return self._to_record(row)
+
+    @staticmethod
+    def _to_record(row: tuple[object, ...]) -> JobRecord:
+        (
+            job_id,
+            job_type,
+            attempt,
+            state,
+            idempotency_key,
+            payload,
+            available_at,
+            worker_id,
+            lease_until,
+            last_error,
+        ) = row
+        lease = None
+        if worker_id is not None and lease_until is not None:
+            lease = JobLease(
+                job_id=str(job_id),
+                worker_id=str(worker_id),
+                leased_until=lease_until,
+            )
+        execution = JobExecution(
+            job_id=str(job_id),
+            job_type=str(job_type),
+            attempt=int(attempt),
+            state=JobState(str(state)),
+            idempotency_key=str(idempotency_key),
+            lease=lease,
+        )
+        return JobRecord(
+            execution=execution,
+            payload=dict(payload),
+            available_at=available_at,
+            last_error=str(last_error) if last_error is not None else None,
         )
 
 
