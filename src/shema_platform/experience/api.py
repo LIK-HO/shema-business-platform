@@ -9,10 +9,10 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from shema_platform.experience.api_models import (
-    CommunicationResult,
     CommercialActionCreateRequest,
     CommercialActionResponse,
     CommercialActionSendRequest,
+    CommunicationResult,
     DiagnosticsResponse,
     DiscoveryRequest,
     DiscoveryResponse,
