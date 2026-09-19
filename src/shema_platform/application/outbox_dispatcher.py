@@ -51,11 +51,16 @@ class OutboxDispatcher:
                 if not any(item.event_id == event.event_id for item in current):
                     continue
 
-                delivered = uow.outbox.mark_published(event.event_id)
+                uow.outbox.mark_published(event.event_id)
                 published_at = datetime.now(UTC)
                 uow.audits.append(
                     AuditRecord(
-                        audit_id=str(uuid5(NAMESPACE_URL, f"audit:outbox.published:{event.event_id}")),
+                        audit_id=str(
+                            uuid5(
+                                NAMESPACE_URL,
+                                f"audit:outbox.published:{event.event_id}",
+                            )
+                        ),
                         actor_id=self._worker_id,
                         action="outbox.published",
                         resource_type="outbox_event",
