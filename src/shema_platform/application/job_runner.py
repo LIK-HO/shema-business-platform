@@ -13,8 +13,36 @@ from shema_platform.foundation.outbox import OutboxEvent
 from shema_platform.foundation.recovery import RetryPolicy
 
 
+class JobHandlerContext:
+    """Narrow execution context exposed to durable job handlers."""
+
+    def __init__(
+        self,
+        *,
+        record: JobRecord,
+        worker_id: str,
+        renew_callback: Callable[[str, datetime], JobRecord],
+    ) -> None:
+        if not worker_id.strip():
+            raise ValueError("worker_id is required")
+        self.record = record
+        self.worker_id = worker_id
+        self._renew_callback = renew_callback
+
+    def renew_lease(self, *, now: datetime | None = None) -> JobRecord:
+        current = now or datetime.now(UTC)
+        if current.tzinfo is None:
+            raise ValueError("now must be timezone-aware")
+        renewed = self._renew_callback(self.record.execution.job_id, current)
+        self.record = renewed
+        return renewed
+
+
 class JobHandler(Protocol):
-    def __call__(self, record: JobRecord) -> Mapping[str, object] | None: ...
+    def __call__(
+        self,
+        context: JobHandlerContext,
+    ) -> Mapping[str, object] | None: ...
 
 
 class RetryableJobError(RuntimeError):
@@ -62,6 +90,7 @@ class JobRunner:
         *,
         lease_seconds: int = 60,
         worker_id: str = "worker",
+        clock: Callable[[], datetime] | None = None,
     ) -> None:
         if lease_seconds <= 0:
             raise ValueError("lease_seconds must be > 0")
@@ -72,11 +101,11 @@ class JobRunner:
         self._retry_policy = retry_policy or RetryPolicy()
         self._lease_seconds = lease_seconds
         self._worker_id = worker_id
+        self._clock = clock or (lambda: datetime.now(UTC))
 
     def run_next(self, *, now: datetime | None = None) -> JobRunResult | None:
-        current = now or datetime.now(UTC)
-        if current.tzinfo is None:
-            raise ValueError("now must be timezone-aware")
+        current = now or self._clock()
+        self._validate_time(current)
 
         with self._unit_of_work_factory() as uow:
             claimed = uow.jobs.claim_next(
@@ -88,35 +117,42 @@ class JobRunner:
         if claimed is None:
             return None
 
+        context = JobHandlerContext(
+            record=claimed,
+            worker_id=self._worker_id,
+            renew_callback=self._renew_lease,
+        )
+
         try:
             handler = self._handlers.resolve(claimed.execution.job_type)
-            output = handler(claimed)
+            output = handler(context)
         except RetryableJobError as exc:
             return self._record_failure(
                 claimed,
                 str(exc),
                 retryable=True,
-                now=current,
+                now=self._clock(),
             )
         except PermanentJobError as exc:
             return self._record_failure(
                 claimed,
                 str(exc),
                 retryable=False,
-                now=current,
+                now=self._clock(),
             )
         except Exception as exc:
             return self._record_failure(
                 claimed,
                 f"unexpected handler failure: {exc}",
                 retryable=True,
-                now=current,
+                now=self._clock(),
             )
 
-        completed_at = current
+        completed_at = self._clock()
+        self._validate_time(completed_at)
         completed = self._complete(
             claimed.execution.job_id,
-            claimed.execution.lease.worker_id if claimed.execution.lease else self._worker_id,
+            context.worker_id,
             now=completed_at,
             output=output,
         )
@@ -127,6 +163,15 @@ class JobRunner:
             output=output,
         )
 
+    def _renew_lease(self, job_id: str, now: datetime) -> JobRecord:
+        with self._unit_of_work_factory() as uow:
+            return uow.jobs.renew(
+                job_id,
+                self._worker_id,
+                lease_seconds=self._lease_seconds,
+                now=now,
+            )
+
     def _record_failure(
         self,
         claimed: JobRecord,
@@ -135,6 +180,7 @@ class JobRunner:
         retryable: bool,
         now: datetime,
     ) -> JobRunResult:
+        self._validate_time(now)
         attempt = claimed.execution.attempt
         should_retry = retryable and self._retry_policy.is_retryable(attempt)
         available_at = (
@@ -143,15 +189,10 @@ class JobRunner:
             else now
         )
 
-        worker_id = (
-            claimed.execution.lease.worker_id
-            if claimed.execution.lease
-            else self._worker_id
-        )
         with self._unit_of_work_factory() as uow:
             failed = uow.jobs.fail(
                 claimed.execution.job_id,
-                worker_id,
+                self._worker_id,
                 retryable=should_retry,
                 error=error,
                 available_at=available_at,
@@ -204,7 +245,8 @@ class JobRunner:
                     event_id=str(
                         uuid5(
                             NAMESPACE_URL,
-                            f"job.completed:{job_id}:{completed.execution.attempt}",
+                            f"job.completed:{job_id}:"
+                            f"{completed.execution.attempt}",
                         )
                     ),
                     event_type="job.completed",
@@ -219,7 +261,8 @@ class JobRunner:
                     audit_id=str(
                         uuid5(
                             NAMESPACE_URL,
-                            f"audit:job.completed:{job_id}:{completed.execution.attempt}",
+                            f"audit:job.completed:{job_id}:"
+                            f"{completed.execution.attempt}",
                         )
                     ),
                     actor_id=worker_id,
@@ -251,7 +294,8 @@ class JobRunner:
             event_id=str(
                 uuid5(
                     NAMESPACE_URL,
-                    f"{event_type}:{claimed.execution.job_id}:{claimed.execution.attempt}",
+                    f"{event_type}:{claimed.execution.job_id}:"
+                    f"{claimed.execution.attempt}",
                 )
             ),
             event_type=event_type,
@@ -275,12 +319,17 @@ class JobRunner:
         error: str,
         occurred_at: datetime,
     ) -> AuditRecord:
-        worker_id = claimed.execution.lease.worker_id if claimed.execution.lease else "worker"
+        worker_id = (
+            claimed.execution.lease.worker_id
+            if claimed.execution.lease
+            else "worker"
+        )
         return AuditRecord(
             audit_id=str(
                 uuid5(
                     NAMESPACE_URL,
-                    f"audit:job.failure:{claimed.execution.job_id}:{claimed.execution.attempt}",
+                    f"audit:job.failure:{claimed.execution.job_id}:"
+                    f"{claimed.execution.attempt}",
                 )
             ),
             actor_id=worker_id,
@@ -294,3 +343,8 @@ class JobRunner:
                 "error": error,
             },
         )
+
+    @staticmethod
+    def _validate_time(value: datetime) -> None:
+        if value.tzinfo is None:
+            raise ValueError("now must be timezone-aware")
