@@ -15,8 +15,8 @@ from shema_platform.foundation.errors import (
 from shema_platform.foundation.evidence import (
     Evidence,
     EvidenceLifecycle,
-    TruthClass,
     TrustLevel,
+    TruthClass,
 )
 from shema_platform.foundation.idempotency import IdempotencyStore
 from shema_platform.foundation.outbox import OutboxEvent, OutboxStatus, OutboxStore
