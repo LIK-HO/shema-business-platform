@@ -10,8 +10,8 @@ if TYPE_CHECKING:
         CommercialActionRepository,
         EconomicEntryRepository,
         EvidenceRepository,
-        IdentityRepository,
         IdempotencyRepository,
+        IdentityRepository,
         OrderRepository,
         OutboxRepository,
     )
@@ -74,8 +74,8 @@ class PostgresUnitOfWork:
             PostgresCommercialActionRepository,
             PostgresEconomicEntryRepository,
             PostgresEvidenceRepository,
-            PostgresIdentityRepository,
             PostgresIdempotencyRepository,
+            PostgresIdentityRepository,
             PostgresOrderRepository,
             PostgresOutboxRepository,
         )
