@@ -370,7 +370,7 @@ class PostgresOutboxRepository(OutboxRepository):
             update outbox_event
             set published_at = coalesce(published_at, now())
             where event_id = %s
-            returning (
+            returning
                 event_id,
                 event_type,
                 aggregate_type,
@@ -378,7 +378,6 @@ class PostgresOutboxRepository(OutboxRepository):
                 payload,
                 occurred_at,
                 published_at
-            )
             """,
             (event_id,),
         )
@@ -390,7 +389,7 @@ class PostgresOutboxRepository(OutboxRepository):
     def _get(self, event_id: str) -> OutboxEvent | None:
         cursor = self._connection.execute(
             """
-            select (
+            select
                 event_id,
                 event_type,
                 aggregate_type,
@@ -398,7 +397,6 @@ class PostgresOutboxRepository(OutboxRepository):
                 payload,
                 occurred_at,
                 published_at
-            )
             from outbox_event
             where event_id = %s
             """,
