@@ -116,6 +116,7 @@ def test_outbox_delivery_is_lease_safe_and_reclaimable() -> None:
             now=start + timedelta(seconds=11),
         )
         assert published.status is OutboxStatus.PUBLISHED
+        second.commit()
 
         assert event.event_id not in {
             item.event_id for item in second_repo.pending()
