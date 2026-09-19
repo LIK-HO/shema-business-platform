@@ -28,9 +28,11 @@ def test_database_migrations_are_forward_only_and_declared() -> None:
         "0002_discovery.sql",
         "0003_audit_context.sql",
         "0004_commercial_execution.sql",
+        "0005_ai_run.sql",
     ]
     assert "correlation_id" in read("db/migrations/0003_audit_context.sql")
     assert "commercial_action" in read("db/migrations/0004_commercial_execution.sql")
+    assert "ai_run" in read("db/migrations/0005_ai_run.sql")
 
 
 def test_database_migration_contains_foundation_tables() -> None:
