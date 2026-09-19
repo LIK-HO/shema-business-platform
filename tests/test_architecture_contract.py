@@ -22,6 +22,7 @@ def test_machine_readable_architecture_contract_exists() -> None:
     assert "order_header" in contract["persistence"]["canonical"]
     assert "economic_entry" in contract["persistence"]["canonical"]
     assert "ai_run" in contract["persistence"]["canonical"]
+    assert "job_execution" in contract["persistence"]["canonical"]
     assert contract["persistence"]["uncertain_state"] == ["quarantine_record"]
 
 
@@ -33,10 +34,12 @@ def test_database_migrations_are_forward_only_and_declared() -> None:
         "0003_audit_context.sql",
         "0004_commercial_execution.sql",
         "0005_ai_run.sql",
+        "0006_job_execution.sql",
     ]
     assert "correlation_id" in read("db/migrations/0003_audit_context.sql")
     assert "commercial_action" in read("db/migrations/0004_commercial_execution.sql")
     assert "ai_run" in read("db/migrations/0005_ai_run.sql")
+    assert "job_execution" in read("db/migrations/0006_job_execution.sql")
 
 
 def test_database_migration_contains_foundation_tables() -> None:
