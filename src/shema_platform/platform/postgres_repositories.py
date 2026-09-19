@@ -4,6 +4,7 @@ import json
 from uuid import uuid4
 
 from shema_platform.application.ports import (
+    AIRunRepository,
     AuditRepository,
     CommercialActionRepository,
     EconomicEntryRepository,
@@ -15,6 +16,7 @@ from shema_platform.application.ports import (
     QuarantineRepository,
     SearchCandidateRepository,
 )
+from shema_platform.application.ai import AIRun
 from shema_platform.domain.commercial_action import CommercialAction, CommercialActionStatus
 from shema_platform.domain.economics import EconomicEntry, EconomicKind
 from shema_platform.domain.identity import Identity, IdentityState
@@ -633,4 +635,102 @@ class PostgresEconomicEntryRepository(EconomicEntryRepository):
                 source_ref,
                 occurred_at,
             ) in cursor.fetchall()
+        )
+
+
+class PostgresAIRunRepository(AIRunRepository):
+    """Persists validated AI execution lineage and usage metrics."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, run: AIRun) -> None:
+        self._connection.execute(
+            """
+            insert into ai_run (
+                run_id,
+                task_id,
+                provider_id,
+                model,
+                model_version,
+                prompt_version,
+                input_refs,
+                evidence_refs,
+                output,
+                tokens,
+                cost,
+                duration_seconds
+            )
+            values (
+                %s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s, %s, %s, %s
+            )
+            """,
+            (
+                run.run_id,
+                run.task_id,
+                run.provider_id,
+                run.model,
+                run.model_version,
+                run.prompt_version,
+                json.dumps(run.input_refs, ensure_ascii=False),
+                json.dumps(run.evidence_refs, ensure_ascii=False),
+                run.output,
+                run.tokens,
+                run.cost,
+                run.duration_seconds,
+            ),
+        )
+
+    def get(self, run_id: str) -> AIRun | None:
+        cursor = self._connection.execute(
+            """
+            select
+                run_id,
+                task_id,
+                provider_id,
+                model,
+                model_version,
+                prompt_version,
+                input_refs,
+                evidence_refs,
+                output,
+                tokens,
+                cost,
+                duration_seconds
+            from ai_run
+            where run_id = %s
+            """,
+            (run_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+
+        (
+            run_id_value,
+            task_id,
+            provider_id,
+            model,
+            model_version,
+            prompt_version,
+            input_refs,
+            evidence_refs,
+            output,
+            tokens,
+            cost,
+            duration_seconds,
+        ) = row
+        return AIRun(
+            run_id=str(run_id_value),
+            task_id=str(task_id),
+            provider_id=str(provider_id),
+            model=str(model),
+            model_version=str(model_version),
+            prompt_version=str(prompt_version),
+            input_refs=tuple(str(ref) for ref in input_refs),
+            evidence_refs=tuple(str(ref) for ref in evidence_refs),
+            output=str(output),
+            tokens=int(tokens),
+            cost=float(cost),
+            duration_seconds=float(duration_seconds),
         )
