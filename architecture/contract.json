@@ -55,7 +55,9 @@
     "diagnostics",
     "job_lease",
     "bounded_retry",
-    "durable_job_execution"
+    "durable_job_execution",
+    "handler_registry",
+    "job_runner_at_least_once"
   ],
   "execution_contracts": [
     "permission_then_policy",
@@ -109,7 +111,10 @@
     "job_state_is_durable",
     "worker_completion_requires_current_lease",
     "expired_job_leases_are_reclaimable",
-    "retry_schedule_is_bounded"
+    "retry_schedule_is_bounded",
+    "job_handler_is_idempotent",
+    "missing_job_handler_fails_job",
+    "job_runner_is_at_least_once"
   ],
   "business_loop": [
     "search",
