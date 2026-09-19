@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Protocol
 from uuid import uuid4
 
 from shema_platform.application.ports import AuditRepository
+from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
 from shema_platform.foundation.errors import PolicyDenied
 from shema_platform.foundation.policy import Decision, PolicyContext, PolicyEngine
@@ -156,8 +156,7 @@ class AIGateway:
                 resource_id=context.resource_ref,
                 outcome="success",
                 occurred_at=datetime.now(UTC),
-                metadata=Mapping(
-                    {
+                metadata={
                         "task_id": task.task_id,
                         "provider_id": run.provider_id,
                         "model": run.model,
@@ -168,13 +167,10 @@ class AIGateway:
                         "duration_seconds": run.duration_seconds,
                         "input_ref_count": len(run.input_refs),
                         "evidence_ref_count": len(run.evidence_refs),
-                    }
-                ),
+                    },
                 correlation_id=context.correlation_id,
                 configuration_version=context.configuration_version,
             )
         )
         return run
 
-
-from shema_platform.foundation.audit import AuditRecord
