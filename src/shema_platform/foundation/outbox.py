@@ -81,7 +81,10 @@ class OutboxStore:
             raise ValueError("now must be timezone-aware")
 
         selected: list[OutboxDelivery] = []
-        for event in sorted(self.pending(), key=lambda item: (item.occurred_at, item.event_id)):
+        for event in sorted(
+            self.pending(),
+            key=lambda item: (item.occurred_at, item.event_id),
+        ):
             lease = self._leases.get(event.event_id)
             if lease is not None and lease.lease_until > now:
                 continue

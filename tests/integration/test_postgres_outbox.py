@@ -101,6 +101,7 @@ def test_outbox_delivery_is_lease_safe_and_reclaimable() -> None:
         assert len(reclaimed) == 1
         assert reclaimed[0].attempt == 2
         assert reclaimed[0].worker_id == "worker-2"
+        second.commit()
 
         with pytest.raises(IntegrityViolation, match="missing or expired"):
             first_repo.mark_published(
