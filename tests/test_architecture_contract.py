@@ -77,6 +77,19 @@ def test_foundation_does_not_depend_on_upper_layers() -> None:
         assert not any(token in content for token in forbidden)
 
 
+def test_kernel_checkpoint_tracks_twelve_elements() -> None:
+    checkpoint = read("docs/V1.4_KERNEL_CHECKPOINT.md")
+    for element in (
+        "1. Foundation / Architecture Contract",
+        "4. Discovery + Qualification",
+        "9. Commercial Action",
+        "10. Order",
+        "11. Economics",
+        "12. Canonical API / Experience Boundary",
+    ):
+        assert element in checkpoint
+
+
 def test_legacy_boundary_is_explicit() -> None:
     architecture = read("ARCHITECTURE.md")
     assert "Airtable is legacy/transition data" in architecture
