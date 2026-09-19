@@ -24,36 +24,54 @@ def provider(
     provider_id: str,
     *,
     cost: float,
+    source_class: str = "official_registry",
     topic: str = "logistics",
     sources: tuple[str, ...] = ("source:1",),
 ) -> FakeProvider:
-    return FakeProvider(
-        capability=ProviderCapability(
-            provider_id=provider_id,
-            coverage=frozenset({topic}),
-            cost_per_call=cost,
-            max_requests_per_second=5,
-            estimated_tokens_per_call=10,
-            estimated_latency_seconds=1,
-        ),
-        result=ProviderResult(
-            provider_id=provider_id,
-            claims=("claim",),
-            source_refs=sources,
-            cost=cost,
-            latency_seconds=1,
-            tokens=10,
-        ),
+    capability = ProviderCapability(
+        provider_id=provider_id,
+        source_class=source_class,
+        coverage=frozenset({topic}),
+        cost_per_call=cost,
+        max_requests_per_second=5,
+        estimated_tokens_per_call=10,
+        estimated_latency_seconds=1,
     )
+    result = ProviderResult(
+        provider_id=provider_id,
+        source_class=source_class,
+        claims=("claim",),
+        source_refs=sources,
+        confidence=0.9,
+        cost=cost,
+        latency_seconds=1,
+        tokens=10,
+    )
+    return FakeProvider(capability=capability, result=result)
 
 
 def test_research_gateway_selects_healthy_covered_providers_by_cost() -> None:
     gateway = ProviderGateway()
     providers = [provider("expensive", cost=2.0), provider("cheap", cost=0.5)]
 
-    selected = gateway.select(providers, "logistics")
+    selected = gateway.select(
+        providers,
+        "logistics",
+        allowed_source_classes=frozenset({"official_registry"}),
+    )
 
     assert [item.capability.provider_id for item in selected] == ["cheap", "expensive"]
+
+
+def test_research_gateway_excludes_prohibited_source_class() -> None:
+    gateway = ProviderGateway()
+    selected = gateway.select(
+        [provider("social", cost=0.1, source_class="social_profile")],
+        "logistics",
+        allowed_source_classes=frozenset({"official_registry"}),
+    )
+
+    assert selected == []
 
 
 def test_research_gateway_enforces_budget() -> None:
@@ -69,6 +87,7 @@ def test_research_gateway_enforces_budget() -> None:
             api_cost_limit=1.0,
             time_budget_seconds=2.0,
         ),
+        allowed_source_classes=frozenset({"official_registry"}),
     )
 
     assert len(results) == 1
@@ -79,8 +98,23 @@ def test_provider_results_require_source_references_for_claims() -> None:
     with pytest.raises(ValueError, match="source reference"):
         ProviderResult(
             provider_id="provider",
+            source_class="official_registry",
             claims=("unsupported claim",),
             source_refs=(),
+            confidence=0.5,
+            cost=0,
+            latency_seconds=0,
+        )
+
+
+def test_provider_result_rejects_invalid_confidence() -> None:
+    with pytest.raises(ValueError, match="confidence"):
+        ProviderResult(
+            provider_id="provider",
+            source_class="official_registry",
+            claims=(),
+            source_refs=("source:1",),
+            confidence=1.5,
             cost=0,
             latency_seconds=0,
         )
