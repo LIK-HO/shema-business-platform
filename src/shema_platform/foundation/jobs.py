@@ -72,6 +72,26 @@ class JobExecution:
             lease=lease,
         )
 
+    def renew(self, lease: JobLease, now: datetime | None = None) -> JobExecution:
+        if self.state is not JobState.RUNNING or self.lease is None:
+            raise ValueError("only running job can renew")
+        if lease.job_id != self.job_id:
+            raise ValueError("lease belongs to a different job")
+        if self.lease.worker_id != lease.worker_id:
+            raise ValueError("lease belongs to a different worker")
+        if self.lease.is_expired(now):
+            raise ValueError("job lease has expired")
+        if lease.is_expired(now):
+            raise ValueError("new lease is already expired")
+        return JobExecution(
+            job_id=self.job_id,
+            job_type=self.job_type,
+            attempt=self.attempt,
+            state=JobState.RUNNING,
+            idempotency_key=self.idempotency_key,
+            lease=lease,
+        )
+
     def succeed(self, now: datetime | None = None) -> JobExecution:
         self._require_active_lease(now)
         return JobExecution(
