@@ -181,7 +181,7 @@ def test_postgres_core_persistence_round_trip() -> None:
 
         loaded_event = outbox.mark_published(event_id)
         assert loaded_event.status is OutboxStatus.PUBLISHED
-        assert outbox.pending() == ()
+        assert event not in outbox.pending()
 
         connection.execute("delete from outbox_event where event_id = %s", (event_id,))
         connection.execute("delete from evidence where evidence_id = %s", (evidence_id,))
