@@ -8,7 +8,6 @@ import pytest
 from shema_platform.domain.identity import Identity, IdentityState
 from shema_platform.platform.postgres import PostgresUnitOfWork
 
-
 pytestmark = pytest.mark.integration
 
 DATABASE_URL = os.getenv("DATABASE_URL")
