@@ -143,7 +143,11 @@ class JobRunner:
             else now
         )
 
-        worker_id = claimed.execution.lease.worker_id if claimed.execution.lease else self._worker_id
+        worker_id = (
+            claimed.execution.lease.worker_id
+            if claimed.execution.lease
+            else self._worker_id
+        )
         with self._unit_of_work_factory() as uow:
             failed = uow.jobs.fail(
                 claimed.execution.job_id,
@@ -197,7 +201,12 @@ class JobRunner:
                 payload["output"] = dict(output)
             uow.outbox.append(
                 OutboxEvent(
-                    event_id=str(uuid5(NAMESPACE_URL, f"job.completed:{job_id}:{completed.execution.attempt}")),
+                    event_id=str(
+                        uuid5(
+                            NAMESPACE_URL,
+                            f"job.completed:{job_id}:{completed.execution.attempt}",
+                        )
+                    ),
                     event_type="job.completed",
                     aggregate_type="job",
                     aggregate_id=job_id,
@@ -207,7 +216,12 @@ class JobRunner:
             )
             uow.audits.append(
                 AuditRecord(
-                    audit_id=str(uuid5(NAMESPACE_URL, f"audit:job.completed:{job_id}:{completed.execution.attempt}")),
+                    audit_id=str(
+                        uuid5(
+                            NAMESPACE_URL,
+                            f"audit:job.completed:{job_id}:{completed.execution.attempt}",
+                        )
+                    ),
                     actor_id=worker_id,
                     action="job.completed",
                     resource_type="job",
