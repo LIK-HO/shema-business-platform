@@ -24,8 +24,8 @@ from shema_platform.experience.api_models import (
 from shema_platform.foundation.authentication import (
     AuthenticatedActor,
     AuthenticationPort,
+    AuthenticationRequired,
 )
-from shema_platform.foundation.authentication import AuthenticationRequired
 from shema_platform.foundation.errors import QuarantineRequired
 
 
