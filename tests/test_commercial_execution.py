@@ -18,9 +18,9 @@ from shema_platform.foundation.authorization import (
     RBACAuthorizer,
 )
 from shema_platform.foundation.errors import AuthorizationError, IdempotencyConflict
-from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.foundation.idempotency import IdempotencyStore
 from shema_platform.foundation.outbox import OutboxStore
+from shema_platform.foundation.policy import PolicyEngine
 
 
 @dataclass
