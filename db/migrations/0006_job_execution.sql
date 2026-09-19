@@ -1,5 +1,5 @@
 -- Durable worker execution state.
--- Jobs are infrastructure state; handlers remain responsible for domain truth.
+-- Jobs are infrastructure state. Handlers remain responsible for domain truth.
 
 create table if not exists job_execution (
     job_id text primary key,
