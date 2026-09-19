@@ -7,7 +7,7 @@ from shema_platform.application.job_runner import (
     RetryableJobError,
 )
 from shema_platform.foundation.audit import AuditRecord
-from shema_platform.foundation.jobs import JobExecution, JobRecord, JobState
+from shema_platform.foundation.jobs import JobExecution, JobLease, JobRecord, JobState
 from shema_platform.foundation.outbox import OutboxEvent
 from shema_platform.foundation.recovery import RetryPolicy
 
@@ -26,16 +26,12 @@ class FakeJobs:
     def claim_next(self, worker_id: str, *, lease_seconds: int, now: datetime) -> JobRecord | None:
         if self.record.execution.state is not JobState.QUEUED:
             return None
-        lease = self.record.execution.lease
-        running = self.record.execution.start(
-            lease=type("Lease", (), {
-                "job_id": self.record.execution.job_id,
-                "worker_id": worker_id,
-                "leased_until": now + timedelta(seconds=lease_seconds),
-                "is_expired": lambda self, current=None: False,
-            })(),
-            now=now,
+        lease = JobLease(
+            job_id=self.record.execution.job_id,
+            worker_id=worker_id,
+            leased_until=now + timedelta(seconds=lease_seconds),
         )
+        running = self.record.execution.start(lease=lease, now=now)
         self.record = JobRecord(
             execution=running,
             payload=self.record.payload,
