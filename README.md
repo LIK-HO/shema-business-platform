@@ -25,5 +25,7 @@ python -m compileall -q src tests
 pytest
 
 Architecture baseline: ARCHITECTURE.md
+Kernel workstream: docs/V1.4_KERNEL.md
+Kernel checkpoint: docs/V1.4_KERNEL_CHECKPOINT.md
 Machine-readable contract: architecture/contract.json
 Database foundation migration: db/migrations/0001_foundation.sql
