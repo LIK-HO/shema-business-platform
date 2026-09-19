@@ -7,6 +7,7 @@ from shema_platform.domain.search import (
     SearchHit,
     SearchProvider,
     SearchService,
+    SelectionLevel,
 )
 
 
@@ -108,6 +109,35 @@ def test_search_enforces_canonical_limit() -> None:
     )
 
     assert len(result) == 50
+
+
+def test_search_selection_level_is_a_real_gate() -> None:
+    hits = (
+        SearchHit(
+            "candidate",
+            "Candidate",
+            "Moscow",
+            frozenset({"logistics"}),
+            "source:candidate",
+            selection_level=SelectionLevel.CANDIDATE,
+        ),
+        SearchHit(
+            "verified",
+            "Verified",
+            "Moscow",
+            frozenset({"logistics"}),
+            "source:verified",
+            selection_level=SelectionLevel.VERIFIED,
+        ),
+    )
+    result = SearchService(FakeSearchProvider(hits)).execute(
+        SearchCriteria(
+            region="Moscow",
+            industries=frozenset({"logistics"}),
+            selection_level=SelectionLevel.VERIFIED,
+        )
+    )
+    assert tuple(hit.candidate_ref for hit in result) == ("verified",)
 
 
 @pytest.mark.parametrize("limit", [0, 501])
