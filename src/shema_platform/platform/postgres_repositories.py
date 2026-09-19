@@ -4,6 +4,7 @@ import json
 from uuid import uuid4
 
 from shema_platform.application.ai import AIRun
+from shema_platform.application.ai import AIRun
 from shema_platform.application.ports import (
     AIRunRepository,
     AuditRepository,
@@ -370,7 +371,15 @@ class PostgresOutboxRepository(OutboxRepository):
             update outbox_event
             set published_at = coalesce(published_at, now())
             where event_id = %s
-            returning event_id, event_type, aggregate_type, aggregate_id, payload, occurred_at, published_at
+            returning (
+                event_id,
+                event_type,
+                aggregate_type,
+                aggregate_id,
+                payload,
+                occurred_at,
+                published_at
+            )
             """,
             (event_id,),
         )
@@ -382,7 +391,15 @@ class PostgresOutboxRepository(OutboxRepository):
     def _get(self, event_id: str) -> OutboxEvent | None:
         cursor = self._connection.execute(
             """
-            select event_id, event_type, aggregate_type, aggregate_id, payload, occurred_at, published_at
+            select (
+                event_id,
+                event_type,
+                aggregate_type,
+                aggregate_id,
+                payload,
+                occurred_at,
+                published_at
+            )
             from outbox_event
             where event_id = %s
             """,
