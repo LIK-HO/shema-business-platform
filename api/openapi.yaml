@@ -1,0 +1,386 @@
+openapi: 3.1.0
+info:
+  title: Shema Business Platform Canonical API
+  version: 1.4.0
+  description: Canonical application boundary shared by Web, PWA and Android.
+servers:
+  - url: /api
+security:
+  - bearerAuth: []
+paths:
+  /v1/search:
+    post:
+      operationId: searchCompanies
+      summary: Execute canonical company search
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SearchRequest' }
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SearchResponse' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /v1/discovery/evaluate:
+    post:
+      operationId: evaluateDiscovery
+      summary: Resolve identity and qualification state
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DiscoveryRequest' }
+      responses:
+        '200':
+          description: Discovery result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DiscoveryResponse' }
+        '423': { $ref: '#/components/responses/ReviewRequired' }
+  /v1/intelligence/research:
+    post:
+      operationId: runResearch
+      summary: Run policy-routed intelligence research
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ResearchRequest' }
+      responses:
+        '200':
+          description: Traceable research result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResearchResponse' }
+        '423': { $ref: '#/components/responses/ReviewRequired' }
+        '429': { $ref: '#/components/responses/RateLimitError' }
+  /v1/commercial-actions:
+    post:
+      operationId: createCommercialAction
+      summary: Create a gated commercial action
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CommercialActionCreateRequest' }
+      responses:
+        '201':
+          description: Commercial action created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommercialAction' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '423': { $ref: '#/components/responses/ReviewRequired' }
+  /v1/commercial-actions/{actionId}/send:
+    post:
+      operationId: sendCommercialAction
+      summary: Send a READY commercial action through its adapter
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CommercialActionSendRequest' }
+      responses:
+        '200':
+          description: External communication accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationResult' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+        '423': { $ref: '#/components/responses/ReviewRequired' }
+  /v1/orders:
+    post:
+      operationId: createOrder
+      summary: Create an order from a sent or completed commercial action
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderCreateRequest' }
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+        '423': { $ref: '#/components/responses/ReviewRequired' }
+  /v1/orders/{orderId}:
+    get:
+      operationId: getOrder
+      summary: Read canonical order state
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Canonical order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+  /v1/economics/{entityRef}:
+    get:
+      operationId: getEconomicLineage
+      summary: Read traceable economic entries
+      parameters:
+        - $ref: '#/components/parameters/EntityRef'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Economic lineage
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EconomicResponse' }
+  /v1/diagnostics:
+    get:
+      operationId: getDiagnostics
+      summary: Read operator-safe diagnostics
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Diagnostics snapshot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DiagnosticsResponse' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema: { type: string }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8 }
+    ActionId:
+      name: actionId
+      in: path
+      required: true
+      schema: { type: string }
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema: { type: string }
+    EntityRef:
+      name: entityRef
+      in: path
+      required: true
+      schema: { type: string }
+  responses:
+    ForbiddenError:
+      description: Authorization or policy denial
+      content:
+        application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } }
+    ValidationError:
+      description: Validation failure
+      content:
+        application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } }
+    ConflictError:
+      description: Idempotency or state conflict
+      content:
+        application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } }
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } }
+    ReviewRequired:
+      description: Quarantined or review-required state
+      content:
+        application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } }
+    RateLimitError:
+      description: Budget or rate limit
+      content:
+        application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } }
+  schemas:
+    SearchRequest:
+      type: object
+      required: [region, industries]
+      properties:
+        region: { type: string }
+        industries: { type: array, minItems: 1, items: { type: string } }
+        limit: { type: integer, minimum: 1, maximum: 500, default: 50 }
+        selectionLevel: { type: string, enum: [candidate, identified, verified] }
+    SearchResponse:
+      type: object
+      required: [results, correlationId]
+      properties:
+        results: { type: array, items: { $ref: '#/components/schemas/SearchHit' } }
+        correlationId: { type: string }
+    SearchHit:
+      type: object
+      required: [candidateRef, name, region, industries, sourceRef, selectionLevel]
+      properties:
+        candidateRef: { type: string }
+        name: { type: string }
+        region: { type: string }
+        industries: { type: array, items: { type: string } }
+        sourceRef: { type: string }
+        taxId: { type: [string, 'null'] }
+        registrationId: { type: [string, 'null'] }
+        contactRefs: { type: array, items: { type: string } }
+        selectionLevel: { type: string, enum: [candidate, identified, verified] }
+    DiscoveryRequest:
+      type: object
+      required: [candidateRef, serviceFit, economicFit]
+      properties:
+        candidateRef: { type: string }
+        serviceFit: { type: boolean }
+        economicFit: { type: boolean }
+    DiscoveryResponse:
+      type: object
+      required: [candidateRef, qualification]
+      properties:
+        candidateRef: { type: string }
+        identityRef: { type: [string, 'null'] }
+        qualification: { type: string, enum: [qualified, review, rejected] }
+        reasons: { type: array, items: { type: string } }
+    ResearchRequest:
+      type: object
+      required: [subjectRef, companyType, depth, query]
+      properties:
+        subjectRef: { type: string }
+        companyType: { type: string }
+        depth: { type: string, enum: [R1_IDENTITY, R2_CONTEXT, R3_DEEP, R4_INVESTIGATIVE] }
+        query: { type: string }
+    ResearchResponse:
+      type: object
+      required: [subjectRef, evidence]
+      properties:
+        subjectRef: { type: string }
+        evidence: { type: array, items: { $ref: '#/components/schemas/EvidenceRef' } }
+    EvidenceRef:
+      type: object
+      required: [evidenceId, claim, sourceRef, trustLevel, confidence]
+      properties:
+        evidenceId: { type: string }
+        claim: { type: string }
+        sourceRef: { type: string }
+        trustLevel: { type: string }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+    CommercialActionCreateRequest:
+      type: object
+      required: [identityId, contactRef, channel, evidenceRefs]
+      properties:
+        identityId: { type: string }
+        contactRef: { type: string }
+        channel: { type: string }
+        evidenceRefs: { type: array, minItems: 1, items: { type: string } }
+    CommercialAction:
+      type: object
+      required: [actionId, identityId, contactRef, channel, status]
+      properties:
+        actionId: { type: string }
+        identityId: { type: string }
+        contactRef: { type: string }
+        channel: { type: string }
+        status: { type: string, enum: [draft, ready, sent, failed, completed, cancelled] }
+    CommercialActionSendRequest:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1 }
+    CommunicationResult:
+      type: object
+      required: [actionId, channel, externalMessageId, accepted]
+      properties:
+        actionId: { type: string }
+        channel: { type: string }
+        externalMessageId: { type: string }
+        accepted: { type: boolean }
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount: { type: string }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+    OrderLine:
+      type: object
+      required: [lineId, description, quantity, unitPrice]
+      properties:
+        lineId: { type: string }
+        description: { type: string }
+        quantity: { type: string }
+        unitPrice: { $ref: '#/components/schemas/Money' }
+    OrderCreateRequest:
+      type: object
+      required: [actionId, lines]
+      properties:
+        actionId: { type: string }
+        lines: { type: array, minItems: 1, items: { $ref: '#/components/schemas/OrderLine' } }
+    Order:
+      type: object
+      required: [orderId, identityId, sourceActionId, status, lines]
+      properties:
+        orderId: { type: string }
+        identityId: { type: string }
+        sourceActionId: { type: string }
+        status: { type: string, enum: [draft, confirmed, in_progress, completed, cancelled, failed] }
+        lines: { type: array, items: { $ref: '#/components/schemas/OrderLine' } }
+    EconomicEntry:
+      type: object
+      required: [entryId, entityRef, kind, amount, sourceRef, occurredAt]
+      properties:
+        entryId: { type: string }
+        entityRef: { type: string }
+        kind: { type: string, enum: [provider_cost, ai_cost, order_cost, revenue, adjustment] }
+        amount: { $ref: '#/components/schemas/Money' }
+        sourceRef: { type: string }
+        occurredAt: { type: string, format: date-time }
+    EconomicResponse:
+      type: object
+      required: [entityRef, entries]
+      properties:
+        entityRef: { type: string }
+        entries: { type: array, items: { $ref: '#/components/schemas/EconomicEntry' } }
+    DiagnosticsResponse:
+      type: object
+      required: [healthy, checks]
+      properties:
+        healthy: { type: boolean }
+        checks:
+          type: array
+          items:
+            type: object
+            required: [checkId, status]
+            properties:
+              checkId: { type: string }
+              status: { type: string, enum: [pass, warn, fail] }
+              message: { type: string }
+    ErrorEnvelope:
+      type: object
+      required: [code, message, correlationId]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        correlationId: { type: string }
+        details: { type: object, additionalProperties: true }
