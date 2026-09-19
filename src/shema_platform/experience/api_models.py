@@ -14,7 +14,10 @@ class SearchRequest(APIModel):
     region: str
     industries: list[str] = Field(min_length=1)
     limit: int = Field(default=50, ge=1, le=500)
-    selection_level: Literal["candidate", "identified", "verified"] = Field(default="candidate", alias="selectionLevel")
+    selection_level: Literal["candidate", "identified", "verified"] = Field(
+        default="candidate",
+        alias="selectionLevel",
+    )
 
 
 class SearchHitResponse(APIModel):
@@ -22,11 +25,13 @@ class SearchHitResponse(APIModel):
     name: str
     region: str
     industries: list[str]
-    source_ref: str = Field(alias="sourceRef") = Field(alias="sourceRef")
+    source_ref: str = Field(alias="sourceRef")
     tax_id: str | None = Field(default=None, alias="taxId")
     registration_id: str | None = Field(default=None, alias="registrationId")
     contact_refs: list[str] = Field(default_factory=list, alias="contactRefs")
-    selection_level: Literal["candidate", "identified", "verified"]
+    selection_level: Literal["candidate", "identified", "verified"] = Field(
+        alias="selectionLevel",
+    )
 
 
 class SearchResponse(APIModel):
@@ -35,16 +40,16 @@ class SearchResponse(APIModel):
 
 
 class DiscoveryRequest(APIModel):
-    candidate_ref: str
+    candidate_ref: str = Field(alias="candidateRef")
     service_fit: bool = Field(alias="serviceFit")
     economic_fit: bool = Field(alias="economicFit")
 
 
 class DiscoveryResponse(APIModel):
-    candidate_ref: str
-    identity_ref: str = Field(alias="entityRef") | None = Field(default=None, alias="identityRef")
+    candidate_ref: str = Field(alias="candidateRef")
+    identity_ref: str | None = Field(default=None, alias="identityRef")
     qualification: Literal["qualified", "review", "rejected"]
-    reasons: list[str] = []
+    reasons: list[str] = Field(default_factory=list)
 
 
 class ResearchRequest(APIModel):
@@ -57,27 +62,27 @@ class ResearchRequest(APIModel):
 class EvidenceRef(APIModel):
     evidence_id: str = Field(alias="evidenceId")
     claim: str
-    source_ref: str
+    source_ref: str = Field(alias="sourceRef")
     trust_level: str = Field(alias="trustLevel")
     confidence: float = Field(ge=0, le=1)
 
 
 class ResearchResponse(APIModel):
-    subject_ref: str
+    subject_ref: str = Field(alias="subjectRef")
     evidence: list[EvidenceRef]
 
 
 class CommercialActionCreateRequest(APIModel):
     identity_id: str = Field(alias="identityId")
-    contact_ref: str
+    contact_ref: str = Field(alias="contactRef")
     channel: str
     evidence_refs: list[str] = Field(min_length=1, alias="evidenceRefs")
 
 
 class CommercialActionResponse(APIModel):
-    action_id: str = Field(alias="actionId") = Field(alias="actionId")
-    identity_id: str
-    contact_ref: str
+    action_id: str = Field(alias="actionId")
+    identity_id: str = Field(alias="identityId")
+    contact_ref: str = Field(alias="contactRef")
     channel: str
     status: Literal["draft", "ready", "sent", "failed", "completed", "cancelled"]
 
@@ -87,7 +92,7 @@ class CommercialActionSendRequest(APIModel):
 
 
 class CommunicationResult(APIModel):
-    action_id: str
+    action_id: str = Field(alias="actionId")
     channel: str
     external_message_id: str = Field(alias="externalMessageId")
     accepted: bool
@@ -106,13 +111,13 @@ class OrderLineResponse(APIModel):
 
 
 class OrderCreateRequest(APIModel):
-    action_id: str
+    action_id: str = Field(alias="actionId")
     lines: list[OrderLineResponse] = Field(min_length=1)
 
 
 class OrderResponse(APIModel):
     order_id: str = Field(alias="orderId")
-    identity_id: str
+    identity_id: str = Field(alias="identityId")
     source_action_id: str = Field(alias="sourceActionId")
     status: Literal[
         "draft",
@@ -127,7 +132,7 @@ class OrderResponse(APIModel):
 
 class EconomicEntryResponse(APIModel):
     entry_id: str = Field(alias="entryId")
-    entity_ref: str
+    entity_ref: str = Field(alias="entityRef")
     kind: Literal[
         "provider_cost",
         "ai_cost",
@@ -136,12 +141,12 @@ class EconomicEntryResponse(APIModel):
         "adjustment",
     ]
     amount: MoneyResponse
-    source_ref: str
+    source_ref: str = Field(alias="sourceRef")
     occurred_at: datetime = Field(alias="occurredAt")
 
 
 class EconomicResponse(APIModel):
-    entity_ref: str
+    entity_ref: str = Field(alias="entityRef")
     entries: list[EconomicEntryResponse]
 
 
@@ -159,5 +164,5 @@ class DiagnosticsResponse(APIModel):
 class ErrorEnvelope(APIModel):
     code: str
     message: str
-    correlation_id: str
+    correlation_id: str = Field(alias="correlationId")
     details: dict[str, object] | None = None
