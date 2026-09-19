@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Annotated, Protocol
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, FastAPI, Header, Path, Request, Security
@@ -37,10 +37,6 @@ from shema_platform.foundation.errors import (
     PolicyDenied,
     QuarantineRequired,
 )
-
-
-BEARER_SECURITY = HTTPBearer(auto_error=False)
-BEARER_DEPENDENCY = Security(BEARER_SECURITY)
 
 
 class ApplicationUnavailable(RuntimeError):
