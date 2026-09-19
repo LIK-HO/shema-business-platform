@@ -7,6 +7,8 @@ from typing import Protocol, Self
 class DBCursor(Protocol):
     def fetchone(self) -> tuple[object, ...] | None: ...
 
+    def fetchall(self) -> list[tuple[object, ...]]: ...
+
 
 class DBConnection(Protocol):
     """Minimal DB-API contract required by the platform."""
