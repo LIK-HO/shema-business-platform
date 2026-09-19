@@ -45,7 +45,11 @@ class PolicyEngine:
             if context.evidence_required and context.evidence_level < 2:
                 return PolicyDecision(Decision.REVIEW, "ai_task_needs_evidence")
 
-        if context.action in {"commercial_action", "order_create"}:
+        if context.action in {
+            "commercial_action",
+            "commercial_action_send",
+            "order_create",
+        }:
             if context.actor_trust_level < 2:
                 return PolicyDecision(Decision.DENY, "actor_not_trusted")
             if context.resource_trust_level < 2:
