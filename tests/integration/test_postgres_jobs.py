@@ -141,3 +141,45 @@ def test_postgres_job_retry_advances_attempt_after_reclaim() -> None:
 
         connection.execute("delete from job_execution where job_id = %s", (job_id,))
         connection.commit()
+
+
+def test_postgres_job_lease_can_be_renewed_only_before_expiry() -> None:
+    job_id = f"job:{uuid4()}"
+    idempotency_key = f"job-idem:{uuid4()}"
+    available_at = datetime.now(UTC)
+
+    record = JobRecord(
+        execution=JobExecution(
+            job_id=job_id,
+            job_type="integration.renew",
+            attempt=1,
+            state=JobState.QUEUED,
+            idempotency_key=idempotency_key,
+        ),
+        payload={},
+        available_at=available_at,
+    )
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        prepare_database(connection)
+        repository = PostgresJobRepository(connection)
+        repository.enqueue(record)
+
+        claimed = repository.claim_next(
+            "worker-1",
+            lease_seconds=10,
+            now=available_at,
+        )
+        assert claimed is not None
+
+        renewed = repository.renew(
+            job_id,
+            "worker-1",
+            lease_seconds=60,
+            now=available_at + timedelta(seconds=5),
+        )
+        assert renewed.execution.lease is not None
+        assert renewed.execution.lease.worker_id == "worker-1"
+
+        connection.execute("delete from job_execution where job_id = %s", (job_id,))
+        connection.commit()
