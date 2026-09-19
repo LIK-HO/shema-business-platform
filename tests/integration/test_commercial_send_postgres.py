@@ -90,11 +90,12 @@ def test_postgres_commercial_send_workflow_round_trip() -> None:
             PolicyEngine(),
         )
 
+        idempotency_key = f"send:{uuid4()}"
         result = workflow.execute(
             actor=Actor("operator-1", trust_level=2),
             action_id=action.action_id,
             body="Здравствуйте",
-            idempotency_key=f"send:{uuid4()}",
+            idempotency_key=idempotency_key,
         )
         assert result.accepted
 
@@ -102,9 +103,7 @@ def test_postgres_commercial_send_workflow_round_trip() -> None:
             loaded = check.commercial_actions.get(action.action_id)
             assert loaded is not None
             assert loaded.status.value == "sent"
-            assert check.idempotency.get(
-                result.external_message_id.replace("external:", "send:")
-            ) is not None
+            assert check.idempotency.get(idempotency_key) is not None
             assert len(check.outbox.pending()) == 1
 
         with psycopg.connect(DATABASE_URL) as cleanup:
