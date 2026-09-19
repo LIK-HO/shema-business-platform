@@ -38,10 +38,10 @@ def test_postgres_uow_commits_all_boundaries_together() -> None:
     with psycopg.connect(DATABASE_URL) as setup:
         apply_migration(setup, "0001_foundation.sql")
         setup.commit()
-
-    factory = lambda: PostgresUnitOfWork(
-        lambda: psycopg.connect(DATABASE_URL)
-    )
+    def factory() -> PostgresUnitOfWork:
+        return PostgresUnitOfWork(
+            lambda: psycopg.connect(DATABASE_URL)
+        )
 
     with factory() as uow:
         uow.identities.add(identity)
