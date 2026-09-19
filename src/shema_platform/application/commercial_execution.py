@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-
 from hashlib import sha256
 
 from shema_platform.application.communication import (
@@ -12,8 +11,7 @@ from shema_platform.application.ports import UnitOfWork
 from shema_platform.domain.commercial_action import CommercialActionStatus
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.errors import IdempotencyConflict, QuarantineRequired
-from shema_platform.foundation.outbox import OutboxEvent
-from shema_platform.foundation.outbox import utc_now
+from shema_platform.foundation.outbox import OutboxEvent, utc_now
 
 
 class CommercialActionSendWorkflow:
@@ -33,8 +31,7 @@ class CommercialActionSendWorkflow:
         body: str,
         idempotency_key: str,
     ) -> str:
-        payload = "
-".join((action_id, idempotency_key, body))
+        payload = "\n".join((action_id, idempotency_key, body))
         return sha256(payload.encode("utf-8")).hexdigest()
 
     def execute(
