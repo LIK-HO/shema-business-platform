@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import uuid4
 
-from fastapi import APIRouter, FastAPI, Header, Path, Request
+from fastapi import APIRouter, Depends, FastAPI, Header, Path, Request, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -24,6 +25,12 @@ from shema_platform.experience.api_models import (
     ResearchResponse,
     SearchRequest,
     SearchResponse,
+)
+
+from shema_platform.foundation.authentication import (
+    AuthenticatedActor,
+    AuthenticationPort,
+    AuthenticationRequired,
 )
 from shema_platform.foundation.errors import (
     AuthorizationError,
@@ -105,13 +112,39 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class AuthenticationMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path in {"/docs", "/redoc", "/openapi.json"}:
+            return await call_next(request)
+
+        authenticator: AuthenticationPort | None = request.app.state.authenticator
+        if authenticator is None:
+            raise ApplicationUnavailable
+
+        try:
+            actor = authenticator.authenticate(
+                request.headers.get("Authorization")
+            )
+        except AuthenticationRequired:
+            return _error(
+                request,
+                status_code=401,
+                code="authentication_required",
+                message="Authentication required",
+            )
+
+        request.state.actor = actor
+        return await call_next(request)
+
+
 def _context(
     request: Request,
     idempotency_key: str | None,
 ) -> RequestContext:
+    actor: AuthenticatedActor = request.state.actor
     return RequestContext(
         correlation_id=request.state.correlation_id,
-        actor_id=request.headers.get("X-Actor-Id"),
+        actor_id=actor.actor_id,
         idempotency_key=idempotency_key,
     )
 
@@ -139,6 +172,7 @@ def _error(
 
 def create_app(
     application: APIApplication | None = None,
+    authenticator: AuthenticationPort | None = None,
     *,
     enable_docs: bool = True,
 ) -> FastAPI:
@@ -150,7 +184,29 @@ def create_app(
         redoc_url="/redoc" if enable_docs else None,
     )
     app.state.application = application
+    app.state.authenticator = authenticator
+    app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(CorrelationMiddleware)
+
+    bearer = HTTPBearer(auto_error=False)
+
+    async def require_bearer(
+        credentials: HTTPAuthorizationCredentials | None = Security(bearer),
+    ) -> None:
+        if credentials is None:
+            raise AuthenticationRequired
+
+    @app.exception_handler(AuthenticationRequired)
+    async def authentication_required(
+        request: Request,
+        _: AuthenticationRequired,
+    ) -> JSONResponse:
+        return _error(
+            request,
+            status_code=401,
+            code="authentication_required",
+            message="Authentication required",
+        )
 
     @app.exception_handler(ApplicationUnavailable)
     async def application_unavailable(
@@ -230,7 +286,7 @@ def create_app(
             raise ApplicationUnavailable
         return value
 
-    router = APIRouter(prefix="/v1")
+    router = APIRouter(prefix="/v1", dependencies=[Depends(require_bearer)])
 
     @router.post("/search", response_model=SearchResponse)
     async def search(
