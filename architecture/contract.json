@@ -5,10 +5,19 @@
   "transactional_authority": "postgresql",
   "layers": {
     "experience": [],
-    "application": ["domain", "foundation"],
-    "domain": ["foundation"],
+    "application": [
+      "domain",
+      "foundation"
+    ],
+    "domain": [
+      "foundation"
+    ],
     "foundation": [],
-    "adapters": ["application", "domain", "foundation"],
+    "adapters": [
+      "application",
+      "domain",
+      "foundation"
+    ],
     "platform": []
   },
   "persistence": {
@@ -17,18 +26,18 @@
       "evidence",
       "idempotency_key",
       "audit_log",
-      "outbox_event"
-    ],
-    "source_observation": [
-      "search_candidate"
-    ],
-    "uncertain_state": [
-      "quarantine_record",
+      "outbox_event",
       "commercial_action",
       "order_header",
       "order_line",
       "economic_entry",
       "ai_run"
+    ],
+    "source_observation": [
+      "search_candidate"
+    ],
+    "uncertain_state": [
+      "quarantine_record"
     ],
     "migrations": [
       "0001_foundation.sql",
@@ -52,8 +61,17 @@
     "order_requires_sent_or_completed_action"
   ],
   "intelligence": {
-    "research_depths": ["R1", "R2", "R3", "R4"],
-    "source_requirements": ["required", "optional", "prohibited"],
+    "research_depths": [
+      "R1",
+      "R2",
+      "R3",
+      "R4"
+    ],
+    "source_requirements": [
+      "required",
+      "optional",
+      "prohibited"
+    ],
     "budget_dimensions": [
       "provider_calls",
       "source_count",
