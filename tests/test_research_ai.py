@@ -4,9 +4,8 @@ import pytest
 
 from shema_platform.application.ai import (
     AIBudget,
-    AIGateway,
     AIExecutionContext,
-    AIProvider,
+    AIGateway,
     AIRun,
     AITask,
 )
