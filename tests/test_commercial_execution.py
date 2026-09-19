@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 import pytest
 
+from shema_platform.application.commands import Actor
 from shema_platform.application.commercial_execution import CommercialActionSendWorkflow
 from shema_platform.application.communication import (
     CommunicationAdapter,
@@ -11,7 +12,13 @@ from shema_platform.application.communication import (
 )
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.foundation.audit import AuditRecord
-from shema_platform.foundation.errors import IdempotencyConflict
+from shema_platform.foundation.authorization import (
+    AuthorizationSubject,
+    Permission,
+    RBACAuthorizer,
+)
+from shema_platform.foundation.errors import AuthorizationError, IdempotencyConflict
+from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.foundation.idempotency import IdempotencyStore
 from shema_platform.foundation.outbox import OutboxStore
 
@@ -81,7 +88,20 @@ def workflow_parts() -> tuple[CommercialActionSendWorkflow, MemoryUow, MemoryAda
     uow = MemoryUow(actions, IdempotencyStore(), OutboxStore(), MemoryAudit())
     adapter = MemoryAdapter()
     gateway = CommunicationGateway(adapter)
-    workflow = CommercialActionSendWorkflow(lambda: uow, gateway)
+    authorizer = RBACAuthorizer(
+        (
+            AuthorizationSubject(
+                "operator-1",
+                frozenset({Permission.COMMERCIAL_ACTION_SEND}),
+            ),
+        )
+    )
+    workflow = CommercialActionSendWorkflow(
+        lambda: uow,
+        gateway,
+        authorizer,
+        PolicyEngine(),
+    )
     return workflow, uow, adapter
 
 
@@ -89,6 +109,7 @@ def test_send_marks_action_sent_and_publishes_outbox() -> None:
     workflow, uow, adapter = workflow_parts()
 
     result = workflow.execute(
+        actor=Actor("operator-1", trust_level=2),
         action_id="action-1",
         body="Здравствуйте",
         idempotency_key="send-key-1",
@@ -105,11 +126,13 @@ def test_retry_uses_idempotency_without_second_external_call() -> None:
     workflow, uow, adapter = workflow_parts()
 
     first = workflow.execute(
+        actor=Actor("operator-1", trust_level=2),
         action_id="action-1",
         body="Здравствуйте",
         idempotency_key="send-key-1",
     )
     second = workflow.execute(
+        actor=Actor("operator-1", trust_level=2),
         action_id="action-1",
         body="Здравствуйте",
         idempotency_key="send-key-1",
@@ -123,6 +146,7 @@ def test_reusing_key_with_changed_request_is_rejected() -> None:
     workflow, _, adapter = workflow_parts()
 
     workflow.execute(
+        actor=Actor("operator-1", trust_level=2),
         action_id="action-1",
         body="Здравствуйте",
         idempotency_key="send-key-1",
@@ -136,3 +160,16 @@ def test_reusing_key_with_changed_request_is_rejected() -> None:
         )
 
     assert len(adapter.calls) == 1
+
+
+def test_permission_is_required_before_external_effect() -> None:
+    workflow, _, adapter = workflow_parts()
+    with pytest.raises(AuthorizationError, match="permission denied"):
+        workflow.execute(
+            actor=Actor("operator-2", trust_level=2),
+            action_id="action-1",
+            body="Здравствуйте",
+            idempotency_key="send-key-2",
+        )
+
+    assert adapter.calls == []
