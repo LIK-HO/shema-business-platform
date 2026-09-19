@@ -34,6 +34,11 @@ class CommercialAction:
         if not self.evidence_refs:
             raise QuarantineRequired("commercial action requires evidence")
 
+    def validate_for_external_send(self) -> None:
+        if self.status is not CommercialActionStatus.READY:
+            raise QuarantineRequired("commercial action must be ready before external send")
+        self.validate_for_send()
+
     def mark_ready(self) -> CommercialAction:
         self.validate_for_send()
         return CommercialAction(
