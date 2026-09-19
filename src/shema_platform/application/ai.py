@@ -167,6 +167,8 @@ class AIGateway:
             raise ValueError("AI provider returned mismatched prompt_version")
         if tuple(run.input_refs) != tuple(input_refs):
             raise ValueError("AI provider returned mismatched input references")
+        if task.evidence_required and not run.evidence_refs:
+            raise ValueError("AI provider returned no evidence references")
         if task.evidence_required and not set(run.evidence_refs).issubset(evidence_refs):
             raise ValueError("AI provider returned unsupported evidence references")
         if run.tokens < 0 or run.cost < 0 or run.duration_seconds < 0:
