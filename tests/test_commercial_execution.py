@@ -9,13 +9,6 @@ from shema_platform.application.communication import (
     CommunicationSendRequest,
     CommunicationSendResult,
 )
-from shema_platform.application.ports import (
-    CommercialActionRepository,
-    EconomicEntryRepository,
-    EvidenceRepository,
-    IdentityRepository,
-    OrderRepository,
-)
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.errors import IdempotencyConflict
