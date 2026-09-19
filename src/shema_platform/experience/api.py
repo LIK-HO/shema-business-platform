@@ -4,13 +4,10 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import uuid4
 
-from fastapi import APIRouter, FastAPI, Header, Request
+from fastapi import APIRouter, FastAPI, Header, Path, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from shema_platform.application.ai import AITask
-from shema_platform.application.commands import Actor
-from shema_platform.application.ports import UnitOfWork
 from shema_platform.foundation.errors import (
     AuthorizationError,
     IdempotencyConflict,
@@ -73,7 +70,7 @@ class APIApplication(Protocol):
 
     def send_commercial_action(
         self,
-        action_id: str,
+        action_id: str = Path(alias="actionId"),
         request: CommercialActionSendRequest,
         context: RequestContext,
     ) -> CommunicationResult: ...
@@ -210,7 +207,6 @@ def create_app(
     async def search(
         request: Request,
         payload: SearchRequest,
-        x_correlation_id: str | None = Header(default=None),
     ) -> SearchResponse:
         context = _context(request, None)
         return services(request).search(payload, context)
@@ -271,11 +267,11 @@ def create_app(
         return services(request).create_order(payload, _context(request, idempotency_key))
 
     @router.get("/orders/{order_id}", response_model=OrderResponse)
-    async def get_order(request: Request, order_id: str) -> OrderResponse:
+    async def get_order(\n        request: Request,\n        order_id: str = Path(alias="orderId"),\n    ) -> OrderResponse:
         return services(request).get_order(order_id, _context(request, None))
 
     @router.get("/economics/{entity_ref}", response_model=EconomicResponse)
-    async def get_economics(request: Request, entity_ref: str) -> EconomicResponse:
+    async def get_economics(\n        request: Request,\n        entity_ref: str = Path(alias="entityRef"),\n    ) -> EconomicResponse:
         return services(request).get_economics(entity_ref, _context(request, None))
 
     @router.get("/diagnostics", response_model=DiagnosticsResponse)
