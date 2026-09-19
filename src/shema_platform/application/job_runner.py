@@ -8,9 +8,8 @@ from uuid import NAMESPACE_URL, uuid5
 
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.foundation.audit import AuditRecord
-from shema_platform.foundation.errors import IntegrityViolation
 from shema_platform.foundation.jobs import JobRecord, JobState
-from shema_platform.foundation.outbox import OutboxEvent, utc_now
+from shema_platform.foundation.outbox import OutboxEvent
 from shema_platform.foundation.recovery import RetryPolicy
 
 
@@ -89,8 +88,8 @@ class JobRunner:
         if claimed is None:
             return None
 
-        handler = self._handlers.resolve(claimed.execution.job_type)
         try:
+            handler = self._handlers.resolve(claimed.execution.job_type)
             output = handler(claimed)
         except RetryableJobError as exc:
             return self._record_failure(
