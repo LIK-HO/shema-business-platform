@@ -75,6 +75,7 @@ def test_outbox_delivery_is_lease_safe_and_reclaimable() -> None:
         assert len(claimed) == 1
         assert claimed[0].attempt == 1
         assert claimed[0].worker_id == "worker-1"
+        first.commit()
 
         blocked = second_repo.claim_pending(
             "worker-2",
