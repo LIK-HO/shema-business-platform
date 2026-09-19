@@ -88,9 +88,9 @@ def test_quarantine_repository_serializes_payload_as_json() -> None:
 
     statement, parameters = connection.calls[0]
     assert "%s::jsonb" in statement
-    assert parameters[0:3] == (
+    assert parameters[1:4] == (
         "search_candidate",
         "candidate-1",
         "missing_tax_id",
     )
-    assert '"name": "ООО Альфа"' in str(parameters[3])
+    assert '"name": "ООО Альфа"' in str(parameters[4])
