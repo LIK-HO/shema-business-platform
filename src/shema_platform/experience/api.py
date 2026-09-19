@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Annotated, Protocol
+from typing import Protocol
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, FastAPI, Header, Path, Request
+from fastapi import APIRouter, FastAPI, Header, Path, Request
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from shema_platform.experience.api_models import (
@@ -194,17 +193,6 @@ def create_app(
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(CorrelationMiddleware)
 
-    bearer = HTTPBearer(auto_error=False)
-
-    async def require_bearer(
-        credentials: Annotated[
-            HTTPAuthorizationCredentials | None,
-            Depends(bearer),
-        ],
-    ) -> None:
-        if credentials is None:
-            raise AuthenticationRequired
-
     @app.exception_handler(AuthenticationRequired)
     async def authentication_required(
         request: Request,
@@ -295,7 +283,7 @@ def create_app(
             raise ApplicationUnavailable
         return value
 
-    router = APIRouter(prefix="/v1", dependencies=[Depends(require_bearer)])
+    router = APIRouter(prefix="/v1")
 
     @router.post("/search", response_model=SearchResponse)
     async def search(
