@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from shema_platform.domain.commercial_action import CommercialAction
+from shema_platform.domain.economics import EconomicEntry
 from shema_platform.domain.identity import Identity
+from shema_platform.domain.order import Order
 from shema_platform.domain.search import SearchHit
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.evidence import Evidence
@@ -65,3 +68,31 @@ class OutboxRepository(Protocol):
     def pending(self) -> tuple[OutboxEvent, ...]: ...
 
     def mark_published(self, event_id: str) -> OutboxEvent: ...
+
+
+class CommercialActionRepository(Protocol):
+    """Persistence port for commercial action state transitions."""
+
+    def add(self, action: CommercialAction) -> None: ...
+
+    def get(self, action_id: str) -> CommercialAction | None: ...
+
+    def save(self, action: CommercialAction) -> None: ...
+
+
+class OrderRepository(Protocol):
+    """Persistence port for order headers and lines."""
+
+    def add(self, order: Order) -> None: ...
+
+    def get(self, order_id: str) -> Order | None: ...
+
+    def save(self, order: Order) -> None: ...
+
+
+class EconomicEntryRepository(Protocol):
+    """Append-only persistence port for traceable economic entries."""
+
+    def add(self, entry: EconomicEntry) -> None: ...
+
+    def list_for_entity(self, entity_ref: str) -> tuple[EconomicEntry, ...]: ...
