@@ -16,7 +16,6 @@ from shema_platform.platform.postgres_repositories import (
     PostgresOrderRepository,
 )
 
-
 pytestmark = pytest.mark.integration
 
 DATABASE_URL = os.getenv("DATABASE_URL")
