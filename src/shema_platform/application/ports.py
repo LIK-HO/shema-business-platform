@@ -4,6 +4,10 @@ from typing import Protocol
 
 from shema_platform.domain.identity import Identity
 from shema_platform.domain.search import SearchHit
+from shema_platform.foundation.audit import AuditRecord
+from shema_platform.foundation.evidence import Evidence
+from shema_platform.foundation.idempotency import IdempotencyRecord
+from shema_platform.foundation.outbox import OutboxEvent
 
 
 class IdentityRepository(Protocol):
@@ -31,3 +35,33 @@ class QuarantineRepository(Protocol):
         reason_code: str,
         payload: dict[str, object],
     ) -> None: ...
+
+
+class EvidenceRepository(Protocol):
+    """Persistence port for traceable evidence."""
+
+    def add(self, evidence: Evidence) -> None: ...
+
+
+class AuditRepository(Protocol):
+    """Append-only persistence port for application audit records."""
+
+    def append(self, record: AuditRecord) -> None: ...
+
+
+class IdempotencyRepository(Protocol):
+    """Persistence port for critical command idempotency."""
+
+    def reserve(self, key: str, request_hash: str, result_ref: str) -> IdempotencyRecord: ...
+
+    def get(self, key: str) -> IdempotencyRecord | None: ...
+
+
+class OutboxRepository(Protocol):
+    """Persistence port for transactional outbox events."""
+
+    def append(self, event: OutboxEvent) -> OutboxEvent: ...
+
+    def pending(self) -> tuple[OutboxEvent, ...]: ...
+
+    def mark_published(self, event_id: str) -> OutboxEvent: ...
