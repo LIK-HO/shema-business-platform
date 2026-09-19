@@ -13,8 +13,8 @@ if TYPE_CHECKING:
         IdempotencyRepository,
         IdentityRepository,
         OrderRepository,
-        OutboxRepository,
         JobRepository,
+        OutboxRepository,
     )
 
 
@@ -79,8 +79,8 @@ class PostgresUnitOfWork:
             PostgresIdempotencyRepository,
             PostgresIdentityRepository,
             PostgresOrderRepository,
-            PostgresOutboxRepository,
             PostgresJobRepository,
+            PostgresOutboxRepository,
         )
 
         connection = self.connection
