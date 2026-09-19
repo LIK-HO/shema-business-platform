@@ -4,7 +4,7 @@ Commercial Intelligence & Execution OS.
 
 ## v1.4
 
-The repository starts from a modular-monolith foundation.
+The repository contains the approved v1.4 kernel and its integration boundaries.
 
 Current foundation:
 - domain rules are isolated from application and adapters;
