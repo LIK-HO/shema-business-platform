@@ -125,6 +125,52 @@ def test_ai_gateway_validates_provider_result_and_audits_success() -> None:
     assert audit.records[0].outcome == "success"
 
 
+def test_ai_gateway_rejects_missing_evidence_in_provider_result() -> None:
+    class MissingEvidenceProvider(FakeAIProvider):
+        def run(self, task: AITask, *, input_refs: tuple[str, ...]) -> AIRun:
+            result = super().run(task, input_refs=input_refs)
+            return AIRun(
+                run_id=result.run_id,
+                task_id=result.task_id,
+                provider_id=result.provider_id,
+                model=result.model,
+                model_version=result.model_version,
+                prompt_version=result.prompt_version,
+                input_refs=result.input_refs,
+                evidence_refs=(),
+                output=result.output,
+                tokens=result.tokens,
+                cost=result.cost,
+                duration_seconds=result.duration_seconds,
+            )
+
+    audit = MemoryAuditRepository()
+    authorizer = RBACAuthorizer(
+        (
+            AuthorizationSubject(
+                "operator-1",
+                frozenset({Permission.AI_RUN}),
+            ),
+        )
+    )
+    gateway_instance = AIGateway(
+        MissingEvidenceProvider(),
+        authorizer,
+        PolicyEngine(),
+        audit,
+        MemoryAIRunRepository(),
+    )
+
+    with pytest.raises(ValueError, match="no evidence references"):
+        gateway_instance.execute(
+            AITask("task-1", "qualification", "prompt:v1", evidence_required=True),
+            input_refs=("identity:1",),
+            evidence_refs=("evidence:1",),
+            context=context(),
+            budget=budget(),
+        )
+
+
 def test_ai_gateway_rejects_unsupported_evidence_reference() -> None:
     class BadProvider(FakeAIProvider):
         def run(self, task: AITask, *, input_refs: tuple[str, ...]) -> AIRun:
