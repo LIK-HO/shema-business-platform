@@ -1,4 +1,3 @@
-import pytest
 from fastapi.testclient import TestClient
 
 from shema_platform.experience.api import (
@@ -113,6 +112,7 @@ def test_runtime_api_propagates_correlation_id() -> None:
     assert response.status_code == 200
     assert response.headers["X-Correlation-Id"] == "corr-test"
     assert response.json()["correlationId"] == "corr-test"
+    assert "selectionLevel" not in response.json()
 
 
 def test_runtime_api_generates_correlation_id_when_missing() -> None:
