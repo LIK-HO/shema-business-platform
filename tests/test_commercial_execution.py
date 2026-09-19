@@ -62,7 +62,7 @@ class MemoryAdapter(CommunicationAdapter):
 
 @dataclass
 class MemoryUow:
-    actions: MemoryActions
+    commercial_actions: MemoryActions
     idempotency: IdempotencyStore
     outbox: OutboxStore
     audits: MemoryAudit
@@ -116,7 +116,7 @@ def test_send_marks_action_sent_and_publishes_outbox() -> None:
     )
 
     assert result.accepted
-    assert uow.actions.get("action-1").status.value == "sent"
+    assert uow.commercial_actions.get("action-1").status.value == "sent"
     assert len(uow.outbox.pending()) == 1
     assert len(uow.audits.records) == 1
     assert len(adapter.calls) == 1
@@ -154,6 +154,7 @@ def test_reusing_key_with_changed_request_is_rejected() -> None:
 
     with pytest.raises(IdempotencyConflict):
         workflow.execute(
+            actor=Actor("operator-1", trust_level=2),
             action_id="action-1",
             body="Другой текст",
             idempotency_key="send-key-1",
