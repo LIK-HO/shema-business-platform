@@ -57,7 +57,8 @@
     "bounded_retry",
     "durable_job_execution",
     "handler_registry",
-    "job_runner_at_least_once"
+    "job_runner_at_least_once",
+    "outbox_dispatcher"
   ],
   "execution_contracts": [
     "permission_then_policy",
@@ -114,7 +115,9 @@
     "retry_schedule_is_bounded",
     "job_handler_is_idempotent",
     "missing_job_handler_fails_job",
-    "job_runner_is_at_least_once"
+    "job_runner_is_at_least_once",
+    "outbox_publication_is_at_least_once",
+    "external_publisher_deduplicates_by_event_id"
   ],
   "business_loop": [
     "search",
