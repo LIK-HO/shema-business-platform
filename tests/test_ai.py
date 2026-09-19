@@ -17,6 +17,7 @@ from shema_platform.foundation.authorization import (
     RBACAuthorizer,
 )
 from shema_platform.foundation.errors import AuthorizationError
+from shema_platform.foundation.policy import PolicyEngine
 
 
 @dataclass
@@ -58,10 +59,7 @@ def gateway() -> tuple[AIGateway, MemoryAuditRepository]:
             ),
         )
     )
-    return AIGateway(FakeAIProvider(), authorizer, __import__(
-        "shema_platform.foundation.policy",
-        fromlist=["PolicyEngine"],
-    ).PolicyEngine(), audit), audit
+    return AIGateway(FakeAIProvider(), authorizer, PolicyEngine(), audit), audit
 
 
 def context() -> AIExecutionContext:
@@ -145,7 +143,7 @@ def test_ai_gateway_rejects_unsupported_evidence_reference() -> None:
     gateway_instance = AIGateway(
         BadProvider(),
         authorizer,
-        __import__("shema_platform.foundation.policy", fromlist=["PolicyEngine"]).PolicyEngine(),
+        PolicyEngine(),
         audit,
     )
 
