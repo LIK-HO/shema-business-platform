@@ -1,5 +1,5 @@
 -- Alignment migration for audit execution context.
--- Existing foundation migrations remain immutable; context is added forward-only.
+-- Existing foundation migrations remain immutable. Context is added forward-only.
 
 alter table audit_log
     add column if not exists correlation_id text;
