@@ -148,6 +148,7 @@ class UnitOfWork(Protocol):
     audits: AuditRepository
     idempotency: IdempotencyRepository
     outbox: OutboxRepository
+    jobs: JobRepository
     commercial_actions: CommercialActionRepository
     orders: OrderRepository
     economics: EconomicEntryRepository
