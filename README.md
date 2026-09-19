@@ -10,7 +10,7 @@ Current foundation:
 - domain rules are isolated from application and adapters;
 - PostgreSQL is the transactional authority;
 - critical command paths are identity-, policy- and evidence-gated;
-- idempotency, audit, evidence, outbox and bounded retry contracts are first-class;
+- idempotency, audit, evidence, outbox, durable jobs and bounded retry contracts are first-class;
 - research and AI execution have explicit gateway and budget boundaries;
 - MAX is a communication adapter and produces canonical events;
 - Web/PWA/Android clients do not access persistence directly;
@@ -29,3 +29,5 @@ Kernel workstream: docs/V1.4_KERNEL.md
 Kernel checkpoint: docs/V1.4_KERNEL_CHECKPOINT.md
 Machine-readable contract: architecture/contract.json
 Database foundation migration: db/migrations/0001_foundation.sql
+
+Durable execution plane: docs/V1.4_EXECUTION_PLANE.md
