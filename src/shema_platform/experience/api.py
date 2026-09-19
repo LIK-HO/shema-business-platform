@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Annotated, Protocol
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, FastAPI, Header, Path, Request, Security
+from fastapi import APIRouter, Depends, FastAPI, Header, Path, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -199,7 +199,7 @@ def create_app(
     async def require_bearer(
         credentials: Annotated[
             HTTPAuthorizationCredentials | None,
-            Security(bearer),
+            Depends(bearer),
         ],
     ) -> None:
         if credentials is None:
