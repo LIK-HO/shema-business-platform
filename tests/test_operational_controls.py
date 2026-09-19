@@ -1,6 +1,5 @@
-from uuid import UUID
-
 import pytest
+from uuid import UUID
 
 from shema_platform.foundation.configuration import (
     ConfigurationRegistry,
@@ -9,8 +8,8 @@ from shema_platform.foundation.configuration import (
 from shema_platform.foundation.correlation import CorrelationContext
 from shema_platform.foundation.diagnostics import (
     DiagnosticResult,
-    DiagnosticStatus,
     Diagnostics,
+    DiagnosticStatus,
 )
 
 
