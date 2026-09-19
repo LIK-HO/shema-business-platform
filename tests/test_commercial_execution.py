@@ -119,6 +119,7 @@ def test_send_marks_action_sent_and_publishes_outbox() -> None:
     assert uow.commercial_actions.get("action-1").status.value == "sent"
     assert len(uow.outbox.pending()) == 1
     assert len(uow.audits.records) == 1
+    assert uow.audits.records[0].actor_id == "operator-1"
     assert len(adapter.calls) == 1
 
 
