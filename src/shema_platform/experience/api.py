@@ -47,7 +47,8 @@ class ApplicationUnavailable(RuntimeError):
 @dataclass(frozen=True, slots=True)
 class RequestContext:
     correlation_id: str
-    actor_id: str | None
+    actor_id: str
+    trust_level: int
     idempotency_key: str | None
 
 
@@ -119,7 +120,12 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
         authenticator: AuthenticationPort | None = request.app.state.authenticator
         if authenticator is None:
-            raise ApplicationUnavailable
+            return _error(
+                request,
+                status_code=503,
+                code="application_unavailable",
+                message="Authentication services are not configured",
+            )
 
         try:
             actor = authenticator.authenticate(
@@ -145,6 +151,7 @@ def _context(
     return RequestContext(
         correlation_id=request.state.correlation_id,
         actor_id=actor.actor_id,
+        trust_level=actor.trust_level,
         idempotency_key=idempotency_key,
     )
 
