@@ -316,10 +316,14 @@ class PostgresOutboxRepository(OutboxRepository):
             )
             values (%s, %s, %s, %s, %s::jsonb, %s)
             on conflict (event_id) do nothing
-            returning (
-                event_id, event_type, aggregate_type, aggregate_id,
-                payload, occurred_at, published_at
-            )
+            returning
+                event_id,
+                event_type,
+                aggregate_type,
+                aggregate_id,
+                payload,
+                occurred_at,
+                published_at
             """,
             (
                 event.event_id,
@@ -353,10 +357,14 @@ class PostgresOutboxRepository(OutboxRepository):
     def pending(self) -> tuple[OutboxEvent, ...]:
         cursor = self._connection.execute(
             """
-            select (
-                event_id, event_type, aggregate_type, aggregate_id,
-                payload, occurred_at, published_at
-            )
+            select
+                event_id,
+                event_type,
+                aggregate_type,
+                aggregate_id,
+                payload,
+                occurred_at,
+                published_at
             from outbox_event
             where published_at is null
             order by occurred_at, event_id
