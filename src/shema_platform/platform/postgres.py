@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Protocol, Self
 
 if TYPE_CHECKING:
     from shema_platform.application.ports import (
+        AIRunRepository,
         AuditRepository,
         CommercialActionRepository,
         EconomicEntryRepository,
@@ -13,7 +14,6 @@ if TYPE_CHECKING:
         IdempotencyRepository,
         OrderRepository,
         OutboxRepository,
-        AIRunRepository,
     )
 
 
