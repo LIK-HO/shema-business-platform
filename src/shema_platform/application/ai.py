@@ -81,6 +81,29 @@ class AIRun:
     cost: float
     duration_seconds: float
 
+    def __post_init__(self) -> None:
+        if not all(
+            value.strip()
+            for value in (
+                self.run_id,
+                self.task_id,
+                self.provider_id,
+                self.model,
+                self.model_version,
+                self.prompt_version,
+            )
+        ):
+            raise ValueError("AI run identifiers and model versions are required")
+        if self.tokens < 0:
+            raise ValueError("AI run tokens cannot be negative")
+        if (
+            not isfinite(self.cost)
+            or self.cost < 0
+            or not isfinite(self.duration_seconds)
+            or self.duration_seconds < 0
+        ):
+            raise ValueError("AI run usage metrics are invalid")
+
 
 class AIProvider(Protocol):
     provider_id: str
