@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isfinite
 from datetime import UTC, datetime
+from math import isfinite
 from typing import Protocol
 from uuid import uuid4
 
