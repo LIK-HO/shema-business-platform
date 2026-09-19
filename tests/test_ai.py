@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from shema_platform.application.ai import AIGateway, AIRun, AITask, AIProvider
+from shema_platform.application.ai import AIGateway, AIProvider, AIRun, AITask
 
 
 @dataclass
