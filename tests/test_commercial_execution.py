@@ -12,8 +12,8 @@ from shema_platform.application.communication import (
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.errors import IdempotencyConflict
-from shema_platform.foundation.idempotency import IdempotencyRecord, IdempotencyStore
-from shema_platform.foundation.outbox import OutboxEvent, OutboxStore
+from shema_platform.foundation.idempotency import IdempotencyStore
+from shema_platform.foundation.outbox import OutboxStore
 
 
 @dataclass
