@@ -46,7 +46,8 @@
       "0003_audit_context.sql",
       "0004_commercial_execution.sql",
       "0005_ai_run.sql",
-      "0006_job_execution.sql"
+      "0006_job_execution.sql",
+      "0007_outbox_delivery_lease.sql"
     ]
   },
   "operational_controls": [
@@ -60,7 +61,9 @@
     "job_runner_at_least_once",
     "outbox_dispatcher",
     "lease_renewal",
-    "lease_aware_handler_context"
+    "lease_aware_handler_context",
+    "outbox_delivery_lease",
+    "outbox_reclaim"
   ],
   "execution_contracts": [
     "permission_then_policy",
@@ -70,7 +73,10 @@
     "job_claim_requires_lease",
     "worker_completion_requires_current_lease",
     "bounded_retry_schedule",
-    "handler_renewal_uses_job_repository_only"
+    "handler_renewal_uses_job_repository_only",
+    "outbox_claim_requires_lease",
+    "outbox_mark_published_requires_current_lease",
+    "expired_outbox_leases_are_reclaimable"
   ],
   "intelligence": {
     "research_depths": [
@@ -123,7 +129,11 @@
     "external_publisher_deduplicates_by_event_id",
     "lease_can_be_renewed_only_by_current_worker",
     "expired_leases_cannot_be_renewed",
-    "handler_renews_only_through_job_context"
+    "handler_renews_only_through_job_context",
+    "outbox_delivery_attempt_is_durable",
+    "outbox_claim_is_concurrency_safe",
+    "outbox_mark_published_requires_current_lease",
+    "expired_outbox_leases_are_reclaimable"
   ],
   "business_loop": [
     "search",

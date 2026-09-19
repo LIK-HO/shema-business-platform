@@ -1,15 +1,16 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from shema_platform.application.outbox_dispatcher import OutboxDispatcher
 from shema_platform.foundation.audit import AuditRecord
-from shema_platform.foundation.outbox import OutboxEvent, OutboxStatus
+from shema_platform.foundation.outbox import OutboxDelivery, OutboxEvent, OutboxStatus
 
 
 class FakeOutbox:
     def __init__(self, events: list[OutboxEvent]) -> None:
         self.events = {event.event_id: event for event in events}
+        self.leases: dict[str, OutboxDelivery] = {}
 
     def append(self, event: OutboxEvent) -> OutboxEvent:
         self.events[event.event_id] = event
@@ -21,7 +22,43 @@ class FakeOutbox:
             if event.status is OutboxStatus.PENDING
         )
 
-    def mark_published(self, event_id: str) -> OutboxEvent:
+    def claim_pending(
+        self,
+        worker_id: str,
+        *,
+        lease_seconds: int,
+        now: datetime,
+        limit: int,
+    ) -> tuple[OutboxDelivery, ...]:
+        selected: list[OutboxDelivery] = []
+        for event in sorted(self.pending(), key=lambda item: item.event_id):
+            lease = self.leases.get(event.event_id)
+            if lease is not None and lease.lease_until > now:
+                continue
+            delivery = OutboxDelivery(
+                event=event,
+                attempt=(lease.attempt + 1 if lease is not None else 1),
+                worker_id=worker_id,
+                lease_until=now + timedelta(seconds=lease_seconds),
+            )
+            self.leases[event.event_id] = delivery
+            selected.append(delivery)
+            if len(selected) >= limit:
+                break
+        return tuple(selected)
+
+    def mark_published(
+        self,
+        event_id: str,
+        worker_id: str,
+        *,
+        now: datetime,
+    ) -> OutboxEvent:
+        delivery = self.leases.get(event_id)
+        if delivery is None or delivery.worker_id != worker_id:
+            raise RuntimeError("delivery lease rejected")
+        if delivery.lease_until <= now:
+            raise RuntimeError("delivery lease expired")
         event = self.events[event_id]
         published = OutboxEvent(
             event_id=event.event_id,
@@ -33,6 +70,7 @@ class FakeOutbox:
             status=OutboxStatus.PUBLISHED,
         )
         self.events[event_id] = published
+        self.leases.pop(event_id, None)
         return published
 
 
@@ -46,9 +84,6 @@ class FakeUoW:
 
     def __exit__(self, exc_type, exc_value, traceback) -> bool:
         return False
-
-    def append(self, record: AuditRecord) -> None:
-        self.audits.append(record)
 
 
 class FakePublisher:
@@ -96,7 +131,7 @@ def test_outbox_dispatcher_leaves_event_pending_when_publish_fails() -> None:
         dispatcher.dispatch_pending()
 
     assert outbox.events["event-1"].status is OutboxStatus.PENDING
-    assert uow.audits == []
+    assert uow.audits[0].action == "outbox.publish_failed"
 
 
 def test_outbox_dispatcher_respects_limit() -> None:
@@ -108,3 +143,32 @@ def test_outbox_dispatcher_respects_limit() -> None:
     assert dispatcher.dispatch_pending(limit=1) == 1
     assert publisher.published == ["event-1"]
     assert outbox.events["event-2"].status is OutboxStatus.PENDING
+
+
+def test_outbox_lease_prevents_second_worker_until_expiry() -> None:
+    outbox = FakeOutbox([make_event()])
+    first = outbox.claim_pending(
+        "worker-1",
+        lease_seconds=10,
+        now=datetime(2026, 9, 20, 0, 0, tzinfo=UTC),
+        limit=1,
+    )
+    assert len(first) == 1
+
+    second = outbox.claim_pending(
+        "worker-2",
+        lease_seconds=10,
+        now=datetime(2026, 9, 20, 0, 1, tzinfo=UTC),
+        limit=1,
+    )
+    assert second == ()
+
+    reclaimed = outbox.claim_pending(
+        "worker-2",
+        lease_seconds=10,
+        now=datetime(2026, 9, 20, 0, 10, tzinfo=UTC),
+        limit=1,
+    )
+    assert len(reclaimed) == 1
+    assert reclaimed[0].attempt == 2
+    assert reclaimed[0].worker_id == "worker-2"

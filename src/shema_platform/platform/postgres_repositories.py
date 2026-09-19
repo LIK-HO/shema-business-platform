@@ -30,7 +30,7 @@ from shema_platform.foundation.errors import IdempotencyConflict, IntegrityViola
 from shema_platform.foundation.evidence import Evidence
 from shema_platform.foundation.idempotency import IdempotencyRecord
 from shema_platform.foundation.jobs import JobExecution, JobLease, JobRecord, JobState
-from shema_platform.foundation.outbox import OutboxEvent, OutboxStatus
+from shema_platform.foundation.outbox import OutboxDelivery, OutboxEvent, OutboxStatus
 from shema_platform.platform.postgres import DBConnection
 
 
@@ -301,7 +301,7 @@ class PostgresIdempotencyRepository(IdempotencyRepository):
 
 
 class PostgresOutboxRepository(OutboxRepository):
-    """Transactional outbox adapter sharing the caller's database transaction."""
+    """Transactional outbox adapter with lease-safe external delivery."""
 
     def __init__(self, connection: DBConnection) -> None:
         self._connection = connection
@@ -338,7 +338,6 @@ class PostgresOutboxRepository(OutboxRepository):
             ),
         )
         row = cursor.fetchone()
-
         if row is not None:
             return self._to_event(row)
 
@@ -352,9 +351,7 @@ class PostgresOutboxRepository(OutboxRepository):
             or existing.payload != event.payload
             or existing.occurred_at != event.occurred_at
         ):
-            raise IntegrityViolation(
-                "outbox event_id collision with different event"
-            )
+            raise IntegrityViolation("outbox event_id collision with different event")
         return existing
 
     def pending(self) -> tuple[OutboxEvent, ...]:
@@ -375,12 +372,81 @@ class PostgresOutboxRepository(OutboxRepository):
         )
         return tuple(self._to_event(row) for row in cursor.fetchall())
 
-    def mark_published(self, event_id: str) -> OutboxEvent:
+    def claim_pending(
+        self,
+        worker_id: str,
+        *,
+        lease_seconds: int,
+        now: datetime,
+        limit: int,
+    ) -> tuple[OutboxDelivery, ...]:
+        if not worker_id.strip():
+            raise ValueError("worker_id is required")
+        if lease_seconds <= 0:
+            raise ValueError("lease_seconds must be > 0")
+        if limit < 1:
+            raise ValueError("limit must be >= 1")
+        if now.tzinfo is None:
+            raise ValueError("now must be timezone-aware")
+
+        cursor = self._connection.execute(
+            """
+            with candidates as (
+                select event_id
+                from outbox_event
+                where published_at is null
+                  and occurred_at <= %s
+                  and (
+                      delivery_lease_until is null
+                      or delivery_lease_until <= %s
+                  )
+                order by occurred_at, event_id
+                for update skip locked
+                limit %s
+            )
+            update outbox_event as event
+            set delivery_attempt = event.delivery_attempt + 1,
+                delivery_worker_id = %s,
+                delivery_lease_until = %s + (%s * interval '1 second')
+            from candidates
+            where event.event_id = candidates.event_id
+            returning
+                event.event_id,
+                event.event_type,
+                event.aggregate_type,
+                event.aggregate_id,
+                event.payload,
+                event.occurred_at,
+                event.published_at,
+                event.delivery_attempt,
+                event.delivery_worker_id,
+                event.delivery_lease_until
+            """,
+            (now, now, limit, worker_id, now, lease_seconds),
+        )
+        return tuple(self._to_delivery(row) for row in cursor.fetchall())
+
+    def mark_published(
+        self,
+        event_id: str,
+        worker_id: str,
+        *,
+        now: datetime,
+    ) -> OutboxEvent:
+        if not worker_id.strip():
+            raise ValueError("worker_id is required")
+        if now.tzinfo is None:
+            raise ValueError("now must be timezone-aware")
         cursor = self._connection.execute(
             """
             update outbox_event
-            set published_at = coalesce(published_at, now())
+            set published_at = %s,
+                delivery_worker_id = null,
+                delivery_lease_until = null
             where event_id = %s
+              and published_at is null
+              and delivery_worker_id = %s
+              and delivery_lease_until > %s
             returning
                 event_id,
                 event_type,
@@ -390,11 +456,13 @@ class PostgresOutboxRepository(OutboxRepository):
                 occurred_at,
                 published_at
             """,
-            (event_id,),
+            (now, event_id, worker_id, now),
         )
         row = cursor.fetchone()
         if row is None:
-            raise KeyError(f"unknown outbox event: {event_id}")
+            raise IntegrityViolation(
+                "outbox publication rejected: missing or expired delivery lease"
+            )
         return self._to_event(row)
 
     def _get(self, event_id: str) -> OutboxEvent | None:
@@ -418,7 +486,15 @@ class PostgresOutboxRepository(OutboxRepository):
 
     @staticmethod
     def _to_event(row: tuple[object, ...]) -> OutboxEvent:
-        event_id, event_type, aggregate_type, aggregate_id, payload, occurred_at, published_at = row
+        (
+            event_id,
+            event_type,
+            aggregate_type,
+            aggregate_id,
+            payload,
+            occurred_at,
+            published_at,
+        ) = row
         return OutboxEvent(
             event_id=str(event_id),
             event_type=str(event_type),
@@ -431,6 +507,41 @@ class PostgresOutboxRepository(OutboxRepository):
                 if published_at is not None
                 else OutboxStatus.PENDING
             ),
+        )
+
+    @staticmethod
+    def _to_delivery(row: tuple[object, ...]) -> OutboxDelivery:
+        (
+            event_id,
+            event_type,
+            aggregate_type,
+            aggregate_id,
+            payload,
+            occurred_at,
+            published_at,
+            delivery_attempt,
+            delivery_worker_id,
+            delivery_lease_until,
+        ) = row
+        if delivery_worker_id is None or delivery_lease_until is None:
+            raise IntegrityViolation("outbox delivery lease disappeared")
+        return OutboxDelivery(
+            event=OutboxEvent(
+                event_id=str(event_id),
+                event_type=str(event_type),
+                aggregate_type=str(aggregate_type),
+                aggregate_id=str(aggregate_id),
+                payload=dict(payload),
+                occurred_at=occurred_at,
+                status=(
+                    OutboxStatus.PUBLISHED
+                    if published_at is not None
+                    else OutboxStatus.PENDING
+                ),
+            ),
+            attempt=int(delivery_attempt),
+            worker_id=str(delivery_worker_id),
+            lease_until=delivery_lease_until,
         )
 
 

@@ -12,7 +12,7 @@ from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.evidence import Evidence
 from shema_platform.foundation.idempotency import IdempotencyRecord
 from shema_platform.foundation.jobs import JobRecord
-from shema_platform.foundation.outbox import OutboxEvent
+from shema_platform.foundation.outbox import OutboxDelivery, OutboxEvent
 
 if TYPE_CHECKING:
     from shema_platform.application.ai import AIRun
@@ -66,13 +66,28 @@ class IdempotencyRepository(Protocol):
 
 
 class OutboxRepository(Protocol):
-    """Persistence port for transactional outbox events."""
+    """Persistence port for transactional outbox events and delivery leases."""
 
     def append(self, event: OutboxEvent) -> OutboxEvent: ...
 
     def pending(self) -> tuple[OutboxEvent, ...]: ...
 
-    def mark_published(self, event_id: str) -> OutboxEvent: ...
+    def claim_pending(
+        self,
+        worker_id: str,
+        *,
+        lease_seconds: int,
+        now: datetime,
+        limit: int,
+    ) -> tuple[OutboxDelivery, ...]: ...
+
+    def mark_published(
+        self,
+        event_id: str,
+        worker_id: str,
+        *,
+        now: datetime,
+    ) -> OutboxEvent: ...
 
 
 class JobRepository(Protocol):

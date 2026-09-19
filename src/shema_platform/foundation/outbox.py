@@ -24,6 +24,24 @@ class OutboxEvent:
     status: OutboxStatus = OutboxStatus.PENDING
 
 
+@dataclass(frozen=True, slots=True)
+class OutboxDelivery:
+    """Immutable event plus the current worker delivery lease."""
+
+    event: OutboxEvent
+    attempt: int
+    worker_id: str
+    lease_until: datetime
+
+    def __post_init__(self) -> None:
+        if self.attempt < 1:
+            raise ValueError("attempt must be >= 1")
+        if not self.worker_id.strip():
+            raise ValueError("worker_id is required")
+        if self.lease_until.tzinfo is None:
+            raise ValueError("lease_until must be timezone-aware")
+
+
 class OutboxStore:
     """In-memory reference implementation of the transactional outbox contract."""
 
