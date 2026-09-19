@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.economics import EconomicEntry
 from shema_platform.domain.identity import Identity
 from shema_platform.domain.order import Order
 from shema_platform.domain.search import SearchHit
+
+if TYPE_CHECKING:
+    from shema_platform.application.ai import AIRun
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.evidence import Evidence
 from shema_platform.foundation.idempotency import IdempotencyRecord
@@ -96,3 +99,11 @@ class EconomicEntryRepository(Protocol):
     def add(self, entry: EconomicEntry) -> None: ...
 
     def list_for_entity(self, entity_ref: str) -> tuple[EconomicEntry, ...]: ...
+
+
+class AIRunRepository(Protocol):
+    """Persistence port for traceable AI execution results."""
+
+    def add(self, run: AIRun) -> None: ...
+
+    def get(self, run_id: str) -> AIRun | None: ...
