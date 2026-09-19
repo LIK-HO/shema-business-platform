@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import Callable
 
 from shema_platform.application.job_runner import (
     JobHandlerRegistry,
@@ -23,7 +24,13 @@ class FakeJobs:
     def get(self, job_id: str) -> JobRecord | None:
         return self.record if self.record.execution.job_id == job_id else None
 
-    def claim_next(self, worker_id: str, *, lease_seconds: int, now: datetime) -> JobRecord | None:
+    def claim_next(
+        self,
+        worker_id: str,
+        *,
+        lease_seconds: int,
+        now: datetime,
+    ) -> JobRecord | None:
         if self.record.execution.state is not JobState.QUEUED:
             return None
         lease = JobLease(
@@ -92,13 +99,34 @@ class FakeJobs:
         return self.record
 
 
+class FakeOutbox:
+    def __init__(self) -> None:
+        self.events: list[OutboxEvent] = []
+
+    def append(self, event: OutboxEvent) -> OutboxEvent:
+        self.events.append(event)
+        return event
+
+    def pending(self) -> tuple[OutboxEvent, ...]:
+        return tuple(self.events)
+
+    def mark_published(self, event_id: str) -> OutboxEvent:
+        raise AssertionError("not needed")
+
+
+class FakeAudits:
+    def __init__(self) -> None:
+        self.records: list[AuditRecord] = []
+
+    def append(self, record: AuditRecord) -> None:
+        self.records.append(record)
+
+
 class FakeUoW:
     def __init__(self, jobs: FakeJobs) -> None:
         self.jobs = jobs
-        self.outbox_events: list[OutboxEvent] = []
-        self.audit_records: list[AuditRecord] = []
-        self.outbox = self
-        self.audits = self
+        self.outbox = FakeOutbox()
+        self.audits = FakeAudits()
 
     def __enter__(self) -> "FakeUoW":
         return self
@@ -106,21 +134,8 @@ class FakeUoW:
     def __exit__(self, exc_type, exc_value, traceback) -> bool:
         return False
 
-    def append(self, event: OutboxEvent) -> OutboxEvent:
-        self.outbox_events.append(event)
-        return event
 
-    def pending(self) -> tuple[OutboxEvent, ...]:
-        return tuple(self.outbox_events)
-
-    def mark_published(self, event_id: str) -> OutboxEvent:
-        raise AssertionError("not needed")
-
-    def add(self, record: AuditRecord) -> None:
-        self.audit_records.append(record)
-
-
-def make_uow() -> tuple[FakeUoW, callable]:
+def make_uow() -> tuple[FakeUoW, Callable[[], FakeUoW]]:
     now = datetime.now(UTC)
     record = JobRecord(
         execution=JobExecution(
@@ -150,8 +165,8 @@ def test_job_runner_completes_and_publishes() -> None:
     assert result is not None
     assert result.state is JobState.SUCCEEDED
     assert result.output == {"ok": True}
-    assert [event.event_type for event in uow.outbox_events] == ["job.completed"]
-    assert [audit.outcome for audit in uow.audit_records] == ["success"]
+    assert [event.event_type for event in uow.outbox.events] == ["job.completed"]
+    assert [audit.outcome for audit in uow.audits.records] == ["success"]
 
 
 def test_job_handler_can_renew_its_lease_without_database_access() -> None:
@@ -163,7 +178,9 @@ def test_job_handler_can_renew_its_lease_without_database_access() -> None:
         assert context.worker_id == "worker-1"
         renewed = context.renew_lease(now=renew_at)
         assert renewed.execution.lease is not None
-        assert renewed.execution.lease.leased_until == renew_at + timedelta(seconds=60)
+        assert renewed.execution.lease.leased_until == renew_at + timedelta(
+            seconds=60
+        )
         assert context.record == renewed
         return {"renewed": True}
 
@@ -191,7 +208,11 @@ def test_job_runner_schedules_retryable_failure() -> None:
     runner = JobRunner(
         factory,
         JobHandlerRegistry({"test.job": fail}),
-        retry_policy=RetryPolicy(max_attempts=3, initial_delay_seconds=2, max_delay_seconds=10),
+        retry_policy=RetryPolicy(
+            max_attempts=3,
+            initial_delay_seconds=2,
+            max_delay_seconds=10,
+        ),
         worker_id="worker-1",
     )
 
@@ -201,12 +222,14 @@ def test_job_runner_schedules_retryable_failure() -> None:
     assert result.state is JobState.RETRYABLE_FAILURE
     assert result.error == "temporary"
     assert uow.jobs.record.last_error == "temporary"
-    assert uow.outbox_events[0].event_type == "job.retry_scheduled"
+    assert uow.outbox.events[0].event_type == "job.retry_scheduled"
 
 
 def test_job_runner_terminates_permanent_failure_and_missing_handler() -> None:
     for registry in (
-        JobHandlerRegistry({"test.job": lambda _: (_ for _ in ()).throw(PermanentJobError("bad"))}),
+        JobHandlerRegistry(
+            {"test.job": lambda _: (_ for _ in ()).throw(PermanentJobError("bad"))}
+        ),
         JobHandlerRegistry({}),
     ):
         uow, factory = make_uow()
@@ -217,4 +240,4 @@ def test_job_runner_terminates_permanent_failure_and_missing_handler() -> None:
         assert result is not None
         assert result.state is JobState.FAILED
         assert uow.jobs.record.execution.state is JobState.FAILED
-        assert uow.outbox_events[0].event_type == "job.failed"
+        assert uow.outbox.events[0].event_type == "job.failed"
