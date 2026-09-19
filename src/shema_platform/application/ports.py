@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, Self
 
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.economics import EconomicEntry
@@ -107,3 +107,21 @@ class AIRunRepository(Protocol):
     def add(self, run: AIRun) -> None: ...
 
     def get(self, run_id: str) -> AIRun | None: ...
+
+
+class UnitOfWork(Protocol):
+    """Application transaction boundary shared by all durable workflows."""
+
+    identities: IdentityRepository
+    evidence: EvidenceRepository
+    audits: AuditRepository
+    idempotency: IdempotencyRepository
+    outbox: OutboxRepository
+    commercial_actions: CommercialActionRepository
+    orders: OrderRepository
+    economics: EconomicEntryRepository
+    ai_runs: AIRunRepository
+
+    def __enter__(self) -> Self: ...
+
+    def __exit__(self, exc_type: object, exc_value: object, traceback: object) -> bool: ...
