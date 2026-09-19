@@ -6,10 +6,10 @@ from shema_platform.experience.api import (
     create_app,
 )
 from shema_platform.experience.api_models import (
-    CommunicationResult,
     CommercialActionCreateRequest,
     CommercialActionResponse,
     CommercialActionSendRequest,
+    CommunicationResult,
     DiagnosticCheck,
     DiagnosticsResponse,
     DiscoveryRequest,
