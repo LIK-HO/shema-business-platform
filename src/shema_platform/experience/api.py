@@ -5,8 +5,8 @@ from typing import Protocol
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, FastAPI, Header, Path, Request, Security
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from shema_platform.experience.api_models import (
@@ -38,6 +38,9 @@ from shema_platform.foundation.errors import (
     PolicyDenied,
     QuarantineRequired,
 )
+
+
+BEARER_SECURITY = HTTPBearer(auto_error=False)
 
 
 class ApplicationUnavailable(RuntimeError):
@@ -195,10 +198,8 @@ def create_app(
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(CorrelationMiddleware)
 
-    bearer = HTTPBearer(auto_error=False)
-
     async def require_bearer(
-        credentials: HTTPAuthorizationCredentials | None = Security(bearer),
+        credentials: HTTPAuthorizationCredentials | None = Security(BEARER_SECURITY),
     ) -> None:
         if credentials is None:
             raise AuthenticationRequired
