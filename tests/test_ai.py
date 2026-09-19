@@ -21,6 +21,17 @@ from shema_platform.foundation.policy import PolicyEngine
 
 
 @dataclass
+class MemoryAIRunRepository:
+    records: list[AIRun] = field(default_factory=list)
+
+    def add(self, run: AIRun) -> None:
+        self.records.append(run)
+
+    def get(self, run_id: str) -> AIRun | None:
+        return next((run for run in self.records if run.run_id == run_id), None)
+
+
+@dataclass
 class MemoryAuditRepository:
     records: list[AuditRecord] = field(default_factory=list)
 
@@ -49,8 +60,9 @@ class FakeAIProvider(AIProvider):
         )
 
 
-def gateway() -> tuple[AIGateway, MemoryAuditRepository]:
+def gateway() -> tuple[AIGateway, MemoryAuditRepository, MemoryAIRunRepository]:
     audit = MemoryAuditRepository()
+    runs = MemoryAIRunRepository()
     authorizer = RBACAuthorizer(
         (
             AuthorizationSubject(
@@ -59,7 +71,7 @@ def gateway() -> tuple[AIGateway, MemoryAuditRepository]:
             ),
         )
     )
-    return AIGateway(FakeAIProvider(), authorizer, PolicyEngine(), audit), audit
+    return AIGateway(FakeAIProvider(), authorizer, PolicyEngine(), audit, runs), audit, runs
 
 
 def context() -> AIExecutionContext:
@@ -79,7 +91,7 @@ def budget() -> AIBudget:
 
 
 def test_ai_gateway_requires_evidence_for_critical_task() -> None:
-    gateway_instance, _ = gateway()
+    gateway_instance, _, _ = gateway()
     task = AITask("task-1", "qualification", "prompt:v1", evidence_required=True)
 
     with pytest.raises(ValueError, match="evidence is required"):
@@ -93,7 +105,7 @@ def test_ai_gateway_requires_evidence_for_critical_task() -> None:
 
 
 def test_ai_gateway_validates_provider_result_and_audits_success() -> None:
-    gateway_instance, audit = gateway()
+    gateway_instance, audit, runs = gateway()
     task = AITask("task-1", "qualification", "prompt:v1", evidence_required=True)
 
     run = gateway_instance.execute(
@@ -108,6 +120,7 @@ def test_ai_gateway_validates_provider_result_and_audits_success() -> None:
     assert run.prompt_version == task.prompt_version
     assert run.tokens == 12
     assert len(audit.records) == 1
+    assert runs.records == [run]
     assert audit.records[0].action == "ai.run"
     assert audit.records[0].outcome == "success"
 
@@ -145,6 +158,7 @@ def test_ai_gateway_rejects_unsupported_evidence_reference() -> None:
         authorizer,
         PolicyEngine(),
         audit,
+        MemoryAIRunRepository(),
     )
 
     with pytest.raises(ValueError, match="unsupported evidence"):
@@ -165,6 +179,7 @@ def test_ai_gateway_requires_explicit_permission_before_provider() -> None:
         authorizer,
         PolicyEngine(),
         audit,
+        MemoryAIRunRepository(),
     )
 
     with pytest.raises(AuthorizationError, match="permission denied"):
@@ -180,7 +195,7 @@ def test_ai_gateway_requires_explicit_permission_before_provider() -> None:
 
 
 def test_ai_gateway_enforces_budget() -> None:
-    gateway_instance, audit = gateway()
+    gateway_instance, audit, _ = gateway()
 
     with pytest.raises(ValueError, match="token budget"):
         gateway_instance.execute(
