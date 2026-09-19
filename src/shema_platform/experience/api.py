@@ -194,8 +194,13 @@ def create_app(
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(CorrelationMiddleware)
 
+    bearer = HTTPBearer(auto_error=False)
+
     async def require_bearer(
-        credentials: HTTPAuthorizationCredentials | None = BEARER_DEPENDENCY,
+        credentials: Annotated[
+            HTTPAuthorizationCredentials | None,
+            Security(bearer),
+        ],
     ) -> None:
         if credentials is None:
             raise AuthenticationRequired
