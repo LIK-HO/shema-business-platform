@@ -12,7 +12,7 @@ from shema_platform.application.ports import UnitOfWork
 from shema_platform.domain.commercial_action import CommercialActionStatus
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
-from shema_platform.foundation.errors import IdempotencyConflict, QuarantineRequired
+from shema_platform.foundation.errors import IdempotencyConflict, PolicyDenied, QuarantineRequired
 from shema_platform.foundation.outbox import OutboxEvent, utc_now
 from shema_platform.foundation.policy import Decision, PolicyContext, PolicyEngine
 
