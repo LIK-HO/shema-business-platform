@@ -152,7 +152,10 @@ class ProviderGateway:
                 raise ValueError("provider result has mismatched provider_id")
             if result.source_class != capability.source_class:
                 raise ValueError("provider result has mismatched source_class")
-            if allowed_source_classes is not None and result.source_class not in allowed_source_classes:
+            if (
+                allowed_source_classes is not None
+                and result.source_class not in allowed_source_classes
+            ):
                 raise ValueError("provider result uses a prohibited source class")
             if len(result.source_refs) > max_sources:
                 raise ValueError("provider exceeded requested source limit")
