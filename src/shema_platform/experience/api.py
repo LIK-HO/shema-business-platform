@@ -8,13 +8,6 @@ from fastapi import APIRouter, FastAPI, Header, Path, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from shema_platform.foundation.errors import (
-    AuthorizationError,
-    IdempotencyConflict,
-    PolicyDenied,
-    QuarantineRequired,
-)
-
 from shema_platform.experience.api_models import (
     CommunicationResult,
     CommercialActionCreateRequest,
@@ -31,6 +24,12 @@ from shema_platform.experience.api_models import (
     ResearchResponse,
     SearchRequest,
     SearchResponse,
+)
+from shema_platform.foundation.errors import (
+    AuthorizationError,
+    IdempotencyConflict,
+    PolicyDenied,
+    QuarantineRequired,
 )
 
 
@@ -70,7 +69,7 @@ class APIApplication(Protocol):
 
     def send_commercial_action(
         self,
-        action_id: str = Path(alias="actionId"),
+        action_id: str,
         request: CommercialActionSendRequest,
         context: RequestContext,
     ) -> CommunicationResult: ...
@@ -81,7 +80,11 @@ class APIApplication(Protocol):
         context: RequestContext,
     ) -> OrderResponse: ...
 
-    def get_order(self, order_id: str, context: RequestContext) -> OrderResponse: ...
+    def get_order(
+        self,
+        order_id: str,
+        context: RequestContext,
+    ) -> OrderResponse: ...
 
     def get_economics(
         self,
@@ -106,10 +109,9 @@ def _context(
     request: Request,
     idempotency_key: str | None,
 ) -> RequestContext:
-    actor_id = request.headers.get("X-Actor-Id")
     return RequestContext(
         correlation_id=request.state.correlation_id,
-        actor_id=actor_id,
+        actor_id=request.headers.get("X-Actor-Id"),
         idempotency_key=idempotency_key,
     )
 
@@ -130,7 +132,7 @@ def _error(
     )
     return JSONResponse(
         status_code=status_code,
-        content=payload.model_dump(mode="json"),
+        content=payload.model_dump(mode="json", by_alias=True),
         headers={"X-Correlation-Id": request.state.correlation_id},
     )
 
@@ -151,7 +153,10 @@ def create_app(
     app.add_middleware(CorrelationMiddleware)
 
     @app.exception_handler(ApplicationUnavailable)
-    async def application_unavailable(request: Request, _: ApplicationUnavailable):
+    async def application_unavailable(
+        request: Request,
+        _: ApplicationUnavailable,
+    ) -> JSONResponse:
         return _error(
             request,
             status_code=503,
@@ -160,7 +165,10 @@ def create_app(
         )
 
     @app.exception_handler(AuthorizationError)
-    async def authorization_error(request: Request, _: AuthorizationError):
+    async def authorization_error(
+        request: Request,
+        _: AuthorizationError,
+    ) -> JSONResponse:
         return _error(
             request,
             status_code=403,
@@ -169,7 +177,10 @@ def create_app(
         )
 
     @app.exception_handler(PolicyDenied)
-    async def policy_denied(request: Request, exc: PolicyDenied):
+    async def policy_denied(
+        request: Request,
+        exc: PolicyDenied,
+    ) -> JSONResponse:
         return _error(
             request,
             status_code=403,
@@ -178,7 +189,10 @@ def create_app(
         )
 
     @app.exception_handler(IdempotencyConflict)
-    async def idempotency_conflict(request: Request, exc: IdempotencyConflict):
+    async def idempotency_conflict(
+        request: Request,
+        exc: IdempotencyConflict,
+    ) -> JSONResponse:
         return _error(
             request,
             status_code=409,
@@ -187,11 +201,26 @@ def create_app(
         )
 
     @app.exception_handler(QuarantineRequired)
-    async def quarantine_required(request: Request, exc: QuarantineRequired):
+    async def quarantine_required(
+        request: Request,
+        exc: QuarantineRequired,
+    ) -> JSONResponse:
         return _error(
             request,
             status_code=423,
             code="review_required",
+            message=str(exc),
+        )
+
+    @app.exception_handler(KeyError)
+    async def not_found(
+        request: Request,
+        exc: KeyError,
+    ) -> JSONResponse:
+        return _error(
+            request,
+            status_code=404,
+            code="not_found",
             message=str(exc),
         )
 
@@ -208,8 +237,7 @@ def create_app(
         request: Request,
         payload: SearchRequest,
     ) -> SearchResponse:
-        context = _context(request, None)
-        return services(request).search(payload, context)
+        return services(request).search(payload, _context(request, None))
 
     @router.post("/discovery/evaluate", response_model=DiscoveryResponse)
     async def discovery(
@@ -243,12 +271,12 @@ def create_app(
         )
 
     @router.post(
-        "/commercial-actions/{action_id}/send",
+        "/commercial-actions/{actionId}/send",
         response_model=CommunicationResult,
     )
     async def send_commercial_action(
         request: Request,
-        action_id: str,
+        action_id: str = Path(alias="actionId"),
         payload: CommercialActionSendRequest,
         idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> CommunicationResult:
@@ -266,12 +294,18 @@ def create_app(
     ) -> OrderResponse:
         return services(request).create_order(payload, _context(request, idempotency_key))
 
-    @router.get("/orders/{order_id}", response_model=OrderResponse)
-    async def get_order(\n        request: Request,\n        order_id: str = Path(alias="orderId"),\n    ) -> OrderResponse:
+    @router.get("/orders/{orderId}", response_model=OrderResponse)
+    async def get_order(
+        request: Request,
+        order_id: str = Path(alias="orderId"),
+    ) -> OrderResponse:
         return services(request).get_order(order_id, _context(request, None))
 
-    @router.get("/economics/{entity_ref}", response_model=EconomicResponse)
-    async def get_economics(\n        request: Request,\n        entity_ref: str = Path(alias="entityRef"),\n    ) -> EconomicResponse:
+    @router.get("/economics/{entityRef}", response_model=EconomicResponse)
+    async def get_economics(
+        request: Request,
+        entity_ref: str = Path(alias="entityRef"),
+    ) -> EconomicResponse:
         return services(request).get_economics(entity_ref, _context(request, None))
 
     @router.get("/diagnostics", response_model=DiagnosticsResponse)
