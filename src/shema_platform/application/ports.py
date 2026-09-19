@@ -7,13 +7,13 @@ from shema_platform.domain.economics import EconomicEntry
 from shema_platform.domain.identity import Identity
 from shema_platform.domain.order import Order
 from shema_platform.domain.search import SearchHit
-
-if TYPE_CHECKING:
-    from shema_platform.application.ai import AIRun
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.evidence import Evidence
 from shema_platform.foundation.idempotency import IdempotencyRecord
 from shema_platform.foundation.outbox import OutboxEvent
+
+if TYPE_CHECKING:
+    from shema_platform.application.ai import AIRun
 
 
 class IdentityRepository(Protocol):
