@@ -5,14 +5,21 @@ from uuid import uuid4
 
 from shema_platform.application.ports import (
     AuditRepository,
+    CommercialActionRepository,
+    EconomicEntryRepository,
     EvidenceRepository,
     IdentityRepository,
     IdempotencyRepository,
+    OrderRepository,
     OutboxRepository,
     QuarantineRepository,
     SearchCandidateRepository,
 )
+from shema_platform.domain.commercial_action import CommercialAction, CommercialActionStatus
+from shema_platform.domain.economics import EconomicEntry, EconomicKind
 from shema_platform.domain.identity import Identity, IdentityState
+from shema_platform.domain.money import Money
+from shema_platform.domain.order import Order, OrderLine, OrderStatus
 from shema_platform.domain.search import SearchHit
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.errors import IdempotencyConflict, IntegrityViolation
@@ -391,4 +398,239 @@ class PostgresOutboxRepository(OutboxRepository):
                 if published_at is not None
                 else OutboxStatus.PENDING
             ),
+        )
+
+
+class PostgresCommercialActionRepository(CommercialActionRepository):
+    """Durable commercial action state; no external calls occur here."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, action: CommercialAction) -> None:
+        self._connection.execute(
+            """
+            insert into commercial_action (
+                action_id, identity_id, contact_ref, channel, evidence_refs, status
+            )
+            values (%s, %s, %s, %s, %s::jsonb, %s)
+            """,
+            (
+                action.action_id,
+                action.identity_id,
+                action.contact_ref,
+                action.channel,
+                json.dumps(action.evidence_refs, ensure_ascii=False),
+                action.status.value,
+            ),
+        )
+
+    def get(self, action_id: str) -> CommercialAction | None:
+        cursor = self._connection.execute(
+            """
+            select action_id, identity_id, contact_ref, channel, evidence_refs, status
+            from commercial_action
+            where action_id = %s
+            """,
+            (action_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        action_id_value, identity_id, contact_ref, channel, evidence_refs, status = row
+        return CommercialAction(
+            action_id=str(action_id_value),
+            identity_id=str(identity_id),
+            contact_ref=str(contact_ref),
+            channel=str(channel),
+            evidence_refs=tuple(str(ref) for ref in evidence_refs),
+            status=CommercialActionStatus(str(status)),
+        )
+
+    def save(self, action: CommercialAction) -> None:
+        cursor = self._connection.execute(
+            """
+            update commercial_action
+            set identity_id = %s,
+                contact_ref = %s,
+                channel = %s,
+                evidence_refs = %s::jsonb,
+                status = %s,
+                updated_at = now()
+            where action_id = %s
+            returning action_id
+            """,
+            (
+                action.identity_id,
+                action.contact_ref,
+                action.channel,
+                json.dumps(action.evidence_refs, ensure_ascii=False),
+                action.status.value,
+                action.action_id,
+            ),
+        )
+        if cursor.fetchone() is None:
+            raise KeyError(f"unknown commercial action: {action.action_id}")
+
+
+class PostgresOrderRepository(OrderRepository):
+    """Durable order headers and lines with explicit source-action lineage."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, order: Order) -> None:
+        self._connection.execute(
+            """
+            insert into order_header (order_id, identity_id, source_action_id, status)
+            values (%s, %s, %s, %s)
+            """,
+            (
+                order.order_id,
+                order.identity_id,
+                order.source_action_id,
+                order.status.value,
+            ),
+        )
+        self._insert_lines(order)
+
+    def get(self, order_id: str) -> Order | None:
+        cursor = self._connection.execute(
+            """
+            select order_id, identity_id, source_action_id, status
+            from order_header
+            where order_id = %s
+            """,
+            (order_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+
+        line_cursor = self._connection.execute(
+            """
+            select line_id, description, quantity, unit_price, currency
+            from order_line
+            where order_id = %s
+            order by line_id
+            """,
+            (order_id,),
+        )
+        lines = tuple(
+            OrderLine(
+                line_id=str(line_id),
+                description=str(description),
+                quantity=quantity,
+                unit_price=Money(unit_price, str(currency)),
+            )
+            for line_id, description, quantity, unit_price, currency in line_cursor.fetchall()
+        )
+        return Order(
+            order_id=str(row[0]),
+            identity_id=str(row[1]),
+            source_action_id=str(row[2]),
+            lines=lines,
+            status=OrderStatus(str(row[3])),
+        )
+
+    def save(self, order: Order) -> None:
+        cursor = self._connection.execute(
+            """
+            update order_header
+            set identity_id = %s,
+                source_action_id = %s,
+                status = %s,
+                updated_at = now()
+            where order_id = %s
+            returning order_id
+            """,
+            (
+                order.identity_id,
+                order.source_action_id,
+                order.status.value,
+                order.order_id,
+            ),
+        )
+        if cursor.fetchone() is None:
+            raise KeyError(f"unknown order: {order.order_id}")
+
+        self._connection.execute(
+            "delete from order_line where order_id = %s",
+            (order.order_id,),
+        )
+        self._insert_lines(order)
+
+    def _insert_lines(self, order: Order) -> None:
+        for line in order.lines:
+            self._connection.execute(
+                """
+                insert into order_line (
+                    line_id, order_id, description, quantity, unit_price, currency
+                )
+                values (%s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    line.line_id,
+                    order.order_id,
+                    line.description,
+                    line.quantity,
+                    line.unit_price.amount,
+                    line.unit_price.currency,
+                ),
+            )
+
+
+class PostgresEconomicEntryRepository(EconomicEntryRepository):
+    """Append-only economic lineage adapter."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, entry: EconomicEntry) -> None:
+        self._connection.execute(
+            """
+            insert into economic_entry (
+                entry_id, entity_ref, kind, amount, currency, source_ref, occurred_at
+            )
+            values (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                entry.entry_id,
+                entry.entity_ref,
+                entry.kind.value,
+                entry.amount.amount,
+                entry.amount.currency,
+                entry.source_ref,
+                entry.occurred_at,
+            ),
+        )
+
+    def list_for_entity(self, entity_ref: str) -> tuple[EconomicEntry, ...]:
+        cursor = self._connection.execute(
+            """
+            select entry_id, entity_ref, kind, amount, currency, source_ref, occurred_at
+            from economic_entry
+            where entity_ref = %s
+            order by occurred_at, entry_id
+            """,
+            (entity_ref,),
+        )
+        return tuple(
+            EconomicEntry(
+                entry_id=str(entry_id),
+                entity_ref=str(stored_entity_ref),
+                kind=EconomicKind(str(kind)),
+                amount=Money(amount, str(currency)),
+                source_ref=str(source_ref),
+                occurred_at=occurred_at,
+            )
+            for (
+                entry_id,
+                stored_entity_ref,
+                kind,
+                amount,
+                currency,
+                source_ref,
+                occurred_at,
+            ) in cursor.fetchall()
         )
