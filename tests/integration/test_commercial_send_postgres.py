@@ -22,7 +22,6 @@ from shema_platform.foundation.authorization import (
 from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.platform.postgres import PostgresUnitOfWork
 
-
 pytestmark = pytest.mark.integration
 
 DATABASE_URL = os.getenv("DATABASE_URL")
