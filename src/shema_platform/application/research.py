@@ -27,6 +27,7 @@ class ResearchBudget:
 @dataclass(frozen=True, slots=True)
 class ProviderCapability:
     provider_id: str
+    source_class: str
     coverage: frozenset[str]
     cost_per_call: float
     max_requests_per_second: float
@@ -37,6 +38,8 @@ class ProviderCapability:
     def __post_init__(self) -> None:
         if not self.provider_id.strip():
             raise ValueError("provider_id is required")
+        if not self.source_class.strip():
+            raise ValueError("source_class is required")
         if self.cost_per_call < 0 or self.max_requests_per_second <= 0:
             raise ValueError("provider capability has invalid cost/rate limits")
         if self.estimated_tokens_per_call < 0 or self.estimated_latency_seconds < 0:
@@ -46,8 +49,10 @@ class ProviderCapability:
 @dataclass(frozen=True, slots=True)
 class ProviderResult:
     provider_id: str
+    source_class: str
     claims: tuple[str, ...]
     source_refs: tuple[str, ...]
+    confidence: float
     cost: float
     latency_seconds: float
     tokens: int = 0
@@ -55,6 +60,10 @@ class ProviderResult:
     def __post_init__(self) -> None:
         if not self.provider_id.strip():
             raise ValueError("provider_id is required")
+        if not self.source_class.strip():
+            raise ValueError("source_class is required")
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError("confidence must be between 0 and 1")
         if self.cost < 0 or self.latency_seconds < 0 or self.tokens < 0:
             raise ValueError("provider result usage metrics cannot be negative")
         if any(not ref.strip() for ref in self.source_refs):
@@ -72,12 +81,23 @@ class ResearchProvider(Protocol):
 class ProviderGateway:
     """Deterministic provider waterfall with explicit budget enforcement."""
 
-    def select(self, providers: list[ResearchProvider], topic: str) -> list[ResearchProvider]:
+    def select(
+        self,
+        providers: list[ResearchProvider],
+        topic: str,
+        *,
+        allowed_source_classes: frozenset[str] | None = None,
+    ) -> list[ResearchProvider]:
         return sorted(
             (
                 provider
                 for provider in providers
-                if provider.capability.healthy and topic in provider.capability.coverage
+                if provider.capability.healthy
+                and topic in provider.capability.coverage
+                and (
+                    allowed_source_classes is None
+                    or provider.capability.source_class in allowed_source_classes
+                )
             ),
             key=lambda provider: provider.capability.cost_per_call,
         )
@@ -88,6 +108,8 @@ class ProviderGateway:
         topic: str,
         providers: list[ResearchProvider],
         budget: ResearchBudget,
+        *,
+        allowed_source_classes: frozenset[str] | None = None,
     ) -> tuple[ProviderResult, ...]:
         remaining_calls = budget.provider_calls
         remaining_sources = budget.source_count
@@ -96,7 +118,11 @@ class ProviderGateway:
         remaining_time = budget.time_budget_seconds
         results: list[ProviderResult] = []
 
-        for provider in self.select(providers, topic):
+        for provider in self.select(
+            providers,
+            topic,
+            allowed_source_classes=allowed_source_classes,
+        ):
             capability = provider.capability
             if remaining_calls <= 0 or remaining_sources <= 0:
                 break
@@ -109,6 +135,13 @@ class ProviderGateway:
 
             max_sources = min(remaining_sources, 10)
             result = provider.research(query, max_sources=max_sources)
+
+            if result.provider_id != capability.provider_id:
+                raise ValueError("provider result has mismatched provider_id")
+            if result.source_class != capability.source_class:
+                raise ValueError("provider result has mismatched source_class")
+            if allowed_source_classes is not None and result.source_class not in allowed_source_classes:
+                raise ValueError("provider result uses a prohibited source class")
             if len(result.source_refs) > max_sources:
                 raise ValueError("provider exceeded requested source limit")
             if result.cost > remaining_cost:
