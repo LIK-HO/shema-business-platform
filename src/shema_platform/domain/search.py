@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import StrEnum
 
 
@@ -8,6 +9,13 @@ class SelectionLevel(StrEnum):
     CANDIDATE = "candidate"
     IDENTIFIED = "identified"
     VERIFIED = "verified"
+
+    def rank(self) -> int:
+        return {
+            SelectionLevel.CANDIDATE: 1,
+            SelectionLevel.IDENTIFIED: 2,
+            SelectionLevel.VERIFIED: 3,
+        }[self]
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +51,13 @@ class SearchHit:
     tax_id: str | None = None
     registration_id: str | None = None
     contact_refs: tuple[str, ...] = ()
+    selection_level: SelectionLevel = SelectionLevel.CANDIDATE
+    observed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    captured_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+    def __post_init__(self) -> None:
+        if self.captured_at < self.observed_at:
+            raise ValueError("captured_at cannot precede observed_at")
 
 
 class SearchProvider:
@@ -79,6 +94,8 @@ class SearchService:
                 continue
             if not industries.intersection(criteria.industries):
                 continue
+            if hit.selection_level.rank() < criteria.selection_level.rank():
+                continue
 
             dedupe_key = tax_id or candidate_ref
             if dedupe_key in seen:
@@ -95,6 +112,9 @@ class SearchService:
                     tax_id=tax_id,
                     registration_id=registration_id,
                     contact_refs=contact_refs,
+                    selection_level=hit.selection_level,
+                    observed_at=hit.observed_at,
+                    captured_at=hit.captured_at,
                 )
             )
             if len(accepted) >= criteria.limit:
