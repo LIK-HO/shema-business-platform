@@ -40,6 +40,30 @@ class FakeJobs:
         )
         return self.record
 
+    def renew(
+        self,
+        job_id: str,
+        worker_id: str,
+        *,
+        lease_seconds: int,
+        now: datetime,
+    ) -> JobRecord:
+        if self.record.execution.lease is None:
+            raise AssertionError("missing lease")
+        renewed_lease = JobLease(
+            job_id=job_id,
+            worker_id=worker_id,
+            leased_until=now + timedelta(seconds=lease_seconds),
+        )
+        renewed = self.record.execution.renew(renewed_lease, now=now)
+        self.record = JobRecord(
+            execution=renewed,
+            payload=self.record.payload,
+            available_at=self.record.available_at,
+            last_error=self.record.last_error,
+        )
+        return self.record
+
     def complete(self, job_id: str, worker_id: str, *, now: datetime) -> JobRecord:
         self.record = JobRecord(
             execution=self.record.execution.succeed(now),
@@ -117,7 +141,7 @@ def test_job_runner_completes_and_publishes() -> None:
     uow, factory = make_uow()
     runner = JobRunner(
         factory,
-        JobHandlerRegistry({"test.job": lambda record: {"ok": True}}),
+        JobHandlerRegistry({"test.job": lambda context: {"ok": True}}),
         worker_id="worker-1",
     )
 
@@ -130,10 +154,38 @@ def test_job_runner_completes_and_publishes() -> None:
     assert [audit.outcome for audit in uow.audit_records] == ["success"]
 
 
+def test_job_handler_can_renew_its_lease_without_database_access() -> None:
+    uow, factory = make_uow()
+    base = datetime.now(UTC)
+    renew_at = base + timedelta(seconds=30)
+
+    def handler(context) -> dict[str, object]:
+        assert context.worker_id == "worker-1"
+        renewed = context.renew_lease(now=renew_at)
+        assert renewed.execution.lease is not None
+        assert renewed.execution.lease.leased_until == renew_at + timedelta(seconds=60)
+        assert context.record == renewed
+        return {"renewed": True}
+
+    runner = JobRunner(
+        factory,
+        JobHandlerRegistry({"test.job": handler}),
+        lease_seconds=60,
+        worker_id="worker-1",
+        clock=lambda: renew_at,
+    )
+
+    result = runner.run_next(now=base)
+
+    assert result is not None
+    assert result.state is JobState.SUCCEEDED
+    assert result.output == {"renewed": True}
+
+
 def test_job_runner_schedules_retryable_failure() -> None:
     uow, factory = make_uow()
 
-    def fail(_: JobRecord) -> None:
+    def fail(_: object) -> None:
         raise RetryableJobError("temporary")
 
     runner = JobRunner(
