@@ -3,11 +3,11 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from shema_platform.application.commands import Actor
+from shema_platform.application.ports import IdempotencyRepository
 from shema_platform.domain.commercial_action import CommercialAction, CommercialActionStatus
 from shema_platform.domain.order import Order, OrderLine
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
 from shema_platform.foundation.errors import PolicyDenied, QuarantineRequired
-from shema_platform.application.ports import IdempotencyRepository
 from shema_platform.foundation.policy import Decision, PolicyContext, PolicyEngine
 
 
