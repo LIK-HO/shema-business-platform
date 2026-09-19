@@ -74,3 +74,43 @@ def test_job_rejects_expired_lease_at_start() -> None:
 
     with pytest.raises(ValueError, match="expired"):
         job.start(lease)
+
+def test_running_job_can_renew_its_current_worker_lease() -> None:
+    job = queued_job()
+    started_at = datetime.now(UTC)
+    lease = JobLease(
+        job_id="job-1",
+        worker_id="worker-1",
+        leased_until=started_at + timedelta(seconds=30),
+    )
+    running = job.start(lease, now=started_at)
+
+    renewed = JobLease(
+        job_id="job-1",
+        worker_id="worker-1",
+        leased_until=started_at + timedelta(seconds=90),
+    )
+    refreshed = running.renew(renewed, now=started_at + timedelta(seconds=5))
+
+    assert refreshed.state is JobState.RUNNING
+    assert refreshed.lease == renewed
+
+
+def test_running_job_cannot_renew_after_lease_expiry() -> None:
+    now = datetime.now(UTC)
+    lease = JobLease(
+        job_id="job-1",
+        worker_id="worker-1",
+        leased_until=now + timedelta(seconds=1),
+    )
+    running = queued_job().start(lease, now=now)
+
+    with pytest.raises(ValueError, match="expired"):
+        running.renew(
+            JobLease(
+                job_id="job-1",
+                worker_id="worker-1",
+                leased_until=now + timedelta(seconds=90),
+            ),
+            now=now + timedelta(seconds=2),
+        )
