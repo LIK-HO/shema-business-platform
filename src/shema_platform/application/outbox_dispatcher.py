@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import UTC, datetime
 from typing import Protocol
 from uuid import NAMESPACE_URL, uuid5
 
@@ -10,6 +11,8 @@ from shema_platform.foundation.outbox import OutboxEvent, OutboxStatus
 
 
 class OutboxPublisher(Protocol):
+    """External publisher; implementations must deduplicate immutable event_id."""
+
     def publish(self, event: OutboxEvent) -> None: ...
 
 
@@ -49,6 +52,7 @@ class OutboxDispatcher:
                     continue
 
                 delivered = uow.outbox.mark_published(event.event_id)
+                published_at = datetime.now(UTC)
                 uow.audits.append(
                     AuditRecord(
                         audit_id=str(uuid5(NAMESPACE_URL, f"audit:outbox.published:{event.event_id}")),
@@ -57,7 +61,7 @@ class OutboxDispatcher:
                         resource_type="outbox_event",
                         resource_id=event.event_id,
                         outcome="success",
-                        occurred_at=delivered.occurred_at,
+                        occurred_at=published_at,
                         metadata={
                             "event_type": event.event_type,
                             "aggregate_type": event.aggregate_type,
