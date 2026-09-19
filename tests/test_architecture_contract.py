@@ -18,6 +18,11 @@ def test_machine_readable_architecture_contract_exists() -> None:
     assert contract["runtime"] == "modular_monolith"
     assert contract["transactional_authority"] == "postgresql"
     assert "max_is_an_adapter" in contract["critical_invariants"]
+    assert "commercial_action" in contract["persistence"]["canonical"]
+    assert "order_header" in contract["persistence"]["canonical"]
+    assert "economic_entry" in contract["persistence"]["canonical"]
+    assert "ai_run" in contract["persistence"]["canonical"]
+    assert contract["persistence"]["uncertain_state"] == ["quarantine_record"]
 
 
 def test_database_migrations_are_forward_only_and_declared() -> None:
