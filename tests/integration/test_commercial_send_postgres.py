@@ -5,6 +5,7 @@ from uuid import uuid4
 import psycopg
 import pytest
 
+from shema_platform.application.commands import Actor
 from shema_platform.application.commercial_execution import CommercialActionSendWorkflow
 from shema_platform.application.communication import (
     CommunicationAdapter,
@@ -13,6 +14,12 @@ from shema_platform.application.communication import (
     CommunicationSendResult,
 )
 from shema_platform.domain.commercial_action import CommercialAction
+from shema_platform.foundation.authorization import (
+    AuthorizationSubject,
+    Permission,
+    RBACAuthorizer,
+)
+from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.platform.postgres import PostgresUnitOfWork
 
 
@@ -73,9 +80,19 @@ def test_postgres_commercial_send_workflow_round_trip() -> None:
         workflow = CommercialActionSendWorkflow(
             factory,
             CommunicationGateway(FakeAdapter()),
+            RBACAuthorizer(
+                (
+                    AuthorizationSubject(
+                        "operator-1",
+                        frozenset({Permission.COMMERCIAL_ACTION_SEND}),
+                    ),
+                )
+            ),
+            PolicyEngine(),
         )
 
         result = workflow.execute(
+            actor=Actor("operator-1", trust_level=2),
             action_id=action.action_id,
             body="Здравствуйте",
             idempotency_key=f"send:{uuid4()}",
