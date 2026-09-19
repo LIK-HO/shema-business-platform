@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Shema Business Platform Canonical API
-  version: 1.0.0
+  version: 1.4.0
   description: Canonical application boundary shared by Web, PWA and Android.
 servers:
   - url: /api
