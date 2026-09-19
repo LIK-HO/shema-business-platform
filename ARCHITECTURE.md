@@ -63,13 +63,13 @@ PostgreSQL is the transactional authority.
 
 Persistence is divided into:
 
-- canonical identity/evidence/audit/idempotency/outbox state;
+- canonical identity/evidence/audit/idempotency/outbox/commercial-action/order/economic/AI-run state;
 - source-side search candidate observations;
 - explicit quarantine state.
 
 Search candidate data is not canonical truth and can be superseded, expired or quarantined without corrupting Identity.
 
-Transactional state change and outbox publication must occur atomically within one database transaction.
+Transactional state change and outbox publication must occur atomically within one database transaction. Commercial Action, Order and Economic Entry state are also PostgreSQL-owned and traceable by source references.
 
 External network calls never occur inside the core database transaction.
 
@@ -110,7 +110,7 @@ Research budgets explicitly constrain:
 - API spend;
 - elapsed time.
 
-Provider results must include source references when they contain externally-derived claims.
+Provider results must include source references when they contain externally-derived claims. The intelligence application service materializes routed claims into traceable Evidence before qualification.
 
 ## AI pipeline
 
@@ -118,7 +118,7 @@ Provider results must include source references when they contain externally-der
 
 AI runs record model/version, prompt version, input refs, evidence refs and usage metrics.
 
-AI is subordinate to domain/application controls and cannot rewrite critical business/legal truth.
+AI is subordinate to authorization, policy, evidence and budget controls and cannot rewrite critical business/legal truth. Validated AI runs are persisted with model, prompt, input/evidence references and usage metrics and audited without storing the generated output in audit metadata.
 
 ## MAX pipeline
 
