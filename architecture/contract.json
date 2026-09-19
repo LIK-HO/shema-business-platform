@@ -58,7 +58,8 @@
     "durable_job_execution",
     "handler_registry",
     "job_runner_at_least_once",
-    "outbox_dispatcher"
+    "outbox_dispatcher",
+    "lease_renewal"
   ],
   "execution_contracts": [
     "permission_then_policy",
@@ -117,7 +118,9 @@
     "missing_job_handler_fails_job",
     "job_runner_is_at_least_once",
     "outbox_publication_is_at_least_once",
-    "external_publisher_deduplicates_by_event_id"
+    "external_publisher_deduplicates_by_event_id",
+    "lease_can_be_renewed_only_by_current_worker",
+    "expired_leases_cannot_be_renewed"
   ],
   "business_loop": [
     "search",
