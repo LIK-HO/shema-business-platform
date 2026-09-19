@@ -67,7 +67,9 @@ def test_postgres_commercial_send_workflow_round_trip() -> None:
         PostgresCommercialActionRepository(setup).add(action)
         setup.commit()
 
-        factory = lambda: PostgresUnitOfWork(lambda: psycopg.connect(DATABASE_URL))
+        factory = lambda: PostgresUnitOfWork(
+            lambda: psycopg.connect(DATABASE_URL)
+        )
         workflow = CommercialActionSendWorkflow(
             factory,
             CommunicationGateway(FakeAdapter()),
@@ -84,7 +86,9 @@ def test_postgres_commercial_send_workflow_round_trip() -> None:
             loaded = check.commercial_actions.get(action.action_id)
             assert loaded is not None
             assert loaded.status.value == "sent"
-            assert check.idempotency.get(result.external_message_id.replace("external:", "send:")) is not None
+            assert check.idempotency.get(
+                result.external_message_id.replace("external:", "send:")
+            ) is not None
             assert len(check.outbox.pending()) == 1
 
         with psycopg.connect(DATABASE_URL) as cleanup:
