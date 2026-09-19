@@ -543,6 +543,40 @@ class PostgresJobRepository(JobRepository):
         row = cursor.fetchone()
         return None if row is None else self._to_record(row)
 
+    def renew(
+        self,
+        job_id: str,
+        worker_id: str,
+        *,
+        lease_seconds: int,
+        now: datetime,
+    ) -> JobRecord:
+        if not worker_id.strip():
+            raise ValueError("worker_id is required")
+        if lease_seconds <= 0:
+            raise ValueError("lease_seconds must be > 0")
+        if now.tzinfo is None:
+            raise ValueError("now must be timezone-aware")
+        cursor = self._connection.execute(
+            """
+            update job_execution
+            set lease_until = %s + (%s * interval '1 second'),
+                updated_at = %s
+            where job_id = %s
+              and state = 'running'
+              and worker_id = %s
+              and lease_until > %s
+            returning
+                job_id, job_type, attempt, state, idempotency_key, payload,
+                available_at, worker_id, lease_until, last_error
+            """,
+            (now, lease_seconds, now, job_id, worker_id, now),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise IntegrityViolation("job lease renewal rejected: missing or expired lease")
+        return self._to_record(row)
+
     def complete(self, job_id: str, worker_id: str, *, now: datetime) -> JobRecord:
         cursor = self._connection.execute(
             """
