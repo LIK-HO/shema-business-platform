@@ -67,9 +67,10 @@ def test_postgres_uow_rolls_back_all_changes_on_failure() -> None:
         tax_id=tax_id,
     )
 
-    factory = lambda: PostgresUnitOfWork(
-        lambda: psycopg.connect(DATABASE_URL)
-    )
+    def factory() -> PostgresUnitOfWork:
+        return PostgresUnitOfWork(
+            lambda: psycopg.connect(DATABASE_URL)
+        )
 
     with pytest.raises(RuntimeError, match="forced rollback"):
         with factory() as uow:
