@@ -1,15 +1,29 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Sequence
 from uuid import uuid4
 
 from shema_platform.application.ports import EvidenceRepository
-from shema_platform.application.research import ProviderResult, ProviderGateway, ResearchBudget, ResearchProvider
-from shema_platform.application.research_routing import ResearchDepth, ResearchRoute, ResearchRoutingPolicy
+from shema_platform.application.research import (
+    ProviderGateway,
+    ProviderResult,
+    ResearchBudget,
+    ResearchProvider,
+)
+from shema_platform.application.research_routing import (
+    ResearchDepth,
+    ResearchRoute,
+    ResearchRoutingPolicy,
+)
 from shema_platform.foundation.errors import QuarantineRequired
-from shema_platform.foundation.evidence import Evidence, EvidenceLifecycle, TruthClass, TrustLevel
+from shema_platform.foundation.evidence import (
+    Evidence,
+    EvidenceLifecycle,
+    TrustLevel,
+    TruthClass,
+)
 
 
 @dataclass(frozen=True, slots=True)
