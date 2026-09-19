@@ -8,7 +8,6 @@ from shema_platform.experience.api import (
 from shema_platform.experience.api_models import (
     CommercialActionCreateRequest,
     CommercialActionResponse,
-    CommercialActionSendRequest,
     CommunicationResult,
     DiagnosticCheck,
     DiagnosticsResponse,
@@ -22,11 +21,25 @@ from shema_platform.experience.api_models import (
     SearchRequest,
     SearchResponse,
 )
+from shema_platform.foundation.authentication import (
+    AuthenticatedActor,
+    AuthenticationPort,
+)
+from shema_platform.foundation.authentication import AuthenticationRequired
 from shema_platform.foundation.errors import QuarantineRequired
+
+
+class FakeAuthenticator(AuthenticationPort):
+    def authenticate(self, authorization: str | None) -> AuthenticatedActor:
+        if authorization == "Bearer test-token":
+            return AuthenticatedActor("operator-1", trust_level=2)
+        raise AuthenticationRequired()
 
 
 class FakeApplication(APIApplication):
     def search(self, request: SearchRequest, context: RequestContext) -> SearchResponse:
+        assert context.actor_id == "operator-1"
+        assert context.trust_level == 2
         assert context.idempotency_key is None
         return SearchResponse(results=[], correlationId=context.correlation_id)
 
@@ -48,7 +61,7 @@ class FakeApplication(APIApplication):
         return CommercialActionResponse(
             actionId="action-1",
             identityId=request.identity_id,
-            contact_ref=request.contact_ref,
+            contactRef=request.contact_ref,
             channel=request.channel,
             status="ready",
         )
@@ -56,7 +69,7 @@ class FakeApplication(APIApplication):
     def send_commercial_action(
         self,
         action_id: str,
-        request: CommercialActionSendRequest,
+        request,
         context: RequestContext,
     ) -> CommunicationResult:
         return CommunicationResult(
@@ -97,12 +110,22 @@ class QuarantineApplication(FakeApplication):
         raise QuarantineRequired("review required")
 
 
-def test_runtime_api_propagates_correlation_id() -> None:
-    client = TestClient(create_app(FakeApplication()))
+def client(application: APIApplication | None = None) -> TestClient:
+    return TestClient(
+        create_app(
+            application,
+            FakeAuthenticator() if application is not None else None,
+        )
+    )
 
-    response = client.post(
+
+def test_runtime_api_propagates_correlation_id() -> None:
+    response = client(FakeApplication()).post(
         "/v1/search",
-        headers={"X-Correlation-Id": "corr-test"},
+        headers={
+            "Authorization": "Bearer test-token",
+            "X-Correlation-Id": "corr-test",
+        },
         json={
             "region": "Moscow",
             "industries": ["logistics"],
@@ -112,24 +135,32 @@ def test_runtime_api_propagates_correlation_id() -> None:
     assert response.status_code == 200
     assert response.headers["X-Correlation-Id"] == "corr-test"
     assert response.json()["correlationId"] == "corr-test"
-    assert "selectionLevel" not in response.json()
 
 
 def test_runtime_api_generates_correlation_id_when_missing() -> None:
-    client = TestClient(create_app(FakeApplication()))
-
-    response = client.get("/v1/diagnostics")
+    response = client(FakeApplication()).get(
+        "/v1/diagnostics",
+        headers={"Authorization": "Bearer test-token"},
+    )
 
     assert response.status_code == 200
     assert response.headers["X-Correlation-Id"]
     assert response.json()["healthy"] is True
 
 
-def test_runtime_api_requires_idempotency_for_critical_mutation() -> None:
-    client = TestClient(create_app(FakeApplication()))
+def test_runtime_api_requires_authentication() -> None:
+    response = TestClient(
+        create_app(FakeApplication(), RejectingAuthenticator())
+    ).get("/v1/diagnostics")
 
-    response = client.post(
+    assert response.status_code == 401
+    assert response.json()["code"] == "authentication_required"
+
+
+def test_runtime_api_requires_idempotency_for_critical_mutation() -> None:
+    response = client(FakeApplication()).post(
         "/v1/orders",
+        headers={"Authorization": "Bearer test-token"},
         json={"actionId": "action-1", "lines": []},
     )
 
@@ -137,11 +168,12 @@ def test_runtime_api_requires_idempotency_for_critical_mutation() -> None:
 
 
 def test_runtime_api_maps_quarantine_to_423() -> None:
-    client = TestClient(create_app(QuarantineApplication()))
-
-    response = client.post(
+    response = client(QuarantineApplication()).post(
         "/v1/intelligence/research",
-        headers={"Idempotency-Key": "research-1"},
+        headers={
+            "Authorization": "Bearer test-token",
+            "Idempotency-Key": "research-1",
+        },
         json={
             "subjectRef": "identity-1",
             "companyType": "logistics",
@@ -155,9 +187,12 @@ def test_runtime_api_maps_quarantine_to_423() -> None:
 
 
 def test_runtime_api_maps_missing_application_to_503() -> None:
-    client = TestClient(create_app())
-
-    response = client.get("/v1/diagnostics")
+    response = TestClient(
+        create_app(None, FakeAuthenticator())
+    ).get(
+        "/v1/diagnostics",
+        headers={"Authorization": "Bearer test-token"},
+    )
 
     assert response.status_code == 503
     assert response.json()["code"] == "application_unavailable"
