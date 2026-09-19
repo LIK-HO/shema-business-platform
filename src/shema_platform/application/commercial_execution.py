@@ -145,7 +145,7 @@ class CommercialActionSendWorkflow:
                                 f"audit:{event_key}",
                             )
                         ),
-                        actor_id="system:commercial-send",
+                        actor_id=actor.actor_id,
                         action="commercial_action.sent",
                         resource_type="commercial_action",
                         resource_id=action_id,
