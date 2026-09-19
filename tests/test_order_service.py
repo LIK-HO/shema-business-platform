@@ -1,13 +1,22 @@
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from shema_platform.application.commands import Actor
 from shema_platform.application.order import OrderService
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.money import Money
 from shema_platform.domain.order import OrderLine
-from shema_platform.foundation.authorization import AuthorizationSubject, Permission, RBACAuthorizer
-from shema_platform.foundation.errors import AuthorizationError, PolicyDenied, QuarantineRequired
+from shema_platform.foundation.authorization import (
+    AuthorizationSubject,
+    Permission,
+    RBACAuthorizer,
+)
+from shema_platform.foundation.errors import (
+    AuthorizationError,
+    PolicyDenied,
+    QuarantineRequired,
+)
 from shema_platform.foundation.idempotency import IdempotencyStore
 from shema_platform.foundation.policy import PolicyEngine
 
