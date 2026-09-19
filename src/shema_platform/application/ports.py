@@ -90,6 +90,15 @@ class JobRepository(Protocol):
         now: datetime,
     ) -> JobRecord | None: ...
 
+    def renew(
+        self,
+        job_id: str,
+        worker_id: str,
+        *,
+        lease_seconds: int,
+        now: datetime,
+    ) -> JobRecord: ...
+
     def complete(self, job_id: str, worker_id: str, *, now: datetime) -> JobRecord: ...
 
     def fail(
