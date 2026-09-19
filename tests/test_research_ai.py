@@ -3,11 +3,11 @@ from dataclasses import dataclass, field
 import pytest
 
 from shema_platform.application.ai import (
-    AIGateway,
     AIBudget,
+    AIGateway,
     AIExecutionContext,
-    AIRun,
     AIProvider,
+    AIRun,
     AITask,
 )
 from shema_platform.application.research import (
