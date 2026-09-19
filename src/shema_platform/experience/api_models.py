@@ -54,7 +54,7 @@ class DiscoveryResponse(APIModel):
 
 class ResearchRequest(APIModel):
     subject_ref: str = Field(alias="subjectRef")
-    company_type: str
+    company_type: str = Field(alias="companyType")
     depth: Literal["R1_IDENTITY", "R2_CONTEXT", "R3_DEEP", "R4_INVESTIGATIVE"]
     query: str
 
