@@ -8,7 +8,6 @@ from shema_platform.domain.identity import Identity
 from shema_platform.domain.order import Order
 from shema_platform.domain.search import SearchHit
 from shema_platform.foundation.audit import AuditRecord
-from shema_platform.foundation.authentication import AuthenticationPort
 from shema_platform.foundation.evidence import Evidence
 from shema_platform.foundation.idempotency import IdempotencyRecord
 from shema_platform.foundation.outbox import OutboxEvent
@@ -126,7 +125,3 @@ class UnitOfWork(Protocol):
     def __enter__(self) -> Self: ...
 
     def __exit__(self, exc_type: object, exc_value: object, traceback: object) -> bool: ...
-
-
-class AuthenticationService(AuthenticationPort, Protocol):
-    """Application-level authentication boundary alias for dependency wiring."""
