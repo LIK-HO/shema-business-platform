@@ -22,7 +22,6 @@ from shema_platform.application.research_routing import (
 from shema_platform.foundation.errors import QuarantineRequired
 from shema_platform.platform.postgres_repositories import PostgresEvidenceRepository
 
-
 pytestmark = pytest.mark.integration
 
 DATABASE_URL = os.getenv("DATABASE_URL")
