@@ -1,7 +1,10 @@
 import pytest
 
 from shema_platform.adapters.communication.max import MaxAdapter
-from shema_platform.application.communication import CommunicationGateway
+from shema_platform.application.communication import (
+    CommunicationGateway,
+    CommunicationSendRequest,
+)
 from shema_platform.domain.commercial_action import CommercialAction, CommercialActionStatus
 from shema_platform.foundation.errors import QuarantineRequired
 
@@ -55,37 +58,20 @@ def test_gateway_rejects_draft_action_before_adapter_call() -> None:
 def test_max_outbound_send_is_idempotent() -> None:
     adapter = MaxAdapter()
     action = ready_action()
-    first = adapter.send(
-        __import__(
-            "shema_platform.application.communication",
-            fromlist=["CommunicationSendRequest"],
-        ).CommunicationSendRequest(
-            action_id=action.action_id,
-            channel=action.channel,
-            contact_ref=action.contact_ref,
-            body="Здравствуйте",
-            idempotency_key="action-1:send",
-        )
+    request = CommunicationSendRequest(
+        action_id=action.action_id,
+        channel=action.channel,
+        contact_ref=action.contact_ref,
+        body="Здравствуйте",
+        idempotency_key="action-1:send",
     )
-    second = adapter.send(
-        __import__(
-            "shema_platform.application.communication",
-            fromlist=["CommunicationSendRequest"],
-        ).CommunicationSendRequest(
-            action_id=action.action_id,
-            channel=action.channel,
-            contact_ref=action.contact_ref,
-            body="Здравствуйте",
-            idempotency_key="action-1:send",
-        )
-    )
+    first = adapter.send(request)
+    second = adapter.send(request)
 
     assert second == first
 
 
 def test_max_rejects_idempotency_key_reuse_with_changed_request() -> None:
-    from shema_platform.application.communication import CommunicationSendRequest
-
     adapter = MaxAdapter()
     request = CommunicationSendRequest(
         action_id="action-1",
