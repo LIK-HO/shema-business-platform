@@ -16,13 +16,12 @@ from shema_platform.foundation.outbox import OutboxEvent, OutboxStatus
 from shema_platform.platform.postgres_repositories import (
     PostgresAuditRepository,
     PostgresEvidenceRepository,
-    PostgresIdentityRepository,
     PostgresIdempotencyRepository,
+    PostgresIdentityRepository,
     PostgresOutboxRepository,
     PostgresQuarantineRepository,
     PostgresSearchCandidateRepository,
 )
-
 pytestmark = pytest.mark.integration
 
 DATABASE_URL = os.getenv("DATABASE_URL")
