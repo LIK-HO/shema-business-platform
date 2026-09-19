@@ -12,7 +12,6 @@ from shema_platform.application.ai import (
     AIRun,
     AITask,
 )
-from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import (
     AuthorizationSubject,
     Permission,
@@ -68,14 +67,6 @@ def apply_migrations(connection: psycopg.Connection) -> None:
                 connection.execute(statement)
 
 
-class MemoryAuditRepository:
-    def __init__(self, durable: PostgresAuditRepository) -> None:
-        self._durable = durable
-
-    def append(self, record: AuditRecord) -> None:
-        self._durable.append(record)
-
-
 def test_ai_gateway_persists_run_and_audit_to_postgres() -> None:
     with psycopg.connect(DATABASE_URL) as connection:
         apply_migrations(connection)
@@ -93,7 +84,7 @@ def test_ai_gateway_persists_run_and_audit_to_postgres() -> None:
             FakeProvider(),
             authorizer,
             PolicyEngine(),
-            MemoryAuditRepository(PostgresAuditRepository(connection)),
+            PostgresAuditRepository(connection),
             runs,
         )
 
