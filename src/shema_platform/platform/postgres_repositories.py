@@ -14,8 +14,8 @@ from shema_platform.application.ports import (
     IdempotencyRepository,
     IdentityRepository,
     OrderRepository,
-    OutboxRepository,
     JobRepository,
+    OutboxRepository,
     QuarantineRepository,
     SearchCandidateRepository,
 )
