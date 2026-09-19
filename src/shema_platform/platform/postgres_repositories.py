@@ -4,7 +4,6 @@ import json
 from uuid import uuid4
 
 from shema_platform.application.ai import AIRun
-from shema_platform.application.ai import AIRun
 from shema_platform.application.ports import (
     AIRunRepository,
     AuditRepository,
