@@ -6,6 +6,7 @@ from uuid import uuid4
 import psycopg
 import pytest
 
+from shema_platform.foundation.errors import IntegrityViolation
 from shema_platform.foundation.jobs import JobExecution, JobRecord, JobState
 from shema_platform.platform.postgres_repositories import PostgresJobRepository
 
@@ -107,19 +108,23 @@ def test_postgres_job_retry_advances_attempt_after_reclaim() -> None:
         available_at=available_at,
     )
 
-    with psycopg.connect(DATABASE_URL) as connection:
-        prepare_database(connection)
-        repository = PostgresJobRepository(connection)
+    with psycopg.connect(DATABASE_URL) as first, psycopg.connect(DATABASE_URL) as second:
+        prepare_database(first)
+        first.commit()
+        first_repo = PostgresJobRepository(first)
+        second_repo = PostgresJobRepository(second)
 
-        repository.enqueue(record)
-        claimed = repository.claim_next(
+        first_repo.enqueue(record)
+        first.commit()
+
+        claimed = first_repo.claim_next(
             "worker-1",
             lease_seconds=1,
             now=available_at,
         )
         assert claimed is not None
 
-        failed = repository.fail(
+        failed = first_repo.fail(
             job_id,
             "worker-1",
             retryable=True,
@@ -128,8 +133,9 @@ def test_postgres_job_retry_advances_attempt_after_reclaim() -> None:
             now=available_at + timedelta(seconds=1),
         )
         assert failed.execution.state is JobState.RETRYABLE_FAILURE
+        first.commit()
 
-        reclaimed = repository.claim_next(
+        reclaimed = second_repo.claim_next(
             "worker-2",
             lease_seconds=60,
             now=available_at + timedelta(seconds=2),
@@ -138,9 +144,23 @@ def test_postgres_job_retry_advances_attempt_after_reclaim() -> None:
         assert reclaimed.execution.attempt == 2
         assert reclaimed.execution.lease is not None
         assert reclaimed.execution.lease.worker_id == "worker-2"
+        second.commit()
 
-        connection.execute("delete from job_execution where job_id = %s", (job_id,))
-        connection.commit()
+        with pytest.raises(IntegrityViolation, match="missing or expired lease"):
+            first_repo.complete(
+                job_id,
+                "worker-1",
+                now=available_at + timedelta(seconds=3),
+            )
+        first.rollback()
+
+        completed = second_repo.complete(
+            job_id,
+            "worker-2",
+            now=available_at + timedelta(seconds=3),
+        )
+        assert completed.execution.state is JobState.SUCCEEDED
+        second.commit()
 
 
 def test_postgres_job_lease_can_be_renewed_only_before_expiry() -> None:
