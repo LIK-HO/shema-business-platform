@@ -8,6 +8,7 @@ from .errors import AuthorizationError
 
 class Permission(StrEnum):
     COMMERCIAL_ACTION_CREATE = "commercial_action.create"
+    COMMERCIAL_ACTION_SEND = "commercial_action.send"
     ORDER_CREATE = "order.create"
     INTELLIGENCE_RUN = "intelligence.run"
     AI_RUN = "ai.run"
