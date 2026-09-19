@@ -21,6 +21,7 @@ class PolicyContext:
     actor_trust_level: int = 0
     resource_trust_level: int = 0
     evidence_level: int = 0
+    evidence_required: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +36,14 @@ class PolicyEngine:
     def evaluate(self, context: PolicyContext) -> PolicyDecision:
         if not context.actor_id:
             raise PolicyDenied("actor_id is required")
+
+        if context.action == "ai_run":
+            if context.actor_trust_level < 1:
+                return PolicyDecision(Decision.DENY, "actor_not_trusted")
+            if context.resource_trust_level < 1:
+                return PolicyDecision(Decision.DENY, "resource_not_verified")
+            if context.evidence_required and context.evidence_level < 2:
+                return PolicyDecision(Decision.REVIEW, "ai_task_needs_evidence")
 
         if context.action in {"commercial_action", "order_create"}:
             if context.actor_trust_level < 2:
