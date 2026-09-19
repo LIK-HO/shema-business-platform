@@ -1,5 +1,5 @@
 {
-  "version": "1.3",
+  "version": "1.4",
   "product": "Commercial Intelligence & Execution OS",
   "runtime": "modular_monolith",
   "transactional_authority": "postgresql",
@@ -27,7 +27,8 @@
     ],
     "migrations": [
       "0001_foundation.sql",
-      "0002_discovery.sql"
+      "0002_discovery.sql",
+      "0003_audit_context.sql"
     ]
   },
   "operational_controls": [
@@ -43,17 +44,8 @@
     "external_effect_outside_core_transaction"
   ],
   "intelligence": {
-    "research_depths": [
-      "R1",
-      "R2",
-      "R3",
-      "R4"
-    ],
-    "source_requirements": [
-      "required",
-      "optional",
-      "prohibited"
-    ],
+    "research_depths": ["R1", "R2", "R3", "R4"],
+    "source_requirements": ["required", "optional", "prohibited"],
     "budget_dimensions": [
       "provider_calls",
       "source_count",
