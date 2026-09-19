@@ -59,7 +59,8 @@
     "handler_registry",
     "job_runner_at_least_once",
     "outbox_dispatcher",
-    "lease_renewal"
+    "lease_renewal",
+    "lease_aware_handler_context"
   ],
   "execution_contracts": [
     "permission_then_policy",
@@ -68,7 +69,8 @@
     "order_requires_sent_or_completed_action",
     "job_claim_requires_lease",
     "worker_completion_requires_current_lease",
-    "bounded_retry_schedule"
+    "bounded_retry_schedule",
+    "handler_renewal_uses_job_repository_only"
   ],
   "intelligence": {
     "research_depths": [
@@ -120,7 +122,8 @@
     "outbox_publication_is_at_least_once",
     "external_publisher_deduplicates_by_event_id",
     "lease_can_be_renewed_only_by_current_worker",
-    "expired_leases_cannot_be_renewed"
+    "expired_leases_cannot_be_renewed",
+    "handler_renews_only_through_job_context"
   ],
   "business_loop": [
     "search",
