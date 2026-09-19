@@ -3,11 +3,11 @@ from decimal import Decimal
 
 from shema_platform.application.commands import Actor
 from shema_platform.application.order import OrderService
-from shema_platform.domain.commercial_action import CommercialAction, CommercialActionStatus
+from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.money import Money
 from shema_platform.domain.order import OrderLine
 from shema_platform.foundation.authorization import AuthorizationSubject, Permission, RBACAuthorizer
-from shema_platform.foundation.errors import PolicyDenied, QuarantineRequired
+from shema_platform.foundation.errors import AuthorizationError, PolicyDenied, QuarantineRequired
 from shema_platform.foundation.idempotency import IdempotencyStore
 from shema_platform.foundation.policy import PolicyEngine
 
@@ -85,7 +85,7 @@ def test_order_requires_permission_before_policy() -> None:
         IdempotencyStore(),
     )
 
-    with pytest.raises(Exception, match="permission denied"):
+    with pytest.raises(AuthorizationError, match="permission denied"):
         no_permission.create_from_action(
             order_id="order-1",
             actor=actor(),
