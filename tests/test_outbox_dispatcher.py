@@ -158,7 +158,7 @@ def test_outbox_lease_prevents_second_worker_until_expiry() -> None:
     second = outbox.claim_pending(
         "worker-2",
         lease_seconds=10,
-        now=datetime(2026, 9, 20, 0, 1, tzinfo=UTC),
+        now=datetime(2026, 9, 20, 0, 0, 1, tzinfo=UTC),
         limit=1,
     )
     assert second == ()
