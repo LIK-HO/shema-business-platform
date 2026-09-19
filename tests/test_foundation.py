@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timedelta
 
 import pytest
 
@@ -216,7 +216,18 @@ def test_outbox_is_idempotent_and_pending_until_published() -> None:
     assert store.append(event) == event
     assert store.append(event) == event
     assert len(store.pending()) == 1
-    assert store.mark_published("evt-1").status is OutboxStatus.PUBLISHED
+    claimed = store.claim_pending(
+        "worker-1",
+        lease_seconds=60,
+        now=datetime.now(UTC),
+        limit=1,
+    )
+    assert len(claimed) == 1
+    assert store.mark_published(
+        "evt-1",
+        "worker-1",
+        now=claimed[0].lease_until - timedelta(seconds=1),
+    ).status is OutboxStatus.PUBLISHED
     assert store.pending() == ()
 
 
