@@ -42,6 +42,21 @@ class MaxSendReceipt:
     external_message_id: str
 
 
+class MaxMockAdapter:
+    """Deterministic in-memory MAX adapter used by tests and local composition."""
+
+    channel = "max"
+
+    def __init__(self) -> None:
+        self._adapter = MaxAdapter()
+
+    def normalize(self, event: MaxWebhookEvent) -> CanonicalCommunicationEvent:
+        return self._adapter.normalize(event)
+
+    def send(self, request: CommunicationSendRequest) -> CommunicationSendResult:
+        return self._adapter.send(request)
+
+
 class MaxAdapter:
     """Boundary for MAX inbound normalization and outbound communication."""
 
