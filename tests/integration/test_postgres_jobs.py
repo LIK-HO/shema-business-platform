@@ -116,6 +116,8 @@ def test_postgres_job_retry_advances_attempt_after_reclaim() -> None:
 
         first_repo.enqueue(record)
         first.commit()
+        first.execute("delete from job_execution where job_id <> %s", (job_id,))
+        first.commit()
 
         claimed = first_repo.claim_next(
             "worker-1",
@@ -130,7 +132,7 @@ def test_postgres_job_retry_advances_attempt_after_reclaim() -> None:
             retryable=True,
             error="temporary dependency failure",
             available_at=available_at,
-            now=available_at + timedelta(seconds=1),
+            now=available_at + timedelta(milliseconds=500),
         )
         assert failed.execution.state is JobState.RETRYABLE_FAILURE
         first.commit()
@@ -184,6 +186,9 @@ def test_postgres_job_lease_can_be_renewed_only_before_expiry() -> None:
         prepare_database(connection)
         repository = PostgresJobRepository(connection)
         repository.enqueue(record)
+        connection.commit()
+        connection.execute("delete from job_execution where job_id <> %s", (job_id,))
+        connection.commit()
 
         claimed = repository.claim_next(
             "worker-1",

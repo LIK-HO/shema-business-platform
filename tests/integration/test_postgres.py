@@ -179,7 +179,20 @@ def test_postgres_core_persistence_round_trip() -> None:
         ).fetchone()
         assert row == (candidate_ref, "candidate", "provider:integration")
 
-        loaded_event = outbox.mark_published(event_id)
+        delivery = outbox.claim_pending(
+            "integration-test",
+            lease_seconds=60,
+            now=occurred,
+            limit=1,
+        )
+        assert len(delivery) == 1
+        assert delivery[0].event.event_id == event_id
+
+        loaded_event = outbox.mark_published(
+            event_id,
+            "integration-test",
+            now=occurred + timedelta(seconds=1),
+        )
         assert loaded_event.status is OutboxStatus.PUBLISHED
         assert event not in outbox.pending()
 

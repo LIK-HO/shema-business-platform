@@ -64,6 +64,11 @@ def test_outbox_delivery_is_lease_safe_and_reclaimable() -> None:
         second_repo = PostgresOutboxRepository(second)
         first_repo.append(event)
         first.commit()
+        first.execute(
+            "delete from outbox_event where event_id <> %s and published_at is null",
+            (event.event_id,),
+        )
+        first.commit()
 
         start = datetime.now(UTC)
         claimed = first_repo.claim_pending(
