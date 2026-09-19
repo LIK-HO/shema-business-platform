@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Callable
 
 from shema_platform.application.job_runner import (
     JobHandlerRegistry,
