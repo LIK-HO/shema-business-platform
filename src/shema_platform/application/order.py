@@ -7,7 +7,7 @@ from shema_platform.domain.commercial_action import CommercialAction, Commercial
 from shema_platform.domain.order import Order, OrderLine
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
 from shema_platform.foundation.errors import PolicyDenied, QuarantineRequired
-from shema_platform.foundation.idempotency import IdempotencyStore
+from shema_platform.application.ports import IdempotencyRepository
 from shema_platform.foundation.policy import Decision, PolicyContext, PolicyEngine
 
 
@@ -18,7 +18,7 @@ class OrderService:
         self,
         authorizer: RBACAuthorizer,
         policy: PolicyEngine,
-        idempotency: IdempotencyStore,
+        idempotency: IdempotencyRepository,
     ) -> None:
         self._authorizer = authorizer
         self._policy = policy
