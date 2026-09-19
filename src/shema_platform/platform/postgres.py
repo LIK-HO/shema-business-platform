@@ -12,8 +12,8 @@ if TYPE_CHECKING:
         EvidenceRepository,
         IdempotencyRepository,
         IdentityRepository,
-        OrderRepository,
         JobRepository,
+        OrderRepository,
         OutboxRepository,
     )
 
@@ -78,8 +78,8 @@ class PostgresUnitOfWork:
             PostgresEvidenceRepository,
             PostgresIdempotencyRepository,
             PostgresIdentityRepository,
-            PostgresOrderRepository,
             PostgresJobRepository,
+            PostgresOrderRepository,
             PostgresOutboxRepository,
         )
 
