@@ -118,7 +118,6 @@
     "canonical_search_is_shared_by_all_clients",
     "qualification_cannot_silently_promote_uncertain_records",
     "source_candidate_is_not_canonical_identity",
-    "commercial_action_is_ready_before_external_send",
     "permission_is_checked_before_policy",
     "job_execution_uses_lease_and_idempotency",
     "max_is_an_adapter",
@@ -141,7 +140,8 @@
     "commercial_send_is_lease_guarded",
     "external_communication_deduplicates_by_idempotency_key",
     "expired_commercial_send_reservations_are_reclaimable",
-    "external_effect_idempotency_key_is_stable_per_action"
+    "external_effect_idempotency_key_is_stable_per_action",
+    "commercial_action_is_reserved_before_external_effect"
   ],
   "business_loop": [
     "search",
