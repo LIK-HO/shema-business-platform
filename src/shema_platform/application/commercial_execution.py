@@ -153,18 +153,16 @@ class CommercialActionSendWorkflow:
                     accepted=True,
                 )
 
-            if (
-                current.status is not CommercialActionStatus.SENDING
-                or current.send_worker_id != worker_id
-                or current.send_lease_until is None
-                or current.send_lease_until <= utc_now()
-            ):
+            if current.status is not CommercialActionStatus.SENDING:
                 raise QuarantineRequired(
-                    "commercial action send lease is no longer owned by this worker"
+                    "commercial action is no longer waiting for leased completion"
                 )
 
-            sent = current.mark_sent()
-            uow.commercial_actions.save(sent)
+            sent = uow.commercial_actions.complete_send(
+                action_id,
+                worker_id,
+                now=utc_now(),
+            )
 
             event_key = (
                 "commercial-action.sent:"
