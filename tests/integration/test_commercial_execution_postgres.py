@@ -2,7 +2,7 @@ import os
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from uuid import NAMESPACE_URL, uuid4, uuid5
+from uuid import NAMESPACE_URL, uuid5
 
 import psycopg
 import pytest
