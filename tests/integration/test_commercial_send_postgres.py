@@ -173,3 +173,60 @@ def test_postgres_commercial_send_reservation_reclaims_expired_lease() -> None:
             (action.action_id,),
         )
         first.commit()
+
+
+def test_postgres_commercial_send_completion_requires_current_lease() -> None:
+    action = CommercialAction(
+        action_id=str(uuid4()),
+        identity_id="identity:integration",
+        contact_ref="chat:integration",
+        channel="max",
+        evidence_refs=("evidence:integration",),
+    ).mark_ready()
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        apply_migrations(connection)
+        from shema_platform.platform.postgres_repositories import PostgresCommercialActionRepository
+        from shema_platform.foundation.errors import IntegrityViolation
+
+        repository = PostgresCommercialActionRepository(connection)
+        repository.add(action)
+        connection.commit()
+
+        start = datetime.now(UTC)
+        claimed = repository.claim_for_send(
+            action.action_id,
+            "worker-1",
+            lease_until=start + timedelta(seconds=1),
+            now=start,
+        )
+        assert claimed.status is CommercialActionStatus.SENDING
+        connection.commit()
+
+        with pytest.raises(IntegrityViolation, match="missing or expired send lease"):
+            repository.complete_send(
+                action.action_id,
+                "worker-2",
+                now=start + timedelta(milliseconds=500),
+            )
+        connection.rollback()
+
+        with pytest.raises(IntegrityViolation, match="SENT state requires lease-guarded completion"):
+            repository.save(claimed.mark_sent())
+        connection.rollback()
+
+        completed = repository.complete_send(
+            action.action_id,
+            "worker-1",
+            now=start + timedelta(milliseconds=500),
+        )
+        assert completed.status is CommercialActionStatus.SENT
+        assert completed.send_worker_id is None
+        assert completed.send_lease_until is None
+        connection.commit()
+
+        connection.execute(
+            "delete from commercial_action where action_id = %s",
+            (action.action_id,),
+        )
+        connection.commit()
