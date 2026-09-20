@@ -1147,9 +1147,45 @@ class PostgresOrderRepository(OrderRepository):
         )
 
     def save(self, order: Order) -> None:
-        current = self.get(order.order_id)
-        if current is None:
+        cursor = self._connection.execute(
+            """
+            select order_id, identity_id, source_action_id, status
+            from order_header
+            where order_id = %s
+            for update
+            """,
+            (order.order_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
             raise KeyError(f"unknown order: {order.order_id}")
+
+        line_cursor = self._connection.execute(
+            """
+            select line_id, description, quantity, unit_price, currency
+            from order_line
+            where order_id = %s
+            order by line_id
+            """,
+            (order.order_id,),
+        )
+        current = Order(
+            order_id=str(row[0]),
+            identity_id=str(row[1]),
+            source_action_id=str(row[2]),
+            lines=tuple(
+                OrderLine(
+                    line_id=str(line_id),
+                    description=str(description),
+                    quantity=quantity,
+                    unit_price=Money(unit_price, str(currency)),
+                )
+                for line_id, description, quantity, unit_price, currency
+                in line_cursor.fetchall()
+            ),
+            status=OrderStatus(str(row[3])),
+        )
+
         if (
             current.identity_id != order.identity_id
             or current.source_action_id != order.source_action_id
@@ -1169,7 +1205,7 @@ class PostgresOrderRepository(OrderRepository):
                     OrderStatus.CONFIRMED: current.confirm,
                     OrderStatus.IN_PROGRESS: current.start,
                     OrderStatus.COMPLETED: current.complete,
-                }.get(order.status, None)
+                }.get(order.status)
                 if expected is None or expected() != order:
                     raise IntegrityViolation(
                         "order status transition is not permitted by domain"
@@ -1179,7 +1215,7 @@ class PostgresOrderRepository(OrderRepository):
                     f"order status transition rejected: {exc}"
                 ) from exc
 
-        cursor = self._connection.execute(
+        self._connection.execute(
             """
             update order_header
             set identity_id = %s,
@@ -1187,7 +1223,6 @@ class PostgresOrderRepository(OrderRepository):
                 status = %s,
                 updated_at = now()
             where order_id = %s
-            returning order_id
             """,
             (
                 order.identity_id,
@@ -1196,8 +1231,6 @@ class PostgresOrderRepository(OrderRepository):
                 order.order_id,
             ),
         )
-        if cursor.fetchone() is None:
-            raise KeyError(f"unknown order: {order.order_id}")
 
         self._connection.execute(
             "delete from order_line where order_id = %s",
