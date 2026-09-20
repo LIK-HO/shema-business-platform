@@ -47,6 +47,10 @@ def prepare_database(connection: psycopg.Connection) -> None:
         "0001_foundation.sql",
         "0002_discovery.sql",
         "0003_audit_context.sql",
+        "0004_commercial_execution.sql",
+        "0005_ai_run.sql",
+        "0006_job_execution.sql",
+        "0007_outbox_delivery_lease.sql",
     ):
         apply_migration(connection, ROOT / "db/migrations" / migration)
 
