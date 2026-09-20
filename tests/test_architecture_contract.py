@@ -14,7 +14,7 @@ def test_architecture_baseline_exists() -> None:
 
 def test_machine_readable_architecture_contract_exists() -> None:
     contract = loads(read("architecture/contract.json"))
-    assert contract["version"] == "1.4"
+    assert contract["version"] == "1.5-runtime"
     assert contract["runtime"] == "modular_monolith"
     assert contract["transactional_authority"] == "postgresql"
     assert "max_is_an_adapter" in contract["critical_invariants"]
@@ -25,6 +25,9 @@ def test_machine_readable_architecture_contract_exists() -> None:
     assert "job_execution" in contract["persistence"]["canonical"]
     assert "commercial_send_reservation" in contract["operational_controls"]
     assert "commercial_send_is_lease_guarded" in contract["critical_invariants"]
+    assert "jwt_jwks_authentication" in contract["operational_controls"]
+    assert "authentication_before_application" in contract["execution_contracts"]
+    assert contract["security_boundary"]["transport"] == "Authorization header"
     assert (
         "external_communication_deduplicates_by_idempotency_key"
         in contract["critical_invariants"]

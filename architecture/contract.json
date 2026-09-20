@@ -1,5 +1,5 @@
 {
-  "version": "1.4",
+  "version": "1.5-runtime",
   "product": "Commercial Intelligence & Execution OS",
   "runtime": "modular_monolith",
   "transactional_authority": "postgresql",
@@ -65,7 +65,8 @@
     "lease_aware_handler_context",
     "outbox_delivery_lease",
     "outbox_reclaim",
-    "commercial_send_reservation"
+    "commercial_send_reservation",
+    "jwt_jwks_authentication"
   ],
   "execution_contracts": [
     "permission_then_policy",
@@ -84,7 +85,8 @@
     "commercial_send_completion_requires_current_lease",
     "idempotency_business_state_outbox_audit_commit_atomically",
     "order_persistence_respects_domain_lifecycle",
-    "order_persistence_serializes_lifecycle_update"
+    "order_persistence_serializes_lifecycle_update",
+    "authentication_before_application"
   ],
   "intelligence": {
     "research_depths": [
@@ -210,5 +212,25 @@
       "cancelled",
       "failed"
     ]
+  },
+  "security_boundary": {
+    "authentication": "bearer_jwt_jwks",
+    "algorithms": [
+      "RS256",
+      "RS384",
+      "RS512",
+      "ES256",
+      "ES384",
+      "ES512",
+      "EdDSA"
+    ],
+    "required_claims": [
+      "iss",
+      "sub",
+      "aud",
+      "exp"
+    ],
+    "transport": "Authorization header",
+    "jwks_transport": "https"
   }
 }

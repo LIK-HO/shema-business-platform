@@ -159,6 +159,7 @@ def test_runtime_api_requires_authentication() -> None:
     ).get("/v1/diagnostics")
 
     assert response.status_code == 401
+    assert response.headers["WWW-Authenticate"] == "Bearer"
     assert response.json()["code"] == "authentication_required"
 
 

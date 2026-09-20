@@ -161,6 +161,7 @@ def _error(
     code: str,
     message: str,
     details: dict[str, object] | None = None,
+    headers: dict[str, str] | None = None,
 ) -> JSONResponse:
     payload = ErrorEnvelope(
         code=code,
@@ -168,10 +169,13 @@ def _error(
         correlation_id=request.state.correlation_id,
         details=details,
     )
+    response_headers = {"X-Correlation-Id": request.state.correlation_id}
+    if headers:
+        response_headers.update(headers)
     return JSONResponse(
         status_code=status_code,
         content=payload.model_dump(mode="json", by_alias=True),
-        headers={"X-Correlation-Id": request.state.correlation_id},
+        headers=response_headers,
     )
 
 
@@ -203,6 +207,7 @@ def create_app(
             status_code=401,
             code="authentication_required",
             message="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     @app.exception_handler(ApplicationUnavailable)

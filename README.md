@@ -31,3 +31,7 @@ Machine-readable contract: architecture/contract.json
 Database foundation migration: db/migrations/0001_foundation.sql
 
 Durable execution plane: docs/V1.4_EXECUTION_PLANE.md
+
+## v1.5 Runtime Core
+
+The first v1.5 runtime increment adds a provider-neutral JWT/JWKS authentication boundary. See docs/V1.5_RUNTIME.md.
