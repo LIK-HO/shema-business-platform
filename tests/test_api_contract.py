@@ -13,6 +13,7 @@ def test_canonical_api_contract_exists() -> None:
 
     assert "openapi: 3.1.0" in openapi
     assert "version: 1.4.0" in openapi
+    assert "enum: [draft, ready, sending, sent, failed, completed, cancelled]" in openapi
     for route in (
         "/v1/search:",
         "/v1/discovery/evaluate:",
