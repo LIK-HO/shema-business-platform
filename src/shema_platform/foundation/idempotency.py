@@ -34,5 +34,23 @@ class IdempotencyStore:
         self._records[key] = record
         return record
 
+    def complete(
+        self,
+        key: str,
+        request_hash: str,
+        result_ref: str,
+    ) -> IdempotencyRecord:
+        existing = self._records.get(key)
+        if existing is None:
+            raise IdempotencyConflict("idempotency completion has no reservation")
+        if existing.request_hash != request_hash:
+            raise IdempotencyConflict("idempotency key reused with different request")
+        if existing.result_ref != "" and not existing.result_ref.startswith("pending:"):
+            return existing
+
+        record = IdempotencyRecord(key=key, request_hash=request_hash, result_ref=result_ref)
+        self._records[key] = record
+        return record
+
     def get(self, key: str) -> IdempotencyRecord | None:
         return self._records.get(key)
