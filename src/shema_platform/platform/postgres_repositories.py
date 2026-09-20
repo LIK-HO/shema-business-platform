@@ -1147,6 +1147,38 @@ class PostgresOrderRepository(OrderRepository):
         )
 
     def save(self, order: Order) -> None:
+        current = self.get(order.order_id)
+        if current is None:
+            raise KeyError(f"unknown order: {order.order_id}")
+        if (
+            current.identity_id != order.identity_id
+            or current.source_action_id != order.source_action_id
+        ):
+            raise IntegrityViolation(
+                "order identity and source action lineage are immutable"
+            )
+
+        if current.status is order.status:
+            if current.status is not OrderStatus.DRAFT and current.lines != order.lines:
+                raise IntegrityViolation(
+                    "order lines are immutable after draft state"
+                )
+        else:
+            try:
+                expected = {
+                    OrderStatus.CONFIRMED: current.confirm,
+                    OrderStatus.IN_PROGRESS: current.start,
+                    OrderStatus.COMPLETED: current.complete,
+                }.get(order.status, None)
+                if expected is None or expected() != order:
+                    raise IntegrityViolation(
+                        "order status transition is not permitted by domain"
+                    )
+            except ValueError as exc:
+                raise IntegrityViolation(
+                    f"order status transition rejected: {exc}"
+                ) from exc
+
         cursor = self._connection.execute(
             """
             update order_header
@@ -1172,6 +1204,7 @@ class PostgresOrderRepository(OrderRepository):
             (order.order_id,),
         )
         self._insert_lines(order)
+
 
     def _insert_lines(self, order: Order) -> None:
         for line in order.lines:
