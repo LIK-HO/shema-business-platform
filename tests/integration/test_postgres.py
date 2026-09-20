@@ -1,12 +1,11 @@
 import os
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
 import psycopg
 import pytest
-
-from decimal import Decimal
 
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.identity import Identity, IdentityState
@@ -20,12 +19,13 @@ from shema_platform.foundation.idempotency import IdempotencyRecord
 from shema_platform.foundation.outbox import OutboxEvent, OutboxStatus
 from shema_platform.platform.postgres_repositories import (
     PostgresAuditRepository,
+    PostgresCommercialActionRepository,
     PostgresEvidenceRepository,
     PostgresIdempotencyRepository,
-    PostgresCommercialActionRepository,
     PostgresIdentityRepository,
     PostgresOrderRepository,
-    PostgresOutboxRepository,    PostgresQuarantineRepository,
+    PostgresOutboxRepository,
+    PostgresQuarantineRepository,
     PostgresSearchCandidateRepository,
 )
 
