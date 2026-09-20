@@ -982,7 +982,54 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
             )
         return self._to_action(row)
 
+    def complete_send(
+        self,
+        action_id: str,
+        worker_id: str,
+        *,
+        now: datetime,
+    ) -> CommercialAction:
+        if not worker_id.strip():
+            raise ValueError("send worker is required")
+        if now.tzinfo is None:
+            raise ValueError("completion time must be timezone-aware")
+
+        cursor = self._connection.execute(
+            """
+            update commercial_action
+            set status = 'sent',
+                send_worker_id = null,
+                send_lease_until = null,
+                updated_at = %s
+            where action_id = %s
+              and status = 'sending'
+              and send_worker_id = %s
+              and send_lease_until > %s
+            returning
+                action_id,
+                identity_id,
+                contact_ref,
+                channel,
+                evidence_refs,
+                status,
+                send_attempt,
+                send_worker_id,
+                send_lease_until
+            """,
+            (now, action_id, worker_id, now),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise IntegrityViolation(
+                "commercial action completion rejected: missing or expired send lease"
+            )
+        return self._to_action(row)
+
     def save(self, action: CommercialAction) -> None:
+        if action.status is CommercialActionStatus.SENT:
+            raise IntegrityViolation(
+                "commercial action SENT state requires lease-guarded completion"
+            )
         cursor = self._connection.execute(
             """
             update commercial_action
