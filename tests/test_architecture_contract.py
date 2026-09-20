@@ -23,6 +23,12 @@ def test_machine_readable_architecture_contract_exists() -> None:
     assert "economic_entry" in contract["persistence"]["canonical"]
     assert "ai_run" in contract["persistence"]["canonical"]
     assert "job_execution" in contract["persistence"]["canonical"]
+    assert "commercial_send_reservation" in contract["operational_controls"]
+    assert "commercial_send_is_lease_guarded" in contract["critical_invariants"]
+    assert (
+        "external_communication_deduplicates_by_idempotency_key"
+        in contract["critical_invariants"]
+    )
     assert contract["persistence"]["uncertain_state"] == ["quarantine_record"]
 
 
