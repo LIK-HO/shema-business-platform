@@ -77,5 +77,9 @@ class CommunicationGateway:
             raise ValueError("adapter returned mismatched channel")
         if not result.accepted:
             raise QuarantineRequired("external communication was not accepted")
+        if not result.external_message_id.strip():
+            raise QuarantineRequired("external communication returned no external identifier")
+        if result.external_message_id.startswith("pending:"):
+            raise QuarantineRequired("external identifier uses reserved pending prefix")
 
         return result
