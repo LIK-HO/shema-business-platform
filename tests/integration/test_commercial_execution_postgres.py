@@ -103,3 +103,56 @@ def test_commercial_order_and_economics_round_trip() -> None:
             ("action:integration",),
         )
         connection.commit()
+
+
+def test_order_repository_rejects_invalid_persistence_transition() -> None:
+    action = ready_action()
+    order = Order(
+        order_id="order:transition",
+        identity_id=action.identity_id,
+        source_action_id=action.action_id,
+        lines=(
+            OrderLine(
+                "line:transition",
+                "Погрузка",
+                Decimal("1"),
+                Money("1000.00", "RUB"),
+            ),
+        ),
+    )
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        apply_migrations(connection)
+        orders = PostgresOrderRepository(connection)
+        actions = PostgresCommercialActionRepository(connection)
+        from shema_platform.foundation.errors import IntegrityViolation
+
+        actions.add(action)
+        orders.add(order)
+        connection.commit()
+
+        invalid = Order(
+            order_id=order.order_id,
+            identity_id=order.identity_id,
+            source_action_id=order.source_action_id,
+            lines=order.lines,
+            status=order.status.IN_PROGRESS,
+        )
+        with pytest.raises(IntegrityViolation, match="transition"):
+            orders.save(invalid)
+        connection.rollback()
+
+        confirmed = order.confirm()
+        orders.save(confirmed)
+        connection.commit()
+        assert orders.get(order.order_id) == confirmed
+
+        connection.execute(
+            "delete from order_header where order_id = %s",
+            (order.order_id,),
+        )
+        connection.execute(
+            "delete from commercial_action where action_id = %s",
+            (action.action_id,),
+        )
+        connection.commit()
