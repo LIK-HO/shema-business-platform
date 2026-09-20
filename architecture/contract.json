@@ -47,7 +47,8 @@
       "0004_commercial_execution.sql",
       "0005_ai_run.sql",
       "0006_job_execution.sql",
-      "0007_outbox_delivery_lease.sql"
+      "0007_outbox_delivery_lease.sql",
+      "0008_commercial_send_reservation.sql"
     ]
   },
   "operational_controls": [
@@ -63,7 +64,8 @@
     "lease_renewal",
     "lease_aware_handler_context",
     "outbox_delivery_lease",
-    "outbox_reclaim"
+    "outbox_reclaim",
+    "commercial_send_reservation"
   ],
   "execution_contracts": [
     "permission_then_policy",
@@ -76,7 +78,9 @@
     "handler_renewal_uses_job_repository_only",
     "outbox_claim_requires_lease",
     "outbox_mark_published_requires_current_lease",
-    "expired_outbox_leases_are_reclaimable"
+    "expired_outbox_leases_are_reclaimable",
+    "commercial_send_reservation_before_external_effect",
+    "expired_commercial_send_reservations_are_reclaimable"
   ],
   "intelligence": {
     "research_depths": [
@@ -133,7 +137,10 @@
     "outbox_delivery_attempt_is_durable",
     "outbox_claim_is_concurrency_safe",
     "outbox_mark_published_requires_current_lease",
-    "expired_outbox_leases_are_reclaimable"
+    "expired_outbox_leases_are_reclaimable",
+    "commercial_send_is_lease_guarded",
+    "external_communication_deduplicates_by_idempotency_key",
+    "expired_commercial_send_reservations_are_reclaimable"
   ],
   "business_loop": [
     "search",
