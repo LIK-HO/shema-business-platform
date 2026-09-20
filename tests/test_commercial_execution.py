@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -10,14 +11,18 @@ from shema_platform.application.communication import (
     CommunicationSendRequest,
     CommunicationSendResult,
 )
-from shema_platform.domain.commercial_action import CommercialAction
+from shema_platform.domain.commercial_action import CommercialAction, CommercialActionStatus
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import (
     AuthorizationSubject,
     Permission,
     RBACAuthorizer,
 )
-from shema_platform.foundation.errors import AuthorizationError, IdempotencyConflict
+from shema_platform.foundation.errors import (
+    AuthorizationError,
+    IdempotencyConflict,
+    QuarantineRequired,
+)
 from shema_platform.foundation.idempotency import IdempotencyStore
 from shema_platform.foundation.outbox import OutboxStore
 from shema_platform.foundation.policy import PolicyEngine
@@ -32,6 +37,31 @@ class MemoryActions:
 
     def get(self, action_id: str) -> CommercialAction | None:
         return self.actions.get(action_id)
+
+    def claim_for_send(
+        self,
+        action_id: str,
+        worker_id: str,
+        *,
+        lease_until: datetime,
+        now: datetime,
+    ) -> CommercialAction:
+        current = self.get(action_id)
+        if current is None:
+            raise KeyError(f"unknown commercial action: {action_id}")
+        if current.status is CommercialActionStatus.SENDING:
+            if current.send_lease_until is None or current.send_lease_until > now:
+                raise QuarantineRequired("commercial action send is already in progress")
+        elif current.status is not CommercialActionStatus.READY:
+            raise QuarantineRequired("commercial action is not available for external send")
+
+        return_value = current.mark_sending(
+            worker_id=worker_id,
+            lease_until=lease_until,
+            attempt=current.send_attempt + 1,
+        )
+        self.actions[action_id] = return_value
+        return return_value
 
     def save(self, action: CommercialAction) -> None:
         self.actions[action.action_id] = action
@@ -175,3 +205,53 @@ def test_permission_is_required_before_external_effect() -> None:
         )
 
     assert adapter.calls == []
+
+
+def test_active_send_reservation_blocks_a_second_external_effect() -> None:
+    workflow, uow, adapter = workflow_parts()
+    request_hash = workflow.request_hash("action-1", "Здравствуйте", "send-key-1")
+    now = datetime.now(UTC)
+    uow.idempotency.reserve("send-key-1", request_hash, "pending:action-1")
+    uow.commercial_actions.claim_for_send(
+        "action-1",
+        "worker-1",
+        lease_until=now + timedelta(minutes=5),
+        now=now,
+    )
+
+    with pytest.raises(QuarantineRequired, match="already in progress"):
+        workflow.execute(
+            actor=Actor("operator-1", trust_level=2),
+            action_id="action-1",
+            body="Здравствуйте",
+            idempotency_key="send-key-1",
+        )
+
+    assert adapter.calls == []
+
+
+def test_expired_send_reservation_can_be_reclaimed() -> None:
+    workflow, uow, adapter = workflow_parts()
+    request_hash = workflow.request_hash("action-1", "Здравствуйте", "send-key-1")
+    now = datetime.now(UTC)
+    uow.idempotency.reserve("send-key-1", request_hash, "pending:action-1")
+    uow.commercial_actions.claim_for_send(
+        "action-1",
+        "worker-1",
+        lease_until=now - timedelta(seconds=1),
+        now=now - timedelta(seconds=10),
+    )
+
+    result = workflow.execute(
+        actor=Actor("operator-1", trust_level=2),
+        action_id="action-1",
+        body="Здравствуйте",
+        idempotency_key="send-key-1",
+    )
+
+    assert result.accepted
+    assert len(adapter.calls) == 1
+    action = uow.commercial_actions.get("action-1")
+    assert action is not None
+    assert action.status is CommercialActionStatus.SENT
+    assert action.send_attempt == 2
