@@ -238,7 +238,11 @@ def test_postgres_order_lifecycle_persists_cancel_and_failure_states() -> None:
         contact_ref="max:integration",
         channel="max",
         evidence_refs=("evidence:integration",),
-    ).mark_ready().mark_sent()
+    ).mark_ready().mark_sending(
+        worker_id="integration-order-worker",
+        lease_until=datetime.now(UTC) + timedelta(minutes=5),
+        attempt=1,
+    ).mark_sent()
 
     cancelled = Order(
         order_id=cancelled_order_id,
