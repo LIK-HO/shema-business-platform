@@ -58,9 +58,11 @@ class AuditRepository(Protocol):
 
 
 class IdempotencyRepository(Protocol):
-    """Persistence port for critical command idempotency."""
+    """Persistence port for critical command idempotency and completion."""
 
     def reserve(self, key: str, request_hash: str, result_ref: str) -> IdempotencyRecord: ...
+
+    def complete(self, key: str, request_hash: str, result_ref: str) -> IdempotencyRecord: ...
 
     def get(self, key: str) -> IdempotencyRecord | None: ...
 
@@ -134,6 +136,15 @@ class CommercialActionRepository(Protocol):
     def add(self, action: CommercialAction) -> None: ...
 
     def get(self, action_id: str) -> CommercialAction | None: ...
+
+    def claim_for_send(
+        self,
+        action_id: str,
+        worker_id: str,
+        *,
+        lease_until: datetime,
+        now: datetime,
+    ) -> CommercialAction: ...
 
     def save(self, action: CommercialAction) -> None: ...
 
