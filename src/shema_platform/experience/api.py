@@ -135,6 +135,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
                 status_code=401,
                 code="authentication_required",
                 message="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
             )
 
         request.state.actor = actor
