@@ -37,6 +37,7 @@ def apply_migrations(connection: psycopg.Connection) -> None:
         "0002_discovery.sql",
         "0003_audit_context.sql",
         "0004_commercial_execution.sql",
+        "0008_commercial_send_reservation.sql",
     ):
         for statement in (ROOT / "db/migrations" / name).read_text().split(";"):
             statement = statement.strip()
