@@ -30,6 +30,17 @@ def test_machine_readable_architecture_contract_exists() -> None:
     assert contract["security_boundary"]["transport"] == "Authorization header"
     assert "structured_telemetry" in contract["operational_controls"]
     assert "telemetry_never_changes_business_truth" in contract["critical_invariants"]
+    assert "iam_authorization_materialization" in contract["operational_controls"]
+    assert (
+        "verified_iam_claims_materialized_before_application"
+        in contract["execution_contracts"]
+    )
+    assert "authentication_does_not_grant_business_permission" in contract[
+        "critical_invariants"
+    ]
+    assert "authorization_permissions_are_explicitly_materialized" in contract[
+        "critical_invariants"
+    ]
     assert contract["observability"]["failure_mode"] == "non_authoritative"
     assert (
         "external_communication_deduplicates_by_idempotency_key"

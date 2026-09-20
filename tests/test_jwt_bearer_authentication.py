@@ -112,6 +112,37 @@ def test_wrong_issuer_or_audience_is_rejected(claim: str, value: str) -> None:
         )
 
 
+def test_roles_and_scopes_are_extracted_without_becoming_permissions() -> None:
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+    actor = authenticator(
+        private_key,
+        roles_claim="roles",
+        scopes_claim="scope",
+    ).authenticate(
+        "Bearer " + token(
+            private_key,
+            roles=["operator", "dispatcher"],
+            scope="orders:read orders:write",
+        ),
+    )
+
+    assert actor.roles == ("operator", "dispatcher")
+    assert actor.scopes == ("orders:read", "orders:write")
+
+
+def test_invalid_configured_authorization_claims_fail_closed() -> None:
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+    with pytest.raises(AuthenticationRequired):
+        authenticator(
+            private_key,
+            roles_claim="roles",
+        ).authenticate(
+            "Bearer " + token(private_key, roles="operator"),
+        )
+
+
 def test_invalid_trust_level_is_rejected() -> None:
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 

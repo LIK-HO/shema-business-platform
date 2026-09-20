@@ -71,7 +71,8 @@
     "telemetry_redaction",
     "http_telemetry",
     "job_telemetry",
-    "outbox_telemetry"
+    "outbox_telemetry",
+    "iam_authorization_materialization"
   ],
   "execution_contracts": [
     "permission_then_policy",
@@ -91,7 +92,8 @@
     "idempotency_business_state_outbox_audit_commit_atomically",
     "order_persistence_respects_domain_lifecycle",
     "order_persistence_serializes_lifecycle_update",
-    "authentication_before_application"
+    "authentication_before_application",
+    "verified_iam_claims_materialized_before_application"
   ],
   "intelligence": {
     "research_depths": [
@@ -157,7 +159,9 @@
     "idempotency_business_state_outbox_audit_are_one_transaction",
     "order_persistence_respects_domain_lifecycle",
     "order_persistence_serializes_lifecycle_update",
-    "telemetry_never_changes_business_truth"
+    "telemetry_never_changes_business_truth",
+    "authentication_does_not_grant_business_permission",
+    "authorization_permissions_are_explicitly_materialized"
   ],
   "business_loop": [
     "search",
@@ -237,7 +241,8 @@
       "exp"
     ],
     "transport": "Authorization header",
-    "jwks_transport": "https"
+    "jwks_transport": "https",
+    "authorization": "separate_rbac_materialization_from_verified_iam_attributes"
   },
   "observability": {
     "events": [

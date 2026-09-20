@@ -29,6 +29,8 @@ class JWTAuthenticationConfig:
     algorithms: tuple[str, ...] = ("RS256",)
     leeway_seconds: int = 30
     trust_level_claim: str | None = None
+    roles_claim: str | None = None
+    scopes_claim: str | None = None
 
     def __post_init__(self) -> None:
         for name, value in (
@@ -52,8 +54,13 @@ class JWTAuthenticationConfig:
             raise ValueError("unsupported JWT algorithm")
         if self.leeway_seconds < 0:
             raise ValueError("leeway_seconds cannot be negative")
-        if self.trust_level_claim is not None and not self.trust_level_claim.strip():
-            raise ValueError("trust_level_claim cannot be empty")
+        for name, value in (
+            ("trust_level_claim", self.trust_level_claim),
+            ("roles_claim", self.roles_claim),
+            ("scopes_claim", self.scopes_claim),
+        ):
+            if value is not None and not value.strip():
+                raise ValueError(f"{name} cannot be empty")
 
 
 class SigningKeyClient(Protocol):
@@ -108,7 +115,14 @@ class JWTBearerAuthentication(AuthenticationPort):
             raise AuthenticationRequired()
 
         trust_level = self._trust_level(claims)
-        return AuthenticatedActor(actor_id=actor_id, trust_level=trust_level)
+        roles = self._string_claims(claims, self._config.roles_claim, allow_space_delimited=False)
+        scopes = self._string_claims(claims, self._config.scopes_claim, allow_space_delimited=True)
+        return AuthenticatedActor(
+            actor_id=actor_id,
+            trust_level=trust_level,
+            roles=roles,
+            scopes=scopes,
+        )
 
     @staticmethod
     def _extract_bearer_token(authorization: str | None) -> str:
@@ -123,6 +137,30 @@ class JWTBearerAuthentication(AuthenticationPort):
         if not token or any(char.isspace() for char in token):
             raise AuthenticationRequired()
         return token
+
+    @staticmethod
+    def _string_claims(
+        claims: dict[str, object],
+        claim_name: str | None,
+        *,
+        allow_space_delimited: bool,
+    ) -> tuple[str, ...]:
+        if claim_name is None:
+            return ()
+        value = claims.get(claim_name)
+        if value is None:
+            return ()
+        if isinstance(value, str):
+            if not allow_space_delimited:
+                raise AuthenticationRequired()
+            values = tuple(item for item in value.split() if item)
+        elif isinstance(value, (list, tuple)):
+            if any(not isinstance(item, str) or not item.strip() for item in value):
+                raise AuthenticationRequired()
+            values = tuple(item.strip() for item in value)
+        else:
+            raise AuthenticationRequired()
+        return values
 
     def _trust_level(self, claims: dict[str, object]) -> int:
         claim = self._config.trust_level_claim

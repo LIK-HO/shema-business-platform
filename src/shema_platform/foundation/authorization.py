@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Mapping
 
+from .authentication import AuthenticatedActor
 from .errors import AuthorizationError
 
 
@@ -18,6 +20,25 @@ class Permission(StrEnum):
 class AuthorizationSubject:
     actor_id: str
     permissions: frozenset[Permission]
+
+
+@dataclass(frozen=True, slots=True)
+class AuthorizationMaterializer:
+    """Materializes explicit permissions from verified IAM roles/scopes."""
+
+    role_permissions: Mapping[str, frozenset[Permission]]
+    scope_permissions: Mapping[str, frozenset[Permission]]
+
+    def materialize(self, actor: AuthenticatedActor) -> AuthorizationSubject:
+        permissions: set[Permission] = set()
+        for role in actor.roles:
+            permissions.update(self.role_permissions.get(role, frozenset()))
+        for scope in actor.scopes:
+            permissions.update(self.scope_permissions.get(scope, frozenset()))
+        return AuthorizationSubject(
+            actor_id=actor.actor_id,
+            permissions=frozenset(permissions),
+        )
 
 
 class RBACAuthorizer:

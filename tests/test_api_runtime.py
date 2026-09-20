@@ -26,6 +26,7 @@ from shema_platform.foundation.authentication import (
     AuthenticationPort,
     AuthenticationRequired,
 )
+from shema_platform.foundation.authorization import AuthorizationMaterializer, Permission
 from shema_platform.foundation.errors import QuarantineRequired
 from shema_platform.foundation.observability import InMemoryTelemetry
 
@@ -38,7 +39,7 @@ class RejectingAuthenticator(AuthenticationPort):
 class FakeAuthenticator(AuthenticationPort):
     def authenticate(self, authorization: str | None) -> AuthenticatedActor:
         if authorization == "Bearer test-token":
-            return AuthenticatedActor("operator-1", trust_level=2)
+            return AuthenticatedActor("operator-1", trust_level=2, roles=("operator",))
         raise AuthenticationRequired()
 
 
@@ -46,6 +47,7 @@ class FakeApplication(APIApplication):
     def search(self, request: SearchRequest, context: RequestContext) -> SearchResponse:
         assert context.actor_id == "operator-1"
         assert context.trust_level == 2
+        assert context.permissions == frozenset({Permission.ORDER_CREATE})
         assert context.idempotency_key is None
         return SearchResponse(results=[], correlationId=context.correlation_id)
 
@@ -125,6 +127,10 @@ def client(
             application,
             FakeAuthenticator() if application is not None else None,
             telemetry=telemetry,
+            authorization_materializer=AuthorizationMaterializer(
+                role_permissions={"operator": frozenset({Permission.ORDER_CREATE})},
+                scope_permissions={},
+            ),
         )
     )
 

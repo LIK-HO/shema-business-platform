@@ -31,6 +31,7 @@ from shema_platform.foundation.authentication import (
     AuthenticationPort,
     AuthenticationRequired,
 )
+from shema_platform.foundation.authorization import AuthorizationMaterializer, Permission
 from shema_platform.foundation.errors import (
     AuthorizationError,
     IdempotencyConflict,
@@ -56,6 +57,7 @@ class RequestContext:
     correlation_id: str
     actor_id: str
     trust_level: int
+    permissions: frozenset[Permission]
     idempotency_key: str | None
 
 
@@ -148,6 +150,12 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             )
 
         request.state.actor = actor
+        materializer: AuthorizationMaterializer | None = request.app.state.authorization_materializer
+        request.state.permissions = (
+            materializer.materialize(actor).permissions
+            if materializer is not None
+            else frozenset()
+        )
         return await call_next(request)
 
 
@@ -205,6 +213,7 @@ def _context(
         correlation_id=request.state.correlation_id,
         actor_id=actor.actor_id,
         trust_level=actor.trust_level,
+        permissions=getattr(request.state, "permissions", frozenset()),
         idempotency_key=idempotency_key,
     )
 
@@ -238,6 +247,7 @@ def create_app(
     application: APIApplication | None = None,
     authenticator: AuthenticationPort | None = None,
     telemetry: TelemetryPort | None = None,
+    authorization_materializer: AuthorizationMaterializer | None = None,
     *,
     enable_docs: bool = True,
 ) -> FastAPI:
@@ -251,6 +261,7 @@ def create_app(
     app.state.application = application
     app.state.authenticator = authenticator
     app.state.telemetry = telemetry or NullTelemetry()
+    app.state.authorization_materializer = authorization_materializer
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(CorrelationMiddleware)
     app.add_middleware(TelemetryMiddleware)
