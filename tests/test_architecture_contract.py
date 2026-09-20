@@ -28,6 +28,9 @@ def test_machine_readable_architecture_contract_exists() -> None:
     assert "jwt_jwks_authentication" in contract["operational_controls"]
     assert "authentication_before_application" in contract["execution_contracts"]
     assert contract["security_boundary"]["transport"] == "Authorization header"
+    assert "structured_telemetry" in contract["operational_controls"]
+    assert "telemetry_never_changes_business_truth" in contract["critical_invariants"]
+    assert contract["observability"]["failure_mode"] == "non_authoritative"
     assert (
         "external_communication_deduplicates_by_idempotency_key"
         in contract["critical_invariants"]

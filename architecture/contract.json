@@ -66,7 +66,12 @@
     "outbox_delivery_lease",
     "outbox_reclaim",
     "commercial_send_reservation",
-    "jwt_jwks_authentication"
+    "jwt_jwks_authentication",
+    "structured_telemetry",
+    "telemetry_redaction",
+    "http_telemetry",
+    "job_telemetry",
+    "outbox_telemetry"
   ],
   "execution_contracts": [
     "permission_then_policy",
@@ -151,7 +156,8 @@
     "commercial_send_completion_requires_current_lease",
     "idempotency_business_state_outbox_audit_are_one_transaction",
     "order_persistence_respects_domain_lifecycle",
-    "order_persistence_serializes_lifecycle_update"
+    "order_persistence_serializes_lifecycle_update",
+    "telemetry_never_changes_business_truth"
   ],
   "business_loop": [
     "search",
@@ -232,5 +238,32 @@
     ],
     "transport": "Authorization header",
     "jwks_transport": "https"
+  },
+  "observability": {
+    "events": [
+      "http.request.completed",
+      "http.request.failed",
+      "job.claimed",
+      "job.lease.renewed",
+      "job.completed",
+      "job.retry_scheduled",
+      "job.failed",
+      "outbox.claimed",
+      "outbox.published",
+      "outbox.publish_failed"
+    ],
+    "redaction": [
+      "authorization",
+      "access_token",
+      "refresh_token",
+      "id_token",
+      "token",
+      "password",
+      "secret",
+      "client_secret",
+      "api_key",
+      "private_key"
+    ],
+    "failure_mode": "non_authoritative"
   }
 }
