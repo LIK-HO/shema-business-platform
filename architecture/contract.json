@@ -80,7 +80,8 @@
     "expired_outbox_leases_are_reclaimable",
     "commercial_send_reservation_before_external_effect",
     "expired_commercial_send_reservations_are_reclaimable",
-    "stable_external_effect_idempotency_key_per_action"
+    "stable_external_effect_idempotency_key_per_action",
+    "commercial_send_completion_requires_current_lease"
   ],
   "intelligence": {
     "research_depths": [
@@ -141,7 +142,8 @@
     "external_communication_deduplicates_by_idempotency_key",
     "expired_commercial_send_reservations_are_reclaimable",
     "external_effect_idempotency_key_is_stable_per_action",
-    "commercial_action_is_reserved_before_external_effect"
+    "commercial_action_is_reserved_before_external_effect",
+    "commercial_send_completion_requires_current_lease"
   ],
   "business_loop": [
     "search",
