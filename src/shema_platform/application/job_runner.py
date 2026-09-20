@@ -9,6 +9,13 @@ from uuid import NAMESPACE_URL, uuid5
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.jobs import JobRecord, JobState
+from shema_platform.foundation.observability import (
+    NullTelemetry,
+    TelemetryEvent,
+    TelemetryLevel,
+    TelemetryPort,
+    emit_safely,
+)
 from shema_platform.foundation.outbox import OutboxEvent
 from shema_platform.foundation.recovery import RetryPolicy
 
@@ -91,6 +98,7 @@ class JobRunner:
         lease_seconds: int = 60,
         worker_id: str = "worker",
         clock: Callable[[], datetime] | None = None,
+        telemetry: TelemetryPort | None = None,
     ) -> None:
         if lease_seconds <= 0:
             raise ValueError("lease_seconds must be > 0")
@@ -102,6 +110,7 @@ class JobRunner:
         self._lease_seconds = lease_seconds
         self._worker_id = worker_id
         self._clock = clock or (lambda: datetime.now(UTC))
+        self._telemetry = telemetry or NullTelemetry()
 
     def run_next(self, *, now: datetime | None = None) -> JobRunResult | None:
         current = now or self._clock()
@@ -116,6 +125,20 @@ class JobRunner:
 
         if claimed is None:
             return None
+
+        emit_safely(
+            self._telemetry,
+            TelemetryEvent(
+                name="job.claimed",
+                occurred_at=current,
+                job_id=claimed.execution.job_id,
+                attributes={
+                    "job_type": claimed.execution.job_type,
+                    "attempt": claimed.execution.attempt,
+                    "worker_id": self._worker_id,
+                },
+            ),
+        )
 
         context = JobHandlerContext(
             record=claimed,
@@ -156,6 +179,19 @@ class JobRunner:
             now=completed_at,
             output=output,
         )
+        emit_safely(
+            self._telemetry,
+            TelemetryEvent(
+                name="job.completed",
+                occurred_at=completed_at,
+                job_id=completed.execution.job_id,
+                attributes={
+                    "job_type": completed.execution.job_type,
+                    "attempt": completed.execution.attempt,
+                    "worker_id": context.worker_id,
+                },
+            ),
+        )
         return JobRunResult(
             job_id=completed.execution.job_id,
             state=completed.execution.state,
@@ -165,12 +201,30 @@ class JobRunner:
 
     def _renew_lease(self, job_id: str, now: datetime) -> JobRecord:
         with self._unit_of_work_factory() as uow:
-            return uow.jobs.renew(
+            renewed = uow.jobs.renew(
                 job_id,
                 self._worker_id,
                 lease_seconds=self._lease_seconds,
                 now=now,
             )
+
+        emit_safely(
+            self._telemetry,
+            TelemetryEvent(
+                name="job.lease.renewed",
+                occurred_at=now,
+                job_id=job_id,
+                attributes={
+                    "worker_id": self._worker_id,
+                    "lease_until": (
+                        renewed.execution.lease.leased_until.isoformat()
+                        if renewed.execution.lease
+                        else None
+                    ),
+                },
+            ),
+        )
+        return renewed
 
     def _record_failure(
         self,
@@ -214,6 +268,22 @@ class JobRunner:
                     occurred_at=now,
                 )
             )
+
+        emit_safely(
+            self._telemetry,
+            TelemetryEvent(
+                name="job.retry_scheduled" if should_retry else "job.failed",
+                occurred_at=now,
+                level=TelemetryLevel.WARNING if should_retry else TelemetryLevel.ERROR,
+                job_id=failed.execution.job_id,
+                attributes={
+                    "job_type": failed.execution.job_type,
+                    "attempt": failed.execution.attempt,
+                    "worker_id": self._worker_id,
+                    "state": failed.execution.state.value,
+                },
+            ),
+        )
 
         return JobRunResult(
             job_id=failed.execution.job_id,

@@ -9,6 +9,7 @@ from shema_platform.application.job_runner import (
 )
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.jobs import JobExecution, JobLease, JobRecord, JobState
+from shema_platform.foundation.observability import InMemoryTelemetry
 from shema_platform.foundation.outbox import OutboxEvent
 from shema_platform.foundation.recovery import RetryPolicy
 
@@ -154,10 +155,12 @@ def make_uow() -> tuple[FakeUoW, Callable[[], FakeUoW]]:
 
 def test_job_runner_completes_and_publishes() -> None:
     uow, factory = make_uow()
+    telemetry = InMemoryTelemetry()
     runner = JobRunner(
         factory,
         JobHandlerRegistry({"test.job": lambda context: {"ok": True}}),
         worker_id="worker-1",
+        telemetry=telemetry,
     )
 
     result = runner.run_next()
@@ -167,10 +170,15 @@ def test_job_runner_completes_and_publishes() -> None:
     assert result.output == {"ok": True}
     assert [event.event_type for event in uow.outbox.events] == ["job.completed"]
     assert [audit.outcome for audit in uow.audits.records] == ["success"]
+    assert [event.name for event in telemetry.events] == [
+        "job.claimed",
+        "job.completed",
+    ]
 
 
 def test_job_handler_can_renew_its_lease_without_database_access() -> None:
     uow, factory = make_uow()
+    telemetry = InMemoryTelemetry()
     base = datetime.now(UTC)
     renew_at = base + timedelta(seconds=30)
 
@@ -190,6 +198,7 @@ def test_job_handler_can_renew_its_lease_without_database_access() -> None:
         lease_seconds=60,
         worker_id="worker-1",
         clock=lambda: renew_at,
+        telemetry=telemetry,
     )
 
     result = runner.run_next(now=base)
@@ -197,6 +206,11 @@ def test_job_handler_can_renew_its_lease_without_database_access() -> None:
     assert result is not None
     assert result.state is JobState.SUCCEEDED
     assert result.output == {"renewed": True}
+    assert [event.name for event in telemetry.events] == [
+        "job.claimed",
+        "job.lease.renewed",
+        "job.completed",
+    ]
 
 
 def test_job_runner_schedules_retryable_failure() -> None:
