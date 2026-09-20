@@ -1,4 +1,5 @@
 import os
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -13,7 +14,7 @@ from shema_platform.application.communication import (
     CommunicationSendRequest,
     CommunicationSendResult,
 )
-from shema_platform.domain.commercial_action import CommercialAction
+from shema_platform.domain.commercial_action import CommercialAction, CommercialActionStatus
 from shema_platform.foundation.authorization import (
     AuthorizationSubject,
     Permission,
@@ -125,3 +126,50 @@ def test_postgres_commercial_send_workflow_round_trip() -> None:
                 (action.action_id,),
             )
             cleanup.commit()
+
+
+def test_postgres_commercial_send_reservation_reclaims_expired_lease() -> None:
+    action = CommercialAction(
+        action_id=str(uuid4()),
+        identity_id="identity:integration",
+        contact_ref="chat:integration",
+        channel="max",
+        evidence_refs=("evidence:integration",),
+    ).mark_ready()
+
+    with psycopg.connect(DATABASE_URL) as first, psycopg.connect(DATABASE_URL) as second:
+        apply_migrations(first)
+        from shema_platform.platform.postgres_repositories import PostgresCommercialActionRepository
+
+        repository = PostgresCommercialActionRepository(first)
+        repository.add(action)
+        first.commit()
+
+        start = datetime.now(UTC)
+        claimed = repository.claim_for_send(
+            action.action_id,
+            "worker-1",
+            lease_until=start + timedelta(seconds=1),
+            now=start,
+        )
+        assert claimed.status is CommercialActionStatus.SENDING
+        assert claimed.send_attempt == 1
+        first.commit()
+
+        second_repository = PostgresCommercialActionRepository(second)
+        reclaimed = second_repository.claim_for_send(
+            action.action_id,
+            "worker-2",
+            lease_until=start + timedelta(seconds=60),
+            now=start + timedelta(seconds=2),
+        )
+        assert reclaimed.status is CommercialActionStatus.SENDING
+        assert reclaimed.send_attempt == 2
+        assert reclaimed.send_worker_id == "worker-2"
+        second.commit()
+
+        first.execute(
+            "delete from commercial_action where action_id = %s",
+            (action.action_id,),
+        )
+        first.commit()
