@@ -44,6 +44,10 @@ def test_machine_readable_architecture_contract_exists() -> None:
         "commercial_send_completion_requires_current_lease"
         in contract["critical_invariants"]
     )
+    assert "order_persistence_respects_domain_lifecycle" in contract["critical_invariants"]
+    assert "order_persistence_serializes_lifecycle_update" in contract[
+        "critical_invariants"
+    ]
     assert contract["persistence"]["uncertain_state"] == ["quarantine_record"]
 
 
