@@ -53,9 +53,60 @@ def test_order_lifecycle_is_explicit() -> None:
     assert completed.status is OrderStatus.COMPLETED
 
 
+@pytest.mark.parametrize(
+    ("status", "expected"),
+    [
+        (OrderStatus.DRAFT, OrderStatus.CANCELLED),
+        (OrderStatus.CONFIRMED, OrderStatus.CANCELLED),
+        (OrderStatus.IN_PROGRESS, OrderStatus.CANCELLED),
+    ],
+)
+def test_order_can_be_cancelled_from_non_terminal_states(
+    status: OrderStatus,
+    expected: OrderStatus,
+) -> None:
+    order = make_order()
+    if status is OrderStatus.CONFIRMED:
+        order = order.confirm()
+    elif status is OrderStatus.IN_PROGRESS:
+        order = order.confirm().start()
+
+    cancelled = order.cancel()
+
+    assert cancelled.status is expected
+
+
+def test_order_can_fail_only_while_in_progress() -> None:
+    failed = make_order().confirm().start().fail()
+
+    assert failed.status is OrderStatus.FAILED
+
+
+@pytest.mark.parametrize(
+    "status",
+    [OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.FAILED],
+)
+def test_order_terminal_states_cannot_transition(status: OrderStatus) -> None:
+    order = make_order()
+    if status is OrderStatus.COMPLETED:
+        order = order.confirm().start().complete()
+    elif status is OrderStatus.CANCELLED:
+        order = order.cancel()
+    else:
+        order = order.confirm().start().fail()
+
+    with pytest.raises(ValueError):
+        order.cancel()
+    with pytest.raises(ValueError):
+        order.fail()
+
+
 def test_invalid_order_transition_is_rejected() -> None:
     with pytest.raises(ValueError, match="only confirmed"):
         make_order().start()
+
+    with pytest.raises(ValueError, match="only in-progress"):
+        make_order().fail()
 
 
 def test_negative_unit_price_is_rejected() -> None:

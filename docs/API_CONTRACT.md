@@ -42,3 +42,13 @@ HTTP mapping: 400 malformed request; 401 unauthenticated; 403 authorization/poli
 ## Client boundary
 
 Web, PWA and Android use versioned DTOs and canonical application semantics. They may cache projections and drafts locally, but identity, evidence, qualification, commercial action, order and economic state remain authoritative on the server.
+## Order lifecycle
+
+The canonical order state machine is:
+
+- `draft -> confirmed | cancelled`
+- `confirmed -> in_progress | cancelled`
+- `in_progress -> completed | cancelled | failed`
+- `completed`, `cancelled` and `failed` are terminal.
+
+The domain is the source of truth for these transitions. Persistence locks the current order row before validating and saving a transition.

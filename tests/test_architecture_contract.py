@@ -52,6 +52,19 @@ def test_machine_readable_architecture_contract_exists() -> None:
     assert "order_persistence_serializes_lifecycle_update" in contract[
         "critical_invariants"
     ]
+    assert contract["order_lifecycle"]["state_transitions"] == {
+        "draft": ["confirmed", "cancelled"],
+        "confirmed": ["in_progress", "cancelled"],
+        "in_progress": ["completed", "cancelled", "failed"],
+        "completed": [],
+        "cancelled": [],
+        "failed": [],
+    }
+    assert contract["order_lifecycle"]["terminal_states"] == [
+        "completed",
+        "cancelled",
+        "failed",
+    ]
     assert contract["persistence"]["uncertain_state"] == ["quarantine_record"]
 
 

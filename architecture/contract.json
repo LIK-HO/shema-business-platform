@@ -185,5 +185,30 @@
     "airtable": "transition_data_only",
     "replit_migration_frozen_until": "2026-10-13",
     "bitrix24_migration": "frozen_without_date"
+  },
+  "order_lifecycle": {
+    "state_transitions": {
+      "draft": [
+        "confirmed",
+        "cancelled"
+      ],
+      "confirmed": [
+        "in_progress",
+        "cancelled"
+      ],
+      "in_progress": [
+        "completed",
+        "cancelled",
+        "failed"
+      ],
+      "completed": [],
+      "cancelled": [],
+      "failed": []
+    },
+    "terminal_states": [
+      "completed",
+      "cancelled",
+      "failed"
+    ]
   }
 }

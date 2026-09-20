@@ -6,7 +6,12 @@ from uuid import uuid4
 import psycopg
 import pytest
 
+from decimal import Decimal
+
+from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.identity import Identity, IdentityState
+from shema_platform.domain.money import Money
+from shema_platform.domain.order import Order, OrderLine, OrderStatus
 from shema_platform.domain.search import SearchHit, SelectionLevel
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.errors import IdempotencyConflict, IntegrityViolation
@@ -17,9 +22,10 @@ from shema_platform.platform.postgres_repositories import (
     PostgresAuditRepository,
     PostgresEvidenceRepository,
     PostgresIdempotencyRepository,
+    PostgresCommercialActionRepository,
     PostgresIdentityRepository,
-    PostgresOutboxRepository,
-    PostgresQuarantineRepository,
+    PostgresOrderRepository,
+    PostgresOutboxRepository,    PostgresQuarantineRepository,
     PostgresSearchCandidateRepository,
 )
 
@@ -219,6 +225,84 @@ def test_postgres_core_persistence_round_trip() -> None:
         connection.execute("delete from identity where identity_id = %s", (identity_id,))
         connection.commit()
 
+
+def test_postgres_order_lifecycle_persists_cancel_and_failure_states() -> None:
+    action_id = f"action:{uuid4()}"
+    identity_id = f"identity:{uuid4()}"
+    cancelled_order_id = f"order:{uuid4()}"
+    failed_order_id = f"order:{uuid4()}"
+
+    action = CommercialAction(
+        action_id=action_id,
+        identity_id=identity_id,
+        contact_ref="max:integration",
+        channel="max",
+        evidence_refs=("evidence:integration",),
+    ).mark_ready().mark_sent()
+
+    cancelled = Order(
+        order_id=cancelled_order_id,
+        identity_id=identity_id,
+        source_action_id=action_id,
+        lines=(
+            OrderLine("line:cancel", "Погрузка", Decimal("1"), Money(1000, "RUB")),
+        ),
+    )
+    failed = Order(
+        order_id=failed_order_id,
+        identity_id=identity_id,
+        source_action_id=action_id,
+        lines=(
+            OrderLine("line:fail", "Такелаж", Decimal("1"), Money(2000, "RUB")),
+        ),
+    )
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        prepare_database(connection)
+        commercial_actions = PostgresCommercialActionRepository(connection)
+        commercial_actions.add(action)
+        orders = PostgresOrderRepository(connection)
+
+        orders.add(cancelled)
+        orders.save(cancelled.cancel())
+        loaded_cancelled = orders.get(cancelled_order_id)
+        assert loaded_cancelled is not None
+        assert loaded_cancelled.status is OrderStatus.CANCELLED
+
+        orders.add(failed)
+        confirmed = failed.confirm()
+        running = confirmed.start()
+        orders.save(confirmed)
+        orders.save(running)
+        orders.save(running.fail())
+        loaded_failed = orders.get(failed_order_id)
+        assert loaded_failed is not None
+        assert loaded_failed.status is OrderStatus.FAILED
+
+        with pytest.raises(IntegrityViolation, match="status transition"):
+            orders.save(
+                Order(
+                    order_id=cancelled_order_id,
+                    identity_id=identity_id,
+                    source_action_id=action_id,
+                    lines=cancelled.lines,
+                    status=OrderStatus.COMPLETED,
+                )
+            )
+
+        connection.execute(
+            "delete from order_line where order_id in (%s, %s)",
+            (cancelled_order_id, failed_order_id),
+        )
+        connection.execute(
+            "delete from order_header where order_id in (%s, %s)",
+            (cancelled_order_id, failed_order_id),
+        )
+        connection.execute(
+            "delete from commercial_action where action_id = %s",
+            (action_id,),
+        )
+        connection.commit()
 
 def test_postgres_outbox_rejects_event_id_collision() -> None:
     event_id = str(uuid4())

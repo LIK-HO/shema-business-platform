@@ -64,32 +64,37 @@ class Order:
     def confirm(self) -> Order:
         if self.status is not OrderStatus.DRAFT:
             raise ValueError("only draft order can be confirmed")
-        return Order(
-            order_id=self.order_id,
-            identity_id=self.identity_id,
-            source_action_id=self.source_action_id,
-            lines=self.lines,
-            status=OrderStatus.CONFIRMED,
-        )
+        return self._with_status(OrderStatus.CONFIRMED)
 
     def start(self) -> Order:
         if self.status is not OrderStatus.CONFIRMED:
             raise ValueError("only confirmed order can start")
-        return Order(
-            order_id=self.order_id,
-            identity_id=self.identity_id,
-            source_action_id=self.source_action_id,
-            lines=self.lines,
-            status=OrderStatus.IN_PROGRESS,
-        )
+        return self._with_status(OrderStatus.IN_PROGRESS)
 
     def complete(self) -> Order:
         if self.status is not OrderStatus.IN_PROGRESS:
             raise ValueError("only in-progress order can complete")
+        return self._with_status(OrderStatus.COMPLETED)
+
+    def cancel(self) -> Order:
+        if self.status not in {
+            OrderStatus.DRAFT,
+            OrderStatus.CONFIRMED,
+            OrderStatus.IN_PROGRESS,
+        }:
+            raise ValueError("only draft, confirmed, or in-progress order can be cancelled")
+        return self._with_status(OrderStatus.CANCELLED)
+
+    def fail(self) -> Order:
+        if self.status is not OrderStatus.IN_PROGRESS:
+            raise ValueError("only in-progress order can fail")
+        return self._with_status(OrderStatus.FAILED)
+
+    def _with_status(self, status: OrderStatus) -> Order:
         return Order(
             order_id=self.order_id,
             identity_id=self.identity_id,
             source_action_id=self.source_action_id,
             lines=self.lines,
-            status=OrderStatus.COMPLETED,
+            status=status,
         )

@@ -1205,6 +1205,8 @@ class PostgresOrderRepository(OrderRepository):
                     OrderStatus.CONFIRMED: current.confirm,
                     OrderStatus.IN_PROGRESS: current.start,
                     OrderStatus.COMPLETED: current.complete,
+                    OrderStatus.CANCELLED: current.cancel,
+                    OrderStatus.FAILED: current.fail,
                 }.get(order.status)
                 if expected is None or expected() != order:
                     raise IntegrityViolation(
