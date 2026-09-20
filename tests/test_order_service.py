@@ -1,3 +1,4 @@
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -43,7 +44,11 @@ def sent_action() -> CommercialAction:
         contact_ref="chat:42",
         channel="max",
         evidence_refs=("evidence:1",),
-    ).mark_ready().mark_sent()
+    ).mark_ready().mark_sending(
+        worker_id="test-worker",
+        lease_until=datetime.now(UTC) + timedelta(minutes=5),
+        attempt=1,
+    ).mark_sent()
 
 
 def line() -> OrderLine:
