@@ -69,7 +69,6 @@
   ],
   "execution_contracts": [
     "permission_then_policy",
-    "commercial_action_ready_before_external_send",
     "external_effect_outside_core_transaction",
     "order_requires_sent_or_completed_action",
     "job_claim_requires_lease",
@@ -80,7 +79,8 @@
     "outbox_mark_published_requires_current_lease",
     "expired_outbox_leases_are_reclaimable",
     "commercial_send_reservation_before_external_effect",
-    "expired_commercial_send_reservations_are_reclaimable"
+    "expired_commercial_send_reservations_are_reclaimable",
+    "stable_external_effect_idempotency_key_per_action"
   ],
   "intelligence": {
     "research_depths": [
@@ -140,7 +140,8 @@
     "expired_outbox_leases_are_reclaimable",
     "commercial_send_is_lease_guarded",
     "external_communication_deduplicates_by_idempotency_key",
-    "expired_commercial_send_reservations_are_reclaimable"
+    "expired_commercial_send_reservations_are_reclaimable",
+    "external_effect_idempotency_key_is_stable_per_action"
   ],
   "business_loop": [
     "search",
