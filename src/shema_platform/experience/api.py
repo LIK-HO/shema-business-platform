@@ -150,7 +150,9 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             )
 
         request.state.actor = actor
-        materializer: AuthorizationMaterializer | None = request.app.state.authorization_materializer
+        materializer: AuthorizationMaterializer | None = (
+            request.app.state.authorization_materializer
+        )
         request.state.permissions = (
             materializer.materialize(actor).permissions
             if materializer is not None
