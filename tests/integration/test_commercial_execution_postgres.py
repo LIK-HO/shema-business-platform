@@ -8,11 +8,11 @@ import psycopg
 import pytest
 
 from shema_platform.domain.commercial_action import CommercialAction
-from shema_platform.foundation.audit import AuditRecord
-from shema_platform.foundation.outbox import OutboxEvent
 from shema_platform.domain.economics import EconomicEntry, EconomicKind
 from shema_platform.domain.money import Money
 from shema_platform.domain.order import Order, OrderLine, OrderStatus
+from shema_platform.foundation.audit import AuditRecord
+from shema_platform.foundation.outbox import OutboxEvent
 from shema_platform.platform.postgres_repositories import (
     PostgresAuditRepository,
     PostgresCommercialActionRepository,
@@ -164,7 +164,7 @@ def test_order_repository_rejects_invalid_persistence_transition() -> None:
         connection.commit()
 
 
-def test_commercial_completion_rolls_back_idempotency_business_outbox_and_audit() -> None:
+def test_commercial_completion_failure_rolls_back_all_transactional_writes() -> None:
     action = ready_action()
     action_id = action.action_id
     idempotency_key = "idempotency:atomic-completion"
