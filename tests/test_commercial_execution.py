@@ -79,15 +79,21 @@ class MemoryAudit:
 class MemoryAdapter(CommunicationAdapter):
     channel: str = "max"
     calls: list[CommunicationSendRequest] = field(default_factory=list)
+    receipts: dict[str, CommunicationSendResult] = field(default_factory=dict)
 
     def send(self, request: CommunicationSendRequest) -> CommunicationSendResult:
         self.calls.append(request)
-        return CommunicationSendResult(
+        existing = self.receipts.get(request.idempotency_key)
+        if existing is not None:
+            return existing
+        result = CommunicationSendResult(
             action_id=request.action_id,
             channel=request.channel,
             external_message_id=f"external:{request.idempotency_key}",
             accepted=True,
         )
+        self.receipts[request.idempotency_key] = result
+        return result
 
 
 @dataclass
@@ -255,3 +261,56 @@ def test_expired_send_reservation_can_be_reclaimed() -> None:
     assert action is not None
     assert action.status is CommercialActionStatus.SENT
     assert action.send_attempt == 2
+
+
+def test_external_effect_key_is_stable_across_command_retries() -> None:
+    workflow, uow, adapter = workflow_parts()
+    effect_key = workflow.effect_idempotency_key("action-1")
+
+    first_request_hash = workflow.request_hash(
+        "action-1",
+        "Здравствуйте",
+        "command-key-1",
+    )
+    uow.idempotency.reserve(
+        "command-key-1",
+        first_request_hash,
+        "pending:action-1",
+    )
+    now = datetime.now(UTC)
+    uow.commercial_actions.claim_for_send(
+        "action-1",
+        "worker-1",
+        lease_until=now - timedelta(seconds=1),
+        now=now - timedelta(seconds=10),
+    )
+    first_receipt = adapter.send(
+        CommunicationSendRequest(
+            action_id="action-1",
+            channel="max",
+            contact_ref="chat:1",
+            body="Здравствуйте",
+            idempotency_key=effect_key,
+        )
+    )
+
+    current = uow.commercial_actions.get("action-1")
+    assert current is not None
+    uow.commercial_actions.save(
+        current.mark_sending(
+            worker_id="worker-1",
+            lease_until=now - timedelta(seconds=1),
+            attempt=1,
+        )
+    )
+
+    result = workflow.execute(
+        actor=Actor("operator-1", trust_level=2),
+        action_id="action-1",
+        body="Здравствуйте",
+        idempotency_key="command-key-2",
+    )
+
+    assert result.external_message_id == first_receipt.external_message_id
+    assert len(adapter.calls) == 2
+    assert adapter.calls[-1].idempotency_key == effect_key
