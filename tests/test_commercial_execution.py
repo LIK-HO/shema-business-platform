@@ -63,7 +63,30 @@ class MemoryActions:
         self.actions[action_id] = return_value
         return return_value
 
+    def complete_send(
+        self,
+        action_id: str,
+        worker_id: str,
+        *,
+        now: datetime,
+    ) -> CommercialAction:
+        current = self.get(action_id)
+        if current is None:
+            raise KeyError(f"unknown commercial action: {action_id}")
+        if (
+            current.status is not CommercialActionStatus.SENDING
+            or current.send_worker_id != worker_id
+            or current.send_lease_until is None
+            or current.send_lease_until <= now
+        ):
+            raise QuarantineRequired("commercial action completion requires current lease")
+        sent = current.mark_sent()
+        self.actions[action_id] = sent
+        return sent
+
     def save(self, action: CommercialAction) -> None:
+        if action.status is CommercialActionStatus.SENT:
+            raise QuarantineRequired("commercial action SENT requires lease-guarded completion")
         self.actions[action.action_id] = action
 
 
@@ -314,3 +337,37 @@ def test_external_effect_key_is_stable_across_command_retries() -> None:
     assert result.external_message_id == first_receipt.external_message_id
     assert len(adapter.calls) == 2
     assert adapter.calls[-1].idempotency_key == effect_key
+
+
+def test_stale_send_worker_cannot_complete_action() -> None:
+    workflow, uow, _ = workflow_parts()
+    now = datetime.now(UTC)
+    uow.commercial_actions.claim_for_send(
+        "action-1",
+        "worker-1",
+        lease_until=now + timedelta(seconds=1),
+        now=now,
+    )
+
+    with pytest.raises(QuarantineRequired, match="requires current lease"):
+        uow.commercial_actions.complete_send(
+            "action-1",
+            "worker-2",
+            now=now + timedelta(seconds=2),
+        )
+
+
+def test_direct_sent_save_is_rejected() -> None:
+    workflow, uow, _ = workflow_parts()
+    sent = (
+        uow.commercial_actions.get("action-1")
+        .mark_sending(
+            worker_id="worker-1",
+            lease_until=datetime.now(UTC) + timedelta(minutes=5),
+            attempt=1,
+        )
+        .mark_sent()
+    )
+    with pytest.raises(QuarantineRequired, match="lease-guarded completion"):
+        uow.commercial_actions.save(sent)
+    assert workflow is not None
