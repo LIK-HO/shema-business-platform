@@ -82,6 +82,7 @@
     "expired_commercial_send_reservations_are_reclaimable",
     "stable_external_effect_idempotency_key_per_action",
     "commercial_send_completion_requires_current_lease",
+    "idempotency_business_state_outbox_audit_commit_atomically",
     "order_persistence_respects_domain_lifecycle",
     "order_persistence_serializes_lifecycle_update"
   ],
@@ -146,6 +147,7 @@
     "external_effect_idempotency_key_is_stable_per_action",
     "commercial_action_is_reserved_before_external_effect",
     "commercial_send_completion_requires_current_lease",
+    "idempotency_business_state_outbox_audit_are_one_transaction",
     "order_persistence_respects_domain_lifecycle",
     "order_persistence_serializes_lifecycle_update"
   ],
