@@ -38,7 +38,7 @@ class CommunicationAdapter(Protocol):
 
 
 class CommunicationGateway:
-    """External-effect boundary. Only a READY commercial action may reach an adapter."""
+    """External-effect boundary. Only a validated READY/SENDING action may reach an adapter."""
 
     def __init__(self, adapter: CommunicationAdapter) -> None:
         self._adapter = adapter
