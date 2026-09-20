@@ -1,3 +1,5 @@
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
 from shema_platform.domain.commercial_action import (
@@ -47,16 +49,24 @@ def test_action_rejects_incomplete_send_context(
         action.mark_ready()
 
 
-def test_only_ready_action_can_be_sent() -> None:
+def test_action_transitions_from_ready_through_sending_to_sent() -> None:
     action = CommercialAction(
         action_id="action-1",
         identity_id="identity-1",
         contact_ref="phone:+70000000000",
         channel="max",
         evidence_refs=("evidence:1",),
-    )
+    ).mark_ready()
 
-    with pytest.raises(ValueError, match="only ready"):
+    with pytest.raises(ValueError, match="only sending"):
         action.mark_sent()
 
-    assert action.mark_ready().mark_sent().status is CommercialActionStatus.SENT
+    sending = action.mark_sending(
+        worker_id="worker-1",
+        lease_until=datetime.now(UTC) + timedelta(minutes=5),
+        attempt=1,
+    )
+    assert sending.status is CommercialActionStatus.SENDING
+    assert sending.send_worker_id == "worker-1"
+    assert sending.send_attempt == 1
+    assert sending.mark_sent().status is CommercialActionStatus.SENT
