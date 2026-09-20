@@ -88,7 +88,7 @@ paths:
   /v1/commercial-actions/{actionId}/send:
     post:
       operationId: sendCommercialAction
-      summary: Send a READY commercial action through its adapter
+      summary: Send a reserved commercial action through its adapter
       parameters:
         - $ref: '#/components/parameters/CorrelationId'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -303,7 +303,7 @@ components:
         identityId: { type: string }
         contactRef: { type: string }
         channel: { type: string }
-        status: { type: string, enum: [draft, ready, sent, failed, completed, cancelled] }
+        status: { type: string, enum: [draft, ready, sending, sent, failed, completed, cancelled] }
     CommercialActionSendRequest:
       type: object
       required: [body]
