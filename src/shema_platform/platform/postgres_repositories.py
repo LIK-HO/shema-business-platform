@@ -26,7 +26,11 @@ from shema_platform.domain.money import Money
 from shema_platform.domain.order import Order, OrderLine, OrderStatus
 from shema_platform.domain.search import SearchHit
 from shema_platform.foundation.audit import AuditRecord
-from shema_platform.foundation.errors import IdempotencyConflict, IntegrityViolation
+from shema_platform.foundation.errors import (
+    IdempotencyConflict,
+    IntegrityViolation,
+    QuarantineRequired,
+)
 from shema_platform.foundation.evidence import Evidence
 from shema_platform.foundation.idempotency import IdempotencyRecord
 from shema_platform.foundation.jobs import JobExecution, JobLease, JobRecord, JobState
@@ -279,6 +283,56 @@ class PostgresIdempotencyRepository(IdempotencyRepository):
             key=str(row[0]),
             request_hash=str(row[1]),
             result_ref=str(row[2]),
+        )
+
+    def complete(
+        self,
+        key: str,
+        request_hash: str,
+        result_ref: str,
+    ) -> IdempotencyRecord:
+        if not result_ref.strip():
+            raise ValueError("result_ref is required")
+        cursor = self._connection.execute(
+            """
+            select key, request_hash, result_ref
+            from idempotency_key
+            where key = %s
+            for update
+            """,
+            (key,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise IdempotencyConflict("idempotency completion has no reservation")
+
+        existing = IdempotencyRecord(
+            key=str(row[0]),
+            request_hash=str(row[1]),
+            result_ref=str(row[2]),
+        )
+        if existing.request_hash != request_hash:
+            raise IdempotencyConflict("idempotency key reused with different request")
+        if existing.result_ref and not existing.result_ref.startswith("pending:"):
+            return existing
+
+        cursor = self._connection.execute(
+            """
+            update idempotency_key
+            set result_ref = %s
+            where key = %s
+              and request_hash = %s
+            returning key, request_hash, result_ref
+            """,
+            (result_ref, key, request_hash),
+        )
+        updated = cursor.fetchone()
+        if updated is None:
+            raise IntegrityViolation("idempotency completion disappeared")
+        return IdempotencyRecord(
+            key=str(updated[0]),
+            request_hash=str(updated[1]),
+            result_ref=str(updated[2]),
         )
 
     def get(self, key: str) -> IdempotencyRecord | None:
@@ -807,9 +861,17 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
         self._connection.execute(
             """
             insert into commercial_action (
-                action_id, identity_id, contact_ref, channel, evidence_refs, status
+                action_id,
+                identity_id,
+                contact_ref,
+                channel,
+                evidence_refs,
+                status,
+                send_attempt,
+                send_worker_id,
+                send_lease_until
             )
-            values (%s, %s, %s, %s, %s::jsonb, %s)
+            values (%s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s)
             """,
             (
                 action.action_id,
@@ -818,30 +880,107 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
                 action.channel,
                 json.dumps(action.evidence_refs, ensure_ascii=False),
                 action.status.value,
+                action.send_attempt,
+                action.send_worker_id,
+                action.send_lease_until,
             ),
         )
 
     def get(self, action_id: str) -> CommercialAction | None:
         cursor = self._connection.execute(
             """
-            select action_id, identity_id, contact_ref, channel, evidence_refs, status
+            select
+                action_id,
+                identity_id,
+                contact_ref,
+                channel,
+                evidence_refs,
+                status,
+                send_attempt,
+                send_worker_id,
+                send_lease_until
             from commercial_action
             where action_id = %s
             """,
             (action_id,),
         )
         row = cursor.fetchone()
-        if row is None:
-            return None
-        action_id_value, identity_id, contact_ref, channel, evidence_refs, status = row
-        return CommercialAction(
-            action_id=str(action_id_value),
-            identity_id=str(identity_id),
-            contact_ref=str(contact_ref),
-            channel=str(channel),
-            evidence_refs=tuple(str(ref) for ref in evidence_refs),
-            status=CommercialActionStatus(str(status)),
+        return None if row is None else self._to_action(row)
+
+    def claim_for_send(
+        self,
+        action_id: str,
+        worker_id: str,
+        *,
+        lease_until: datetime,
+        now: datetime,
+    ) -> CommercialAction:
+        if not worker_id.strip():
+            raise ValueError("send worker is required")
+        if lease_until.tzinfo is None or now.tzinfo is None:
+            raise ValueError("send lease timestamps must be timezone-aware")
+        if lease_until <= now:
+            raise ValueError("send lease must be in the future")
+
+        current = self.get(action_id)
+        if current is None:
+            raise KeyError(f"unknown commercial action: {action_id}")
+        if current.status not in (
+            CommercialActionStatus.READY,
+            CommercialActionStatus.SENDING,
+        ):
+            raise QuarantineRequired(
+                "commercial action is not available for external send"
+            )
+        current.validate_for_send()
+
+        cursor = self._connection.execute(
+            """
+            update commercial_action
+            set status = 'sending',
+                send_attempt = send_attempt + 1,
+                send_worker_id = %s,
+                send_lease_until = %s,
+                updated_at = %s
+            where action_id = %s
+              and (
+                  status = 'ready'
+                  or (
+                      status = 'sending'
+                      and send_lease_until is not null
+                      and send_lease_until <= %s
+                  )
+              )
+            returning
+                action_id,
+                identity_id,
+                contact_ref,
+                channel,
+                evidence_refs,
+                status,
+                send_attempt,
+                send_worker_id,
+                send_lease_until
+            """,
+            (
+                worker_id,
+                lease_until,
+                now,
+                action_id,
+                now,
+            ),
         )
+        row = cursor.fetchone()
+        if row is None:
+            current = self.get(action_id)
+            if current is not None and current.status is CommercialActionStatus.SENDING:
+                raise QuarantineRequired(
+                    "commercial action send is already in progress"
+                )
+            raise QuarantineRequired(
+                "commercial action changed during send reservation"
+            )
+        return self._to_action(row)
 
     def save(self, action: CommercialAction) -> None:
         cursor = self._connection.execute(
@@ -852,6 +991,9 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
                 channel = %s,
                 evidence_refs = %s::jsonb,
                 status = %s,
+                send_attempt = %s,
+                send_worker_id = %s,
+                send_lease_until = %s,
                 updated_at = now()
             where action_id = %s
             returning action_id
@@ -862,11 +1004,39 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
                 action.channel,
                 json.dumps(action.evidence_refs, ensure_ascii=False),
                 action.status.value,
+                action.send_attempt,
+                action.send_worker_id,
+                action.send_lease_until,
                 action.action_id,
             ),
         )
         if cursor.fetchone() is None:
             raise KeyError(f"unknown commercial action: {action.action_id}")
+
+    @staticmethod
+    def _to_action(row: tuple[object, ...]) -> CommercialAction:
+        (
+            action_id_value,
+            identity_id,
+            contact_ref,
+            channel,
+            evidence_refs,
+            status,
+            send_attempt,
+            send_worker_id,
+            send_lease_until,
+        ) = row
+        return CommercialAction(
+            action_id=str(action_id_value),
+            identity_id=str(identity_id),
+            contact_ref=str(contact_ref),
+            channel=str(channel),
+            evidence_refs=tuple(str(ref) for ref in evidence_refs),
+            status=CommercialActionStatus(str(status)),
+            send_attempt=int(send_attempt),
+            send_worker_id=str(send_worker_id) if send_worker_id is not None else None,
+            send_lease_until=send_lease_until,
+        )
 
 
 class PostgresOrderRepository(OrderRepository):
