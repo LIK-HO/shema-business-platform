@@ -88,6 +88,45 @@ def test_malformed_bearer_header_is_rejected(authorization: str | None) -> None:
         authenticator(private_key).authenticate(authorization)
 
 
+def test_key_rotation_accepts_a_new_signing_key_without_changing_issuer_configuration() -> None:
+    old_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    new_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+    class RotatingJWKClient:
+        def get_signing_key_from_jwt(self, token_value: str) -> FakeSigningKey:
+            header = jwt.get_unverified_header(token_value)
+            return FakeSigningKey(
+                new_key.public_key() if header["kid"] == "key-2" else old_key.public_key()
+            )
+
+    auth = JWTBearerAuthentication(
+        JWTAuthenticationConfig(
+            issuer="https://issuer.example",
+            audience="shema-api",
+            jwks_url="https://issuer.example/.well-known/jwks.json",
+        ),
+        jwks_client=RotatingJWKClient(),
+    )
+
+    actor = auth.authenticate(
+        "Bearer "
+        + jwt.encode(
+            {
+                "iss": "https://issuer.example",
+                "sub": "operator-1",
+                "aud": "shema-api",
+                "iat": int(datetime.now(UTC).timestamp()),
+                "exp": int((datetime.now(UTC) + timedelta(minutes=5)).timestamp()),
+            },
+            new_key,
+            algorithm="RS256",
+            headers={"kid": "key-2"},
+        )
+    )
+
+    assert actor.actor_id == "operator-1"
+
+
 def test_expired_token_is_rejected() -> None:
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     expired = token(

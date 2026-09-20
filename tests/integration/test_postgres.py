@@ -62,6 +62,25 @@ def prepare_database(connection: psycopg.Connection) -> None:
         apply_migration(connection, ROOT / "db/migrations" / migration)
 
 
+def test_postgres_transaction_rollback_restores_database_truth() -> None:
+    identity_id = f"rollback:{uuid4()}"
+    tax_id = str(uuid4().int % 10_000_000_000).zfill(10)
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        prepare_database(connection)
+        PostgresIdentityRepository(connection).add(
+            Identity(
+                identity_id=identity_id,
+                canonical_name="ООО Rollback Test",
+                state=IdentityState.IDENTIFIED,
+                tax_id=tax_id,
+            )
+        )
+        connection.rollback()
+
+        assert PostgresIdentityRepository(connection).find_by_tax_id(tax_id) is None
+
+
 def test_postgres_core_persistence_round_trip() -> None:
     identity_id = str(uuid4())
     tax_id = str(uuid4().int % 10_000_000_000).zfill(10)

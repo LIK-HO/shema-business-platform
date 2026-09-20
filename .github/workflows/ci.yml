@@ -34,6 +34,52 @@ jobs:
       - name: Unit tests
         run: pytest -m "not integration"
 
+  security:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install package
+        run: python -m pip install --upgrade pip && pip install -e '.[dev]'
+      - name: Security tests
+        run: pytest tests/test_jwt_bearer_authentication.py tests/test_authorization_materialization.py tests/test_observability.py
+
+  recovery:
+    needs: quality
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: shema
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d shema"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shema
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install package
+        run: python -m pip install --upgrade pip && pip install -e '.[dev]'
+      - name: Recovery drills
+        run: pytest -m integration tests/integration/test_postgres.py tests/integration/test_postgres_jobs.py tests/integration/test_postgres_outbox.py
+
   integration:
     needs: quality
     runs-on: ubuntu-latest
