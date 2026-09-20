@@ -9,7 +9,7 @@ import pytest
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.economics import EconomicEntry, EconomicKind
 from shema_platform.domain.money import Money
-from shema_platform.domain.order import Order, OrderLine
+from shema_platform.domain.order import Order, OrderLine, OrderStatus
 from shema_platform.platform.postgres_repositories import (
     PostgresCommercialActionRepository,
     PostgresEconomicEntryRepository,
@@ -136,7 +136,7 @@ def test_order_repository_rejects_invalid_persistence_transition() -> None:
             identity_id=order.identity_id,
             source_action_id=order.source_action_id,
             lines=order.lines,
-            status=order.status.IN_PROGRESS,
+            status=OrderStatus.IN_PROGRESS,
         )
         with pytest.raises(IntegrityViolation, match="transition"):
             orders.save(invalid)
