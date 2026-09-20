@@ -25,6 +25,13 @@ class CommunicationSendResult:
 
 
 class CommunicationAdapter(Protocol):
+    """External adapter contract.
+
+    Implementations must treat idempotency_key as the deduplication key for the
+    external effect: repeated sends with the same key and request must resolve
+    to the same external result rather than creating a second effect.
+    """
+
     channel: str
 
     def send(self, request: CommunicationSendRequest) -> CommunicationSendResult: ...
