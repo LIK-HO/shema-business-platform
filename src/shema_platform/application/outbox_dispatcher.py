@@ -7,6 +7,13 @@ from uuid import NAMESPACE_URL, uuid5
 
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.foundation.audit import AuditRecord
+from shema_platform.foundation.observability import (
+    NullTelemetry,
+    TelemetryEvent,
+    TelemetryLevel,
+    TelemetryPort,
+    emit_safely,
+)
 from shema_platform.foundation.outbox import OutboxDelivery, OutboxEvent
 
 
@@ -26,6 +33,7 @@ class OutboxDispatcher:
         *,
         worker_id: str = "outbox-worker",
         lease_seconds: int = 60,
+        telemetry: TelemetryPort | None = None,
     ) -> None:
         if not worker_id.strip():
             raise ValueError("worker_id is required")
@@ -35,6 +43,7 @@ class OutboxDispatcher:
         self._publisher = publisher
         self._worker_id = worker_id
         self._lease_seconds = lease_seconds
+        self._telemetry = telemetry or NullTelemetry()
 
     def dispatch_pending(self, *, limit: int = 100) -> int:
         if limit < 1:
@@ -50,6 +59,20 @@ class OutboxDispatcher:
 
         published = 0
         for delivery in deliveries:
+            emit_safely(
+                self._telemetry,
+                TelemetryEvent(
+                    name="outbox.claimed",
+                    occurred_at=datetime.now(UTC),
+                    entity_id=delivery.event.event_id,
+                    attributes={
+                        "event_type": delivery.event.event_type,
+                        "aggregate_type": delivery.event.aggregate_type,
+                        "delivery_attempt": delivery.attempt,
+                        "worker_id": self._worker_id,
+                    },
+                ),
+            )
             try:
                 self._publisher.publish(delivery.event)
             except Exception as exc:
@@ -83,6 +106,20 @@ class OutboxDispatcher:
                             "delivery_attempt": delivery.attempt,
                         },
                     )
+                )
+                emit_safely(
+                    self._telemetry,
+                    TelemetryEvent(
+                        name="outbox.published",
+                        occurred_at=datetime.now(UTC),
+                        entity_id=delivery.event.event_id,
+                        attributes={
+                            "event_type": delivery.event.event_type,
+                            "aggregate_type": delivery.event.aggregate_type,
+                            "delivery_attempt": delivery.attempt,
+                            "worker_id": self._worker_id,
+                        },
+                    ),
                 )
                 published += 1
 
@@ -124,3 +161,20 @@ class OutboxDispatcher:
         except Exception:
             # The publisher error remains the authoritative failure signal.
             pass
+
+        emit_safely(
+            self._telemetry,
+            TelemetryEvent(
+                name="outbox.publish_failed",
+                occurred_at=datetime.now(UTC),
+                level=TelemetryLevel.ERROR,
+                entity_id=delivery.event.event_id,
+                attributes={
+                    "event_type": delivery.event.event_type,
+                    "aggregate_type": delivery.event.aggregate_type,
+                    "delivery_attempt": delivery.attempt,
+                    "worker_id": self._worker_id,
+                    "error_type": type(error).__name__,
+                },
+            ),
+        )

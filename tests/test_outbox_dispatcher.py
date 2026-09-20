@@ -4,6 +4,7 @@ import pytest
 
 from shema_platform.application.outbox_dispatcher import OutboxDispatcher
 from shema_platform.foundation.audit import AuditRecord
+from shema_platform.foundation.observability import InMemoryTelemetry
 from shema_platform.foundation.outbox import OutboxDelivery, OutboxEvent, OutboxStatus
 
 
@@ -112,12 +113,17 @@ def test_outbox_dispatcher_publishes_and_marks_event() -> None:
     outbox = FakeOutbox([make_event()])
     uow = FakeUoW(outbox)
     publisher = FakePublisher()
-    dispatcher = OutboxDispatcher(lambda: uow, publisher)
+    telemetry = InMemoryTelemetry()
+    dispatcher = OutboxDispatcher(lambda: uow, publisher, telemetry=telemetry)
 
     assert dispatcher.dispatch_pending() == 1
     assert publisher.published == ["event-1"]
     assert outbox.events["event-1"].status is OutboxStatus.PUBLISHED
     assert uow.audits[0].action == "outbox.published"
+    assert [event.name for event in telemetry.events] == [
+        "outbox.claimed",
+        "outbox.published",
+    ]
 
 
 def test_outbox_dispatcher_leaves_event_pending_when_publish_fails() -> None:
@@ -125,13 +131,18 @@ def test_outbox_dispatcher_leaves_event_pending_when_publish_fails() -> None:
     uow = FakeUoW(outbox)
     publisher = FakePublisher()
     publisher.fail = True
-    dispatcher = OutboxDispatcher(lambda: uow, publisher)
+    telemetry = InMemoryTelemetry()
+    dispatcher = OutboxDispatcher(lambda: uow, publisher, telemetry=telemetry)
 
     with pytest.raises(RuntimeError, match="publisher unavailable"):
         dispatcher.dispatch_pending()
 
     assert outbox.events["event-1"].status is OutboxStatus.PENDING
     assert uow.audits[0].action == "outbox.publish_failed"
+    assert [event.name for event in telemetry.events] == [
+        "outbox.claimed",
+        "outbox.publish_failed",
+    ]
 
 
 def test_outbox_dispatcher_respects_limit() -> None:
