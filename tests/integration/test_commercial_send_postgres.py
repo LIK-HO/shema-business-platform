@@ -186,8 +186,10 @@ def test_postgres_commercial_send_completion_requires_current_lease() -> None:
 
     with psycopg.connect(DATABASE_URL) as connection:
         apply_migrations(connection)
-        from shema_platform.platform.postgres_repositories import PostgresCommercialActionRepository
         from shema_platform.foundation.errors import IntegrityViolation
+        from shema_platform.platform.postgres_repositories import (
+            PostgresCommercialActionRepository,
+        )
 
         repository = PostgresCommercialActionRepository(connection)
         repository.add(action)
@@ -211,7 +213,10 @@ def test_postgres_commercial_send_completion_requires_current_lease() -> None:
             )
         connection.rollback()
 
-        with pytest.raises(IntegrityViolation, match="SENT state requires lease-guarded completion"):
+        with pytest.raises(
+            IntegrityViolation,
+            match="SENT state requires lease-guarded completion",
+        ):
             repository.save(claimed.mark_sent())
         connection.rollback()
 
