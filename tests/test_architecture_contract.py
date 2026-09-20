@@ -29,6 +29,10 @@ def test_machine_readable_architecture_contract_exists() -> None:
         "external_communication_deduplicates_by_idempotency_key"
         in contract["critical_invariants"]
     )
+    assert (
+        "external_effect_idempotency_key_is_stable_per_action"
+        in contract["critical_invariants"]
+    )
     assert contract["persistence"]["uncertain_state"] == ["quarantine_record"]
 
 
