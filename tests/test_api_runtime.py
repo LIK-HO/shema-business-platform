@@ -27,6 +27,7 @@ from shema_platform.foundation.authentication import (
     AuthenticationRequired,
 )
 from shema_platform.foundation.errors import QuarantineRequired
+from shema_platform.foundation.observability import InMemoryTelemetry
 
 
 class RejectingAuthenticator(AuthenticationPort):
@@ -115,11 +116,15 @@ class QuarantineApplication(FakeApplication):
         raise QuarantineRequired("review required")
 
 
-def client(application: APIApplication | None = None) -> TestClient:
+def client(
+    application: APIApplication | None = None,
+    telemetry: InMemoryTelemetry | None = None,
+) -> TestClient:
     return TestClient(
         create_app(
             application,
             FakeAuthenticator() if application is not None else None,
+            telemetry=telemetry,
         )
     )
 
@@ -202,3 +207,25 @@ def test_runtime_api_maps_missing_application_to_503() -> None:
 
     assert response.status_code == 503
     assert response.json()["code"] == "application_unavailable"
+
+def test_runtime_api_emits_structured_request_telemetry() -> None:
+    telemetry = InMemoryTelemetry()
+
+    response = client(FakeApplication(), telemetry).get(
+        "/v1/diagnostics",
+        headers={
+            "Authorization": "Bearer test-token",
+            "X-Correlation-Id": "corr-telemetry",
+        },
+    )
+
+    assert response.status_code == 200
+    assert [event.name for event in telemetry.events] == ["http.request.completed"]
+
+    event = telemetry.events[0]
+    assert event.correlation_id == "corr-telemetry"
+    assert event.actor_id == "operator-1"
+    assert event.attributes["method"] == "GET"
+    assert event.attributes["path"] == "/v1/diagnostics"
+    assert event.attributes["status_code"] == 200
+    assert "authorization" not in event.attributes

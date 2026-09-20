@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from time import perf_counter
 from typing import Protocol
 from uuid import uuid4
 
@@ -35,6 +36,14 @@ from shema_platform.foundation.errors import (
     IdempotencyConflict,
     PolicyDenied,
     QuarantineRequired,
+)
+from shema_platform.foundation.observability import (
+    NullTelemetry,
+    TelemetryEvent,
+    TelemetryLevel,
+    TelemetryPort,
+    emit_safely,
+    now_utc,
 )
 
 
@@ -142,6 +151,51 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+class TelemetryMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        started = perf_counter()
+        telemetry: TelemetryPort = request.app.state.telemetry
+        try:
+            response = await call_next(request)
+        except Exception as exc:
+            actor = getattr(request.state, "actor", None)
+            emit_safely(
+                telemetry,
+                TelemetryEvent(
+                    name="http.request.failed",
+                    occurred_at=now_utc(),
+                    level=TelemetryLevel.ERROR,
+                    correlation_id=getattr(request.state, "correlation_id", None),
+                    actor_id=getattr(actor, "actor_id", None),
+                    attributes={
+                        "method": request.method,
+                        "path": request.url.path,
+                        "duration_ms": round((perf_counter() - started) * 1000, 2),
+                        "error_type": type(exc).__name__,
+                    },
+                ),
+            )
+            raise
+
+        actor = getattr(request.state, "actor", None)
+        emit_safely(
+            telemetry,
+            TelemetryEvent(
+                name="http.request.completed",
+                occurred_at=now_utc(),
+                correlation_id=getattr(request.state, "correlation_id", None),
+                actor_id=getattr(actor, "actor_id", None),
+                attributes={
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status_code": response.status_code,
+                    "duration_ms": round((perf_counter() - started) * 1000, 2),
+                },
+            ),
+        )
+        return response
+
+
 def _context(
     request: Request,
     idempotency_key: str | None,
@@ -183,6 +237,7 @@ def _error(
 def create_app(
     application: APIApplication | None = None,
     authenticator: AuthenticationPort | None = None,
+    telemetry: TelemetryPort | None = None,
     *,
     enable_docs: bool = True,
 ) -> FastAPI:
@@ -195,8 +250,10 @@ def create_app(
     )
     app.state.application = application
     app.state.authenticator = authenticator
+    app.state.telemetry = telemetry or NullTelemetry()
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(CorrelationMiddleware)
+    app.add_middleware(TelemetryMiddleware)
 
     @app.exception_handler(AuthenticationRequired)
     async def authentication_required(
