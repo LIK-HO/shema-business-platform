@@ -146,6 +146,14 @@ class CommercialActionRepository(Protocol):
         now: datetime,
     ) -> CommercialAction: ...
 
+    def complete_send(
+        self,
+        action_id: str,
+        worker_id: str,
+        *,
+        now: datetime,
+    ) -> CommercialAction: ...
+
     def save(self, action: CommercialAction) -> None: ...
 
 
