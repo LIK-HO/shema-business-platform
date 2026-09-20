@@ -14,7 +14,6 @@ from shema_platform.foundation.authentication import (
     AuthenticationRequired,
 )
 
-
 _SUPPORTED_JWKS_ALGORITHMS = frozenset(
     {"RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "EdDSA"}
 )
