@@ -84,7 +84,7 @@ class CommercialActionResponse(APIModel):
     identity_id: str = Field(alias="identityId")
     contact_ref: str = Field(alias="contactRef")
     channel: str
-    status: Literal["draft", "ready", "sent", "failed", "completed", "cancelled"]
+    status: Literal["draft", "ready", "sending", "sent", "failed", "completed", "cancelled"]
 
 
 class CommercialActionSendRequest(APIModel):
