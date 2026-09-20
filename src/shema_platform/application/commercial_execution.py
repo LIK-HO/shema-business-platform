@@ -49,6 +49,10 @@ class CommercialActionSendWorkflow:
     def pending_ref(action_id: str) -> str:
         return f"pending:{action_id}"
 
+    @staticmethod
+    def effect_idempotency_key(action_id: str) -> str:
+        return f"commercial-send:{action_id}"
+
     def execute(
         self,
         *,
@@ -124,7 +128,7 @@ class CommercialActionSendWorkflow:
         result = self._communication_gateway.send(
             sending,
             body=body,
-            idempotency_key=idempotency_key,
+            idempotency_key=self.effect_idempotency_key(action_id),
         )
 
         with self._unit_of_work_factory() as uow:
