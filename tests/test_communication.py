@@ -46,7 +46,7 @@ def test_gateway_rejects_draft_action_before_adapter_call() -> None:
     assert action.status is CommercialActionStatus.DRAFT
     with pytest.raises(
         QuarantineRequired,
-        match="must be ready before external send",
+        match="must be ready or reserved before external send",
     ):
         gateway.send(
             action,
