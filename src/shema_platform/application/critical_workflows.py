@@ -64,10 +64,22 @@ class CommercialActionCreateWorkflow:
             if identity is None:
                 raise KeyError(f"unknown identity: {identity_id}")
 
+            reservation = uow.idempotency.reserve(
+                key=idempotency_key,
+                request_hash=request_hash,
+                result_ref=action_id,
+            )
+            if reservation.result_ref != action_id:
+                existing_action = uow.commercial_actions.get(reservation.result_ref)
+                if existing_action is None:
+                    raise IntegrityViolation(
+                        "idempotency reservation references missing commercial action"
+                    )
+                return existing_action
+
             service = CommercialActionService(
                 self._authorizer,
                 self._policy,
-                uow.idempotency,
             )
             action = service.create_ready(
                 action_id=action_id,
@@ -77,7 +89,6 @@ class CommercialActionCreateWorkflow:
                 channel=channel,
                 evidence_refs=evidence_refs,
                 request_hash=request_hash,
-                idempotency_key=idempotency_key,
             )
             uow.commercial_actions.add(action)
 
@@ -159,10 +170,22 @@ class OrderCreateWorkflow:
             if action is None:
                 raise KeyError(f"unknown commercial action: {action_id}")
 
+            reservation = uow.idempotency.reserve(
+                key=idempotency_key,
+                request_hash=request_hash,
+                result_ref=order_id,
+            )
+            if reservation.result_ref != order_id:
+                existing_order = uow.orders.get(reservation.result_ref)
+                if existing_order is None:
+                    raise IntegrityViolation(
+                        "idempotency reservation references missing order"
+                    )
+                return existing_order
+
             service = OrderService(
                 self._authorizer,
                 self._policy,
-                uow.idempotency,
             )
             order = service.create_from_action(
                 order_id=order_id,
@@ -170,7 +193,6 @@ class OrderCreateWorkflow:
                 action=action,
                 lines=tuple(lines),
                 request_hash=request_hash,
-                idempotency_key=idempotency_key,
             )
             uow.orders.add(order)
 
