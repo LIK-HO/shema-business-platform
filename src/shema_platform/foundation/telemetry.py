@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass
-from datetime import UTC, datetime
-from types import MappingProxyType
-from typing import Protocol
+import collections.abc
+import dataclasses
+import datetime
+import types
+import typing
 
 
 _SAFE_ATTRIBUTE_KEYS = frozenset(
@@ -23,12 +23,12 @@ _SAFE_ATTRIBUTE_KEYS = frozenset(
 _MAX_STRING_VALUE_LENGTH = 256
 
 
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class TelemetryEvent:
     name: str
-    occurred_at: datetime
+    occurred_at: datetime.datetime
     correlation_id: str
-    attributes: Mapping[str, object]
+    attributes: collections.abc.Mapping[str, object]
 
     def __post_init__(self) -> None:
         if not self.name.strip():
@@ -39,10 +39,10 @@ class TelemetryEvent:
             raise ValueError("occurred_at must be timezone-aware")
 
         safe = _sanitize_attributes(self.attributes)
-        object.__setattr__(self, "attributes", MappingProxyType(safe))
+        object.__setattr__(self, "attributes", types.MappingProxyType(safe))
 
 
-class TelemetrySink(Protocol):
+class TelemetrySink(typing.Protocol):
     """Non-authoritative operational telemetry boundary."""
 
     def emit(self, event: TelemetryEvent) -> None: ...
@@ -72,18 +72,20 @@ def build_event(
     *,
     name: str,
     correlation_id: str,
-    attributes: Mapping[str, object] | None = None,
-    occurred_at: datetime | None = None,
+    attributes: collections.abc.Mapping[str, object] | None = None,
+    occurred_at: datetime.datetime | None = None,
 ) -> TelemetryEvent:
     return TelemetryEvent(
         name=name,
-        occurred_at=occurred_at or datetime.now(UTC),
+        occurred_at=occurred_at or datetime.datetime.now(datetime.UTC),
         correlation_id=correlation_id,
         attributes=attributes or {},
     )
 
 
-def _sanitize_attributes(attributes: Mapping[str, object]) -> dict[str, object]:
+def _sanitize_attributes(
+    attributes: collections.abc.Mapping[str, object],
+) -> dict[str, object]:
     safe: dict[str, object] = {}
     for key, value in attributes.items():
         if key not in _SAFE_ATTRIBUTE_KEYS:
