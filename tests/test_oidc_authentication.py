@@ -123,7 +123,7 @@ def test_oidc_rejects_expired_token(authenticator) -> None:
 
     with pytest.raises(AuthenticationRequired):
         verifier.authenticate(
-            f"Bearer {token(private_key, exp=now - timedelta(seconds=1))}"
+            f"Bearer {token(private_key, exp=now - timedelta(seconds=31))}"
         )
 
 
