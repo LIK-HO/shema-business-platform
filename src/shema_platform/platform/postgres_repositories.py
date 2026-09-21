@@ -16,6 +16,7 @@ from shema_platform.application.ports import (
     JobRepository,
     OrderRepository,
     OutboxRepository,
+    PaymentAdjustmentRepository,
     PaymentAttemptRepository,
     PaymentIntentRepository,
     ProviderEventRepository,
