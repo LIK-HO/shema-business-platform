@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Callable
-
 from shema_platform.application.outbox_router import OutboxHandlerRouter
 from shema_platform.application.payment_execution import PaymentExecutionWorkflow
 from shema_platform.application.payment_outbox import PaymentOutboxHandler
