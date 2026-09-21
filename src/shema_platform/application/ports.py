@@ -220,6 +220,14 @@ class PaymentAttemptRepository(Protocol):
         now: datetime,
     ) -> PaymentAttempt: ...
 
+    def apply_provider_result(
+        self,
+        attempt_id: str,
+        *,
+        status: PaymentAttemptStatus,
+        provider_ref: str | None,
+    ) -> PaymentAttempt: ...
+
 
 class ProviderEventRepository(Protocol):
     """Idempotent persistence port for verified provider events."""
