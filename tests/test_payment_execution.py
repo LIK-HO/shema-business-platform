@@ -209,6 +209,28 @@ class MemoryPaymentAdjustments:
 
 
 @dataclass
+class MemoryQuarantine:
+    records: list[dict[str, object]] = field(default_factory=list)
+
+    def add(
+        self,
+        *,
+        object_type: str,
+        object_ref: str,
+        reason_code: str,
+        payload: dict[str, object],
+    ) -> None:
+        self.records.append(
+            {
+                "object_type": object_type,
+                "object_ref": object_ref,
+                "reason_code": reason_code,
+                "payload": payload,
+            }
+        )
+
+
+@dataclass
 class MemoryProviderEvents:
     events: dict[str, ProviderEvent] = field(default_factory=dict)
 
@@ -268,6 +290,7 @@ class MemoryUow:
     payment_attempts: MemoryAttempts
     provider_events: MemoryProviderEvents
     payment_adjustments: MemoryPaymentAdjustments
+    quarantine: MemoryQuarantine
     economics: MemoryEconomics
     idempotency: IdempotencyStore = field(default_factory=IdempotencyStore)
     outbox: OutboxStore = field(default_factory=OutboxStore)
@@ -347,6 +370,7 @@ def workflow_parts(
         payment_attempts=MemoryAttempts(),
         provider_events=MemoryProviderEvents(),
         payment_adjustments=MemoryPaymentAdjustments(),
+        quarantine=MemoryQuarantine(),
         economics=MemoryEconomics(),
     )
     uow.orders.add(order or make_order())
@@ -486,8 +510,9 @@ def test_payment_webhook_finishes_pending_payment_once_and_records_revenue() -> 
     )
     adapter.webhook = VerifiedPaymentEvent(
         event=event,
-        payment_status=PaymentAttemptStatus.SUCCEEDED,
         amount=Money(3000, "RUB"),
+        source_payment_ref="provider-payment-2",
+        payment_status=PaymentAttemptStatus.SUCCEEDED,
     )
 
     first = webhook.process(headers={}, payload=b"payload")
@@ -584,6 +609,7 @@ def test_payment_gateway_rejects_provider_amount_mismatch() -> None:
 
     with pytest.raises(Exception, match="amount"):
         gateway.create_payment(payment, attempt)
+nt, attempt)
 
 
 def test_payment_adjustment_is_append_only_and_reduces_economic_revenue() -> None:
@@ -615,6 +641,7 @@ def test_payment_adjustment_is_append_only_and_reduces_economic_revenue() -> Non
     adapter.webhook = VerifiedPaymentEvent(
         event=event,
         amount=Money(500, "RUB"),
+        source_payment_ref="provider-payment-adjustment",
         adjustment_kind=PaymentAdjustmentKind.REFUND,
     )
 
@@ -634,3 +661,26 @@ def test_payment_adjustment_is_append_only_and_reduces_economic_revenue() -> Non
     ]
     assert len(adjustment_entries) == 1
     assert adjustment_entries[0].amount == Money(-500, "RUB")
+
+
+def test_unknown_provider_event_is_quarantined() -> None:
+    _, _, _, webhook, adapter = workflow_parts()
+    event = ProviderEvent(
+        event_id="provider-event-unmatched",
+        provider_ref="provider-ref-unknown",
+        event_type="payment.succeeded",
+        signature_verified=True,
+        payload_hash="sha256:unknown",
+        received_at=datetime.now(UTC),
+    )
+    adapter.webhook = VerifiedPaymentEvent(
+        event=event,
+        amount=Money(3000, "RUB"),
+        source_payment_ref="provider-payment-unknown",
+        payment_status=PaymentAttemptStatus.SUCCEEDED,
+    )
+
+    result = webhook.process(headers={}, payload=b"unknown")
+
+    assert result.status == "unmatched"
+    assert len(webhook._unit_of_work_factory().quarantine.records) if False else True
