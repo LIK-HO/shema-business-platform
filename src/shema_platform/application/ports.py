@@ -7,7 +7,12 @@ from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.economics import EconomicEntry
 from shema_platform.domain.identity import Identity
 from shema_platform.domain.order import Order
-from shema_platform.domain.payment import PaymentAttempt, PaymentIntent, ProviderEvent
+from shema_platform.domain.payment import (
+    PaymentAttempt,
+    PaymentAttemptStatus,
+    PaymentIntent,
+    ProviderEvent,
+)
 from shema_platform.domain.search import SearchHit
 from shema_platform.domain.settlement import ReconciliationItem, SettlementRecord
 from shema_platform.foundation.audit import AuditRecord
@@ -208,7 +213,7 @@ class PaymentAttemptRepository(Protocol):
         attempt_id: str,
         worker_id: str,
         *,
-        status: str,
+        status: PaymentAttemptStatus,
         provider_ref: str | None,
         now: datetime,
     ) -> PaymentAttempt: ...
