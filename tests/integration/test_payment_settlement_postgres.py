@@ -15,6 +15,10 @@ from shema_platform.domain.payment import (
     ProviderEvent,
     ProviderEventStatus,
 )
+from shema_platform.domain.payment_adjustment import (
+    PaymentAdjustment,
+    PaymentAdjustmentKind,
+)
 from shema_platform.domain.settlement import (
     ReconciliationItem,
     ReconciliationStatus,
@@ -59,6 +63,7 @@ def prepare_database(connection: psycopg.Connection) -> None:
         "0009_payment_settlement.sql",
         "0010_settlement_lines.sql",
         "0011_settlement_statement_hash.sql",
+        "0012_payment_adjustments.sql",
     ):
         apply_migration(connection, ROOT / "db/migrations" / migration)
 
@@ -307,5 +312,79 @@ def test_postgres_reconciliation_can_resolve_and_close_settlement() -> None:
         loaded = settlement_repository.get(settlement.settlement_id)
         assert loaded is not None
         assert loaded.status is SettlementStatus.SETTLED
+
+        connection.rollback()
+
+
+def test_postgres_payment_adjustment_is_append_only() -> None:
+    now = datetime.now(UTC)
+    payment_id = f"payment:{uuid4()}"
+    order_id = f"order:{uuid4()}"
+    action_id = f"action:{uuid4()}"
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        prepare_database(connection)
+        connection.execute(
+            """
+            insert into commercial_action (
+                action_id, identity_id, contact_ref, channel, status
+            )
+            values (%s, %s, %s, %s, 'ready')
+            """,
+            (action_id, f"identity:{uuid4()}", "contact:test", "MAX"),
+        )
+        connection.execute(
+            """
+            insert into order_header (order_id, identity_id, source_action_id, status)
+            values (%s, %s, %s, 'confirmed')
+            """,
+            (order_id, f"identity:{uuid4()}", action_id),
+        )
+        connection.execute(
+            """
+            insert into payment_intent (
+                payment_id, order_id, amount, currency, idempotency_key, status
+            )
+            values (%s, %s, %s, %s, %s, 'succeeded')
+            """,
+            (payment_id, order_id, 6000, "RUB", f"payment-key:{uuid4()}"),
+        )
+
+        from shema_platform.platform.postgres_repositories import (
+            PostgresPaymentAdjustmentRepository,
+        )
+
+        repository = PostgresPaymentAdjustmentRepository(connection)
+        adjustment = PaymentAdjustment(
+            adjustment_id=f"adjustment:{uuid4()}",
+            payment_id=payment_id,
+            provider_event_id=f"event:{uuid4()}",
+            provider_ref=f"provider-refund:{uuid4()}",
+            kind=PaymentAdjustmentKind.REFUND,
+            amount=Money(500, "RUB"),
+            occurred_at=now,
+        )
+        repository.add(adjustment)
+        assert repository.get_by_provider_event(
+            adjustment.provider_event_id
+        ) == adjustment
+        assert repository.find_by_provider_ref(
+            adjustment.provider_ref
+        ) == adjustment
+        assert repository.total_for_payment(payment_id) == Money(500, "RUB")
+
+        duplicate = PaymentAdjustment(
+            adjustment_id=f"adjustment:{uuid4()}",
+            payment_id=payment_id,
+            provider_event_id=adjustment.provider_event_id,
+            provider_ref=adjustment.provider_ref,
+            kind=PaymentAdjustmentKind.REFUND,
+            amount=Money(500, "RUB"),
+            occurred_at=now,
+        )
+        repository.add(duplicate)
+        assert repository.get_by_provider_event(
+            adjustment.provider_event_id
+        ) == adjustment
 
         connection.rollback()
