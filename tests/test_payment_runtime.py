@@ -120,6 +120,8 @@ def test_payment_runtime_binds_real_execution_and_webhook_workflows() -> None:
     assert runtime.webhook is not None
     assert runtime.settlement is not None
     assert runtime.settlement_verifier is not None
+    assert runtime.outbox_router is not None
+    assert "payment.create_requested" in runtime.outbox_router.handlers
 
 
 def test_payment_runtime_rejects_missing_production_provider() -> None:
