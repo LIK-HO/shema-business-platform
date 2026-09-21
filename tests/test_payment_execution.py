@@ -690,9 +690,7 @@ def test_unknown_provider_event_is_quarantined() -> None:
             "reason_code": "provider_payment_unmatched",
             "payload": {
                 "provider_ref": event.provider_ref,
-                "source_payment_ref": event.event_id.replace(
-                    "event-", "provider-"
-                ) if False else "provider-payment-unknown",
+                "source_payment_ref": "provider-payment-unknown",
                 "event_type": event.event_type,
             },
         }
