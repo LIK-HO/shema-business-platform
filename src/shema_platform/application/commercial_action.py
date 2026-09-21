@@ -32,6 +32,7 @@ class CommercialActionService:
         channel: str,
         evidence_refs: tuple[str, ...],
         request_hash: str,
+        idempotency_key: str | None = None,
     ) -> CommercialAction:
         self._authorizer.require(
             actor.actor_id,
@@ -62,7 +63,7 @@ class CommercialActionService:
         ).mark_ready()
 
         self._idempotency.reserve(
-            key=action_id,
+            key=idempotency_key or action_id,
             request_hash=request_hash,
             result_ref=action_id,
         )
