@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import dataclasses
-import typing
+from dataclasses import dataclass
+from typing import Any, NoReturn, Protocol
 
 import jwt
-
+from jwt import PyJWKClient, PyJWTError
 
 
 _SAFE_ASYMMETRIC_ALGORITHMS = frozenset(
@@ -23,13 +23,13 @@ _SAFE_ASYMMETRIC_ALGORITHMS = frozenset(
 )
 
 
-class SigningKeyProvider(typing.Protocol):
+class SigningKeyProvider(Protocol):
     """Resolve an approved issuer signing key."""
 
-    def signing_key(self, token: str) -> typing.Any: ...
+    def signing_key(self, token: str) -> Any: ...
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True)
 class OIDCConfiguration:
     issuer: str
     audience: str
@@ -130,7 +130,7 @@ class OIDCJWTAuthenticator:
         )
 
     @staticmethod
-    def _authentication_error() -> typing.NoReturn:
+    def _authentication_error() -> NoReturn:
         from shema_platform.foundation.authentication import AuthenticationRequired
 
         raise AuthenticationRequired()
