@@ -19,10 +19,10 @@ from shema_platform.application.ports import (
     PaymentAttemptRepository,
     PaymentIntentRepository,
     ProviderEventRepository,
-    ReconciliationRepository,
-    SettlementRepository,
     QuarantineRepository,
+    ReconciliationRepository,
     SearchCandidateRepository,
+    SettlementRepository,
 )
 from shema_platform.domain.commercial_action import CommercialAction, CommercialActionStatus
 from shema_platform.domain.economics import EconomicEntry, EconomicKind
@@ -41,6 +41,7 @@ from shema_platform.domain.search import SearchHit
 from shema_platform.domain.settlement import (
     ReconciliationItem,
     ReconciliationStatus,
+    SettlementLine,
     SettlementRecord,
     SettlementStatus,
 )
@@ -1536,7 +1537,11 @@ class PostgresPaymentAttemptRepository(PaymentAttemptRepository):
             where attempt_id = %s
               and (
                   status = 'ready'
-                  or (status = 'sending' and send_lease_until is not null and send_lease_until <= %s)
+                  or (
+                      status = 'sending'
+                      and send_lease_until is not null
+                      and send_lease_until <= %s
+                  )
               )
             returning
                 attempt_id,
