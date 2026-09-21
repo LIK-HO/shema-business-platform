@@ -124,6 +124,32 @@ def client(application: APIApplication | None = None) -> TestClient:
     )
 
 
+def test_runtime_api_emits_redacted_telemetry() -> None:
+    telemetry = InMemoryTelemetrySink()
+
+    response = TestClient(
+        create_app(FakeApplication(), FakeAuthenticator(), telemetry=telemetry)
+    ).post(
+        "/v1/search",
+        headers={
+            "Authorization": "Bearer test-token",
+            "X-Correlation-Id": "corr-telemetry",
+        },
+        json={
+            "region": "Moscow",
+            "industries": ["logistics"],
+        },
+    )
+
+    assert response.status_code == 200
+    event = telemetry.all()[-1]
+    assert event.name == "http.request.completed"
+    assert event.correlation_id == "corr-telemetry"
+    assert event.attributes["status"] == 200
+    assert "authorization" not in event.attributes
+    assert "body" not in event.attributes
+
+
 def test_runtime_api_propagates_correlation_id() -> None:
     response = client(FakeApplication()).post(
         "/v1/search",
