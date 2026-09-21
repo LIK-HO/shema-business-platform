@@ -11,6 +11,7 @@ from shema_platform.application.commands import Actor
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.domain.economics import EconomicEntry, EconomicKind
 from shema_platform.domain.order import OrderStatus
+from shema_platform.domain.money import Money
 from shema_platform.domain.payment import (
     PaymentAttempt,
     PaymentAttemptStatus,
@@ -40,12 +41,14 @@ class PaymentExecutionState(StrEnum):
 class PaymentProviderResult:
     provider_ref: str
     status: PaymentAttemptStatus
+    amount: Money
 
 
 @dataclass(frozen=True, slots=True)
 class VerifiedPaymentEvent:
     event: ProviderEvent
     payment_status: PaymentAttemptStatus
+    amount: Money
 
 
 class PaymentProviderAdapter(Protocol):
@@ -93,6 +96,10 @@ class PaymentGateway:
             PaymentAttemptStatus.FAILED,
         }:
             raise IntegrityViolation("provider returned invalid payment state")
+        if result.amount.currency != payment.amount.currency:
+            raise IntegrityViolation("provider payment currency does not match intent")
+        if result.amount != payment.amount:
+            raise IntegrityViolation("provider payment amount does not match intent")
         return result
 
     def verify_webhook(
@@ -110,6 +117,8 @@ class PaymentGateway:
             PaymentAttemptStatus.FAILED,
         }:
             raise IntegrityViolation("webhook returned invalid payment state")
+        if result.amount.amount <= 0:
+            raise IntegrityViolation("webhook payment amount must be positive")
         return result
 
 
@@ -308,6 +317,9 @@ class PaymentExecutionWorkflow:
             if current is None:
                 raise KeyError(f"unknown payment: {payment_id}")
 
+            if result.amount != current.amount:
+                raise IntegrityViolation("provider payment amount does not match intent")
+
             final_attempt = uow.payment_attempts.complete(
                 attempt_id,
                 self._worker_id,
@@ -469,6 +481,8 @@ class PaymentWebhookWorkflow:
             payment = uow.payments.get(attempt.payment_id)
             if payment is None:
                 raise IntegrityViolation("provider event references missing payment")
+            if verified.amount != payment.amount:
+                raise IntegrityViolation("webhook payment amount does not match intent")
 
             payment_changed = False
             event_status = verified.payment_status
