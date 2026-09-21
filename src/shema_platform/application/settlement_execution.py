@@ -8,7 +8,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.domain.money import Money
-from shema_platform.domain.payment import PaymentAttemptStatus, PaymentIntentStatus
+from shema_platform.domain.payment import PaymentIntentStatus
 from shema_platform.domain.settlement import (
     ReconciliationItem,
     ReconciliationStatus,
@@ -93,7 +93,8 @@ class SettlementWorkflow:
                     or existing.settled_at != statement.settled_at
                 ):
                     raise IntegrityViolation(
-                        "provider settlement reference already exists with different immutable facts"
+                        "provider settlement reference already exists with different "
+                        "immutable facts"
                     )
                 return SettlementReconciliationResult(
                     settlement_id=settlement_id,
