@@ -2114,6 +2114,31 @@ class PostgresReconciliationRepository(ReconciliationRepository):
             return existing
         raise IntegrityViolation("reconciliation item was already finalized")
 
+    def list_open_for_settlement(
+        self,
+        settlement_id: str,
+    ) -> tuple[ReconciliationItem, ...]:
+        cursor = self._connection.execute(
+            """
+            select
+                reconciliation_id,
+                settlement_id,
+                reason_code,
+                expected_amount,
+                observed_amount,
+                currency,
+                status,
+                created_at,
+                resolved_at
+            from reconciliation_item
+            where settlement_id = %s
+              and status = 'open'
+            order by reconciliation_id
+            """,
+            (settlement_id,),
+        )
+        return tuple(self._to_item(row) for row in cursor.fetchall())
+
     @staticmethod
     def _to_item(row: tuple[object, ...]) -> ReconciliationItem:
         (
