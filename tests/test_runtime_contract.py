@@ -1,4 +1,4 @@
-from json import loads
+import json
 from pathlib import Path
 
 
@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_v1_5_runtime_contract_preserves_frozen_kernel_boundary() -> None:
-    contract = loads((ROOT / "architecture/runtime_contract.json").read_text())
+    contract = json.loads((ROOT / "architecture/runtime_contract.json").read_text())
 
     assert contract["version"] == "1.5.0"
     assert contract["baseline_kernel_contract"] == "1.4"
