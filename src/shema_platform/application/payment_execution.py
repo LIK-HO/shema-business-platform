@@ -81,6 +81,23 @@ class PaymentProviderAdapter(Protocol):
     ) -> VerifiedPaymentEvent: ...
 
 
+class PaymentProviderContractViolation(IntegrityViolation):
+    """External payment result conflicts with the platform contract."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        provider_ref: str,
+        observed_amount: Money,
+        expected_amount: Money,
+    ) -> None:
+        super().__init__(message)
+        self.provider_ref = provider_ref
+        self.observed_amount = observed_amount
+        self.expected_amount = expected_amount
+
+
 class PaymentGateway:
     """Provider adapter guardrail around outbound payment effects."""
 
@@ -103,10 +120,6 @@ class PaymentGateway:
             PaymentAttemptStatus.FAILED,
         }:
             raise IntegrityViolation("provider returned invalid payment state")
-        if result.amount.currency != payment.amount.currency:
-            raise IntegrityViolation("provider payment currency does not match intent")
-        if result.amount != payment.amount:
-            raise IntegrityViolation("provider payment amount does not match intent")
         return result
 
     def verify_webhook(
@@ -326,7 +339,10 @@ class PaymentExecutionWorkflow:
                 now=now,
             )
 
-        result = self._gateway.create_payment(payment, sending)
+        try:
+            result = self._gateway.create_payment(payment, sending)
+        except PaymentProviderContractViolation:
+            raise
 
         with self._unit_of_work_factory() as uow:
             current = uow.payments.get(payment_id)
@@ -334,7 +350,64 @@ class PaymentExecutionWorkflow:
                 raise KeyError(f"unknown payment: {payment_id}")
 
             if result.amount != current.amount:
-                raise IntegrityViolation("provider payment amount does not match intent")
+                pending_attempt = uow.payment_attempts.apply_provider_result(
+                    attempt_id,
+                    status=PaymentAttemptStatus.PENDING,
+                    provider_ref=result.provider_ref,
+                )
+                uow.quarantine.add(
+                    object_type="payment_provider_result",
+                    object_ref=attempt_id,
+                    reason_code="provider_payment_contract_conflict",
+                    payload={
+                        "payment_id": payment_id,
+                        "provider_ref": result.provider_ref,
+                        "expected_amount": str(current.amount.amount),
+                        "expected_currency": current.amount.currency,
+                        "observed_amount": str(result.amount.amount),
+                        "observed_currency": result.amount.currency,
+                    },
+                )
+                uow.audits.append(
+                    AuditRecord(
+                        audit_id=str(
+                            uuid5(
+                                NAMESPACE_URL,
+                                f"audit:payment.contract-conflict:{attempt_id}",
+                            )
+                        ),
+                        actor_id=self._worker_id,
+                        action="payment.provider_contract_conflict",
+                        resource_type="payment",
+                        resource_id=payment_id,
+                        outcome="review",
+                        occurred_at=utc_now(),
+                        metadata={
+                            "attempt_id": attempt_id,
+                            "provider_ref": result.provider_ref,
+                        },
+                    )
+                )
+                uow.outbox.append(
+                    OutboxEvent(
+                        event_id=str(
+                            uuid5(
+                                NAMESPACE_URL,
+                                f"payment.provider-contract-conflict:{attempt_id}",
+                            )
+                        ),
+                        event_type="payment.provider_contract_conflict",
+                        aggregate_type="payment",
+                        aggregate_id=payment_id,
+                        payload={
+                            "payment_id": payment_id,
+                            "attempt_id": pending_attempt.attempt_id,
+                            "provider_ref": result.provider_ref,
+                        },
+                        occurred_at=utc_now(),
+                    )
+                )
+                return PaymentExecutionState.PENDING
 
             final_attempt = uow.payment_attempts.complete(
                 attempt_id,
@@ -649,9 +722,49 @@ class PaymentWebhookWorkflow:
                     payment_id=payment.payment_id,
                 )
 
-            if verified.amount != payment.amount:
-                raise IntegrityViolation(
-                    "webhook payment amount does not match intent"
+            if (
+                verified.adjustment_kind is None
+                and verified.amount != payment.amount
+            ):
+                uow.quarantine.add(
+                    object_type="payment_provider_event",
+                    object_ref=event.event_id,
+                    reason_code="provider_payment_contract_conflict",
+                    payload={
+                        "payment_id": payment.payment_id,
+                        "provider_ref": event.provider_ref,
+                        "expected_amount": str(payment.amount.amount),
+                        "expected_currency": payment.amount.currency,
+                        "observed_amount": str(verified.amount.amount),
+                        "observed_currency": verified.amount.currency,
+                    },
+                )
+                uow.provider_events.mark_processed(
+                    event.event_id,
+                    status=ProviderEventStatus.IGNORED,
+                    processed_at=utc_now(),
+                )
+                uow.audits.append(
+                    AuditRecord(
+                        audit_id=str(
+                            uuid5(
+                                NAMESPACE_URL,
+                                f"audit:payment.webhook-conflict:{event.event_id}",
+                            )
+                        ),
+                        actor_id="payment-provider",
+                        action="payment.provider_contract_conflict",
+                        resource_type="payment",
+                        resource_id=payment.payment_id,
+                        outcome="review",
+                        occurred_at=utc_now(),
+                        metadata={"provider_ref": event.provider_ref},
+                    )
+                )
+                return PaymentWebhookResult(
+                    event_id=event.event_id,
+                    status="quarantined",
+                    payment_id=payment.payment_id,
                 )
 
             payment_changed = False
