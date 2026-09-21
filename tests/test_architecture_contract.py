@@ -147,3 +147,21 @@ def test_external_system_boundary_is_empty() -> None:
 
     architecture = read("ARCHITECTURE.md")
     assert "MAX is included in the communication adapter boundary" in architecture
+
+
+def test_production_payment_settlement_boundary_is_defined() -> None:
+    contract = loads(read("architecture/contract.json"))
+    payment_doc = read("docs/PRODUCTION_PAYMENT_SETTLEMENT.md")
+
+    assert "payment_execution" in contract["production_boundaries"]["post_kernel"]
+    assert "settlement" in contract["production_boundaries"]["post_kernel"]
+    for required in (
+        "Payment Intent",
+        "Payment Attempt",
+        "Verified Provider Event",
+        "Settlement Record",
+        "Reconciliation Item",
+        "External payment calls occur outside the core database transaction.",
+        "Every inbound provider event is deduplicated by immutable provider event id.",
+    ):
+        assert required in payment_doc
