@@ -1,5 +1,14 @@
 {
   "version": "1.5-core-maturity",
+  "canonical_critical_workflows": [
+    "commercial_action_create",
+    "order_create"
+  ],
+  "critical_workflows_require": [
+    "canonical_postgresql_identity_lookup",
+    "explicit_operation_idempotency_key",
+    "business_state_idempotency_outbox_audit_atomic_commit"
+  ],
   "authoritative_core": [
     "domain",
     "foundation",
