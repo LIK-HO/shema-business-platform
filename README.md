@@ -24,6 +24,8 @@ ruff check .
 python -m compileall -q src tests
 pytest
 
+Runtime production gates: runtime security, redacted telemetry and dependency audit are defined in v1.5 runtime controls.
+
 Architecture baseline: ARCHITECTURE.md
 Kernel workstream: docs/V1.4_KERNEL.md
 Kernel checkpoint: docs/V1.4_KERNEL_CHECKPOINT.md
