@@ -1834,7 +1834,6 @@ class PostgresSettlementRepository(SettlementRepository):
                 settlement_id,
                 provider_settlement_ref,
                 statement_hash,
-                statement_hash,
                 gross_amount,
                 fees,
                 net_amount,
@@ -1886,6 +1885,7 @@ class PostgresSettlementRepository(SettlementRepository):
             select
                 settlement_id,
                 provider_settlement_ref,
+                statement_hash,
                 gross_amount,
                 fees,
                 net_amount,
@@ -2010,6 +2010,7 @@ class PostgresSettlementRepository(SettlementRepository):
         return SettlementRecord(
             settlement_id=str(settlement_id),
             provider_settlement_ref=str(provider_settlement_ref),
+            statement_hash=str(statement_hash),
             gross=Money(gross_amount, str(currency)),
             fees=Money(fees, str(currency)),
             net=Money(net_amount, str(currency)),
