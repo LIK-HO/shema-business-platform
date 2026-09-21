@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from hashlib import sha256
 from decimal import Decimal
 
 import pytest
