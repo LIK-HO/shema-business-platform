@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
-from typing import Callable
 
 from shema_platform.platform.postgres import DBConnection
 
@@ -54,7 +54,7 @@ class MigrationPlan:
             raise MigrationPlanError("migration versions must be contiguous from 1")
 
     @classmethod
-    def from_directory(cls, directory: Path) -> "MigrationPlan":
+    def from_directory(cls, directory: Path) -> MigrationPlan:
         pattern = re.compile(r"^(?P<version>\d{4})_(?P<name>[a-z0-9_]+)\.sql$")
         migrations: list[Migration] = []
 
