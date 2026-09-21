@@ -6,7 +6,6 @@ from shema_platform.domain.commercial_action import CommercialActionStatus
 from shema_platform.domain.identity import Identity, IdentityState
 from shema_platform.foundation.authorization import AuthorizationSubject, Permission, RBACAuthorizer
 from shema_platform.foundation.errors import PolicyDenied, QuarantineRequired
-from shema_platform.foundation.idempotency import IdempotencyStore
 from shema_platform.foundation.policy import PolicyEngine
 
 
@@ -21,7 +20,6 @@ def make_service() -> CommercialActionService:
             )
         ),
         PolicyEngine(),
-        IdempotencyStore(),
     )
 
 
@@ -34,7 +32,7 @@ def verified_identity() -> Identity:
     )
 
 
-def test_create_ready_action_is_gated_and_idempotent() -> None:
+def test_create_ready_action_is_gated() -> None:
     service = make_service()
     action = service.create_ready(
         action_id="action-1",
