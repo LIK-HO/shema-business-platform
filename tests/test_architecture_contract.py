@@ -121,7 +121,10 @@ def test_database_migrations_are_forward_only_and_declared() -> None:
         "reconciliation_item",
     ):
         assert f"create table if not exists {table}" in migration
-    assert "create table if not exists settlement_line" in read("db/migrations/0010_settlement_lines.sql")
+    assert (
+        "create table if not exists settlement_line"
+        in read("db/migrations/0010_settlement_lines.sql")
+    )
     assert "statement_hash" in read("db/migrations/0011_settlement_statement_hash.sql")
 
 
@@ -188,8 +191,14 @@ def test_external_system_boundary_is_empty_and_payment_boundary_is_explicit() ->
     assert "payment_execution" in contract["production_boundaries"]["post_kernel"]
     assert "payment_attempt_is_lease_guarded" in contract["critical_invariants"]
     assert "settlement" in contract["production_boundaries"]["post_kernel"]
-    assert "provider_amount_and_currency_must_match_payment_intent" in contract["payment_settlement_contract"]["invariants"]
-    assert "settlement_statement_hash_is_immutable" in contract["payment_settlement_contract"]["invariants"]
+    assert (
+        "provider_amount_and_currency_must_match_payment_intent"
+        in contract["payment_settlement_contract"]["invariants"]
+    )
+    assert (
+        "settlement_statement_hash_is_immutable"
+        in contract["payment_settlement_contract"]["invariants"]
+    )
     assert contract["payment_settlement_contract"]["settlement_states"] == [
         "expected",
         "reconciling",
