@@ -48,6 +48,13 @@ class TelemetrySink(Protocol):
     def emit(self, event: TelemetryEvent) -> None: ...
 
 
+class NoopTelemetrySink:
+    """Production-safe default sink until an external telemetry backend is composed."""
+
+    def emit(self, event: TelemetryEvent) -> None:
+        return None
+
+
 class InMemoryTelemetrySink:
     """Deterministic sink used by tests and local runtime composition."""
 
