@@ -14,7 +14,9 @@ from shema_platform.domain.payment import (
 from shema_platform.domain.settlement import (
     ReconciliationItem,
     ReconciliationStatus,
+    SettlementLine,
     SettlementRecord,
+    SettlementStatement,
     SettlementStatus,
 )
 
@@ -99,6 +101,7 @@ def test_settlement_amounts_are_deterministic() -> None:
     settlement = SettlementRecord(
         settlement_id="settlement-1",
         provider_settlement_ref="provider-settlement-1",
+        statement_hash="sha256:statement-1",
         gross=Money("6000.00", "RUB"),
         fees=Money("150.00", "RUB"),
         net=Money("5850.00", "RUB"),
@@ -116,6 +119,7 @@ def test_settlement_rejects_incorrect_net() -> None:
         SettlementRecord(
             settlement_id="settlement-1",
             provider_settlement_ref="provider-settlement-1",
+            statement_hash="sha256:statement-1",
             gross=Money(6000, "RUB"),
             fees=Money(150, "RUB"),
             net=Money(5800, "RUB"),
@@ -137,3 +141,44 @@ def test_reconciliation_is_durable_review_state_until_resolved() -> None:
     assert item.status is ReconciliationStatus.OPEN
     resolved = item.resolve(datetime.now(UTC) + timedelta(minutes=1))
     assert resolved.status is ReconciliationStatus.RESOLVED
+
+
+def test_statement_requires_line_total_and_net_math() -> None:
+    now = datetime.now(UTC)
+    statement = SettlementStatement(
+        statement_id="statement-1",
+        provider_settlement_ref="provider-settlement-1",
+        statement_hash="sha256:statement-1",
+        lines=(
+            SettlementLine(
+                line_id="line-1",
+                settlement_id="settlement-1",
+                provider_ref="provider-payment-1",
+                amount=Money(6000, "RUB"),
+                statement_ref="statement-1",
+            ),
+        ),
+        gross=Money(6000, "RUB"),
+        fees=Money(150, "RUB"),
+        net=Money(5850, "RUB"),
+        settled_at=now,
+    )
+
+    assert statement.lines[0].settlement_id == "settlement-1"
+
+
+def test_discrepancy_must_be_explicitly_resolved() -> None:
+    settlement = SettlementRecord(
+        settlement_id="settlement-1",
+        provider_settlement_ref="provider-settlement-1",
+        statement_hash="sha256:statement-1",
+        gross=Money(6000, "RUB"),
+        fees=Money(150, "RUB"),
+        net=Money(5850, "RUB"),
+        settled_at=datetime.now(UTC),
+    )
+
+    discrepancy = settlement.begin_reconciliation().mark_discrepancy()
+    resolved = discrepancy.resolve_discrepancy()
+
+    assert resolved.status is SettlementStatus.SETTLED
