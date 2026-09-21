@@ -81,23 +81,6 @@ class PaymentProviderAdapter(Protocol):
     ) -> VerifiedPaymentEvent: ...
 
 
-class PaymentProviderContractViolation(IntegrityViolation):
-    """External payment result conflicts with the platform contract."""
-
-    def __init__(
-        self,
-        message: str,
-        *,
-        provider_ref: str,
-        observed_amount: Money,
-        expected_amount: Money,
-    ) -> None:
-        super().__init__(message)
-        self.provider_ref = provider_ref
-        self.observed_amount = observed_amount
-        self.expected_amount = expected_amount
-
-
 class PaymentGateway:
     """Provider adapter guardrail around outbound payment effects."""
 
@@ -339,10 +322,7 @@ class PaymentExecutionWorkflow:
                 now=now,
             )
 
-        try:
-            result = self._gateway.create_payment(payment, sending)
-        except PaymentProviderContractViolation:
-            raise
+        result = self._gateway.create_payment(payment, sending)
 
         with self._unit_of_work_factory() as uow:
             current = uow.payments.get(payment_id)
