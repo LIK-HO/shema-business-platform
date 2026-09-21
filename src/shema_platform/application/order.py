@@ -32,6 +32,7 @@ class OrderService:
         action: CommercialAction,
         lines: Sequence[OrderLine],
         request_hash: str,
+        idempotency_key: str | None = None,
     ) -> Order:
         self._authorizer.require(actor.actor_id, Permission.ORDER_CREATE)
 
@@ -66,7 +67,7 @@ class OrderService:
             lines=tuple(lines),
         )
         self._idempotency.reserve(
-            key=order_id,
+            key=idempotency_key or order_id,
             request_hash=request_hash,
             result_ref=order_id,
         )
