@@ -56,6 +56,11 @@ class SettlementRecord:
             raise ValueError("only reconciling settlement can become discrepancy")
         return self._with_status(SettlementStatus.DISCREPANCY)
 
+    def resolve_discrepancy(self) -> SettlementRecord:
+        if self.status is not SettlementStatus.DISCREPANCY:
+            raise ValueError("only discrepancy settlement can be resolved")
+        return self._with_status(SettlementStatus.SETTLED)
+
     def _with_status(self, status: SettlementStatus) -> SettlementRecord:
         return SettlementRecord(
             settlement_id=self.settlement_id,
@@ -108,3 +113,54 @@ class ReconciliationItem:
             created_at=self.created_at,
             resolved_at=resolved_at,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class SettlementLine:
+    line_id: str
+    provider_ref: str
+    amount: Money
+    statement_ref: str
+
+    def __post_init__(self) -> None:
+        if not self.line_id.strip() or not self.provider_ref.strip():
+            raise ValueError("settlement line identifiers are required")
+        if not self.statement_ref.strip():
+            raise ValueError("statement_ref is required")
+        if self.amount.amount <= 0:
+            raise ValueError("settlement line amount must be positive")
+
+
+@dataclass(frozen=True, slots=True)
+class SettlementStatement:
+    statement_id: str
+    provider_settlement_ref: str
+    statement_hash: str
+    lines: tuple[SettlementLine, ...]
+    gross: Money
+    fees: Money
+    net: Money
+    settled_at: datetime
+
+    def __post_init__(self) -> None:
+        if not self.statement_id.strip():
+            raise ValueError("statement_id is required")
+        if not self.provider_settlement_ref.strip():
+            raise ValueError("provider_settlement_ref is required")
+        if not self.statement_hash.strip():
+            raise ValueError("statement_hash is required")
+        if not self.lines:
+            raise ValueError("settlement statement must contain lines")
+        if self.settled_at.tzinfo is None:
+            raise ValueError("settled_at must be timezone-aware")
+        if self.gross.currency != self.fees.currency or self.gross.currency != self.net.currency:
+            raise ValueError("statement currencies must match")
+        line_total = Money(0, self.gross.currency)
+        for line in self.lines:
+            if line.amount.currency != self.gross.currency:
+                raise ValueError("settlement line currency mismatch")
+            line_total = line_total.add(line.amount)
+        if line_total != self.gross:
+            raise ValueError("statement gross must equal settlement line total")
+        if self.net != self.gross.subtract(self.fees):
+            raise ValueError("statement net must equal gross minus fees")
