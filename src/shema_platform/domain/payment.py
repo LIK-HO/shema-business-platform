@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from decimal import Decimal
 
 from shema_platform.domain.money import Money
 
@@ -32,6 +31,7 @@ class ProviderEventStatus(StrEnum):
     IGNORED = "ignored"
 
 
+@dataclass(frozen=True, slots=True)
 class PaymentIntent:
     payment_id: str
     order_id: str
