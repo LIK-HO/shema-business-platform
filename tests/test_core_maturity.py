@@ -26,6 +26,15 @@ def test_core_maturity_contract_is_explicit() -> None:
         "observability",
         "release_safety",
     ]
+    assert contract["canonical_critical_workflows"] == [
+        "commercial_action_create",
+        "order_create",
+    ]
+    assert contract["critical_workflows_require"] == [
+        "canonical_postgresql_identity_lookup",
+        "explicit_operation_idempotency_key",
+        "business_state_idempotency_outbox_audit_atomic_commit",
+    ]
     assert contract["database_state_ownership_constraints"] is True
     assert contract["migration_safety"]["historical_edit_fails_closed"] is True
     assert contract["migration_safety"]["latest_required_version"] == 9
