@@ -582,33 +582,33 @@ def test_payment_retry_reuses_stable_external_effect_key() -> None:
     assert adapter.calls.count(first_key) == 1
 
 
-def test_payment_gateway_rejects_provider_amount_mismatch() -> None:
-    adapter = FakePaymentAdapter(
-        result=PaymentProviderResult(
-            provider_ref="provider-payment-1",
-            status=PaymentAttemptStatus.SUCCEEDED,
-            amount=Money(2999, "RUB"),
-        )
+def test_payment_execution_quarantines_provider_amount_mismatch() -> None:
+    uow, creation, execution, _, adapter = workflow_parts()
+    adapter.result = PaymentProviderResult(
+        provider_ref="provider-payment-mismatch",
+        status=PaymentAttemptStatus.SUCCEEDED,
+        amount=Money(2999, "RUB"),
     )
-    gateway = PaymentGateway(adapter)
-    payment = PaymentIntent(
-        payment_id="payment-1",
+    created = creation.create(
+        actor=Actor("operator-1", trust_level=2),
         order_id="order-1",
-        amount=Money(3000, "RUB"),
-        idempotency_key="key-1",
-    ).begin()
-    attempt = PaymentAttempt(
-        attempt_id="attempt-1",
-        payment_id="payment-1",
-        attempt_number=1,
-        external_idempotency_key="external-1",
-        status=PaymentAttemptStatus.SENDING,
-        worker_id="worker-1",
-        lease_until=datetime.now(UTC) + timedelta(minutes=5),
+        idempotency_key="payment-key-mismatch",
+    )
+    attempt_id = next(iter(uow.payment_attempts.attempts))
+
+    result = execution.execute(
+        payment_id=created.payment_id,
+        attempt_id=attempt_id,
     )
 
-    with pytest.raises(Exception, match="amount"):
-        gateway.create_payment(payment, attempt)
+    assert result is PaymentExecutionState.PENDING
+    payment = uow.payments.get(created.payment_id)
+    assert payment is not None
+    assert payment.status is PaymentIntentStatus.PROCESSING
+    assert uow.payment_attempts.get(attempt_id).status is PaymentAttemptStatus.PENDING
+    assert uow.quarantine.records[0]["reason_code"] == (
+        "provider_payment_contract_conflict"
+    )
 nt, attempt)
 
 
@@ -695,3 +695,138 @@ def test_unknown_provider_event_is_quarantined() -> None:
             },
         }
     ]
+
+
+def test_partial_refund_uses_source_payment_reference() -> None:
+    uow, creation, _, webhook, adapter = workflow_parts()
+    created = creation.create(
+        actor=Actor("operator-1", trust_level=2),
+        order_id="order-1",
+        idempotency_key="payment-key-partial-refund",
+    )
+    attempt_id = next(iter(uow.payment_attempts.attempts))
+    uow.payment_attempts.apply_provider_result(
+        attempt_id,
+        status=PaymentAttemptStatus.SUCCEEDED,
+        provider_ref="provider-payment-captured",
+    )
+    payment = uow.payments.get(created.payment_id)
+    assert payment is not None
+    uow.payments.save(payment.succeed())
+
+    event = ProviderEvent(
+        event_id="provider-event-partial-refund",
+        provider_ref="provider-refund-1",
+        event_type="payment.refund",
+        signature_verified=True,
+        payload_hash="sha256:partial-refund",
+        received_at=datetime.now(UTC),
+    )
+    adapter.webhook = VerifiedPaymentEvent(
+        event=event,
+        amount=Money(500, "RUB"),
+        source_payment_ref="provider-payment-captured",
+        adjustment_kind=PaymentAdjustmentKind.REFUND,
+    )
+
+    result = webhook.process(headers={}, payload=b"partial-refund")
+
+    assert result.status == "refund"
+    assert uow.payment_adjustments.total_for_payment(created.payment_id) == Money(
+        500,
+        "RUB",
+    )
+
+
+def test_excessive_cumulative_refund_is_quarantined() -> None:
+    uow, creation, _, webhook, adapter = workflow_parts()
+    created = creation.create(
+        actor=Actor("operator-1", trust_level=2),
+        order_id="order-1",
+        idempotency_key="payment-key-refund-limit",
+    )
+    attempt_id = next(iter(uow.payment_attempts.attempts))
+    uow.payment_attempts.apply_provider_result(
+        attempt_id,
+        status=PaymentAttemptStatus.SUCCEEDED,
+        provider_ref="provider-payment-limit",
+    )
+    payment = uow.payments.get(created.payment_id)
+    assert payment is not None
+    uow.payments.save(payment.succeed())
+
+    first = ProviderEvent(
+        event_id="provider-event-refund-1",
+        provider_ref="provider-refund-1",
+        event_type="payment.refund",
+        signature_verified=True,
+        payload_hash="sha256:refund-1",
+        received_at=datetime.now(UTC),
+    )
+    adapter.webhook = VerifiedPaymentEvent(
+        event=first,
+        amount=Money(2500, "RUB"),
+        source_payment_ref="provider-payment-limit",
+        adjustment_kind=PaymentAdjustmentKind.REFUND,
+    )
+    assert webhook.process(headers={}, payload=b"refund-1").status == "refund"
+
+    second = ProviderEvent(
+        event_id="provider-event-refund-2",
+        provider_ref="provider-refund-2",
+        event_type="payment.refund",
+        signature_verified=True,
+        payload_hash="sha256:refund-2",
+        received_at=datetime.now(UTC),
+    )
+    adapter.webhook = VerifiedPaymentEvent(
+        event=second,
+        amount=Money(600, "RUB"),
+        source_payment_ref="provider-payment-limit",
+        adjustment_kind=PaymentAdjustmentKind.REFUND,
+    )
+
+    result = webhook.process(headers={}, payload=b"refund-2")
+
+    assert result.status == "quarantined"
+    assert uow.quarantine.records[-1]["reason_code"] == (
+        "payment_adjustment_conflict"
+    )
+
+
+def test_conflicting_terminal_provider_event_is_quarantined() -> None:
+    uow, creation, _, webhook, adapter = workflow_parts()
+    created = creation.create(
+        actor=Actor("operator-1", trust_level=2),
+        order_id="order-1",
+        idempotency_key="payment-key-terminal-conflict",
+    )
+    attempt_id = next(iter(uow.payment_attempts.attempts))
+    uow.payment_attempts.apply_provider_result(
+        attempt_id,
+        status=PaymentAttemptStatus.SUCCEEDED,
+        provider_ref="provider-payment-terminal",
+    )
+    payment = uow.payments.get(created.payment_id)
+    assert payment is not None
+    uow.payments.save(payment.succeed())
+
+    event = ProviderEvent(
+        event_id="provider-event-terminal-conflict",
+        provider_ref="provider-payment-terminal",
+        event_type="payment.failed",
+        signature_verified=True,
+        payload_hash="sha256:terminal-conflict",
+        received_at=datetime.now(UTC),
+    )
+    adapter.webhook = VerifiedPaymentEvent(
+        event=event,
+        amount=Money(3000, "RUB"),
+        source_payment_ref="provider-payment-terminal",
+        payment_status=PaymentAttemptStatus.FAILED,
+    )
+
+    result = webhook.process(headers={}, payload=b"terminal-conflict")
+
+    assert result.status == "quarantined"
+    assert uow.quarantine.records[-1]["reason_code"] == "payment_state_conflict"
