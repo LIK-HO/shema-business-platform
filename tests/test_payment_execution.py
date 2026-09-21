@@ -386,9 +386,10 @@ def test_payment_execution_calls_provider_once_and_records_revenue() -> None:
         idempotency_key="payment-key-1",
     )
 
+    attempt_id = next(iter(uow.payment_attempts.attempts))
     result = execution.execute(
         payment_id=created.payment_id,
-        attempt_id="",
+        attempt_id=attempt_id,
     )
     assert result is PaymentExecutionState.SUCCEEDED
     assert len(adapter.calls) == 1
@@ -402,3 +403,97 @@ def test_payment_execution_calls_provider_once_and_records_revenue() -> None:
     ]
     assert len(revenues) == 1
     assert revenues[0].amount == Money(3000, "RUB")
+
+
+def test_payment_webhook_finishes_pending_payment_once_and_records_revenue() -> None:
+    uow, creation, _, webhook, adapter = workflow_parts()
+    created = creation.create(
+        actor=Actor("operator-1", trust_level=2),
+        order_id="order-1",
+        idempotency_key="payment-key-2",
+    )
+    attempt_id = next(iter(uow.payment_attempts.attempts))
+    uow.payment_attempts.apply_provider_result(
+        attempt_id,
+        status=PaymentAttemptStatus.PENDING,
+        provider_ref="provider-payment-2",
+    )
+
+    now = datetime.now(UTC)
+    event = ProviderEvent(
+        event_id="provider-event-1",
+        provider_ref="provider-payment-2",
+        event_type="payment.succeeded",
+        signature_verified=True,
+        payload_hash="sha256:event-1",
+        received_at=now,
+    )
+    adapter.webhook = VerifiedPaymentEvent(
+        event=event,
+        payment_status=PaymentAttemptStatus.SUCCEEDED,
+    )
+
+    first = webhook.process(headers={}, payload=b"payload")
+    second = webhook.process(headers={}, payload=b"payload")
+
+    assert first.status == "succeeded"
+    assert first.payment_id == created.payment_id
+    assert second.status == "duplicate"
+
+    payment = uow.payments.get(created.payment_id)
+    assert payment is not None
+    assert payment.status is PaymentIntentStatus.SUCCEEDED
+    revenues = [
+        entry for entry in uow.economics.entries
+        if entry.kind is EconomicKind.REVENUE
+    ]
+    assert len(revenues) == 1
+    assert uow.provider_events.get(event.event_id) is not None
+    assert uow.provider_events.get(event.event_id).status is ProviderEventStatus.PROCESSED
+
+
+def test_payment_provider_failure_does_not_create_revenue() -> None:
+    uow, creation, execution, _, adapter = workflow_parts()
+    adapter.result = PaymentProviderResult(
+        provider_ref="provider-payment-fail",
+        status=PaymentAttemptStatus.FAILED,
+    )
+    created = creation.create(
+        actor=Actor("operator-1", trust_level=2),
+        order_id="order-1",
+        idempotency_key="payment-key-3",
+    )
+    attempt_id = next(iter(uow.payment_attempts.attempts))
+
+    result = execution.execute(
+        payment_id=created.payment_id,
+        attempt_id=attempt_id,
+    )
+
+    assert result is PaymentExecutionState.FAILED
+    payment = uow.payments.get(created.payment_id)
+    assert payment is not None
+    assert payment.status is PaymentIntentStatus.FAILED
+    assert [
+        entry for entry in uow.economics.entries
+        if entry.kind is EconomicKind.REVENUE
+    ] == []
+
+
+def test_payment_retry_reuses_stable_external_effect_key() -> None:
+    uow, creation, execution, _, adapter = workflow_parts()
+    created = creation.create(
+        actor=Actor("operator-1", trust_level=2),
+        order_id="order-1",
+        idempotency_key="payment-key-4",
+    )
+    attempt_id = next(iter(uow.payment_attempts.attempts))
+
+    before = uow.payment_attempts.get(attempt_id)
+    assert before is not None
+    first_key = before.external_idempotency_key
+
+    execution.execute(payment_id=created.payment_id, attempt_id=attempt_id)
+
+    assert adapter.calls == [first_key]
+    assert adapter.calls.count(first_key) == 1
