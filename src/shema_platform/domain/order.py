@@ -93,3 +93,29 @@ class Order:
             lines=self.lines,
             status=OrderStatus.COMPLETED,
         )
+
+    def cancel(self) -> Order:
+        if self.status in (
+            OrderStatus.COMPLETED,
+            OrderStatus.CANCELLED,
+            OrderStatus.FAILED,
+        ):
+            raise ValueError("terminal order cannot be cancelled")
+        return Order(
+            order_id=self.order_id,
+            identity_id=self.identity_id,
+            source_action_id=self.source_action_id,
+            lines=self.lines,
+            status=OrderStatus.CANCELLED,
+        )
+
+    def fail(self) -> Order:
+        if self.status is not OrderStatus.IN_PROGRESS:
+            raise ValueError("only in-progress order can fail")
+        return Order(
+            order_id=self.order_id,
+            identity_id=self.identity_id,
+            source_action_id=self.source_action_id,
+            lines=self.lines,
+            status=OrderStatus.FAILED,
+        )
