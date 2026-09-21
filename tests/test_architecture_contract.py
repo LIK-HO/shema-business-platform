@@ -17,6 +17,8 @@ def test_machine_readable_architecture_contract_exists() -> None:
     assert contract["version"] == "1.5-runtime"
     assert contract["runtime"] == "modular_monolith"
     assert contract["transactional_authority"] == "postgresql"
+    assert 'version = "1.5.0"' in read("pyproject.toml")
+    assert "  version: 1.5.0" in read("api/openapi.yaml")
     assert "max_is_an_adapter" in contract["critical_invariants"]
     assert "commercial_action" in contract["persistence"]["canonical"]
     assert "order_header" in contract["persistence"]["canonical"]
