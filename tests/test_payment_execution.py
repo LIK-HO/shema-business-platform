@@ -465,6 +465,7 @@ def test_payment_provider_failure_does_not_create_revenue() -> None:
     adapter.result = PaymentProviderResult(
         provider_ref="provider-payment-fail",
         status=PaymentAttemptStatus.FAILED,
+        amount=Money(3000, "RUB"),
     )
     created = creation.create(
         actor=Actor("operator-1", trust_level=2),
