@@ -19,6 +19,16 @@ class AuthorizationSubject:
     actor_id: str
     permissions: frozenset[Permission]
 
+    @classmethod
+    def from_actor(
+        cls,
+        actor_id: str,
+        permissions: frozenset[Permission],
+    ) -> "AuthorizationSubject":
+        if not actor_id.strip():
+            raise ValueError("actor_id is required")
+        return cls(actor_id=actor_id, permissions=permissions)
+
 
 class RBACAuthorizer:
     """Small explicit RBAC boundary; extensible toward ABAC/ReBAC later."""
