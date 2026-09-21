@@ -6,11 +6,7 @@ from typing import Any, Protocol
 import jwt
 from jwt import PyJWKClient, PyJWTError
 
-from shema_platform.foundation.authentication import (
-    AuthenticatedActor,
-    AuthenticationRequired,
-)
-from shema_platform.foundation.authorization import Permission
+from shema_platform.foundation import authentication, authorization
 
 
 _SAFE_ASYMMETRIC_ALGORITHMS = frozenset(
@@ -104,7 +100,7 @@ class OIDCJWTAuthenticator:
             ),
         )
 
-    def authenticate(self, authorization: str | None) -> AuthenticatedActor:
+    def authenticate(self, authorization: str | None) -> authentication.AuthenticatedActor:
         token = self._bearer_token(authorization)
         try:
             signing_key = self.key_provider.signing_key(token)
@@ -118,7 +114,7 @@ class OIDCJWTAuthenticator:
                 options={"require": ["exp", self.configuration.actor_id_claim]},
             )
         except (PyJWTError, ValueError, TypeError):
-            raise AuthenticationRequired() from None
+            raise authentication.AuthenticationRequired() from None
 
         actor_id = self._required_string_claim(
             claims,
@@ -127,7 +123,7 @@ class OIDCJWTAuthenticator:
         trust_level = self._trust_level(claims)
         permissions = self._permissions(claims)
 
-        return AuthenticatedActor(
+        return authentication.AuthenticatedActor(
             actor_id=actor_id,
             trust_level=trust_level,
             permissions=permissions,
@@ -155,7 +151,7 @@ class OIDCJWTAuthenticator:
             raise AuthenticationRequired()
         return value
 
-    def _permissions(self, claims: dict[str, Any]) -> frozenset[Permission]:
+    def _permissions(self, claims: dict[str, Any]) -> frozenset[authorization.Permission]:
         value = claims.get(self.configuration.permissions_claim, ())
         if isinstance(value, str):
             raw = tuple(item for item in value.split() if item)
@@ -164,12 +160,12 @@ class OIDCJWTAuthenticator:
         else:
             raise AuthenticationRequired()
 
-        permissions: set[Permission] = set()
+        permissions: set[authorization.Permission] = set()
         for item in raw:
             if not isinstance(item, str):
                 raise AuthenticationRequired()
             try:
-                permissions.add(Permission(item))
+                permissions.add(authorization.Permission(item))
             except ValueError:
                 raise AuthenticationRequired() from None
         return frozenset(permissions)
