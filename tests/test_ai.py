@@ -192,9 +192,7 @@ def test_ai_gateway_rejects_missing_evidence_in_provider_result() -> None:
                 duration_seconds=result.duration_seconds,
             )
 
-    gateway_instance, state = gateway(
-        MissingEvidenceProvider(transaction_probe=lambda: state.active)
-    )
+    gateway_instance, state = gateway(MissingEvidenceProvider())
 
     with pytest.raises(ValueError, match="no evidence references"):
         gateway_instance.execute(
@@ -227,9 +225,7 @@ def test_ai_gateway_rejects_unsupported_evidence_reference() -> None:
                 duration_seconds=result.duration_seconds,
             )
 
-    gateway_instance, state = gateway(
-        BadProvider(transaction_probe=lambda: state.active)
-    )
+    gateway_instance, state = gateway(BadProvider())
 
     with pytest.raises(ValueError, match="unsupported evidence"):
         gateway_instance.execute(
