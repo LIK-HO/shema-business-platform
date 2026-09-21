@@ -40,11 +40,13 @@
     "concurrent_deployment",
     "historical_migration_edit"
   ],
+  "database_state_ownership_constraints": true,
   "migration_safety": {
     "serialized_by_advisory_lock": true,
     "checksummed": true,
     "historical_edit_fails_closed": true,
     "single_transaction": true,
-    "gap_free_sequence": true
+    "gap_free_sequence": true,
+    "latest_required_version": 9
   }
 }
