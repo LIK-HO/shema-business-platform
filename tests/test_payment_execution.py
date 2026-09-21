@@ -609,7 +609,6 @@ def test_payment_execution_quarantines_provider_amount_mismatch() -> None:
     assert uow.quarantine.records[0]["reason_code"] == (
         "provider_payment_contract_conflict"
     )
-nt, attempt)
 
 
 def test_payment_adjustment_is_append_only_and_reduces_economic_revenue() -> None:
