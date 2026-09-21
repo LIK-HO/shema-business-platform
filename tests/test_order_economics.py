@@ -53,6 +53,27 @@ def test_order_lifecycle_is_explicit() -> None:
     assert completed.status is OrderStatus.COMPLETED
 
 
+def test_order_can_be_cancelled_from_non_terminal_states() -> None:
+    order = make_order()
+
+    assert order.cancel().status is OrderStatus.CANCELLED
+    assert order.confirm().cancel().status is OrderStatus.CANCELLED
+    assert order.confirm().start().cancel().status is OrderStatus.CANCELLED
+
+
+def test_order_can_fail_only_while_in_progress() -> None:
+    failed = make_order().confirm().start().fail()
+    assert failed.status is OrderStatus.FAILED
+
+    with pytest.raises(ValueError, match="only in-progress"):
+        make_order().fail()
+
+
+def test_terminal_order_cannot_be_cancelled() -> None:
+    with pytest.raises(ValueError, match="terminal"):
+        make_order().confirm().start().complete().cancel()
+
+
 def test_invalid_order_transition_is_rejected() -> None:
     with pytest.raises(ValueError, match="only confirmed"):
         make_order().start()
