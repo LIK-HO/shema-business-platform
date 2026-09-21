@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, NoReturn, Protocol
 
 import jwt
 from jwt import PyJWKClient, PyJWTError
-
-import shema_platform.foundation as foundation
 
 
 _SAFE_ASYMMETRIC_ALGORITHMS = frozenset(
@@ -100,7 +98,9 @@ class OIDCJWTAuthenticator:
             ),
         )
 
-    def authenticate(self, authorization: str | None) -> foundation.authentication.AuthenticatedActor:
+    def authenticate(self, authorization: str | None) -> Any:
+        from shema_platform.foundation.authentication import AuthenticatedActor
+
         token = self._bearer_token(authorization)
         try:
             signing_key = self.key_provider.signing_key(token)
@@ -114,7 +114,7 @@ class OIDCJWTAuthenticator:
                 options={"require": ["exp", self.configuration.actor_id_claim]},
             )
         except (PyJWTError, ValueError, TypeError):
-            raise foundation.authentication.AuthenticationRequired() from None
+            self._authentication_error()
 
         actor_id = self._required_string_claim(
             claims,
@@ -123,49 +123,57 @@ class OIDCJWTAuthenticator:
         trust_level = self._trust_level(claims)
         permissions = self._permissions(claims)
 
-        return foundation.authentication.AuthenticatedActor(
+        return AuthenticatedActor(
             actor_id=actor_id,
             trust_level=trust_level,
             permissions=permissions,
         )
 
     @staticmethod
+    def _authentication_error() -> NoReturn:
+        from shema_platform.foundation.authentication import AuthenticationRequired
+
+        raise AuthenticationRequired()
+
+    @staticmethod
     def _bearer_token(authorization: str | None) -> str:
         if authorization is None:
-            raise foundation.authentication.AuthenticationRequired()
+            OIDCJWTAuthenticator._authentication_error()
         parts = authorization.strip().split()
         if len(parts) != 2 or parts[0].lower() != "bearer" or not parts[1]:
-            raise foundation.authentication.AuthenticationRequired()
+            OIDCJWTAuthenticator._authentication_error()
         return parts[1]
 
     @staticmethod
     def _required_string_claim(claims: dict[str, Any], name: str) -> str:
         value = claims.get(name)
         if not isinstance(value, str) or not value.strip():
-            raise foundation.authentication.AuthenticationRequired()
+            OIDCJWTAuthenticator._authentication_error()
         return value.strip()
 
     def _trust_level(self, claims: dict[str, Any]) -> int:
         value = claims.get(self.configuration.trust_level_claim, 0)
         if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-            raise foundation.authentication.AuthenticationRequired()
+            OIDCJWTAuthenticator._authentication_error()
         return value
 
-    def _permissions(self, claims: dict[str, Any]) -> frozenset[foundation.authorization.Permission]:
+    def _permissions(self, claims: dict[str, Any]) -> frozenset[Any]:
+        from shema_platform.foundation.authorization import Permission
+
         value = claims.get(self.configuration.permissions_claim, ())
         if isinstance(value, str):
             raw = tuple(item for item in value.split() if item)
         elif isinstance(value, (list, tuple, set, frozenset)):
             raw = tuple(value)
         else:
-            raise foundation.authentication.AuthenticationRequired()
+            OIDCJWTAuthenticator._authentication_error()
 
-        permissions: set[foundation.authorization.Permission] = set()
+        permissions: set[Permission] = set()
         for item in raw:
             if not isinstance(item, str):
-                raise foundation.authentication.AuthenticationRequired()
+                OIDCJWTAuthenticator._authentication_error()
             try:
-                permissions.add(foundation.authorization.Permission(item))
+                permissions.add(Permission(item))
             except ValueError:
-                raise foundation.authentication.AuthenticationRequired() from None
+                OIDCJWTAuthenticator._authentication_error()
         return frozenset(permissions)
