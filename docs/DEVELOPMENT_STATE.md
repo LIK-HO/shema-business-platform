@@ -18,7 +18,16 @@ Development protocol files were introduced to make future work resumable and ele
 
 ## Current active element
 
-**CM-CERTIFICATION / development-process boundary**
+**CM-CERTIFICATION**
+
+### Active certification sub-element
+
+**B1 — GREEN CI**
+
+Integrity boundary:
+- verify current branch/HEAD/PR/CI live from GitHub;
+- distinguish tooling/CI failure from product failure;
+- close CI quality gate without changing kernel semantics.
 
 ### Completed in this boundary
 
@@ -47,7 +56,13 @@ Certification blockers are tracked in the Development Manifest:
 
 ## Exact continuation boundary
 
-Until CM-CERTIFICATION is closed, the next development action must begin with:
+Until CM-CERTIFICATION is closed, the active cursor is B1 — GREEN CI. After B1 closes, move to exactly one of B2-B10 in manifest order unless evidence requires a bounded dependency-first exception.
+
+Every development session must begin with live GitHub branch/HEAD/PR/CI verification, then read this state ledger before selecting work.
+
+Until B1 closes, do not start B2-B10 implementation.
+
+The next development action must begin with:
 1. read manifest;
 2. read work protocol;
 3. read this state ledger;
@@ -58,7 +73,7 @@ Until CM-CERTIFICATION is closed, the next development action must begin with:
 
 ## Safe next action
 
-Continue certification from the first unfinished sub-element after verifying current CI status. Do not restart manifest/protocol work.
+Verify the latest CI run for the current HEAD. If green, close B1 with evidence and move to B2. If red, fix only the failing B1 boundary, rerun verification, and update this ledger.
 
 ## Prohibited until boundary is closed
 
@@ -69,6 +84,11 @@ Continue certification from the first unfinished sub-element after verifying cur
 - no new system-of-record;
 - no migration to Airtable/Replit/Bitrix24 as authority;
 - no broad refactor without an explicit integrity reason.
+
+## Last verified repository point
+
+- PR head known at state-ledger update time: 0c3f844d5ab3ac6849e234bb178815c1382c9a45
+- This value is evidence only; live GitHub HEAD must always be re-read before continuation.
 
 ## Interruption record
 
