@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import StrEnum
 from hashlib import sha256
 from typing import Protocol
@@ -10,8 +11,8 @@ from uuid import NAMESPACE_URL, uuid5
 from shema_platform.application.commands import Actor
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.domain.economics import EconomicEntry, EconomicKind
-from shema_platform.domain.order import OrderStatus
 from shema_platform.domain.money import Money
+from shema_platform.domain.order import OrderStatus
 from shema_platform.domain.payment import (
     PaymentAttempt,
     PaymentAttemptStatus,
@@ -147,7 +148,7 @@ class PaymentCreationWorkflow:
     @staticmethod
     def request_hash(order_id: str, idempotency_key: str) -> str:
         return sha256(
-            f"{order_id}\n{idempotency_key}".encode("utf-8")
+            f"{order_id}\n{idempotency_key}".encode()
         ).hexdigest()
 
     @staticmethod
@@ -170,7 +171,9 @@ class PaymentCreationWorkflow:
             if order is None:
                 raise KeyError(f"unknown order: {order_id}")
             if order.status in {OrderStatus.CANCELLED, OrderStatus.FAILED}:
-                raise PolicyDenied("payment cannot be created for a terminal failed/cancelled order")
+                raise PolicyDenied(
+                    "payment cannot be created for a terminal failed/cancelled order"
+                )
 
             decision = self._policy.evaluate(
                 PolicyContext(
@@ -454,15 +457,17 @@ class PaymentWebhookWorkflow:
             if attempt is None:
                 uow.provider_events.mark_processed(
                     event.event_id,
-                    status=__import__(
-                        "shema_platform.domain.payment",
-                        fromlist=["ProviderEventStatus"],
-                    ).ProviderEventStatus.IGNORED,
+                    status=ProviderEventStatus.IGNORED,
                     processed_at=utc_now(),
                 )
                 uow.audits.append(
                     AuditRecord(
-                        audit_id=str(uuid5(NAMESPACE_URL, f"audit:payment.unmatched:{event.event_id}")),
+                        audit_id=str(
+                            uuid5(
+                                NAMESPACE_URL,
+                                f"audit:payment.unmatched:{event.event_id}",
+                            )
+                        ),
                         actor_id="payment-provider",
                         action="payment.provider_event_unmatched",
                         resource_type="provider_event",
@@ -558,12 +563,21 @@ class PaymentWebhookWorkflow:
             )
             uow.audits.append(
                 AuditRecord(
-                    audit_id=str(uuid5(NAMESPACE_URL, f"audit:payment.webhook:{event.event_id}")),
+                    audit_id=str(
+                        uuid5(
+                            NAMESPACE_URL,
+                            f"audit:payment.webhook:{event.event_id}",
+                        )
+                    ),
                     actor_id="payment-provider",
                     action="payment.provider_event_processed",
                     resource_type="provider_event",
                     resource_id=event.event_id,
-                    outcome="success" if payment_changed or payment.status is PaymentIntentStatus.SUCCEEDED else "review",
+                    outcome=(
+                        "success"
+                        if payment_changed or payment.status is PaymentIntentStatus.SUCCEEDED
+                        else "review"
+                    ),
                     occurred_at=utc_now(),
                     metadata={
                         "provider_ref": event.provider_ref,
