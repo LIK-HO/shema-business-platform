@@ -12,7 +12,7 @@ def test_canonical_api_contract_exists() -> None:
     architecture = read("docs/API_CONTRACT.md")
 
     assert "openapi: 3.1.0" in openapi
-    assert "version: 1.4.0" in openapi
+    assert "version: 1.5.0" in openapi
     assert "enum: [draft, ready, sending, sent, failed, completed, cancelled]" in openapi
     for route in (
         "/v1/search:",
