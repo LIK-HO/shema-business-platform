@@ -1,0 +1,265 @@
+from datetime import UTC, datetime, timedelta
+
+import pytest
+
+from shema_platform.application.commands import Actor, CommandService, CommercialActionCommand
+from shema_platform.domain.identity import Identity, IdentityState, Resolution
+from shema_platform.foundation.authorization import AuthorizationSubject, Permission, RBACAuthorizer
+from shema_platform.foundation.errors import (
+    AuthorizationError,
+    IdempotencyConflict,
+    IntegrityViolation,
+    PolicyDenied,
+    QuarantineRequired,
+)
+from shema_platform.foundation.evidence import (
+    Evidence,
+    EvidenceLifecycle,
+    TrustLevel,
+    TruthClass,
+)
+from shema_platform.foundation.idempotency import IdempotencyStore
+from shema_platform.foundation.outbox import OutboxEvent, OutboxStatus, OutboxStore
+from shema_platform.foundation.policy import PolicyEngine
+from shema_platform.foundation.recovery import RetryPolicy
+
+
+def authorizer() -> RBACAuthorizer:
+    return RBACAuthorizer(
+        (
+            AuthorizationSubject(
+                actor_id="operator-1",
+                permissions=frozenset({Permission.COMMERCIAL_ACTION_CREATE}),
+            ),
+        )
+    )
+
+
+def service() -> CommandService:
+    return CommandService(PolicyEngine(), IdempotencyStore(), authorizer())
+
+
+def verified_identity() -> Identity:
+    return Identity("1", "ООО Альфа", IdentityState.VERIFIED, tax_id="7700000000")
+
+
+def test_verified_identity_can_resolve_merge() -> None:
+    left = verified_identity()
+    right = Identity("2", "ООО Альфа", IdentityState.CANDIDATE, tax_id="7700000000")
+    assert left.resolve_with(right) is Resolution.MERGE
+
+
+def test_missing_identity_key_data_requires_quarantine() -> None:
+    left = verified_identity()
+    right = Identity("2", "Альфа", IdentityState.CANDIDATE)
+    assert left.resolve_with(right) is Resolution.QUARANTINE
+
+
+def test_unverified_identity_cannot_execute_critical_action() -> None:
+    command = CommercialActionCommand(
+        command_id="cmd-1",
+        actor=Actor("operator-1", trust_level=2),
+        identity=Identity(
+            "1",
+            "ООО Альфа",
+            IdentityState.CANDIDATE,
+            tax_id="7700000000",
+        ),
+        evidence_level=2,
+        request_hash="hash-1",
+    )
+    with pytest.raises(QuarantineRequired):
+        service().execute(command)
+
+
+def test_verified_identity_can_execute_critical_action() -> None:
+    command = CommercialActionCommand(
+        command_id="cmd-1",
+        actor=Actor("operator-1", trust_level=2),
+        identity=verified_identity(),
+        evidence_level=2,
+        request_hash="hash-1",
+    )
+    assert service().execute(command) == "1"
+
+
+def test_missing_permission_is_denied_before_policy() -> None:
+    no_permission = RBACAuthorizer()
+    secured = CommandService(PolicyEngine(), IdempotencyStore(), no_permission)
+    command = CommercialActionCommand(
+        command_id="cmd-1",
+        actor=Actor("operator-1", trust_level=2),
+        identity=verified_identity(),
+        evidence_level=2,
+        request_hash="hash-1",
+    )
+
+    with pytest.raises(AuthorizationError):
+        secured.execute(command)
+
+
+def test_untrusted_actor_is_denied_by_policy_after_authorization() -> None:
+    command = CommercialActionCommand(
+        command_id="cmd-1",
+        actor=Actor("operator-1", trust_level=1),
+        identity=verified_identity(),
+        evidence_level=2,
+        request_hash="hash-1",
+    )
+
+    with pytest.raises(PolicyDenied, match="actor_not_trusted"):
+        service().execute(command)
+
+
+def test_idempotency_rejects_changed_request() -> None:
+    store = IdempotencyStore()
+    store.reserve("k1", "h1", "result-1")
+    with pytest.raises(IdempotencyConflict):
+        store.reserve("k1", "h2", "result-2")
+
+
+def test_evidence_rejects_invalid_confidence() -> None:
+    with pytest.raises(ValueError):
+        Evidence(
+            evidence_id="e1",
+            subject_ref="identity:1",
+            claim="Claim",
+            source_ref="source:1",
+            observed_at=datetime.now(UTC),
+            captured_at=datetime.now(UTC),
+            truth_class=TruthClass.FACT,
+            trust_level=TrustLevel.T2_VERIFIED,
+            confidence=1.5,
+        )
+
+
+def test_evidence_rejects_invalid_timeline() -> None:
+    observed = datetime.now(UTC)
+    with pytest.raises(ValueError):
+        Evidence(
+            evidence_id="e1",
+            subject_ref="identity:1",
+            claim="Claim",
+            source_ref="source:1",
+            observed_at=observed,
+            captured_at=observed - timedelta(seconds=1),
+            truth_class=TruthClass.FACT,
+            trust_level=TrustLevel.T2_VERIFIED,
+            confidence=1,
+        )
+
+
+def test_evidence_preserves_provenance_and_currentness() -> None:
+    observed = datetime.now(UTC)
+    evidence = Evidence(
+        evidence_id="e1",
+        subject_ref="identity:1",
+        claim="Current contact exists",
+        source_ref="provider:registry",
+        observed_at=observed,
+        captured_at=observed + timedelta(seconds=1),
+        truth_class=TruthClass.FACT,
+        trust_level=TrustLevel.T2_VERIFIED,
+        confidence=0.95,
+        provenance={
+            "provider": "registry",
+            "source_url": "https://example.test/source",
+        },
+        expires_at=observed + timedelta(days=1),
+    )
+
+    assert evidence.provenance["provider"] == "registry"
+    assert evidence.is_current(observed + timedelta(hours=1))
+
+
+def test_expired_or_quarantined_evidence_is_not_current() -> None:
+    observed = datetime.now(UTC)
+    expired = Evidence(
+        evidence_id="e1",
+        subject_ref="identity:1",
+        claim="Old fact",
+        source_ref="provider:registry",
+        observed_at=observed,
+        captured_at=observed,
+        truth_class=TruthClass.FACT,
+        trust_level=TrustLevel.T2_VERIFIED,
+        confidence=1,
+        expires_at=observed + timedelta(hours=1),
+    )
+    quarantined = Evidence(
+        evidence_id="e2",
+        subject_ref="identity:1",
+        claim="Conflicting fact",
+        source_ref="provider:registry",
+        observed_at=observed,
+        captured_at=observed,
+        truth_class=TruthClass.FACT,
+        trust_level=TrustLevel.T1_OBSERVED,
+        confidence=0.5,
+        lifecycle=EvidenceLifecycle.QUARANTINED,
+    )
+
+    assert not expired.is_current(observed + timedelta(hours=2))
+    assert not quarantined.is_current(observed)
+
+
+def test_outbox_is_idempotent_and_pending_until_published() -> None:
+    store = OutboxStore()
+    event = OutboxEvent(
+        event_id="evt-1",
+        event_type="identity.verified",
+        aggregate_type="identity",
+        aggregate_id="1",
+        payload={"state": "verified"},
+        occurred_at=datetime.now(UTC),
+    )
+    assert store.append(event) == event
+    assert store.append(event) == event
+    assert len(store.pending()) == 1
+    claimed = store.claim_pending(
+        "worker-1",
+        lease_seconds=60,
+        now=datetime.now(UTC),
+        limit=1,
+    )
+    assert len(claimed) == 1
+    assert store.mark_published(
+        "evt-1",
+        "worker-1",
+        now=claimed[0].lease_until - timedelta(seconds=1),
+    ).status is OutboxStatus.PUBLISHED
+    assert store.pending() == ()
+
+
+def test_outbox_rejects_event_id_collision() -> None:
+    store = OutboxStore()
+    now = datetime.now(UTC)
+    store.append(
+        OutboxEvent(
+            "evt-1",
+            "identity.verified",
+            "identity",
+            "1",
+            {"state": "verified"},
+            now,
+        )
+    )
+    with pytest.raises(IntegrityViolation):
+        store.append(
+            OutboxEvent(
+                "evt-1",
+                "identity.changed",
+                "identity",
+                "1",
+                {"state": "active"},
+                now,
+            )
+        )
+
+
+def test_retry_policy_is_bounded() -> None:
+    policy = RetryPolicy(max_attempts=5, initial_delay_seconds=1, max_delay_seconds=4)
+    assert policy.delay_for(1) == 1
+    assert policy.delay_for(5) == 4
+    assert policy.is_retryable(4)
+    assert not policy.is_retryable(5)

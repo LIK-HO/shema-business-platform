@@ -1,0 +1,189 @@
+{
+  "version": "1.4",
+  "product": "Commercial Intelligence & Execution OS",
+  "runtime": "modular_monolith",
+  "transactional_authority": "postgresql",
+  "layers": {
+    "experience": [],
+    "application": [
+      "domain",
+      "foundation"
+    ],
+    "domain": [
+      "foundation"
+    ],
+    "foundation": [],
+    "adapters": [
+      "application",
+      "domain",
+      "foundation"
+    ],
+    "platform": []
+  },
+  "persistence": {
+    "canonical": [
+      "identity",
+      "evidence",
+      "idempotency_key",
+      "audit_log",
+      "outbox_event",
+      "commercial_action",
+      "order_header",
+      "order_line",
+      "economic_entry",
+      "ai_run",
+      "job_execution"
+    ],
+    "source_observation": [
+      "search_candidate"
+    ],
+    "uncertain_state": [
+      "quarantine_record"
+    ],
+    "migrations": [
+      "0001_foundation.sql",
+      "0002_discovery.sql",
+      "0003_audit_context.sql",
+      "0004_commercial_execution.sql",
+      "0005_ai_run.sql",
+      "0006_job_execution.sql",
+      "0007_outbox_delivery_lease.sql",
+      "0008_commercial_send_reservation.sql"
+    ]
+  },
+  "operational_controls": [
+    "correlation_context",
+    "versioned_configuration",
+    "diagnostics",
+    "job_lease",
+    "bounded_retry",
+    "durable_job_execution",
+    "handler_registry",
+    "job_runner_at_least_once",
+    "outbox_dispatcher",
+    "lease_renewal",
+    "lease_aware_handler_context",
+    "outbox_delivery_lease",
+    "outbox_reclaim",
+    "commercial_send_reservation"
+  ],
+  "execution_contracts": [
+    "permission_then_policy",
+    "external_effect_outside_core_transaction",
+    "order_requires_sent_or_completed_action",
+    "job_claim_requires_lease",
+    "worker_completion_requires_current_lease",
+    "bounded_retry_schedule",
+    "handler_renewal_uses_job_repository_only",
+    "outbox_claim_requires_lease",
+    "outbox_mark_published_requires_current_lease",
+    "expired_outbox_leases_are_reclaimable",
+    "commercial_send_reservation_before_external_effect",
+    "expired_commercial_send_reservations_are_reclaimable",
+    "stable_external_effect_idempotency_key_per_action",
+    "commercial_send_completion_requires_current_lease",
+    "idempotency_business_state_outbox_audit_commit_atomically",
+    "order_persistence_respects_domain_lifecycle",
+    "order_persistence_serializes_lifecycle_update"
+  ],
+  "intelligence": {
+    "research_depths": [
+      "R1",
+      "R2",
+      "R3",
+      "R4"
+    ],
+    "source_requirements": [
+      "required",
+      "optional",
+      "prohibited"
+    ],
+    "budget_dimensions": [
+      "provider_calls",
+      "source_count",
+      "token_budget",
+      "api_cost_limit",
+      "time_budget_seconds"
+    ]
+  },
+  "critical_invariants": [
+    "identity_before_critical_commercial_action",
+    "evidence_for_external_critical_claims",
+    "adapters_cannot_mutate_domain_truth",
+    "ai_cannot_bypass_policy_or_evidence",
+    "critical_writes_are_idempotent",
+    "external_calls_are_outside_core_transaction",
+    "state_change_and_outbox_are_atomic",
+    "retries_are_at_least_once_and_handlers_idempotent",
+    "uncertain_identity_or_evidence_is_quarantined",
+    "audit_is_append_only",
+    "configuration_and_business_policy_are_versioned",
+    "self_healing_never_rewrites_business_truth",
+    "canonical_search_is_shared_by_all_clients",
+    "qualification_cannot_silently_promote_uncertain_records",
+    "source_candidate_is_not_canonical_identity",
+    "permission_is_checked_before_policy",
+    "job_execution_uses_lease_and_idempotency",
+    "max_is_an_adapter",
+    "job_state_is_durable",
+    "worker_completion_requires_current_lease",
+    "expired_job_leases_are_reclaimable",
+    "retry_schedule_is_bounded",
+    "job_handler_is_idempotent",
+    "missing_job_handler_fails_job",
+    "job_runner_is_at_least_once",
+    "outbox_publication_is_at_least_once",
+    "external_publisher_deduplicates_by_event_id",
+    "lease_can_be_renewed_only_by_current_worker",
+    "expired_leases_cannot_be_renewed",
+    "handler_renews_only_through_job_context",
+    "outbox_delivery_attempt_is_durable",
+    "outbox_claim_is_concurrency_safe",
+    "outbox_mark_published_requires_current_lease",
+    "expired_outbox_leases_are_reclaimable",
+    "commercial_send_is_lease_guarded",
+    "external_communication_deduplicates_by_idempotency_key",
+    "expired_commercial_send_reservations_are_reclaimable",
+    "external_effect_idempotency_key_is_stable_per_action",
+    "commercial_action_is_reserved_before_external_effect",
+    "commercial_send_completion_requires_current_lease",
+    "idempotency_business_state_outbox_audit_are_one_transaction",
+    "order_persistence_respects_domain_lifecycle",
+    "order_persistence_serializes_lifecycle_update"
+  ],
+  "business_loop": [
+    "search",
+    "intelligence",
+    "evidence",
+    "qualification",
+    "commercial_action",
+    "order",
+    "economic_result",
+    "learning",
+    "search_improvement"
+  ],
+  "identity_lifecycle": [
+    "raw",
+    "candidate",
+    "identified",
+    "verified",
+    "active",
+    "inactive",
+    "unknown"
+  ],
+  "quality_gates": [
+    "architecture_contract",
+    "lint",
+    "compile",
+    "unit_tests",
+    "integration_tests",
+    "security_tests",
+    "recovery_drills",
+    "controlled_release"
+  ],
+  "legacy": {
+    "airtable": "transition_data_only",
+    "replit_migration_frozen_until": "2026-10-13",
+    "bitrix24_migration": "frozen_without_date"
+  }
+}
