@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 
-import shema_platform.platform.migrations as migrations
+from shema_platform.platform import migrations
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
