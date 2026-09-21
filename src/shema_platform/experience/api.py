@@ -48,6 +48,7 @@ class RequestContext:
     actor_id: str
     trust_level: int
     idempotency_key: str | None
+    permissions: frozenset = frozenset()
 
 
 class APIApplication(Protocol):
@@ -151,6 +152,7 @@ def _context(
         actor_id=actor.actor_id,
         trust_level=actor.trust_level,
         idempotency_key=idempotency_key,
+        permissions=actor.permissions,
     )
 
 
