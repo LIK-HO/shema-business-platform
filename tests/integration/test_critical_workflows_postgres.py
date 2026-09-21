@@ -122,6 +122,7 @@ def test_critical_create_workflows_are_atomic_and_idempotent() -> None:
             channel="max",
             evidence_refs=("evidence:integration",),
             request_hash="request:action:1",
+            idempotency_key="idem:action:1",
             correlation_id="corr:workflow",
         )
         assert action.status is CommercialActionStatus.READY
@@ -134,6 +135,7 @@ def test_critical_create_workflows_are_atomic_and_idempotent() -> None:
             channel="max",
             evidence_refs=("evidence:integration",),
             request_hash="request:action:1",
+            idempotency_key="idem:action:1",
             correlation_id="corr:workflow",
         )
         assert repeated == action
@@ -142,10 +144,6 @@ def test_critical_create_workflows_are_atomic_and_idempotent() -> None:
             conn.execute('set search_path to "' + schema + '"')
             action_rows = conn.execute(
                 "select count(*) from commercial_action where action_id = 'action-workflow-1'"
-            ).fetchone()
-            event_rows = conn.execute(
-                "select count(*) from outbox_event where event_id = "
-                "(select encode(convert_to('commercial-action.created:action-workflow-1', 'utf8'), 'hex'))"
             ).fetchone()
             audit_rows = conn.execute(
                 "select count(*) from audit_log where action = 'commercial_action.created'"
@@ -198,6 +196,7 @@ def test_critical_create_workflows_are_atomic_and_idempotent() -> None:
                 ),
             ),
             request_hash="request:order:1",
+            idempotency_key="idem:order:1",
             correlation_id="corr:order",
         )
         assert order.order_id == "order-workflow-1"
@@ -208,6 +207,7 @@ def test_critical_create_workflows_are_atomic_and_idempotent() -> None:
             action_id="action-workflow-1",
             lines=order.lines,
             request_hash="request:order:1",
+            idempotency_key="idem:order:1",
             correlation_id="corr:order",
         )
         assert repeated_order == order
@@ -253,6 +253,7 @@ def test_critical_create_rolls_back_all_state_when_outbox_fails() -> None:
                 channel="max",
                 evidence_refs=("evidence:rollback",),
                 request_hash="request:rollback:1",
+                idempotency_key="idem:rollback:1",
             )
 
         with psycopg.connect(DATABASE_URL) as conn:
@@ -261,7 +262,7 @@ def test_critical_create_rolls_back_all_state_when_outbox_fails() -> None:
                 "select count(*) from commercial_action where action_id = 'action-rollback-1'"
             ).fetchone() == (0,)
             assert conn.execute(
-                "select count(*) from idempotency_key where key = 'action-rollback-1'"
+                "select count(*) from idempotency_key where key = 'idem:rollback:1'"
             ).fetchone() == (0,)
             assert conn.execute(
                 "select count(*) from audit_log where action = 'commercial_action.created'"
@@ -294,6 +295,7 @@ def test_critical_create_rejects_changed_request_for_same_idempotency_key() -> N
             channel="max",
             evidence_refs=("evidence:collision",),
             request_hash="request:collision:1",
+            idempotency_key="idem:collision:1",
         )
 
         with pytest.raises(IdempotencyConflict):
@@ -305,6 +307,7 @@ def test_critical_create_rejects_changed_request_for_same_idempotency_key() -> N
                 channel="max",
                 evidence_refs=("evidence:collision",),
                 request_hash="request:collision:2",
+                idempotency_key="idem:collision:1",
             )
     finally:
         cleanup(schema)
