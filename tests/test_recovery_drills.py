@@ -87,7 +87,10 @@ class DrillOutbox:
         return (delivery,)
 
     def pending(self):
-        return tuple(event for event in self.events.values() if event.status is OutboxStatus.PENDING)
+        return tuple(
+            event for event in self.events.values()
+            if event.status is OutboxStatus.PENDING
+        )
 
     def mark_published(self, event_id: str, worker_id: str, *, now: datetime):
         delivery = self.leases[event_id]
