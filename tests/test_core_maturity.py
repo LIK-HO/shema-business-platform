@@ -1,5 +1,5 @@
-import json
-import pathlib
+from json import loads
+from pathlib import Path
 
 import pytest
 
@@ -11,11 +11,11 @@ from shema_platform.platform.migrations import (
 )
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_core_maturity_contract_is_explicit() -> None:
-    contract = json.loads((ROOT / "architecture/core_maturity_contract.json").read_text())
+    contract = loads((ROOT / "architecture/core_maturity_contract.json").read_text())
     assert contract["version"] == "1.5-core-maturity"
     assert contract["maturity_gates"] == [
         "correctness",
