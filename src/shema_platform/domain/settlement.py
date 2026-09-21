@@ -118,12 +118,17 @@ class ReconciliationItem:
 @dataclass(frozen=True, slots=True)
 class SettlementLine:
     line_id: str
+    settlement_id: str
     provider_ref: str
     amount: Money
     statement_ref: str
 
     def __post_init__(self) -> None:
-        if not self.line_id.strip() or not self.provider_ref.strip():
+        if (
+            not self.line_id.strip()
+            or not self.settlement_id.strip()
+            or not self.provider_ref.strip()
+        ):
             raise ValueError("settlement line identifiers are required")
         if not self.statement_ref.strip():
             raise ValueError("statement_ref is required")
