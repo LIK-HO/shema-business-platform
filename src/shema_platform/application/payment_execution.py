@@ -673,7 +673,27 @@ class PaymentWebhookWorkflow:
                     PaymentExecutionWorkflow._record_revenue(uow, payment)
                     payment_changed = True
                 else:
-                    event_status = PaymentAttemptStatus.FAILED
+                    uow.quarantine.add(
+                        object_type="payment_provider_event",
+                        object_ref=event.event_id,
+                        reason_code="payment_state_conflict",
+                        payload={
+                            "payment_id": payment.payment_id,
+                            "current_status": payment.status.value,
+                            "observed_status": event_status.value,
+                            "provider_ref": event.provider_ref,
+                        },
+                    )
+                    uow.provider_events.mark_processed(
+                        event.event_id,
+                        status=ProviderEventStatus.IGNORED,
+                        processed_at=utc_now(),
+                    )
+                    return PaymentWebhookResult(
+                        event_id=event.event_id,
+                        status="quarantined",
+                        payment_id=payment.payment_id,
+                    )
             elif event_status is PaymentAttemptStatus.FAILED:
                 if payment.status in {
                     PaymentIntentStatus.PENDING,
@@ -690,7 +710,27 @@ class PaymentWebhookWorkflow:
                 elif payment.status is PaymentIntentStatus.FAILED:
                     pass
                 else:
-                    event_status = PaymentAttemptStatus.SUCCEEDED
+                    uow.quarantine.add(
+                        object_type="payment_provider_event",
+                        object_ref=event.event_id,
+                        reason_code="payment_state_conflict",
+                        payload={
+                            "payment_id": payment.payment_id,
+                            "current_status": payment.status.value,
+                            "observed_status": event_status.value,
+                            "provider_ref": event.provider_ref,
+                        },
+                    )
+                    uow.provider_events.mark_processed(
+                        event.event_id,
+                        status=ProviderEventStatus.IGNORED,
+                        processed_at=utc_now(),
+                    )
+                    return PaymentWebhookResult(
+                        event_id=event.event_id,
+                        status="quarantined",
+                        payment_id=payment.payment_id,
+                    )
             else:
                 uow.payment_attempts.apply_provider_result(
                     attempt.attempt_id,
