@@ -30,11 +30,8 @@ class CommercialActionCreateWorkflow:
         policy: PolicyEngine,
     ) -> None:
         self._unit_of_work_factory = unit_of_work_factory
-        self._service = CommercialActionService(
-            authorizer,
-            policy,
-            idempotency=None,  # bound per transaction below
-        )
+        self._authorizer = authorizer
+        self._policy = policy
 
     def execute(
         self,
@@ -67,8 +64,8 @@ class CommercialActionCreateWorkflow:
                 raise KeyError(f"unknown identity: {identity_id}")
 
             service = CommercialActionService(
-                self._service._authorizer,
-                self._service._policy,
+                self._authorizer,
+                self._policy,
                 uow.idempotency,
             )
             action = service.create_ready(
@@ -128,11 +125,8 @@ class OrderCreateWorkflow:
         policy: PolicyEngine,
     ) -> None:
         self._unit_of_work_factory = unit_of_work_factory
-        self._service = OrderService(
-            authorizer,
-            policy,
-            idempotency=None,  # bound per transaction below
-        )
+        self._authorizer = authorizer
+        self._policy = policy
 
     def execute(
         self,
@@ -163,8 +157,8 @@ class OrderCreateWorkflow:
                 raise KeyError(f"unknown commercial action: {action_id}")
 
             service = OrderService(
-                self._service._authorizer,
-                self._service._policy,
+                self._authorizer,
+                self._policy,
                 uow.idempotency,
             )
             order = service.create_from_action(
