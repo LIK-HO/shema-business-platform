@@ -13,6 +13,15 @@ from shema_platform.foundation.policy import Decision, PolicyContext, PolicyEngi
 class Actor:
     actor_id: str
     trust_level: int
+    permissions: frozenset[Permission] = frozenset()
+
+    def authorization_subject(self):
+        from shema_platform.foundation.authorization import AuthorizationSubject
+
+        return AuthorizationSubject.from_actor(
+            actor_id=self.actor_id,
+            permissions=self.permissions,
+        )
 
 
 @dataclass(frozen=True, slots=True)
