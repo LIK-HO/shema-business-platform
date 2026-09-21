@@ -268,7 +268,7 @@ class ProviderEventRepository(Protocol):
         self,
         event_id: str,
         *,
-        status: str,
+        status: ProviderEventStatus,
         processed_at: datetime,
     ) -> ProviderEvent: ...
 
@@ -319,6 +319,7 @@ class UnitOfWork(Protocol):
     idempotency: IdempotencyRepository
     outbox: OutboxRepository
     jobs: JobRepository
+    quarantine: QuarantineRepository
     commercial_actions: CommercialActionRepository
     orders: OrderRepository
     economics: EconomicEntryRepository
