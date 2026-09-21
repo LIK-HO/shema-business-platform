@@ -1,8 +1,6 @@
 import json
 from pathlib import Path
 
-import pytest
-
 from shema_platform.platform import migrations
 
 
@@ -44,7 +42,7 @@ def test_core_maturity_contract_is_explicit() -> None:
 
 
 def test_migration_plan_rejects_gaps() -> None:
-    with pytest.raises(migrations.MigrationPlanError, match="contiguous"):
+    try:
         migrations.MigrationPlan(
             (
                 migrations.Migration(
@@ -59,6 +57,10 @@ def test_migration_plan_rejects_gaps() -> None:
                 ),
             )
         )
+    except migrations.MigrationPlanError as exc:
+        assert "contiguous" in str(exc)
+    else:
+        raise AssertionError("expected migration gap failure")
 
 
 def test_migration_checksum_is_deterministic() -> None:
