@@ -18,7 +18,9 @@ from shema_platform.domain.payment import (
 from shema_platform.domain.settlement import (
     ReconciliationItem,
     ReconciliationStatus,
+    SettlementLine,
     SettlementRecord,
+    SettlementStatement,
     SettlementStatus,
 )
 from shema_platform.platform.postgres_repositories import (
@@ -56,6 +58,8 @@ def prepare_database(connection: psycopg.Connection) -> None:
         "0007_outbox_delivery_lease.sql",
         "0008_commercial_send_reservation.sql",
         "0009_payment_settlement.sql",
+        "0010_settlement_lines.sql",
+        "0011_settlement_statement_hash.sql",
     ):
         apply_migration(connection, ROOT / "db/migrations" / migration)
 
@@ -178,6 +182,7 @@ def test_settlement_reconciliation_persists_discrepancy_state() -> None:
     settlement = SettlementRecord(
         settlement_id=f"settlement:{uuid4()}",
         provider_settlement_ref=f"provider-settlement:{uuid4()}",
+        statement_hash="sha256:statement-test",
         gross=Money(6000, "RUB"),
         fees=Money(150, "RUB"),
         net=Money(5850, "RUB"),
@@ -208,5 +213,100 @@ def test_settlement_reconciliation_persists_discrepancy_state() -> None:
         reconciliation_repository.add(item)
         loaded = reconciliation_repository.get(item.reconciliation_id)
         assert loaded == item
+
+        connection.rollback()
+
+
+def test_postgres_settlement_lines_and_statement_hash_are_immutable() -> None:
+    now = datetime.now(UTC)
+    settlement = SettlementRecord(
+        settlement_id=f"settlement:{uuid4()}",
+        provider_settlement_ref=f"provider-settlement:{uuid4()}",
+        statement_hash="sha256:statement-lines",
+        gross=Money(6000, "RUB"),
+        fees=Money(150, "RUB"),
+        net=Money(5850, "RUB"),
+        settled_at=now,
+    )
+    line = SettlementLine(
+        line_id=f"line:{uuid4()}",
+        settlement_id=settlement.settlement_id,
+        provider_ref="provider-payment-1",
+        amount=Money(6000, "RUB"),
+        statement_ref="statement-1",
+    )
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        prepare_database(connection)
+        repository = PostgresSettlementRepository(connection)
+        repository.add(settlement)
+        repository.add_line(line)
+
+        loaded = repository.get(settlement.settlement_id)
+        assert loaded is not None
+        assert loaded.statement_hash == settlement.statement_hash
+        assert repository.list_lines(settlement.settlement_id) == (line,)
+
+        with pytest.raises(Exception, match="immutable"):
+            repository.save(
+                SettlementRecord(
+                    settlement_id=settlement.settlement_id,
+                    provider_settlement_ref=settlement.provider_settlement_ref,
+                    statement_hash="sha256:tampered",
+                    gross=settlement.gross,
+                    fees=settlement.fees,
+                    net=settlement.net,
+                    settled_at=settlement.settled_at,
+                    status=SettlementStatus.RECONCILING,
+                )
+            )
+
+        connection.rollback()
+
+
+def test_postgres_reconciliation_can_resolve_and_close_settlement() -> None:
+    now = datetime.now(UTC)
+    settlement = SettlementRecord(
+        settlement_id=f"settlement:{uuid4()}",
+        provider_settlement_ref=f"provider-settlement:{uuid4()}",
+        statement_hash="sha256:resolve",
+        gross=Money(6000, "RUB"),
+        fees=Money(150, "RUB"),
+        net=Money(5850, "RUB"),
+        settled_at=now,
+    )
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        prepare_database(connection)
+        settlement_repository = PostgresSettlementRepository(connection)
+        reconciliation_repository = PostgresReconciliationRepository(connection)
+
+        settlement_repository.add(settlement)
+        discrepancy = settlement.begin_reconciliation().mark_discrepancy()
+        settlement_repository.save(discrepancy)
+
+        item = ReconciliationItem(
+            reconciliation_id=f"recon:{uuid4()}",
+            settlement_id=settlement.settlement_id,
+            reason_code="amount_mismatch",
+            expected_amount=Money(6000, "RUB"),
+            observed_amount=Money(5900, "RUB"),
+            currency="RUB",
+            status=ReconciliationStatus.OPEN,
+            created_at=now,
+        )
+        reconciliation_repository.add(item)
+        resolved = item.resolve(now + timedelta(minutes=1))
+        reconciliation_repository.resolve(resolved)
+
+        assert reconciliation_repository.list_open_for_settlement(
+            settlement.settlement_id
+        ) == ()
+
+        closed = discrepancy.resolve_discrepancy()
+        settlement_repository.save(closed)
+        loaded = settlement_repository.get(settlement.settlement_id)
+        assert loaded is not None
+        assert loaded.status is SettlementStatus.SETTLED
 
         connection.rollback()
