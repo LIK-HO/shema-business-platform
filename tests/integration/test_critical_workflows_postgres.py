@@ -1,5 +1,7 @@
 import os
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
+from threading import Barrier
 from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
@@ -154,6 +156,10 @@ def test_critical_create_workflows_are_atomic_and_idempotent() -> None:
 
             assert action_rows == (1,)
             assert audit_rows == (1,)
+            idempotency_rows = conn.execute(
+                "select count(*) from idempotency_key where key = 'idem:action:1'"
+            ).fetchone()
+
             assert idempotency_rows == (1,)
 
             # Event id is UUIDv5; verify by querying aggregate/type instead of
@@ -226,7 +232,7 @@ def test_critical_create_workflows_are_atomic_and_idempotent() -> None:
                 "select count(*) from audit_log where action = 'order.created'"
             ).fetchone() == (1,)
             assert conn.execute(
-                "select count(*) from idempotency_key where key = 'order-workflow-1'"
+                "select count(*) from idempotency_key where key = 'idem:order:1'"
             ).fetchone() == (1,)
     finally:
         cleanup(schema)
@@ -310,5 +316,65 @@ def test_critical_create_rejects_changed_request_for_same_idempotency_key() -> N
                 request_hash="request:collision:2",
                 idempotency_key="idem:collision:1",
             )
+    finally:
+        cleanup(schema)
+
+
+def test_concurrent_action_create_with_same_idempotency_key_returns_one_result() -> None:
+    schema = make_schema()
+    try:
+        migrate(schema)
+        identity_id = str(uuid4())
+        seed_verified_identity(schema, identity_id)
+
+        barrier = Barrier(2)
+
+        def execute_once():
+            workflow = CommercialActionCreateWorkflow(
+                factory(schema),
+                authorizer(Permission.COMMERCIAL_ACTION_CREATE),
+                PolicyEngine(),
+            )
+            barrier.wait(timeout=10)
+            return workflow.execute(
+                action_id="action-concurrent-1",
+                actor=Actor("operator-1", trust_level=2),
+                identity_id=identity_id,
+                contact_ref="chat:concurrent",
+                channel="max",
+                evidence_refs=("evidence:concurrent",),
+                request_hash="request:concurrent:1",
+                idempotency_key="idem:concurrent:1",
+            )
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(execute_once),
+                executor.submit(execute_once),
+            ]
+            results = [future.result(timeout=30) for future in futures]
+
+        assert results[0] == results[1]
+
+        with psycopg.connect(DATABASE_URL) as conn:
+            conn.execute('set search_path to "' + schema + '"')
+            assert conn.execute(
+                "select count(*) from commercial_action "
+                "where action_id = 'action-concurrent-1'"
+            ).fetchone() == (1,)
+            assert conn.execute(
+                "select count(*) from idempotency_key "
+                "where key = 'idem:concurrent:1'"
+            ).fetchone() == (1,)
+            assert conn.execute(
+                "select count(*) from outbox_event "
+                "where event_type = 'commercial_action.created' "
+                "and aggregate_id = 'action-concurrent-1'"
+            ).fetchone() == (1,)
+            assert conn.execute(
+                "select count(*) from audit_log "
+                "where action = 'commercial_action.created' "
+                "and resource_id = 'action-concurrent-1'"
+            ).fetchone() == (1,)
     finally:
         cleanup(schema)
