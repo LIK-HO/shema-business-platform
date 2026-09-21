@@ -24,7 +24,7 @@ class AuthorizationSubject:
         cls,
         actor_id: str,
         permissions: frozenset[Permission],
-    ) -> "AuthorizationSubject":
+    ) -> AuthorizationSubject:
         if not actor_id.strip():
             raise ValueError("actor_id is required")
         return cls(actor_id=actor_id, permissions=permissions)
