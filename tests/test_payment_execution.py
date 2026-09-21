@@ -240,6 +240,7 @@ class FakePaymentAdapter(PaymentProviderAdapter):
         default_factory=lambda: PaymentProviderResult(
             provider_ref="provider-payment-1",
             status=PaymentAttemptStatus.SUCCEEDED,
+            amount=Money(3000, "RUB"),
         )
     )
     webhook: VerifiedPaymentEvent | None = None
@@ -431,6 +432,7 @@ def test_payment_webhook_finishes_pending_payment_once_and_records_revenue() -> 
     adapter.webhook = VerifiedPaymentEvent(
         event=event,
         payment_status=PaymentAttemptStatus.SUCCEEDED,
+        amount=Money(3000, "RUB"),
     )
 
     first = webhook.process(headers={}, payload=b"payload")
@@ -497,3 +499,32 @@ def test_payment_retry_reuses_stable_external_effect_key() -> None:
 
     assert adapter.calls == [first_key]
     assert adapter.calls.count(first_key) == 1
+
+
+def test_payment_gateway_rejects_provider_amount_mismatch() -> None:
+    adapter = FakePaymentAdapter(
+        result=PaymentProviderResult(
+            provider_ref="provider-payment-1",
+            status=PaymentAttemptStatus.SUCCEEDED,
+            amount=Money(2999, "RUB"),
+        )
+    )
+    gateway = PaymentGateway(adapter)
+    payment = PaymentIntent(
+        payment_id="payment-1",
+        order_id="order-1",
+        amount=Money(3000, "RUB"),
+        idempotency_key="key-1",
+    ).begin()
+    attempt = PaymentAttempt(
+        attempt_id="attempt-1",
+        payment_id="payment-1",
+        attempt_number=1,
+        external_idempotency_key="external-1",
+        status=PaymentAttemptStatus.SENDING,
+        worker_id="worker-1",
+        lease_until=datetime.now(UTC) + timedelta(minutes=5),
+    )
+
+    with pytest.raises(Exception, match="amount"):
+        gateway.create_payment(payment, attempt)
