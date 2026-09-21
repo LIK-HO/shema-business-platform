@@ -27,7 +27,6 @@ from shema_platform.foundation.authentication import (
     AuthenticationRequired,
 )
 from shema_platform.foundation.authorization import Permission
-from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.errors import QuarantineRequired
 
 
