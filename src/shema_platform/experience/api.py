@@ -223,12 +223,10 @@ def create_app(
     enable_docs: bool = True,
     telemetry: TelemetrySink | None = None,
 ) -> FastAPI:
-    if RuntimeSecurityConfiguration.from_environment(
+    runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
-    ).environment == "production":
-        RuntimeSecurityConfiguration.from_environment(
-            docs_enabled=enable_docs
-        ).enforce()
+    )
+    runtime_security.enforce()
 
     app = FastAPI(
         title="Shema Business Platform Canonical API",
