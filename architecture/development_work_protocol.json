@@ -74,5 +74,35 @@
     "migration_plan",
     "rollback_plan"
   ],
-  "post_certification": "kernel_semantics_frozen"
+  "post_certification": "kernel_semantics_frozen",
+  "current_cursor": {
+    "stage": "CM-CERTIFICATION",
+    "active_sub_element": "B1_GREEN_CI",
+    "rule": "Do not start B2-B10 until B1 is closed.",
+    "live_state_required": [
+      "branch",
+      "head",
+      "pull_request",
+      "ci"
+    ]
+  },
+  "element_completion": {
+    "close_only_when": [
+      "contract_explicit",
+      "implementation_complete",
+      "failure_modes_verified",
+      "security_verified",
+      "persistence_concurrency_recovery_verified_where_applicable",
+      "tests_green",
+      "observability_sufficient",
+      "release_impact_checked",
+      "development_state_updated"
+    ],
+    "interruption_cursor_required": true
+  },
+  "github_tool_use": {
+    "entry": "Read AGENTS.md, manifest, work protocol, development state; then resolve live branch/head/PR/CI.",
+    "no_conversation_memory_as_source_of_truth": true,
+    "live_github_state_authoritative": true
+  }
 }
