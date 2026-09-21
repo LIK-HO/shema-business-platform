@@ -1833,6 +1833,8 @@ class PostgresSettlementRepository(SettlementRepository):
             insert into settlement_record (
                 settlement_id,
                 provider_settlement_ref,
+                statement_hash,
+                statement_hash,
                 gross_amount,
                 fees,
                 net_amount,
@@ -1840,11 +1842,12 @@ class PostgresSettlementRepository(SettlementRepository):
                 settled_at,
                 status
             )
-            values (%s, %s, %s, %s, %s, %s, %s, %s)
+            values (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 settlement.settlement_id,
                 settlement.provider_settlement_ref,
+                settlement.statement_hash,
                 settlement.gross.amount,
                 settlement.fees.amount,
                 settlement.net.amount,
@@ -1860,6 +1863,7 @@ class PostgresSettlementRepository(SettlementRepository):
             select
                 settlement_id,
                 provider_settlement_ref,
+                statement_hash,
                 gross_amount,
                 fees,
                 net_amount,
@@ -1901,6 +1905,7 @@ class PostgresSettlementRepository(SettlementRepository):
 
         if (
             current.provider_settlement_ref != settlement.provider_settlement_ref
+            or current.statement_hash != settlement.statement_hash
             or current.gross != settlement.gross
             or current.fees != settlement.fees
             or current.net != settlement.net
@@ -1994,6 +1999,7 @@ class PostgresSettlementRepository(SettlementRepository):
         (
             settlement_id,
             provider_settlement_ref,
+            statement_hash,
             gross_amount,
             fees,
             net_amount,
