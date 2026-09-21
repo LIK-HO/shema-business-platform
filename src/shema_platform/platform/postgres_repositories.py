@@ -37,6 +37,10 @@ from shema_platform.domain.payment import (
     ProviderEvent,
     ProviderEventStatus,
 )
+from shema_platform.domain.payment_adjustment import (
+    PaymentAdjustment,
+    PaymentAdjustmentKind,
+)
 from shema_platform.domain.search import SearchHit
 from shema_platform.domain.settlement import (
     ReconciliationItem,
@@ -1684,6 +1688,144 @@ class PostgresPaymentAttemptRepository(PaymentAttemptRepository):
             provider_ref=str(provider_ref) if provider_ref is not None else None,
             worker_id=str(worker_id) if worker_id is not None else None,
             lease_until=lease_until,
+        )
+
+
+class PostgresPaymentAdjustmentRepository(PaymentAdjustmentRepository):
+    """Append-only persistence for provider refund/reversal/chargeback facts."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, adjustment: PaymentAdjustment) -> None:
+        self._connection.execute(
+            """
+            insert into payment_adjustment (
+                adjustment_id,
+                payment_id,
+                provider_event_id,
+                provider_ref,
+                kind,
+                amount,
+                currency,
+                occurred_at
+            )
+            values (%s, %s, %s, %s, %s, %s, %s, %s)
+            on conflict (provider_event_id) do nothing
+            """,
+            (
+                adjustment.adjustment_id,
+                adjustment.payment_id,
+                adjustment.provider_event_id,
+                adjustment.provider_ref,
+                adjustment.kind.value,
+                adjustment.amount.amount,
+                adjustment.amount.currency,
+                adjustment.occurred_at,
+            ),
+        )
+        existing = self.get_by_provider_event(adjustment.provider_event_id)
+        if existing is None:
+            raise IntegrityViolation(
+                "payment adjustment disappeared after insert"
+            )
+        if existing != adjustment:
+            raise IntegrityViolation(
+                "provider event already has different immutable adjustment"
+            )
+
+    def get_by_provider_event(
+        self,
+        provider_event_id: str,
+    ) -> PaymentAdjustment | None:
+        cursor = self._connection.execute(
+            """
+            select
+                adjustment_id,
+                payment_id,
+                provider_event_id,
+                provider_ref,
+                kind,
+                amount,
+                currency,
+                occurred_at
+            from payment_adjustment
+            where provider_event_id = %s
+            """,
+            (provider_event_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return self._to_adjustment(row)
+
+    def find_by_provider_ref(
+        self,
+        provider_ref: str,
+    ) -> PaymentAdjustment | None:
+        cursor = self._connection.execute(
+            """
+            select
+                adjustment_id,
+                payment_id,
+                provider_event_id,
+                provider_ref,
+                kind,
+                amount,
+                currency,
+                occurred_at
+            from payment_adjustment
+            where provider_ref = %s
+            """,
+            (provider_ref,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return self._to_adjustment(row)
+
+    def total_for_payment(self, payment_id: str) -> Money:
+        cursor = self._connection.execute(
+            """
+            select coalesce(sum(amount), 0), currency
+            from payment_adjustment
+            where payment_id = %s
+            group by currency
+            """,
+            (payment_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            payment = self._connection.execute(
+                "select currency from payment_intent where payment_id = %s",
+                (payment_id,),
+            ).fetchone()
+            if payment is None:
+                raise KeyError(f"unknown payment: {payment_id}")
+            return Money(0, str(payment[0]))
+        amount, currency = row
+        return Money(amount, str(currency))
+
+    @staticmethod
+    def _to_adjustment(row: tuple[object, ...]) -> PaymentAdjustment:
+        (
+            adjustment_id,
+            payment_id,
+            provider_event_id,
+            provider_ref,
+            kind,
+            amount,
+            currency,
+            occurred_at,
+        ) = row
+        return PaymentAdjustment(
+            adjustment_id=str(adjustment_id),
+            payment_id=str(payment_id),
+            provider_event_id=str(provider_event_id),
+            provider_ref=str(provider_ref),
+            kind=PaymentAdjustmentKind(str(kind)),
+            amount=Money(amount, str(currency)),
+            occurred_at=occurred_at,
         )
 
 
