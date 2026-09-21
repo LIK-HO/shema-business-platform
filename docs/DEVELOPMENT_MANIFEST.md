@@ -823,6 +823,10 @@ Core изменяется только по доказанному invariant def
 
 ---
 
+## Universal development doctrine
+
+The repository adopts `docs/UNIVERSAL_DEVELOPMENT_DOCTRINE.md` as the reusable development standard for integrity, reliability, security, scalability, maintainability, observability, intelligence/data governance and release safety. The doctrine governs *how* development is performed; project manifests govern the project's own product and architecture semantics.
+
 ## Operational authority
 
 The repository-level operating contract is:
