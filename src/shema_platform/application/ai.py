@@ -182,7 +182,7 @@ class AIGateway:
         with self._unit_of_work_factory() as uow:
             uow.ai_runs.add(run)
             uow.audits.append(
-            AuditRecord(
+                AuditRecord(
                 audit_id=str(uuid4()),
                 actor_id=context.actor_id,
                 action="ai.run",
@@ -203,7 +203,8 @@ class AIGateway:
                     "evidence_ref_count": len(run.evidence_refs),
                 },
                 correlation_id=context.correlation_id,
-                configuration_version=context.configuration_version,
+                    configuration_version=context.configuration_version,
+                )
             )
         return run
 
