@@ -15,6 +15,11 @@ if TYPE_CHECKING:
         JobRepository,
         OrderRepository,
         OutboxRepository,
+        PaymentAttemptRepository,
+        PaymentIntentRepository,
+        ProviderEventRepository,
+        ReconciliationRepository,
+        SettlementRepository,
     )
 
 
@@ -57,6 +62,11 @@ class PostgresUnitOfWork:
         self.commercial_actions: CommercialActionRepository | None = None
         self.orders: OrderRepository | None = None
         self.economics: EconomicEntryRepository | None = None
+        self.payments: PaymentIntentRepository | None = None
+        self.payment_attempts: PaymentAttemptRepository | None = None
+        self.provider_events: ProviderEventRepository | None = None
+        self.settlements: SettlementRepository | None = None
+        self.reconciliations: ReconciliationRepository | None = None
         self.ai_runs: AIRunRepository | None = None
 
     @property
@@ -81,6 +91,11 @@ class PostgresUnitOfWork:
             PostgresJobRepository,
             PostgresOrderRepository,
             PostgresOutboxRepository,
+            PostgresPaymentAttemptRepository,
+            PostgresPaymentIntentRepository,
+            PostgresProviderEventRepository,
+            PostgresReconciliationRepository,
+            PostgresSettlementRepository,
         )
 
         connection = self.connection
@@ -93,6 +108,11 @@ class PostgresUnitOfWork:
         self.commercial_actions = PostgresCommercialActionRepository(connection)
         self.orders = PostgresOrderRepository(connection)
         self.economics = PostgresEconomicEntryRepository(connection)
+        self.payments = PostgresPaymentIntentRepository(connection)
+        self.payment_attempts = PostgresPaymentAttemptRepository(connection)
+        self.provider_events = PostgresProviderEventRepository(connection)
+        self.settlements = PostgresSettlementRepository(connection)
+        self.reconciliations = PostgresReconciliationRepository(connection)
         self.ai_runs = PostgresAIRunRepository(connection)
         return self
 
@@ -108,6 +128,11 @@ class PostgresUnitOfWork:
         self.commercial_actions = None
         self.orders = None
         self.economics = None
+        self.payments = None
+        self.payment_attempts = None
+        self.provider_events = None
+        self.settlements = None
+        self.reconciliations = None
         self.ai_runs = None
         if connection is None:
             return False
