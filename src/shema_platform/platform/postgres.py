@@ -15,6 +15,7 @@ if TYPE_CHECKING:
         JobRepository,
         OrderRepository,
         OutboxRepository,
+        PaymentAdjustmentRepository,
         PaymentAttemptRepository,
         PaymentIntentRepository,
         ProviderEventRepository,
@@ -64,6 +65,7 @@ class PostgresUnitOfWork:
         self.economics: EconomicEntryRepository | None = None
         self.payments: PaymentIntentRepository | None = None
         self.payment_attempts: PaymentAttemptRepository | None = None
+        self.payment_adjustments: PaymentAdjustmentRepository | None = None
         self.provider_events: ProviderEventRepository | None = None
         self.settlements: SettlementRepository | None = None
         self.reconciliations: ReconciliationRepository | None = None
@@ -91,6 +93,7 @@ class PostgresUnitOfWork:
             PostgresJobRepository,
             PostgresOrderRepository,
             PostgresOutboxRepository,
+            PostgresPaymentAdjustmentRepository,
             PostgresPaymentAttemptRepository,
             PostgresPaymentIntentRepository,
             PostgresProviderEventRepository,
@@ -110,6 +113,7 @@ class PostgresUnitOfWork:
         self.economics = PostgresEconomicEntryRepository(connection)
         self.payments = PostgresPaymentIntentRepository(connection)
         self.payment_attempts = PostgresPaymentAttemptRepository(connection)
+        self.payment_adjustments = PostgresPaymentAdjustmentRepository(connection)
         self.provider_events = PostgresProviderEventRepository(connection)
         self.settlements = PostgresSettlementRepository(connection)
         self.reconciliations = PostgresReconciliationRepository(connection)
@@ -130,6 +134,7 @@ class PostgresUnitOfWork:
         self.economics = None
         self.payments = None
         self.payment_attempts = None
+        self.payment_adjustments = None
         self.provider_events = None
         self.settlements = None
         self.reconciliations = None
