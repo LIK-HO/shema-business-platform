@@ -1,6 +1,8 @@
-# GitHub Development Work Protocol
+# Development Work Protocol
 
 ## Purpose
+
+This is the repository implementation of the universal development doctrine. The same operating logic is intended for all current and future projects; project-specific manifests define their own semantics and approved roadmap.
 
 This protocol makes repository work resumable, bounded and integrity-preserving even when a development session is interrupted.
 
