@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from typing import Any, NoReturn, Protocol
 
 import jwt
-from jwt import PyJWKClient, PyJWTError
-
 
 _SAFE_ASYMMETRIC_ALGORITHMS = frozenset(
     {
@@ -69,7 +67,7 @@ class PyJWTSigningKeyProvider:
     """Production JWKS resolver with bounded in-process key caching."""
 
     def __init__(self, jwks_url: str, cache_seconds: int) -> None:
-        self._client = PyJWKClient(
+        self._client = jwt.PyJWKClient(
             jwks_url,
             cache_jwk_set=True,
             lifespan=cache_seconds,
@@ -113,7 +111,7 @@ class OIDCJWTAuthenticator:
                 leeway=self.configuration.clock_skew_seconds,
                 options={"require": ["exp", self.configuration.actor_id_claim]},
             )
-        except (PyJWTError, ValueError, TypeError):
+        except (jwt.PyJWTError, ValueError, TypeError):
             self._authentication_error()
 
         actor_id = self._required_string_claim(
