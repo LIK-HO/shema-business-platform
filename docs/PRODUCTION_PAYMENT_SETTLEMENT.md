@@ -28,7 +28,7 @@ Duplicate delivery of an already processed provider event is a no-op.
 
 ### Settlement Record
 
-Provider settlement fact with settlement identifier, covered payment references, gross amount, fees, net amount, currency, settlement timestamp and reconciliation state.
+Provider settlement fact with settlement identifier, immutable statement hash, covered payment references, gross amount, fees, net amount, currency, settlement timestamp and reconciliation state. Each statement line is persisted immutably with a provider payment reference and amount.
 
 ### Reconciliation Item
 
@@ -56,7 +56,7 @@ Succeeded, failed and cancelled Payment Intent states are terminal for the inten
 
 1. Amount and currency are explicit and decimal-safe.
 2. The client cannot set successful payment truth.
-3. Payment success comes from an authorized application command or a verified provider event.
+3. Payment success comes from an authorized application command or a verified provider event whose amount and currency exactly match the Payment Intent.
 4. External payment calls happen outside the core database transaction.
 5. State change and outbox publication are atomic.
 6. Every critical outbound payment command is idempotent.
@@ -69,6 +69,8 @@ Succeeded, failed and cancelled Payment Intent states are terminal for the inten
 13. Monetary calculations do not use binary floating-point.
 14. Operational recovery may reclaim leases but never fabricate payment or settlement success.
 15. Provider credentials, webhook secrets and signing keys are runtime secrets, never repository data.
+16. A settlement statement is accepted only with an immutable statement hash.
+17. A settlement cannot close while any reconciliation item remains open.
 
 ## Adapter boundary
 
@@ -89,7 +91,7 @@ Matching priority is:
 
 Amount-only matching is never enough to auto-close a settlement discrepancy.
 
-Reprocessing the same provider statement must be idempotent and must not create duplicate settlement truth.
+Reprocessing the same provider statement must be idempotent and must not create duplicate settlement truth. A changed payload for the same provider settlement reference is treated as an integrity conflict. A discrepancy must be resolved explicitly before settlement can be closed.
 
 ## Production gate
 
