@@ -22,6 +22,62 @@ class IdentityResolution:
     existing_identity_ids: tuple[str, ...] = ()
 
 
+class PersistentIdentityDirectory:
+    """Repository-backed canonical identity resolver for production runtime."""
+
+    def __init__(self, repository) -> None:
+        self._repository = repository
+
+    def all(self) -> tuple[Identity, ...]:
+        return self._repository.list_all()
+
+    def get(self, identity_id: str) -> Identity | None:
+        return self._repository.get(identity_id)
+
+    def find_by_tax_id(self, tax_id: str) -> tuple[Identity, ...]:
+        identity = self._repository.find_by_tax_id(tax_id)
+        return (identity,) if identity is not None else ()
+
+    def resolve(self, candidate: Identity) -> IdentityResolution:
+        if not candidate.tax_id:
+            return IdentityResolution(
+                match=IdentityMatch.REVIEW,
+                resolution=Resolution.QUARANTINE,
+            )
+
+        existing = self._repository.find_by_tax_id(candidate.tax_id)
+        if existing is None:
+            return IdentityResolution(
+                match=IdentityMatch.NEW,
+                resolution=Resolution.KEEP_SEPARATE,
+            )
+
+        if existing.identity_id == candidate.identity_id:
+            return IdentityResolution(
+                match=IdentityMatch.EXISTING,
+                resolution=Resolution.MATCH,
+                existing_identity_ids=(existing.identity_id,),
+            )
+
+        return IdentityResolution(
+            match=IdentityMatch.EXISTING,
+            resolution=existing.resolve_with(candidate),
+            existing_identity_ids=(existing.identity_id,),
+        )
+
+    def register(self, candidate: Identity) -> Identity:
+        if not candidate.tax_id:
+            raise QuarantineRequired(
+                "canonical identity registration requires tax_id"
+            )
+        if self._repository.get(candidate.identity_id) is not None:
+            raise IntegrityViolation("identity_id is already registered")
+        if self._repository.find_by_tax_id(candidate.tax_id) is not None:
+            raise IntegrityViolation("tax_id is already registered")
+        self._repository.add(candidate)
+        return candidate
+
+
 class IdentityDirectory:
     """Single global identity index spanning every lifecycle state.
 
