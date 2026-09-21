@@ -114,3 +114,7 @@ Production Payment/Settlement is not accepted until there is evidence for:
 - selected production provider, merchant account, verified webhook endpoint and operational reconciliation procedure.
 
 No production credentials or provider-specific truth is invented in the kernel repository before the provider is actually selected and configured.
+
+## Current implementation boundary
+
+Provider-neutral payment, settlement, reconciliation and post-payment adjustment contracts are implemented in the runtime branch. A concrete production provider is intentionally not hard-coded until its merchant account, webhook signing configuration and settlement statement format are selected and verified.
