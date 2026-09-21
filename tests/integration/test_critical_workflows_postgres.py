@@ -150,10 +150,6 @@ def test_critical_create_workflows_are_atomic_and_idempotent() -> None:
             audit_rows = conn.execute(
                 "select count(*) from audit_log where action = 'commercial_action.created'"
             ).fetchone()
-            idempotency_rows = conn.execute(
-                "select count(*) from idempotency_key where key = 'action-workflow-1'"
-            ).fetchone()
-
             assert action_rows == (1,)
             assert audit_rows == (1,)
             idempotency_rows = conn.execute(
