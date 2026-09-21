@@ -181,9 +181,34 @@
     "recovery_drills",
     "controlled_release"
   ],
-  "legacy": {
-    "airtable": "transition_data_only",
-    "replit_migration_frozen_until": "2026-10-13",
-    "bitrix24_migration": "frozen_without_date"
+  "external_system_boundary": {
+    "integration_targets": [],
+    "transition_dependencies": [],
+    "transactional_mirrors": []
+  },
+  "order_lifecycle": {
+    "transitions": [
+      "draft->confirmed",
+      "draft->cancelled",
+      "confirmed->in_progress",
+      "confirmed->cancelled",
+      "in_progress->completed",
+      "in_progress->cancelled",
+      "in_progress->failed"
+    ],
+    "terminal_states": [
+      "completed",
+      "cancelled",
+      "failed"
+    ]
+  },
+  "production_boundaries": {
+    "post_kernel": [
+      "payment_execution",
+      "settlement",
+      "provider_reconciliation",
+      "production_release"
+    ],
+    "payment_principle": "provider_adapters_cannot_mutate_business_truth_directly"
   }
 }
