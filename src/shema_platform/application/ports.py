@@ -7,7 +7,9 @@ from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.economics import EconomicEntry
 from shema_platform.domain.identity import Identity
 from shema_platform.domain.order import Order
+from shema_platform.domain.payment import PaymentAttempt, PaymentIntent, ProviderEvent
 from shema_platform.domain.search import SearchHit
+from shema_platform.domain.settlement import ReconciliationItem, SettlementRecord
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.evidence import Evidence
 from shema_platform.foundation.idempotency import IdempotencyRecord
@@ -175,6 +177,79 @@ class EconomicEntryRepository(Protocol):
     def list_for_entity(self, entity_ref: str) -> tuple[EconomicEntry, ...]: ...
 
 
+class PaymentIntentRepository(Protocol):
+    """Persistence port for platform payment intent state."""
+
+    def add(self, payment: PaymentIntent) -> None: ...
+
+    def get(self, payment_id: str) -> PaymentIntent | None: ...
+
+    def save(self, payment: PaymentIntent) -> None: ...
+
+
+class PaymentAttemptRepository(Protocol):
+    """Lease-guarded persistence port for provider payment attempts."""
+
+    def add(self, attempt: PaymentAttempt) -> None: ...
+
+    def get(self, attempt_id: str) -> PaymentAttempt | None: ...
+
+    def claim_for_send(
+        self,
+        attempt_id: str,
+        worker_id: str,
+        *,
+        lease_until: datetime,
+        now: datetime,
+    ) -> PaymentAttempt: ...
+
+    def complete(
+        self,
+        attempt_id: str,
+        worker_id: str,
+        *,
+        status: str,
+        provider_ref: str | None,
+        now: datetime,
+    ) -> PaymentAttempt: ...
+
+
+class ProviderEventRepository(Protocol):
+    """Idempotent persistence port for verified provider events."""
+
+    def add(self, event: ProviderEvent) -> None: ...
+
+    def get(self, event_id: str) -> ProviderEvent | None: ...
+
+    def mark_processed(
+        self,
+        event_id: str,
+        *,
+        status: str,
+        processed_at: datetime,
+    ) -> ProviderEvent: ...
+
+
+class SettlementRepository(Protocol):
+    """Persistence port for provider settlement facts."""
+
+    def add(self, settlement: SettlementRecord) -> None: ...
+
+    def get(self, settlement_id: str) -> SettlementRecord | None: ...
+
+    def save(self, settlement: SettlementRecord) -> None: ...
+
+
+class ReconciliationRepository(Protocol):
+    """Append-only-ish review state for settlement discrepancies."""
+
+    def add(self, item: ReconciliationItem) -> None: ...
+
+    def get(self, reconciliation_id: str) -> ReconciliationItem | None: ...
+
+    def resolve(self, item: ReconciliationItem) -> ReconciliationItem: ...
+
+
 class AIRunRepository(Protocol):
     """Persistence port for traceable AI execution results."""
 
@@ -195,6 +270,11 @@ class UnitOfWork(Protocol):
     commercial_actions: CommercialActionRepository
     orders: OrderRepository
     economics: EconomicEntryRepository
+    payments: PaymentIntentRepository
+    payment_attempts: PaymentAttemptRepository
+    provider_events: ProviderEventRepository
+    settlements: SettlementRepository
+    reconciliations: ReconciliationRepository
     ai_runs: AIRunRepository
 
     def __enter__(self) -> Self: ...
