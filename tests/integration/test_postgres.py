@@ -68,6 +68,7 @@ def test_postgres_transaction_rollback_restores_database_truth() -> None:
 
     with psycopg.connect(DATABASE_URL) as connection:
         prepare_database(connection)
+        connection.commit()
         PostgresIdentityRepository(connection).add(
             Identity(
                 identity_id=identity_id,
