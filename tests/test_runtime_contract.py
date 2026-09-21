@@ -1,8 +1,8 @@
 import json
-from pathlib import Path
+import pathlib
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 def test_v1_5_runtime_contract_preserves_frozen_kernel_boundary() -> None:
