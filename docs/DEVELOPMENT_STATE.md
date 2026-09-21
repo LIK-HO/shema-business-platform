@@ -12,9 +12,9 @@
 
 ## Last recorded architectural milestone
 
-The core maturity manifesto was formalized and linked into the machine-readable maturity contract.
+The universal development doctrine was added and adopted by the repository agent contract, project manifest and GitHub work protocol. This repository now provides a reusable implementation of the cross-project development method.
 
-Development protocol files were introduced to make future work resumable and element-bounded.
+Live branch/HEAD/PR/CI are always re-read at session entry; no static HEAD in this ledger is authoritative.
 
 ## Current active element
 
@@ -73,7 +73,7 @@ The next development action must begin with:
 
 ## Safe next action
 
-Verify the latest CI run for the current HEAD. If green, close B1 with evidence and move to B2. If red, fix only the failing B1 boundary, rerun verification, and update this ledger.
+Verify the latest CI run for the current live HEAD. If green, close B1 with evidence and move to B2. If red, fix only the failing B1 boundary, rerun verification, and update this ledger.
 
 ## Prohibited until boundary is closed
 
@@ -87,7 +87,7 @@ Verify the latest CI run for the current HEAD. If green, close B1 with evidence 
 
 ## Last verified repository point
 
-- PR head known at state-ledger update time: 0c3f844d5ab3ac6849e234bb178815c1382c9a45
+- Live PR #8 head at state update time: 5bc6b019274088e9c0f476265292ea586ef77f52
 - This value is evidence only; live GitHub HEAD must always be re-read before continuation.
 
 ## Interruption record
