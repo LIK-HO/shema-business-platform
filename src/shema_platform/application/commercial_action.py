@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from shema_platform.application.commands import Actor
-from shema_platform.application.ports import IdempotencyRepository
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.identity import Identity
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
@@ -16,11 +15,9 @@ class CommercialActionService:
         self,
         authorizer: RBACAuthorizer,
         policy: PolicyEngine,
-        idempotency: IdempotencyRepository,
     ) -> None:
         self._authorizer = authorizer
         self._policy = policy
-        self._idempotency = idempotency
 
     def create_ready(
         self,
@@ -32,7 +29,6 @@ class CommercialActionService:
         channel: str,
         evidence_refs: tuple[str, ...],
         request_hash: str,
-        idempotency_key: str | None = None,
     ) -> CommercialAction:
         self._authorizer.require(
             actor.actor_id,
@@ -61,11 +57,5 @@ class CommercialActionService:
             channel=channel,
             evidence_refs=evidence_refs,
         ).mark_ready()
-
-        self._idempotency.reserve(
-            key=idempotency_key or action_id,
-            request_hash=request_hash,
-            result_ref=action_id,
-        )
 
         return action
