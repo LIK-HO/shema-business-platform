@@ -57,4 +57,10 @@ class PolicyEngine:
             if context.evidence_level < 2:
                 return PolicyDecision(Decision.REVIEW, "critical_claims_need_evidence")
 
+        if context.action == "payment_create":
+            if context.actor_trust_level < 2:
+                return PolicyDecision(Decision.DENY, "actor_not_trusted")
+            if context.resource_trust_level < 2:
+                return PolicyDecision(Decision.DENY, "resource_not_verified")
+
         return PolicyDecision(Decision.ALLOW, "policy_ok")

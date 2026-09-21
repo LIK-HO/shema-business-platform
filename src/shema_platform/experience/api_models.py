@@ -174,3 +174,33 @@ class ErrorEnvelope(APIModel):
     message: str
     correlation_id: str = Field(alias="correlationId")
     details: dict[str, object] | None = None
+
+
+class PaymentCreateRequest(APIModel):
+    order_id: str = Field(alias="orderId")
+
+
+class PaymentResponse(APIModel):
+    payment_id: str = Field(alias="paymentId")
+    order_id: str = Field(alias="orderId")
+    amount: MoneyResponse
+    status: Literal[
+        "draft",
+        "pending",
+        "processing",
+        "succeeded",
+        "failed",
+        "cancelled",
+    ]
+
+
+class PaymentWebhookResponse(APIModel):
+    event_id: str = Field(alias="eventId")
+    status: str
+    payment_id: str | None = Field(default=None, alias="paymentId")
+
+
+class SettlementResponse(APIModel):
+    settlement_id: str = Field(alias="settlementId")
+    status: Literal["expected", "reconciling", "settled", "discrepancy"]
+    discrepancies: list[str] = Field(default_factory=list)

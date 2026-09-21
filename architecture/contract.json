@@ -32,7 +32,14 @@
       "order_line",
       "economic_entry",
       "ai_run",
-      "job_execution"
+      "job_execution",
+      "payment_intent",
+      "payment_attempt",
+      "provider_event",
+      "settlement_record",
+      "reconciliation_item",
+      "settlement_line",
+      "payment_adjustment"
     ],
     "source_observation": [
       "search_candidate"
@@ -48,7 +55,11 @@
       "0005_ai_run.sql",
       "0006_job_execution.sql",
       "0007_outbox_delivery_lease.sql",
-      "0008_commercial_send_reservation.sql"
+      "0008_commercial_send_reservation.sql",
+      "0009_payment_settlement.sql",
+      "0010_settlement_lines.sql",
+      "0011_settlement_statement_hash.sql",
+      "0012_payment_adjustments.sql"
     ]
   },
   "operational_controls": [
@@ -72,7 +83,11 @@
     "http_telemetry",
     "job_telemetry",
     "outbox_telemetry",
-    "iam_authorization_materialization"
+    "iam_authorization_materialization",
+    "payment_attempt_send_reservation",
+    "provider_event_deduplication",
+    "settlement_reconciliation",
+    "payment_outbox_router"
   ],
   "execution_contracts": [
     "permission_then_policy",
@@ -93,7 +108,13 @@
     "order_persistence_respects_domain_lifecycle",
     "order_persistence_serializes_lifecycle_update",
     "authentication_before_application",
-    "verified_iam_claims_materialized_before_application"
+    "verified_iam_claims_materialized_before_application",
+    "payment_attempt_claim_requires_lease",
+    "payment_attempt_completion_requires_current_lease",
+    "provider_event_is_idempotent",
+    "settlement_persistence_respects_domain_lifecycle",
+    "reconciliation_discrepancy_is_durable",
+    "payment_outbox_handler_is_explicit"
   ],
   "intelligence": {
     "research_depths": [
@@ -161,7 +182,20 @@
     "order_persistence_serializes_lifecycle_update",
     "telemetry_never_changes_business_truth",
     "authentication_does_not_grant_business_permission",
-    "authorization_permissions_are_explicitly_materialized"
+    "authorization_permissions_are_explicitly_materialized",
+    "payment_amount_currency_are_decimal_safe",
+    "payment_success_requires_authorized_command_or_verified_provider_event",
+    "payment_attempt_is_lease_guarded",
+    "provider_event_deduplicates_by_immutable_event_id",
+    "settlement_matching_is_deterministic",
+    "reconciliation_discrepancy_is_durable_review_state",
+    "refund_reversal_chargeback_are_append_only",
+    "settlement_statement_hash_immutable",
+    "settlement_line_provider_ref_unique",
+    "provider_amount_and_currency_match_payment_intent",
+    "settlement_statement_hash_prevents_replay_or_tamper",
+    "post_payment_adjustments_are_append_only",
+    "cumulative_adjustments_cannot_exceed_captured_payment"
   ],
   "business_loop": [
     "search",
@@ -193,11 +227,6 @@
     "recovery_drills",
     "controlled_release"
   ],
-  "legacy": {
-    "airtable": "transition_data_only",
-    "replit_migration_frozen_until": "2026-10-13",
-    "bitrix24_migration": "frozen_without_date"
-  },
   "order_lifecycle": {
     "state_transitions": {
       "draft": [
@@ -270,5 +299,108 @@
       "private_key"
     ],
     "failure_mode": "non_authoritative"
+  },
+  "external_system_boundary": {
+    "integration_targets": [],
+    "transition_dependencies": [],
+    "transactional_mirrors": [],
+    "system_of_record": "postgresql"
+  },
+  "production_boundaries": {
+    "post_kernel": [
+      "recovery_and_security_drills",
+      "concrete_max_adapter",
+      "concrete_intelligence_adapters",
+      "controlled_deployment",
+      "payment_execution",
+      "settlement",
+      "provider_reconciliation",
+      "production_release",
+      "web_pwa_android",
+      "economic_learning_loop"
+    ],
+    "payment_principle": "provider_adapters_cannot_mutate_business_truth_directly"
+  },
+  "payment_settlement_contract": {
+    "payment_intent_states": [
+      "draft",
+      "pending",
+      "processing",
+      "succeeded",
+      "failed",
+      "cancelled"
+    ],
+    "payment_attempt_states": [
+      "ready",
+      "sending",
+      "pending",
+      "succeeded",
+      "failed",
+      "expired"
+    ],
+    "settlement_states": [
+      "expected",
+      "reconciling",
+      "settled",
+      "discrepancy"
+    ],
+    "append_only_movements": [
+      "refund",
+      "reversal",
+      "chargeback",
+      "adjustment"
+    ],
+    "invariants": [
+      "payment_amount_and_currency_are_decimal_safe",
+      "payment_success_requires_authorized_command_or_verified_provider_event",
+      "external_payment_calls_are_outside_core_transaction",
+      "payment_state_change_and_outbox_are_atomic",
+      "outbound_payment_is_idempotent",
+      "inbound_provider_event_is_deduplicated_by_immutable_provider_event_id",
+      "payment_attempt_uses_stable_external_idempotency_key",
+      "provider_callbacks_cannot_bypass_authorization_policy_or_audit",
+      "settlement_matching_is_deterministic_and_restartable",
+      "settlement_discrepancy_is_durable_review_state",
+      "refund_reversal_chargeback_are_append_only",
+      "payment_credentials_and_webhook_secrets_are_runtime_only",
+      "provider_amount_and_currency_must_match_payment_intent",
+      "settlement_statement_hash_is_immutable",
+      "settlement_line_provider_reference_is_unique_per_settlement",
+      "settlement_cannot_close_with_open_reconciliation_items",
+      "refunds_are_separate_from_original_payment_truth",
+      "reversals_are_separate_from_original_payment_truth",
+      "chargebacks_are_separate_from_original_payment_truth",
+      "provider_adjustment_event_is_idempotent_by_immutable_event_id",
+      "cumulative_adjustment_amount_cannot_exceed_captured_payment"
+    ],
+    "reconciliation_priority": [
+      "immutable_provider_payment_reference",
+      "platform_payment_intent_id",
+      "exact_amount_currency_statement_reference",
+      "controlled_date_window"
+    ],
+    "auto_close_rule": "amount_only_matching_is_never_sufficient",
+    "production_gate": [
+      "provider_contract_tests",
+      "sandbox_integration_tests",
+      "webhook_signature_tests",
+      "duplicate_and_out_of_order_event_tests",
+      "retry_and_idempotency_tests",
+      "network_failure_recovery_tests",
+      "refund_reversal_chargeback_tests_when_supported",
+      "settlement_reconciliation_tests",
+      "discrepancy_review_tests",
+      "postgresql_integration_tests",
+      "audit_observability_and_redaction_checks",
+      "secrets_configuration_checks",
+      "controlled_release_and_rollback_drill",
+      "production_provider_merchant_account_webhook_and_reconciliation_procedure",
+      "settlement_statement_hash_tamper_test",
+      "open_discrepancy_blocks_settlement_close",
+      "resolved_discrepancy_closure_test",
+      "refund_reversal_chargeback_integration_tests",
+      "duplicate_adjustment_event_test",
+      "cumulative_adjustment_limit_test"
+    ]
   }
 }

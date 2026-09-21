@@ -15,6 +15,13 @@ if TYPE_CHECKING:
         JobRepository,
         OrderRepository,
         OutboxRepository,
+        PaymentAdjustmentRepository,
+        PaymentAttemptRepository,
+        PaymentIntentRepository,
+        ProviderEventRepository,
+        QuarantineRepository,
+        ReconciliationRepository,
+        SettlementRepository,
     )
 
 
@@ -54,9 +61,16 @@ class PostgresUnitOfWork:
         self.idempotency: IdempotencyRepository | None = None
         self.outbox: OutboxRepository | None = None
         self.jobs: JobRepository | None = None
+        self.quarantine: QuarantineRepository | None = None
         self.commercial_actions: CommercialActionRepository | None = None
         self.orders: OrderRepository | None = None
         self.economics: EconomicEntryRepository | None = None
+        self.payments: PaymentIntentRepository | None = None
+        self.payment_attempts: PaymentAttemptRepository | None = None
+        self.payment_adjustments: PaymentAdjustmentRepository | None = None
+        self.provider_events: ProviderEventRepository | None = None
+        self.settlements: SettlementRepository | None = None
+        self.reconciliations: ReconciliationRepository | None = None
         self.ai_runs: AIRunRepository | None = None
 
     @property
@@ -81,6 +95,13 @@ class PostgresUnitOfWork:
             PostgresJobRepository,
             PostgresOrderRepository,
             PostgresOutboxRepository,
+            PostgresPaymentAdjustmentRepository,
+            PostgresPaymentAttemptRepository,
+            PostgresPaymentIntentRepository,
+            PostgresProviderEventRepository,
+            PostgresQuarantineRepository,
+            PostgresReconciliationRepository,
+            PostgresSettlementRepository,
         )
 
         connection = self.connection
@@ -90,9 +111,16 @@ class PostgresUnitOfWork:
         self.idempotency = PostgresIdempotencyRepository(connection)
         self.outbox = PostgresOutboxRepository(connection)
         self.jobs = PostgresJobRepository(connection)
+        self.quarantine = PostgresQuarantineRepository(connection)
         self.commercial_actions = PostgresCommercialActionRepository(connection)
         self.orders = PostgresOrderRepository(connection)
         self.economics = PostgresEconomicEntryRepository(connection)
+        self.payments = PostgresPaymentIntentRepository(connection)
+        self.payment_attempts = PostgresPaymentAttemptRepository(connection)
+        self.payment_adjustments = PostgresPaymentAdjustmentRepository(connection)
+        self.provider_events = PostgresProviderEventRepository(connection)
+        self.settlements = PostgresSettlementRepository(connection)
+        self.reconciliations = PostgresReconciliationRepository(connection)
         self.ai_runs = PostgresAIRunRepository(connection)
         return self
 
@@ -105,9 +133,16 @@ class PostgresUnitOfWork:
         self.idempotency = None
         self.outbox = None
         self.jobs = None
+        self.quarantine = None
         self.commercial_actions = None
         self.orders = None
         self.economics = None
+        self.payments = None
+        self.payment_attempts = None
+        self.payment_adjustments = None
+        self.provider_events = None
+        self.settlements = None
+        self.reconciliations = None
         self.ai_runs = None
         if connection is None:
             return False

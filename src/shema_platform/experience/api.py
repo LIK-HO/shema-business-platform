@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from time import perf_counter
 from typing import Protocol
@@ -21,10 +22,14 @@ from shema_platform.experience.api_models import (
     ErrorEnvelope,
     OrderCreateRequest,
     OrderResponse,
+    PaymentCreateRequest,
+    PaymentResponse,
+    PaymentWebhookResponse,
     ResearchRequest,
     ResearchResponse,
     SearchRequest,
     SearchResponse,
+    SettlementResponse,
 )
 from shema_platform.foundation.authentication import (
     AuthenticatedActor,
@@ -103,6 +108,34 @@ class APIApplication(Protocol):
         context: RequestContext,
     ) -> OrderResponse: ...
 
+    def create_payment(
+        self,
+        request: PaymentCreateRequest,
+        context: RequestContext,
+    ) -> PaymentResponse: ...
+
+    def get_payment(
+        self,
+        payment_id: str,
+        context: RequestContext,
+    ) -> PaymentResponse: ...
+
+    def process_payment_webhook(
+        self,
+        provider: str,
+        *,
+        headers: Mapping[str, str],
+        payload: bytes,
+    ) -> PaymentWebhookResponse: ...
+
+    def ingest_settlement_statement(
+        self,
+        provider: str,
+        *,
+        headers: Mapping[str, str],
+        payload: bytes,
+    ) -> SettlementResponse: ...
+
     def get_economics(
         self,
         entity_ref: str,
@@ -124,7 +157,11 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
 
 class AuthenticationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.url.path in {"/docs", "/redoc", "/openapi.json"}:
+        public_ingress = (
+            request.url.path.startswith("/v1/payment-providers/")
+            or request.url.path.startswith("/v1/settlement-providers/")
+        )
+        if request.url.path in {"/docs", "/redoc", "/openapi.json"} or public_ingress:
             return await call_next(request)
 
         authenticator: AuthenticationPort | None = request.app.state.authenticator
@@ -255,7 +292,7 @@ def create_app(
 ) -> FastAPI:
     app = FastAPI(
         title="Shema Business Platform Canonical API",
-        version="1.4.0",
+        version="1.5.0",
         openapi_url="/openapi.json" if enable_docs else None,
         docs_url="/docs" if enable_docs else None,
         redoc_url="/redoc" if enable_docs else None,
@@ -429,6 +466,57 @@ def create_app(
         order_id: str = Path(alias="orderId"),
     ) -> OrderResponse:
         return services(request).get_order(order_id, _context(request, None))
+
+    @router.post("/payments", response_model=PaymentResponse, status_code=201)
+    async def create_payment(
+        request: Request,
+        payload: PaymentCreateRequest,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
+    ) -> PaymentResponse:
+        return services(request).create_payment(
+            payload,
+            _context(request, idempotency_key),
+        )
+
+    @router.get("/payments/{paymentId}", response_model=PaymentResponse)
+    async def get_payment(
+        request: Request,
+        payment_id: str = Path(alias="paymentId"),
+    ) -> PaymentResponse:
+        return services(request).get_payment(
+            payment_id,
+            _context(request, None),
+        )
+
+    @router.post(
+        "/payment-providers/{provider}/webhook",
+        response_model=PaymentWebhookResponse,
+    )
+    async def payment_webhook(
+        request: Request,
+        provider: str = Path(min_length=1),
+    ) -> PaymentWebhookResponse:
+        payload = await request.body()
+        return services(request).process_payment_webhook(
+            provider,
+            headers=dict(request.headers),
+            payload=payload,
+        )
+
+    @router.post(
+        "/settlement-providers/{provider}/statement",
+        response_model=SettlementResponse,
+    )
+    async def settlement_statement(
+        request: Request,
+        provider: str = Path(min_length=1),
+    ) -> SettlementResponse:
+        payload = await request.body()
+        return services(request).ingest_settlement_statement(
+            provider,
+            headers=dict(request.headers),
+            payload=payload,
+        )
 
     @router.get("/economics/{entityRef}", response_model=EconomicResponse)
     async def get_economics(

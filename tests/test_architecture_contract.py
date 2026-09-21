@@ -17,10 +17,19 @@ def test_machine_readable_architecture_contract_exists() -> None:
     assert contract["version"] == "1.5-runtime"
     assert contract["runtime"] == "modular_monolith"
     assert contract["transactional_authority"] == "postgresql"
+    assert 'version = "1.5.0"' in read("pyproject.toml")
+    assert "  version: 1.5.0" in read("api/openapi.yaml")
     assert "max_is_an_adapter" in contract["critical_invariants"]
     assert "commercial_action" in contract["persistence"]["canonical"]
     assert "order_header" in contract["persistence"]["canonical"]
     assert "economic_entry" in contract["persistence"]["canonical"]
+    assert "payment_intent" in contract["persistence"]["canonical"]
+    assert "payment_attempt" in contract["persistence"]["canonical"]
+    assert "provider_event" in contract["persistence"]["canonical"]
+    assert "settlement_record" in contract["persistence"]["canonical"]
+    assert "reconciliation_item" in contract["persistence"]["canonical"]
+    assert "payment_adjustment" in contract["persistence"]["canonical"]
+    assert "settlement_line" in contract["persistence"]["canonical"]
     assert "ai_run" in contract["persistence"]["canonical"]
     assert "job_execution" in contract["persistence"]["canonical"]
     assert "commercial_send_reservation" in contract["operational_controls"]
@@ -96,6 +105,10 @@ def test_database_migrations_are_forward_only_and_declared() -> None:
         "0006_job_execution.sql",
         "0007_outbox_delivery_lease.sql",
         "0008_commercial_send_reservation.sql",
+        "0009_payment_settlement.sql",
+        "0010_settlement_lines.sql",
+        "0011_settlement_statement_hash.sql",
+        "0012_payment_adjustments.sql",
     ]
     assert "correlation_id" in read("db/migrations/0003_audit_context.sql")
     assert "commercial_action" in read("db/migrations/0004_commercial_execution.sql")
@@ -103,6 +116,24 @@ def test_database_migrations_are_forward_only_and_declared() -> None:
     assert "job_execution" in read("db/migrations/0006_job_execution.sql")
     assert "delivery_lease_until" in read("db/migrations/0007_outbox_delivery_lease.sql")
     assert "send_lease_until" in read("db/migrations/0008_commercial_send_reservation.sql")
+    migration = read("db/migrations/0009_payment_settlement.sql")
+    for table in (
+        "payment_intent",
+        "payment_attempt",
+        "provider_event",
+        "settlement_record",
+        "reconciliation_item",
+    ):
+        assert f"create table if not exists {table}" in migration
+    assert (
+        "create table if not exists settlement_line"
+        in read("db/migrations/0010_settlement_lines.sql")
+    )
+    assert "statement_hash" in read("db/migrations/0011_settlement_statement_hash.sql")
+    assert (
+        "create table if not exists payment_adjustment"
+        in read("db/migrations/0012_payment_adjustments.sql")
+    )
 
 
 def test_database_migration_contains_foundation_tables() -> None:
@@ -156,7 +187,43 @@ def test_kernel_checkpoint_tracks_twelve_elements() -> None:
         assert element in checkpoint
 
 
-def test_legacy_boundary_is_explicit() -> None:
+def test_external_system_boundary_is_empty_and_payment_boundary_is_explicit() -> None:
+    contract = loads(read("architecture/contract.json"))
+
+    assert contract["external_system_boundary"] == {
+        "integration_targets": [],
+        "transition_dependencies": [],
+        "transactional_mirrors": [],
+        "system_of_record": "postgresql",
+    }
+    assert "payment_execution" in contract["production_boundaries"]["post_kernel"]
+    assert "payment_attempt_is_lease_guarded" in contract["critical_invariants"]
+    assert "settlement" in contract["production_boundaries"]["post_kernel"]
+    assert (
+        "provider_amount_and_currency_must_match_payment_intent"
+        in contract["payment_settlement_contract"]["invariants"]
+    )
+    assert (
+        "settlement_statement_hash_is_immutable"
+        in contract["payment_settlement_contract"]["invariants"]
+    )
+    assert contract["payment_settlement_contract"]["settlement_states"] == [
+        "expected",
+        "reconciling",
+        "settled",
+        "discrepancy",
+    ]
+
+    active_docs = (
+        "ARCHITECTURE.md",
+        "docs/V1.4_KERNEL.md",
+        "docs/V1.4_KERNEL_CHECKPOINT.md",
+        "docs/V1.5_RUNTIME.md",
+    )
+    forbidden_external_systems = ("airtable", "replit", "bitrix24")
+    for path in active_docs:
+        content = read(path).lower()
+        assert not any(name in content for name in forbidden_external_systems)
+
     architecture = read("ARCHITECTURE.md")
-    assert "Airtable is legacy/transition data" in architecture
-    assert "MAX is included in the adapter boundary" in architecture
+    assert "Payment and settlement providers are post-kernel adapters" in architecture

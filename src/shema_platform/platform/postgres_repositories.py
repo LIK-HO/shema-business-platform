@@ -16,15 +16,40 @@ from shema_platform.application.ports import (
     JobRepository,
     OrderRepository,
     OutboxRepository,
+    PaymentAdjustmentRepository,
+    PaymentAttemptRepository,
+    PaymentIntentRepository,
+    ProviderEventRepository,
     QuarantineRepository,
+    ReconciliationRepository,
     SearchCandidateRepository,
+    SettlementRepository,
 )
 from shema_platform.domain.commercial_action import CommercialAction, CommercialActionStatus
 from shema_platform.domain.economics import EconomicEntry, EconomicKind
 from shema_platform.domain.identity import Identity, IdentityState
 from shema_platform.domain.money import Money
 from shema_platform.domain.order import Order, OrderLine, OrderStatus
+from shema_platform.domain.payment import (
+    PaymentAttempt,
+    PaymentAttemptStatus,
+    PaymentIntent,
+    PaymentIntentStatus,
+    ProviderEvent,
+    ProviderEventStatus,
+)
+from shema_platform.domain.payment_adjustment import (
+    PaymentAdjustment,
+    PaymentAdjustmentKind,
+)
 from shema_platform.domain.search import SearchHit
+from shema_platform.domain.settlement import (
+    ReconciliationItem,
+    ReconciliationStatus,
+    SettlementLine,
+    SettlementRecord,
+    SettlementStatus,
+)
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.errors import (
     IdempotencyConflict,
@@ -64,6 +89,49 @@ class PostgresIdentityRepository(IdentityRepository):
             state=IdentityState(str(state)),
             tax_id=str(stored_tax_id) if stored_tax_id is not None else None,
             registration_id=str(registration_id) if registration_id is not None else None,
+        )
+
+    def get(self, identity_id: str) -> Identity | None:
+        cursor = self._connection.execute(
+            """
+            select identity_id, canonical_name, state, tax_id, registration_id
+            from identity
+            where identity_id = %s
+            """,
+            (identity_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        identity_id, canonical_name, state, stored_tax_id, registration_id = row
+        return Identity(
+            identity_id=str(identity_id),
+            canonical_name=str(canonical_name),
+            state=IdentityState(str(state)),
+            tax_id=str(stored_tax_id) if stored_tax_id is not None else None,
+            registration_id=str(registration_id) if registration_id is not None else None,
+        )
+
+    def list_all(self) -> tuple[Identity, ...]:
+        cursor = self._connection.execute(
+            """
+            select identity_id, canonical_name, state, tax_id, registration_id
+            from identity
+            order by identity_id
+            """
+        )
+        return tuple(
+            Identity(
+                identity_id=str(identity_id),
+                canonical_name=str(canonical_name),
+                state=IdentityState(str(state)),
+                tax_id=str(stored_tax_id) if stored_tax_id is not None else None,
+                registration_id=str(registration_id)
+                if registration_id is not None
+                else None,
+            )
+            for identity_id, canonical_name, state, stored_tax_id, registration_id
+            in cursor.fetchall()
         )
 
     def add(self, identity: Identity) -> None:
@@ -1314,6 +1382,985 @@ class PostgresEconomicEntryRepository(EconomicEntryRepository):
                 source_ref,
                 occurred_at,
             ) in cursor.fetchall()
+        )
+
+
+class PostgresPaymentIntentRepository(PaymentIntentRepository):
+    """Durable payment intent state with order lineage and explicit lifecycle."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, payment: PaymentIntent) -> None:
+        self._connection.execute(
+            """
+            insert into payment_intent (
+                payment_id, order_id, amount, currency, idempotency_key, status
+            )
+            values (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                payment.payment_id,
+                payment.order_id,
+                payment.amount.amount,
+                payment.amount.currency,
+                payment.idempotency_key,
+                payment.status.value,
+            ),
+        )
+
+    def get(self, payment_id: str) -> PaymentIntent | None:
+        cursor = self._connection.execute(
+            """
+            select payment_id, order_id, amount, currency, idempotency_key, status
+            from payment_intent
+            where payment_id = %s
+            """,
+            (payment_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return self._to_payment(row)
+
+    def save(self, payment: PaymentIntent) -> None:
+        cursor = self._connection.execute(
+            """
+            select payment_id, order_id, amount, currency, idempotency_key, status
+            from payment_intent
+            where payment_id = %s
+            for update
+            """,
+            (payment.payment_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise KeyError(f"unknown payment: {payment.payment_id}")
+
+        current = self._to_payment(row)
+        if (
+            current.order_id != payment.order_id
+            or current.amount != payment.amount
+            or current.idempotency_key != payment.idempotency_key
+        ):
+            raise IntegrityViolation("payment intent identity and amount are immutable")
+
+        if current.status is not payment.status:
+            try:
+                expected = {
+                    PaymentIntentStatus.PENDING: current.begin,
+                    PaymentIntentStatus.PROCESSING: current.mark_processing,
+                    PaymentIntentStatus.SUCCEEDED: current.succeed,
+                    PaymentIntentStatus.FAILED: current.fail,
+                    PaymentIntentStatus.CANCELLED: current.cancel,
+                }.get(payment.status)
+                if expected is None or expected() != payment:
+                    raise IntegrityViolation(
+                        "payment intent status transition is not permitted by domain"
+                    )
+            except ValueError as exc:
+                raise IntegrityViolation(
+                    f"payment intent status transition rejected: {exc}"
+                ) from exc
+
+        self._connection.execute(
+            """
+            update payment_intent
+            set status = %s, updated_at = now()
+            where payment_id = %s
+            """,
+            (payment.status.value, payment.payment_id),
+        )
+
+    @staticmethod
+    def _to_payment(row: tuple[object, ...]) -> PaymentIntent:
+        payment_id, order_id, amount, currency, idempotency_key, status = row
+        return PaymentIntent(
+            payment_id=str(payment_id),
+            order_id=str(order_id),
+            amount=Money(amount, str(currency)),
+            idempotency_key=str(idempotency_key),
+            status=PaymentIntentStatus(str(status)),
+        )
+
+
+class PostgresPaymentAttemptRepository(PaymentAttemptRepository):
+    """Lease-guarded persistence for provider payment attempts."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, attempt: PaymentAttempt) -> None:
+        self._connection.execute(
+            """
+            insert into payment_attempt (
+                attempt_id,
+                payment_id,
+                attempt_number,
+                external_idempotency_key,
+                status,
+                provider_ref,
+                send_worker_id,
+                send_lease_until
+            )
+            values (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                attempt.attempt_id,
+                attempt.payment_id,
+                attempt.attempt_number,
+                attempt.external_idempotency_key,
+                attempt.status.value,
+                attempt.provider_ref,
+                attempt.worker_id,
+                attempt.lease_until,
+            ),
+        )
+
+    def get(self, attempt_id: str) -> PaymentAttempt | None:
+        cursor = self._connection.execute(
+            """
+            select
+                attempt_id,
+                payment_id,
+                attempt_number,
+                external_idempotency_key,
+                status,
+                provider_ref,
+                send_worker_id,
+                send_lease_until
+            from payment_attempt
+            where attempt_id = %s
+            """,
+            (attempt_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return self._to_attempt(row)
+
+    def find_by_provider_ref(self, provider_ref: str) -> PaymentAttempt | None:
+        cursor = self._connection.execute(
+            """
+            select
+                attempt_id,
+                payment_id,
+                attempt_number,
+                external_idempotency_key,
+                status,
+                provider_ref,
+                send_worker_id,
+                send_lease_until
+            from payment_attempt
+            where provider_ref = %s
+            order by attempt_number desc
+            limit 1
+            """,
+            (provider_ref,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return self._to_attempt(row)
+
+    def claim_for_send(
+        self,
+        attempt_id: str,
+        worker_id: str,
+        *,
+        lease_until: datetime,
+        now: datetime,
+    ) -> PaymentAttempt:
+        if not worker_id.strip():
+            raise ValueError("payment worker is required")
+        if lease_until.tzinfo is None or now.tzinfo is None:
+            raise ValueError("payment lease times must be timezone-aware")
+        cursor = self._connection.execute(
+            """
+            update payment_attempt
+            set status = 'sending',
+                send_worker_id = %s,
+                send_lease_until = %s,
+                updated_at = %s
+            where attempt_id = %s
+              and (
+                  status = 'ready'
+                  or (
+                      status = 'sending'
+                      and send_lease_until is not null
+                      and send_lease_until <= %s
+                  )
+              )
+            returning
+                attempt_id,
+                payment_id,
+                attempt_number,
+                external_idempotency_key,
+                status,
+                provider_ref,
+                send_worker_id,
+                send_lease_until
+            """,
+            (worker_id, lease_until, now, attempt_id, now),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise IntegrityViolation("payment attempt is not ready for send")
+        return self._to_attempt(row)
+
+    def complete(
+        self,
+        attempt_id: str,
+        worker_id: str,
+        *,
+        status: PaymentAttemptStatus,
+        provider_ref: str | None,
+        now: datetime,
+    ) -> PaymentAttempt:
+        if status not in {
+            PaymentAttemptStatus.PENDING,
+            PaymentAttemptStatus.SUCCEEDED,
+            PaymentAttemptStatus.FAILED,
+        }:
+            raise ValueError("invalid payment attempt completion state")
+        if not worker_id.strip():
+            raise ValueError("payment worker is required")
+        if now.tzinfo is None:
+            raise ValueError("completion time must be timezone-aware")
+        cursor = self._connection.execute(
+            """
+            update payment_attempt
+            set status = %s,
+                provider_ref = coalesce(%s, provider_ref),
+                send_worker_id = null,
+                send_lease_until = null,
+                updated_at = %s
+            where attempt_id = %s
+              and status = 'sending'
+              and send_worker_id = %s
+              and send_lease_until > %s
+            returning
+                attempt_id,
+                payment_id,
+                attempt_number,
+                external_idempotency_key,
+                status,
+                provider_ref,
+                send_worker_id,
+                send_lease_until
+            """,
+            (status.value, provider_ref, now, attempt_id, worker_id, now),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise IntegrityViolation(
+                "payment attempt completion rejected: missing or expired lease"
+            )
+        return self._to_attempt(row)
+
+    def apply_provider_result(
+        self,
+        attempt_id: str,
+        *,
+        status: PaymentAttemptStatus,
+        provider_ref: str | None,
+    ) -> PaymentAttempt:
+        if status not in {
+            PaymentAttemptStatus.PENDING,
+            PaymentAttemptStatus.SUCCEEDED,
+            PaymentAttemptStatus.FAILED,
+        }:
+            raise ValueError("invalid provider result state")
+
+        cursor = self._connection.execute(
+            """
+            update payment_attempt
+            set status = %s,
+                provider_ref = coalesce(%s, provider_ref),
+                send_worker_id = null,
+                send_lease_until = null,
+                updated_at = now()
+            where attempt_id = %s
+              and status not in ('succeeded', 'failed', 'expired')
+            returning
+                attempt_id,
+                payment_id,
+                attempt_number,
+                external_idempotency_key,
+                status,
+                provider_ref,
+                send_worker_id,
+                send_lease_until
+            """,
+            (status.value, provider_ref, attempt_id),
+        )
+        row = cursor.fetchone()
+        if row is not None:
+            return self._to_attempt(row)
+
+        existing = self.get(attempt_id)
+        if existing is None:
+            raise KeyError(f"unknown payment attempt: {attempt_id}")
+        if existing.status is status:
+            return existing
+        if existing.status in {
+            PaymentAttemptStatus.SUCCEEDED,
+            PaymentAttemptStatus.FAILED,
+            PaymentAttemptStatus.EXPIRED,
+        }:
+            return existing
+        raise IntegrityViolation("provider result could not be applied")
+
+    @staticmethod
+    def _to_attempt(row: tuple[object, ...]) -> PaymentAttempt:
+        (
+            attempt_id,
+            payment_id,
+            attempt_number,
+            external_idempotency_key,
+            status,
+            provider_ref,
+            worker_id,
+            lease_until,
+        ) = row
+        return PaymentAttempt(
+            attempt_id=str(attempt_id),
+            payment_id=str(payment_id),
+            attempt_number=int(attempt_number),
+            external_idempotency_key=str(external_idempotency_key),
+            status=PaymentAttemptStatus(str(status)),
+            provider_ref=str(provider_ref) if provider_ref is not None else None,
+            worker_id=str(worker_id) if worker_id is not None else None,
+            lease_until=lease_until,
+        )
+
+
+class PostgresPaymentAdjustmentRepository(PaymentAdjustmentRepository):
+    """Append-only persistence for provider refund/reversal/chargeback facts."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, adjustment: PaymentAdjustment) -> None:
+        self._connection.execute(
+            """
+            insert into payment_adjustment (
+                adjustment_id,
+                payment_id,
+                provider_event_id,
+                provider_ref,
+                kind,
+                amount,
+                currency,
+                occurred_at
+            )
+            values (%s, %s, %s, %s, %s, %s, %s, %s)
+            on conflict (provider_event_id) do nothing
+            """,
+            (
+                adjustment.adjustment_id,
+                adjustment.payment_id,
+                adjustment.provider_event_id,
+                adjustment.provider_ref,
+                adjustment.kind.value,
+                adjustment.amount.amount,
+                adjustment.amount.currency,
+                adjustment.occurred_at,
+            ),
+        )
+        existing = self.get_by_provider_event(adjustment.provider_event_id)
+        if existing is None:
+            raise IntegrityViolation(
+                "payment adjustment disappeared after insert"
+            )
+        if existing != adjustment:
+            raise IntegrityViolation(
+                "provider event already has different immutable adjustment"
+            )
+
+    def get_by_provider_event(
+        self,
+        provider_event_id: str,
+    ) -> PaymentAdjustment | None:
+        cursor = self._connection.execute(
+            """
+            select
+                adjustment_id,
+                payment_id,
+                provider_event_id,
+                provider_ref,
+                kind,
+                amount,
+                currency,
+                occurred_at
+            from payment_adjustment
+            where provider_event_id = %s
+            """,
+            (provider_event_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return self._to_adjustment(row)
+
+    def find_by_provider_ref(
+        self,
+        provider_ref: str,
+    ) -> PaymentAdjustment | None:
+        cursor = self._connection.execute(
+            """
+            select
+                adjustment_id,
+                payment_id,
+                provider_event_id,
+                provider_ref,
+                kind,
+                amount,
+                currency,
+                occurred_at
+            from payment_adjustment
+            where provider_ref = %s
+            """,
+            (provider_ref,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return self._to_adjustment(row)
+
+    def total_for_payment(self, payment_id: str) -> Money:
+        cursor = self._connection.execute(
+            """
+            select coalesce(sum(amount), 0), currency
+            from payment_adjustment
+            where payment_id = %s
+            group by currency
+            """,
+            (payment_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            payment = self._connection.execute(
+                "select currency from payment_intent where payment_id = %s",
+                (payment_id,),
+            ).fetchone()
+            if payment is None:
+                raise KeyError(f"unknown payment: {payment_id}")
+            return Money(0, str(payment[0]))
+        amount, currency = row
+        return Money(amount, str(currency))
+
+    @staticmethod
+    def _to_adjustment(row: tuple[object, ...]) -> PaymentAdjustment:
+        (
+            adjustment_id,
+            payment_id,
+            provider_event_id,
+            provider_ref,
+            kind,
+            amount,
+            currency,
+            occurred_at,
+        ) = row
+        return PaymentAdjustment(
+            adjustment_id=str(adjustment_id),
+            payment_id=str(payment_id),
+            provider_event_id=str(provider_event_id),
+            provider_ref=str(provider_ref),
+            kind=PaymentAdjustmentKind(str(kind)),
+            amount=Money(amount, str(currency)),
+            occurred_at=occurred_at,
+        )
+
+
+class PostgresProviderEventRepository(ProviderEventRepository):
+    """Idempotent persistence for verified provider event facts."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, event: ProviderEvent) -> None:
+        cursor = self._connection.execute(
+            """
+            insert into provider_event (
+                event_id,
+                provider_ref,
+                event_type,
+                signature_verified,
+                payload_hash,
+                received_at,
+                status
+            )
+            values (%s, %s, %s, %s, %s, %s, %s)
+            on conflict (event_id) do nothing
+            returning
+                event_id,
+                provider_ref,
+                event_type,
+                signature_verified,
+                payload_hash,
+                received_at,
+                status
+            """,
+            (
+                event.event_id,
+                event.provider_ref,
+                event.event_type,
+                event.signature_verified,
+                event.payload_hash,
+                event.received_at,
+                event.status.value,
+            ),
+        )
+        row = cursor.fetchone()
+        if row is not None:
+            return
+        existing = self.get(event.event_id)
+        if existing is None:
+            raise IntegrityViolation("provider event disappeared after conflict")
+        if (
+            existing.provider_ref != event.provider_ref
+            or existing.event_type != event.event_type
+            or existing.payload_hash != event.payload_hash
+        ):
+            raise IntegrityViolation("provider event collision with different payload")
+        if existing.signature_verified != event.signature_verified:
+            raise IntegrityViolation("provider event verification state conflict")
+
+    def get(self, event_id: str) -> ProviderEvent | None:
+        cursor = self._connection.execute(
+            """
+            select
+                event_id,
+                provider_ref,
+                event_type,
+                signature_verified,
+                payload_hash,
+                received_at,
+                status
+            from provider_event
+            where event_id = %s
+            """,
+            (event_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return self._to_event(row)
+
+    def mark_processed(
+        self,
+        event_id: str,
+        *,
+        status: ProviderEventStatus,
+        processed_at: datetime,
+    ) -> ProviderEvent:
+        if status not in {
+            ProviderEventStatus.PROCESSED,
+            ProviderEventStatus.IGNORED,
+        }:
+            raise ValueError("provider event may only be processed or ignored")
+        if processed_at.tzinfo is None:
+            raise ValueError("processed_at must be timezone-aware")
+        cursor = self._connection.execute(
+            """
+            update provider_event
+            set status = %s,
+                processed_at = %s
+            where event_id = %s
+              and status = 'received'
+            returning
+                event_id,
+                provider_ref,
+                event_type,
+                signature_verified,
+                payload_hash,
+                received_at,
+                status
+            """,
+            (status.value, processed_at, event_id),
+        )
+        row = cursor.fetchone()
+        if row is not None:
+            return self._to_event(row)
+        existing = self.get(event_id)
+        if existing is None:
+            raise KeyError(f"unknown provider event: {event_id}")
+        if existing.status is status:
+            return existing
+        raise IntegrityViolation("provider event has already been finalized")
+
+    @staticmethod
+    def _to_event(row: tuple[object, ...]) -> ProviderEvent:
+        (
+            event_id,
+            provider_ref,
+            event_type,
+            signature_verified,
+            payload_hash,
+            received_at,
+            status,
+        ) = row
+        return ProviderEvent(
+            event_id=str(event_id),
+            provider_ref=str(provider_ref),
+            event_type=str(event_type),
+            signature_verified=bool(signature_verified),
+            payload_hash=str(payload_hash),
+            received_at=received_at,
+            status=ProviderEventStatus(str(status)),
+        )
+
+
+class PostgresSettlementRepository(SettlementRepository):
+    """Durable provider settlement facts with explicit lifecycle."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, settlement: SettlementRecord) -> None:
+        self._connection.execute(
+            """
+            insert into settlement_record (
+                settlement_id,
+                provider_settlement_ref,
+                statement_hash,
+                gross_amount,
+                fees,
+                net_amount,
+                currency,
+                settled_at,
+                status
+            )
+            values (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                settlement.settlement_id,
+                settlement.provider_settlement_ref,
+                settlement.statement_hash,
+                settlement.gross.amount,
+                settlement.fees.amount,
+                settlement.net.amount,
+                settlement.gross.currency,
+                settlement.settled_at,
+                settlement.status.value,
+            ),
+        )
+
+    def get(self, settlement_id: str) -> SettlementRecord | None:
+        cursor = self._connection.execute(
+            """
+            select
+                settlement_id,
+                provider_settlement_ref,
+                statement_hash,
+                gross_amount,
+                fees,
+                net_amount,
+                currency,
+                settled_at,
+                status
+            from settlement_record
+            where settlement_id = %s
+            """,
+            (settlement_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return self._to_settlement(row)
+
+    def save(self, settlement: SettlementRecord) -> None:
+        cursor = self._connection.execute(
+            """
+            select
+                settlement_id,
+                provider_settlement_ref,
+                statement_hash,
+                gross_amount,
+                fees,
+                net_amount,
+                currency,
+                settled_at,
+                status
+            from settlement_record
+            where settlement_id = %s
+            for update
+            """,
+            (settlement.settlement_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise KeyError(f"unknown settlement: {settlement.settlement_id}")
+        current = self._to_settlement(row)
+
+        if (
+            current.provider_settlement_ref != settlement.provider_settlement_ref
+            or current.statement_hash != settlement.statement_hash
+            or current.gross != settlement.gross
+            or current.fees != settlement.fees
+            or current.net != settlement.net
+            or current.settled_at != settlement.settled_at
+        ):
+            raise IntegrityViolation("settlement facts are immutable")
+
+        if current.status is not settlement.status:
+            try:
+                expected = {
+                    SettlementStatus.RECONCILING: current.begin_reconciliation,
+                    SettlementStatus.SETTLED: (
+                        current.settle
+                        if current.status is SettlementStatus.RECONCILING
+                        else current.resolve_discrepancy
+                    ),
+                    SettlementStatus.DISCREPANCY: current.mark_discrepancy,
+                }.get(settlement.status)
+                if expected is None or expected() != settlement:
+                    raise IntegrityViolation(
+                        "settlement status transition is not permitted"
+                    )
+            except ValueError as exc:
+                raise IntegrityViolation(
+                    f"settlement status transition rejected: {exc}"
+                ) from exc
+
+        self._connection.execute(
+            """
+            update settlement_record
+            set status = %s
+            where settlement_id = %s
+            """,
+            (settlement.status.value, settlement.settlement_id),
+        )
+
+    def add_line(self, line: SettlementLine) -> None:
+        self._connection.execute(
+            """
+            insert into settlement_line (
+                line_id,
+                settlement_id,
+                provider_ref,
+                amount,
+                currency,
+                statement_ref
+            )
+            values (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                line.line_id,
+                line.settlement_id,
+                line.provider_ref,
+                line.amount.amount,
+                line.amount.currency,
+                line.statement_ref,
+            ),
+        )
+
+    def list_lines(self, settlement_id: str) -> tuple[SettlementLine, ...]:
+        cursor = self._connection.execute(
+            """
+            select line_id, settlement_id, provider_ref, amount, currency, statement_ref
+            from settlement_line
+            where settlement_id = %s
+            order by line_id
+            """,
+            (settlement_id,),
+        )
+        return tuple(
+            SettlementLine(
+                line_id=str(line_id),
+                settlement_id=str(stored_settlement_id),
+                provider_ref=str(provider_ref),
+                amount=Money(amount, str(currency)),
+                statement_ref=str(statement_ref),
+            )
+            for (
+                line_id,
+                stored_settlement_id,
+                provider_ref,
+                amount,
+                currency,
+                statement_ref,
+            ) in cursor.fetchall()
+        )
+
+
+    @staticmethod
+    def _to_settlement(row: tuple[object, ...]) -> SettlementRecord:
+        (
+            settlement_id,
+            provider_settlement_ref,
+            statement_hash,
+            gross_amount,
+            fees,
+            net_amount,
+            currency,
+            settled_at,
+            status,
+        ) = row
+        return SettlementRecord(
+            settlement_id=str(settlement_id),
+            provider_settlement_ref=str(provider_settlement_ref),
+            statement_hash=str(statement_hash),
+            gross=Money(gross_amount, str(currency)),
+            fees=Money(fees, str(currency)),
+            net=Money(net_amount, str(currency)),
+            settled_at=settled_at,
+            status=SettlementStatus(str(status)),
+        )
+
+
+class PostgresReconciliationRepository(ReconciliationRepository):
+    """Durable discrepancy/review state for settlement reconciliation."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, item: ReconciliationItem) -> None:
+        self._connection.execute(
+            """
+            insert into reconciliation_item (
+                reconciliation_id,
+                settlement_id,
+                reason_code,
+                expected_amount,
+                observed_amount,
+                currency,
+                status,
+                created_at,
+                resolved_at
+            )
+            values (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                item.reconciliation_id,
+                item.settlement_id,
+                item.reason_code,
+                item.expected_amount.amount if item.expected_amount else None,
+                item.observed_amount.amount if item.observed_amount else None,
+                item.currency,
+                item.status.value,
+                item.created_at,
+                item.resolved_at,
+            ),
+        )
+
+    def get(self, reconciliation_id: str) -> ReconciliationItem | None:
+        cursor = self._connection.execute(
+            """
+            select
+                reconciliation_id,
+                settlement_id,
+                reason_code,
+                expected_amount,
+                observed_amount,
+                currency,
+                status,
+                created_at,
+                resolved_at
+            from reconciliation_item
+            where reconciliation_id = %s
+            """,
+            (reconciliation_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return self._to_item(row)
+
+    def resolve(self, item: ReconciliationItem) -> ReconciliationItem:
+        if item.status is not ReconciliationStatus.RESOLVED:
+            raise ValueError("only resolved reconciliation items can be persisted")
+        if item.resolved_at is None:
+            raise ValueError("resolved item requires resolved_at")
+        cursor = self._connection.execute(
+            """
+            update reconciliation_item
+            set status = 'resolved',
+                resolved_at = %s
+            where reconciliation_id = %s
+              and status = 'open'
+            returning
+                reconciliation_id,
+                settlement_id,
+                reason_code,
+                expected_amount,
+                observed_amount,
+                currency,
+                status,
+                created_at,
+                resolved_at
+            """,
+            (item.resolved_at, item.reconciliation_id),
+        )
+        row = cursor.fetchone()
+        if row is not None:
+            return self._to_item(row)
+        existing = self.get(item.reconciliation_id)
+        if existing is None:
+            raise KeyError(
+                f"unknown reconciliation item: {item.reconciliation_id}"
+            )
+        if existing == item:
+            return existing
+        raise IntegrityViolation("reconciliation item was already finalized")
+
+    def list_open_for_settlement(
+        self,
+        settlement_id: str,
+    ) -> tuple[ReconciliationItem, ...]:
+        cursor = self._connection.execute(
+            """
+            select
+                reconciliation_id,
+                settlement_id,
+                reason_code,
+                expected_amount,
+                observed_amount,
+                currency,
+                status,
+                created_at,
+                resolved_at
+            from reconciliation_item
+            where settlement_id = %s
+              and status = 'open'
+            order by reconciliation_id
+            """,
+            (settlement_id,),
+        )
+        return tuple(self._to_item(row) for row in cursor.fetchall())
+
+    @staticmethod
+    def _to_item(row: tuple[object, ...]) -> ReconciliationItem:
+        (
+            reconciliation_id,
+            settlement_id,
+            reason_code,
+            expected_amount,
+            observed_amount,
+            currency,
+            status,
+            created_at,
+            resolved_at,
+        ) = row
+        return ReconciliationItem(
+            reconciliation_id=str(reconciliation_id),
+            settlement_id=str(settlement_id),
+            reason_code=str(reason_code),
+            expected_amount=(
+                Money(expected_amount, str(currency))
+                if expected_amount is not None
+                else None
+            ),
+            observed_amount=(
+                Money(observed_amount, str(currency))
+                if observed_amount is not None
+                else None
+            ),
+            currency=str(currency),
+            status=ReconciliationStatus(str(status)),
+            created_at=created_at,
+            resolved_at=resolved_at,
         )
 
 
