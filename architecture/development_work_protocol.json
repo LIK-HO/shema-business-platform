@@ -1,0 +1,78 @@
+{
+  "version": "1.0",
+  "repository": "LIK-HO/shema-business-platform",
+  "governing_documents": [
+    "docs/DEVELOPMENT_MANIFEST.md",
+    "docs/GITHUB_WORK_PROTOCOL.md",
+    "docs/DEVELOPMENT_STATE.md",
+    "architecture/contract.json",
+    "architecture/core_maturity_contract.json"
+  ],
+  "session_entry": [
+    "identify_repository",
+    "identify_branch_and_head",
+    "read_manifest",
+    "read_work_protocol",
+    "read_development_state",
+    "verify_pr_and_ci",
+    "select_one_bounded_element"
+  ],
+  "element_states": [
+    "NOT_STARTED",
+    "IN_PROGRESS",
+    "VERIFIED",
+    "CLOSED",
+    "FROZEN"
+  ],
+  "integrity_requirements": [
+    "contract",
+    "implementation",
+    "failure_modes",
+    "security",
+    "persistence",
+    "concurrency",
+    "recovery",
+    "tests",
+    "observability",
+    "release_impact"
+  ],
+  "interruption_requirements": [
+    "active_element",
+    "last_completed_boundary",
+    "unfinished_boundary",
+    "last_verified_commit",
+    "pending_or_failed_checks",
+    "safe_next_action",
+    "prohibited_actions"
+  ],
+  "mature_system_principles": [
+    "canonical_truth",
+    "explicit_interfaces",
+    "idempotent_retries",
+    "transactional_integrity",
+    "at_least_once_plus_deduplication",
+    "lease_ownership",
+    "fail_closed_security",
+    "defense_in_depth",
+    "evidence_provenance",
+    "observable_failures",
+    "tested_recovery",
+    "bounded_complexity",
+    "controlled_migrations",
+    "measurable_slos",
+    "rollback_safe_release",
+    "standard_patterns_first",
+    "measured_scaling_before_decomposition"
+  ],
+  "core_change_exception_requires": [
+    "proven_invariant_defect",
+    "security_defect",
+    "data_integrity_defect",
+    "fundamental_scalability_or_reliability_constraint",
+    "explicit_impact_analysis",
+    "regression_tests",
+    "migration_plan",
+    "rollback_plan"
+  ],
+  "post_certification": "kernel_semantics_frozen"
+}
