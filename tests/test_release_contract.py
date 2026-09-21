@@ -36,8 +36,7 @@ def test_release_tree_fails_when_maturity_gate_set_changes(tmp_path) -> None:
     contract = tmp_path / "architecture" / "core_maturity_contract.json"
     text = contract.read_text(encoding="utf-8").replace(
         '"release_safety",',
-        '"release_safety",
-        "unexpected_gate",',
+        '"release_safety",\n        "unexpected_gate",',
     )
     contract.write_text(text, encoding="utf-8")
 
