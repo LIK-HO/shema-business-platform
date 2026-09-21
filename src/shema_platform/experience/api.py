@@ -31,6 +31,7 @@ from shema_platform.foundation.authentication import (
     AuthenticationPort,
     AuthenticationRequired,
 )
+from shema_platform.foundation.runtime_security import RuntimeSecurityConfiguration
 from shema_platform.foundation.errors import (
     AuthorizationError,
     IdempotencyConflict,
@@ -222,6 +223,13 @@ def create_app(
     enable_docs: bool = True,
     telemetry: TelemetrySink | None = None,
 ) -> FastAPI:
+    if RuntimeSecurityConfiguration.from_environment(
+        docs_enabled=enable_docs
+    ).environment == "production":
+        RuntimeSecurityConfiguration.from_environment(
+            docs_enabled=enable_docs
+        ).enforce()
+
     app = FastAPI(
         title="Shema Business Platform Canonical API",
         version="1.5.0",
