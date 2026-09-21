@@ -16,6 +16,8 @@ from shema_platform.application.settlement_execution import (
     SettlementStatementVerifier,
     SettlementWorkflow,
 )
+from shema_platform.application.outbox_router import OutboxHandlerRouter
+from shema_platform.runtime.outbox import build_outbox_router
 from shema_platform.runtime.providers import ProviderRegistry
 
 
@@ -28,6 +30,7 @@ class PaymentRuntime:
     settlement_verifier: SettlementStatementVerifier
     payment_providers: ProviderRegistry[PaymentProviderAdapter]
     settlement_providers: ProviderRegistry[SettlementProviderAdapter]
+    outbox_router: OutboxHandlerRouter
 
 
 def build_payment_runtime(
@@ -65,6 +68,7 @@ def build_payment_runtime(
     )
     settlement = SettlementWorkflow(unit_of_work_factory)
     settlement_verifier = SettlementStatementVerifier(settlement_adapter)
+    outbox_router = build_outbox_router(execution)
 
     return PaymentRuntime(
         creation=creation,
@@ -74,4 +78,5 @@ def build_payment_runtime(
         settlement_verifier=settlement_verifier,
         payment_providers=payment_providers,
         settlement_providers=settlement_providers,
+        outbox_router=outbox_router,
     )
