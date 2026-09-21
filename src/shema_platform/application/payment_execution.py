@@ -21,6 +21,10 @@ from shema_platform.domain.payment import (
     ProviderEvent,
     ProviderEventStatus,
 )
+from shema_platform.domain.payment_adjustment import (
+    PaymentAdjustment,
+    PaymentAdjustmentKind,
+)
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
 from shema_platform.foundation.errors import (
@@ -48,8 +52,9 @@ class PaymentProviderResult:
 @dataclass(frozen=True, slots=True)
 class VerifiedPaymentEvent:
     event: ProviderEvent
-    payment_status: PaymentAttemptStatus
     amount: Money
+    payment_status: PaymentAttemptStatus | None = None
+    adjustment_kind: PaymentAdjustmentKind | None = None
 
 
 class PaymentProviderAdapter(Protocol):
@@ -112,14 +117,19 @@ class PaymentGateway:
         result = self._adapter.verify_webhook(headers=headers, payload=payload)
         if not result.event.signature_verified:
             raise IntegrityViolation("payment webhook signature is not verified")
-        if result.payment_status not in {
-            PaymentAttemptStatus.PENDING,
-            PaymentAttemptStatus.SUCCEEDED,
-            PaymentAttemptStatus.FAILED,
-        }:
-            raise IntegrityViolation("webhook returned invalid payment state")
         if result.amount.amount <= 0:
             raise IntegrityViolation("webhook payment amount must be positive")
+        if result.adjustment_kind is None:
+            if result.payment_status not in {
+                PaymentAttemptStatus.PENDING,
+                PaymentAttemptStatus.SUCCEEDED,
+                PaymentAttemptStatus.FAILED,
+            }:
+                raise IntegrityViolation("webhook returned invalid payment state")
+        elif result.payment_status is not None:
+            raise IntegrityViolation(
+                "adjustment webhook cannot also carry payment state"
+            )
         return result
 
 
@@ -488,6 +498,121 @@ class PaymentWebhookWorkflow:
                 raise IntegrityViolation("provider event references missing payment")
             if verified.amount != payment.amount:
                 raise IntegrityViolation("webhook payment amount does not match intent")
+
+            if verified.adjustment_kind is not None:
+                if payment.status is not PaymentIntentStatus.SUCCEEDED:
+                    raise IntegrityViolation(
+                        "payment adjustment requires a succeeded payment"
+                    )
+                existing_adjustment = uow.payment_adjustments.get_by_provider_event(
+                    event.event_id
+                )
+                if existing_adjustment is not None:
+                    uow.provider_events.mark_processed(
+                        event.event_id,
+                        status=ProviderEventStatus.PROCESSED,
+                        processed_at=utc_now(),
+                    )
+                    return PaymentWebhookResult(
+                        event_id=event.event_id,
+                        status=verified.adjustment_kind.value,
+                        payment_id=payment.payment_id,
+                    )
+
+                adjusted_total = uow.payment_adjustments.total_for_payment(
+                    payment.payment_id
+                ).add(verified.amount)
+                if adjusted_total.amount > payment.amount.amount:
+                    raise IntegrityViolation(
+                        "cumulative payment adjustments exceed captured payment"
+                    )
+
+                adjustment = PaymentAdjustment(
+                    adjustment_id=str(
+                        uuid5(
+                            NAMESPACE_URL,
+                            f"payment-adjustment:{event.event_id}",
+                        )
+                    ),
+                    payment_id=payment.payment_id,
+                    provider_event_id=event.event_id,
+                    provider_ref=event.provider_ref,
+                    kind=verified.adjustment_kind,
+                    amount=verified.amount,
+                    occurred_at=event.received_at,
+                )
+                uow.payment_adjustments.add(adjustment)
+                uow.economics.add(
+                    EconomicEntry(
+                        entry_id=str(
+                            uuid5(
+                                NAMESPACE_URL,
+                                f"economic-adjustment:{adjustment.adjustment_id}",
+                            )
+                        ),
+                        entity_ref=payment.order_id,
+                        kind=EconomicKind.ADJUSTMENT,
+                        amount=Money(
+                            -verified.amount.amount,
+                            verified.amount.currency,
+                        ),
+                        source_ref=f"payment-adjustment:{adjustment.adjustment_id}",
+                        occurred_at=adjustment.occurred_at,
+                    )
+                )
+                uow.outbox.append(
+                    OutboxEvent(
+                        event_id=str(
+                            uuid5(
+                                NAMESPACE_URL,
+                                f"payment.adjustment:{event.event_id}",
+                            )
+                        ),
+                        event_type=f"payment.{verified.adjustment_kind.value}",
+                        aggregate_type="payment",
+                        aggregate_id=payment.payment_id,
+                        payload={
+                            "payment_id": payment.payment_id,
+                            "provider_ref": event.provider_ref,
+                            "event_id": event.event_id,
+                            "kind": verified.adjustment_kind.value,
+                            "amount": str(verified.amount.amount),
+                            "currency": verified.amount.currency,
+                        },
+                        occurred_at=utc_now(),
+                    )
+                )
+                uow.audits.append(
+                    AuditRecord(
+                        audit_id=str(
+                            uuid5(
+                                NAMESPACE_URL,
+                                f"audit:payment.adjustment:{event.event_id}",
+                            )
+                        ),
+                        actor_id="payment-provider",
+                        action=f"payment.{verified.adjustment_kind.value}",
+                        resource_type="payment",
+                        resource_id=payment.payment_id,
+                        outcome="success",
+                        occurred_at=utc_now(),
+                        metadata={
+                            "provider_ref": event.provider_ref,
+                            "amount": str(verified.amount.amount),
+                            "currency": verified.amount.currency,
+                        },
+                    )
+                )
+                uow.provider_events.mark_processed(
+                    event.event_id,
+                    status=ProviderEventStatus.PROCESSED,
+                    processed_at=utc_now(),
+                )
+                return PaymentWebhookResult(
+                    event_id=event.event_id,
+                    status=verified.adjustment_kind.value,
+                    payment_id=payment.payment_id,
+                )
 
             payment_changed = False
             event_status = verified.payment_status
