@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from time import perf_counter
-from collections.abc import Mapping
 from typing import Protocol
 from uuid import uuid4
 
@@ -25,11 +25,11 @@ from shema_platform.experience.api_models import (
     PaymentCreateRequest,
     PaymentResponse,
     PaymentWebhookResponse,
-    SettlementResponse,
     ResearchRequest,
     ResearchResponse,
     SearchRequest,
     SearchResponse,
+    SettlementResponse,
 )
 from shema_platform.foundation.authentication import (
     AuthenticatedActor,
