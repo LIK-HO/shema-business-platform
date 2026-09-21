@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Protocol, Self
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.economics import EconomicEntry
 from shema_platform.domain.identity import Identity
+from shema_platform.domain.money import Money
 from shema_platform.domain.order import Order
 from shema_platform.domain.payment import (
     PaymentAttempt,
@@ -13,6 +14,7 @@ from shema_platform.domain.payment import (
     PaymentIntent,
     ProviderEvent,
 )
+from shema_platform.domain.payment_adjustment import PaymentAdjustment
 from shema_platform.domain.search import SearchHit
 from shema_platform.domain.settlement import (
     ReconciliationItem,
@@ -233,6 +235,24 @@ class PaymentAttemptRepository(Protocol):
     ) -> PaymentAttempt: ...
 
 
+class PaymentAdjustmentRepository(Protocol):
+    """Append-only provider adjustment facts."""
+
+    def add(self, adjustment: PaymentAdjustment) -> None: ...
+
+    def get_by_provider_event(
+        self,
+        provider_event_id: str,
+    ) -> PaymentAdjustment | None: ...
+
+    def find_by_provider_ref(
+        self,
+        provider_ref: str,
+    ) -> PaymentAdjustment | None: ...
+
+    def total_for_payment(self, payment_id: str) -> Money: ...
+
+
 class ProviderEventRepository(Protocol):
     """Idempotent persistence port for verified provider events."""
 
@@ -301,6 +321,7 @@ class UnitOfWork(Protocol):
     payments: PaymentIntentRepository
     payment_attempts: PaymentAttemptRepository
     provider_events: ProviderEventRepository
+    payment_adjustments: PaymentAdjustmentRepository
     settlements: SettlementRepository
     reconciliations: ReconciliationRepository
     ai_runs: AIRunRepository
