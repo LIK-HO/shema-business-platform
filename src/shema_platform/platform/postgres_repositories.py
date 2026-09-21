@@ -44,6 +44,28 @@ class PostgresIdentityRepository(IdentityRepository):
     def __init__(self, connection: DBConnection) -> None:
         self._connection = connection
 
+    def get(self, identity_id: str) -> Identity | None:
+        cursor = self._connection.execute(
+            """
+            select identity_id, canonical_name, state, tax_id, registration_id
+            from identity
+            where identity_id = %s
+            """,
+            (identity_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+
+        stored_id, canonical_name, state, stored_tax_id, registration_id = row
+        return Identity(
+            identity_id=str(stored_id),
+            canonical_name=str(canonical_name),
+            state=IdentityState(str(state)),
+            tax_id=str(stored_tax_id) if stored_tax_id is not None else None,
+            registration_id=str(registration_id) if registration_id is not None else None,
+        )
+
     def find_by_tax_id(self, tax_id: str) -> Identity | None:
         cursor = self._connection.execute(
             """
