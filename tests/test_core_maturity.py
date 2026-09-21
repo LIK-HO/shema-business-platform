@@ -4,12 +4,10 @@ from pathlib import Path
 from shema_platform.platform import migrations
 
 
-ROOT = Path(__file__).resolve().parents[1]
-
-
 def test_core_maturity_contract_is_explicit() -> None:
+    root = Path(__file__).resolve().parents[1]
     contract = json.loads(
-        (ROOT / "architecture/core_maturity_contract.json").read_text()
+        (root / "architecture/core_maturity_contract.json").read_text()
     )
     assert contract["version"] == "1.5-core-maturity"
     assert contract["maturity_gates"] == [
@@ -34,7 +32,7 @@ def test_core_maturity_contract_is_explicit() -> None:
     assert contract["migration_safety"]["historical_edit_fails_closed"] is True
     assert contract["migration_safety"]["latest_required_version"] == 9
     migration = (
-        ROOT / "db/migrations/0009_state_ownership_invariants.sql"
+        root / "db/migrations/0009_state_ownership_invariants.sql"
     ).read_text()
     assert "job_execution_lease_consistency_check" in migration
     assert "outbox_delivery_lease_consistency_check" in migration
