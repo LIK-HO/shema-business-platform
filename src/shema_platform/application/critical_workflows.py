@@ -11,7 +11,7 @@ from shema_platform.application.ports import UnitOfWork
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.order import Order, OrderLine
 from shema_platform.foundation.audit import AuditRecord
-from shema_platform.foundation.authorization import Permission, RBACAuthorizer
+from shema_platform.foundation.authorization import RBACAuthorizer
 from shema_platform.foundation.errors import (
     IdempotencyConflict,
     IntegrityViolation,
