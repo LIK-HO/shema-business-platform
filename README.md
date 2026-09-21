@@ -2,7 +2,7 @@
 
 Commercial Intelligence & Execution OS.
 
-## v1.4
+## v1.5
 
 The repository contains the approved v1.4 kernel and its integration boundaries.
 
