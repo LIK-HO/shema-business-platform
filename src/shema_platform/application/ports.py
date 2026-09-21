@@ -272,6 +272,11 @@ class ReconciliationRepository(Protocol):
 
     def resolve(self, item: ReconciliationItem) -> ReconciliationItem: ...
 
+    def list_open_for_settlement(
+        self,
+        settlement_id: str,
+    ) -> tuple[ReconciliationItem, ...]: ...
+
 
 class AIRunRepository(Protocol):
     """Persistence port for traceable AI execution results."""
