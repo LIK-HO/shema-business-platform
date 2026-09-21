@@ -160,7 +160,8 @@ def test_critical_create_workflows_are_atomic_and_idempotent() -> None:
             # duplicating UUID generation in the assertion.
             event_by_type = conn.execute(
                 "select count(*) from outbox_event "
-                "where event_type = 'commercial_action.created' and aggregate_id = 'action-workflow-1'"
+                "where event_type = 'commercial_action.created' "
+                "and aggregate_id = 'action-workflow-1'"
             ).fetchone()
             assert event_by_type == (1,)
 
