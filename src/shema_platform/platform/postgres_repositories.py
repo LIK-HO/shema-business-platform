@@ -1490,6 +1490,30 @@ class PostgresPaymentAttemptRepository(PaymentAttemptRepository):
             return None
         return self._to_attempt(row)
 
+    def find_by_provider_ref(self, provider_ref: str) -> PaymentAttempt | None:
+        cursor = self._connection.execute(
+            """
+            select
+                attempt_id,
+                payment_id,
+                attempt_number,
+                external_idempotency_key,
+                status,
+                provider_ref,
+                send_worker_id,
+                send_lease_until
+            from payment_attempt
+            where provider_ref = %s
+            order by attempt_number desc
+            limit 1
+            """,
+            (provider_ref,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return self._to_attempt(row)
+
     def claim_for_send(
         self,
         attempt_id: str,
@@ -1510,7 +1534,10 @@ class PostgresPaymentAttemptRepository(PaymentAttemptRepository):
                 send_lease_until = %s,
                 updated_at = %s
             where attempt_id = %s
-              and status = 'ready'
+              and (
+                  status = 'ready'
+                  or (status = 'sending' and send_lease_until is not null and send_lease_until <= %s)
+              )
             returning
                 attempt_id,
                 payment_id,
@@ -1521,7 +1548,7 @@ class PostgresPaymentAttemptRepository(PaymentAttemptRepository):
                 send_worker_id,
                 send_lease_until
             """,
-            (worker_id, lease_until, now, attempt_id),
+            (worker_id, lease_until, now, attempt_id, now),
         )
         row = cursor.fetchone()
         if row is None:
