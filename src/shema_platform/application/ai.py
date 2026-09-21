@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from math import isfinite
-from typing import Protocol
+from typing import Callable, Protocol
 from uuid import uuid4
 
-from shema_platform.application.ports import AIRunRepository, AuditRepository
+from shema_platform.application.ports import UnitOfWork
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
 from shema_platform.foundation.errors import PolicyDenied
@@ -119,14 +119,12 @@ class AIGateway:
         provider: AIProvider,
         authorizer: RBACAuthorizer,
         policy: PolicyEngine,
-        audit_repository: AuditRepository,
-        run_repository: AIRunRepository,
+        unit_of_work_factory: Callable[[], UnitOfWork],
     ) -> None:
         self._provider = provider
         self._authorizer = authorizer
         self._policy = policy
-        self._audit = audit_repository
-        self._runs = run_repository
+        self._unit_of_work_factory = unit_of_work_factory
 
     def execute(
         self,
@@ -180,9 +178,10 @@ class AIGateway:
         if run.duration_seconds > budget.max_duration_seconds:
             raise ValueError("AI provider exceeded duration budget")
 
-        self._runs.add(run)
-
-        self._audit.append(
+        # The provider call above is outside the Unit of Work by design.
+        with self._unit_of_work_factory() as uow:
+            uow.ai_runs.add(run)
+            uow.audits.append(
             AuditRecord(
                 audit_id=str(uuid4()),
                 actor_id=context.actor_id,
@@ -206,6 +205,5 @@ class AIGateway:
                 correlation_id=context.correlation_id,
                 configuration_version=context.configuration_version,
             )
-        )
         return run
 
