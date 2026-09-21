@@ -130,3 +130,14 @@ def test_legacy_boundary_is_explicit() -> None:
     architecture = read("ARCHITECTURE.md")
     assert "Airtable is legacy/transition data" in architecture
     assert "MAX is included in the adapter boundary" in architecture
+
+
+def test_v1_5_runtime_contract_preserves_frozen_kernel_boundary() -> None:
+    contract = loads(read("architecture/runtime_contract.json"))
+    assert contract["version"] == "1.5.0"
+    assert contract["baseline_kernel_contract"] == "1.4"
+    assert contract["iam"]["authentication_boundary"] == "oidc_jwt_adapter"
+    assert contract["iam"]["issuer_must_use_https"] is True
+    assert contract["iam"]["jwks_must_use_https"] is True
+    assert contract["iam"]["permission_materialization"] is True
+    assert contract["iam"]["unknown_permissions_fail_closed"] is True
