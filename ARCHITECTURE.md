@@ -18,7 +18,7 @@ Start as a modular monolith. PostgreSQL is the transactional authority. External
 - `application/` — commands, queries, workflows, jobs and orchestration.
 - `domain/` — business rules, value objects and state transitions.
 - `foundation/` — identity primitives, policy, idempotency, audit, evidence, outbox, recovery, transactions.
-- `adapters/` — MAX, Telegram, Email, SMS, CRM, intelligence providers, payments, documents.
+- `adapters/` — MAX, Telegram, Email, SMS, intelligence providers, payments, documents.
 - `platform/` — PostgreSQL, object storage, queue, cache, IAM, search, observability.
 
 ## Identity and truth boundary
@@ -149,12 +149,12 @@ Current implementation sequence:
 9. Commercial Action → Order → Economics.
 10. API/PWA/Android surface and integration hardening.
 
-## Legacy and continuity rules
+## Boundary and continuity rules
 
-- Airtable is legacy/transition data, not the system of record or business-rule engine.
-- Replit migration remains frozen until 2026-10-13.
-- Bitrix24 migration remains frozen without a scheduled date; Bitrix24 is a reference/integration target, not the core platform.
-- MAX is included in the adapter boundary from the first integration design.
+- PostgreSQL is the sole transactional system of record.
+- No external CRM, low-code, migration or mirror system is a platform dependency or business-rule engine.
+- External providers are reachable only through explicit adapters and cannot become domain dependencies.
+- MAX is included in the communication adapter boundary from the first integration design.
 - Proven mature patterns are preferred over bespoke infrastructure.
 - Start with one operator; preserve clean contracts for later team mode.
 
