@@ -156,7 +156,34 @@ def test_kernel_checkpoint_tracks_twelve_elements() -> None:
         assert element in checkpoint
 
 
-def test_legacy_boundary_is_explicit() -> None:
+def test_external_system_boundary_is_empty_and_payment_boundary_is_explicit() -> None:
+    contract = loads(read("architecture/contract.json"))
+
+    assert contract["external_system_boundary"] == {
+        "integration_targets": [],
+        "transition_dependencies": [],
+        "transactional_mirrors": [],
+        "system_of_record": "postgresql",
+    }
+    assert "payment_execution" in contract["production_boundaries"]["post_kernel"]
+    assert "settlement" in contract["production_boundaries"]["post_kernel"]
+    assert contract["payment_settlement_contract"]["settlement_states"] == [
+        "expected",
+        "reconciling",
+        "settled",
+        "discrepancy",
+    ]
+
+    active_docs = (
+        "ARCHITECTURE.md",
+        "docs/V1.4_KERNEL.md",
+        "docs/V1.4_KERNEL_CHECKPOINT.md",
+        "docs/V1.5_RUNTIME.md",
+    )
+    forbidden_external_systems = ("airtable", "replit", "bitrix24")
+    for path in active_docs:
+        content = read(path).lower()
+        assert not any(name in content for name in forbidden_external_systems)
+
     architecture = read("ARCHITECTURE.md")
-    assert "Airtable is legacy/transition data" in architecture
-    assert "MAX is included in the adapter boundary" in architecture
+    assert "Payment and settlement providers are post-kernel adapters" in architecture
