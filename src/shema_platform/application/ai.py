@@ -3,7 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from math import isfinite
-from typing import Callable, Protocol
+from collections.abc import Callable
+from typing import Protocol
 from uuid import uuid4
 
 from shema_platform.application.ports import UnitOfWork
