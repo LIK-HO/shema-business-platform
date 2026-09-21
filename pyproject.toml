@@ -19,6 +19,7 @@ dev = [
   "ruff>=0.9,<1",
   "psycopg[binary]>=3.2,<4",
   "httpx>=0.28,<1",
+  "pip-audit>=2.9,<3",
 ]
 
 [tool.pytest.ini_options]
