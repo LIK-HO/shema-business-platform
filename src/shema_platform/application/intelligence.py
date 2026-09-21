@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from shema_platform.application.ports import EvidenceRepository
+from shema_platform.application.ports import UnitOfWork
 from shema_platform.application.research import (
     ProviderGateway,
     ProviderResult,
@@ -41,11 +41,11 @@ class IntelligenceService:
         self,
         routing_policy: ResearchRoutingPolicy,
         provider_gateway: ProviderGateway,
-        evidence_repository: EvidenceRepository,
+        unit_of_work_factory: Callable[[], UnitOfWork],
     ) -> None:
         self._routing = routing_policy
         self._providers = provider_gateway
-        self._evidence = evidence_repository
+        self._unit_of_work_factory = unit_of_work_factory
 
     def run(
         self,
@@ -104,8 +104,12 @@ class IntelligenceService:
                     provenance=provenance,
                     lifecycle=EvidenceLifecycle.ACTIVE,
                 )
-                self._evidence.add(record)
                 evidence.append(record)
+
+        # External provider calls are complete before the transactional boundary opens.
+        with self._unit_of_work_factory() as uow:
+            for record in evidence:
+                uow.evidence.add(record)
 
         return IntelligenceRun(
             subject_ref=subject_ref,
