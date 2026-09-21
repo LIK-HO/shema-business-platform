@@ -140,6 +140,88 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Order' }
         '404': { $ref: '#/components/responses/NotFoundError' }
+  /v1/payments:
+    post:
+      operationId: createPayment
+      summary: Create a payment intent from canonical order truth
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PaymentCreateRequest' }
+      responses:
+        '201':
+          description: Payment intent created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+
+  /v1/payments/{paymentId}:
+    get:
+      operationId: getPayment
+      summary: Read canonical payment state
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Payment intent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+
+  /v1/payment-providers/{provider}/webhook:
+    post:
+      operationId: receivePaymentProviderWebhook
+      summary: Receive a verified payment provider event
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+      requestBody:
+        required: true
+        content:
+          application/octet-stream: {}
+      responses:
+        '200':
+          description: Provider event processed or deduplicated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentWebhookResponse' }
+        '400':
+          description: Invalid provider signature or payload
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /v1/settlement-providers/{provider}/statement:
+    post:
+      operationId: ingestSettlementStatement
+      summary: Receive a verified provider settlement statement
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+      requestBody:
+        required: true
+        content:
+          application/octet-stream: {}
+      responses:
+        '200':
+          description: Settlement reconciliation result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Settlement' }
+        '400':
+          description: Invalid provider statement or signature
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
   /v1/economics/{entityRef}:
     get:
       operationId: getEconomicLineage
@@ -196,6 +278,16 @@ components:
       in: path
       required: true
       schema: { type: string }
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      schema: { type: string }
+    Provider:
+      name: provider
+      in: path
+      required: true
+      schema: { type: string, minLength: 1 }
   responses:
     ForbiddenError:
       description: Authorization or policy denial
@@ -346,6 +438,39 @@ components:
         sourceActionId: { type: string }
         status: { type: string, enum: [draft, confirmed, in_progress, completed, cancelled, failed] }
         lines: { type: array, items: { $ref: '#/components/schemas/OrderLine' } }
+    PaymentCreateRequest:
+      type: object
+      required: [orderId]
+      properties:
+        orderId: { type: string }
+    Payment:
+      type: object
+      required: [paymentId, orderId, amount, status]
+      properties:
+        paymentId: { type: string }
+        orderId: { type: string }
+        amount: { $ref: '#/components/schemas/Money' }
+        status:
+          type: string
+          enum: [draft, pending, processing, succeeded, failed, cancelled]
+    PaymentWebhookResponse:
+      type: object
+      required: [eventId, status]
+      properties:
+        eventId: { type: string }
+        status: { type: string }
+        paymentId: { type: [string, 'null'] }
+    Settlement:
+      type: object
+      required: [settlementId, status, discrepancies]
+      properties:
+        settlementId: { type: string }
+        status:
+          type: string
+          enum: [expected, reconciling, settled, discrepancy]
+        discrepancies:
+          type: array
+          items: { type: string }
     EconomicEntry:
       type: object
       required: [entryId, entityRef, kind, amount, sourceRef, occurredAt]
