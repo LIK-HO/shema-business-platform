@@ -1,4 +1,4 @@
-from pathlib import Path
+import pathlib
 
 import pytest
 
@@ -8,7 +8,7 @@ from shema_platform.platform.release import (
 )
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 def test_release_tree_matches_current_core_baseline() -> None:
@@ -28,13 +28,15 @@ def test_release_tree_fails_when_maturity_gate_set_changes(tmp_path) -> None:
     ):
         target = tmp_path / source
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text((ROOT / source).read_text(encoding="utf-8"), encoding="utf-8")
+        target.write_text(
+            (ROOT / source).read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
 
     contract = tmp_path / "architecture" / "core_maturity_contract.json"
     text = contract.read_text(encoding="utf-8").replace(
         '"release_safety",',
-        '"release_safety",
-    "unexpected_gate",',
+        '"release_safety",\n        "unexpected_gate",',
     )
     contract.write_text(text, encoding="utf-8")
 
