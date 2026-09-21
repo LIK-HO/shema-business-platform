@@ -137,7 +137,15 @@ class SettlementWorkflow:
                 observed_amount = line.amount
 
                 if attempt is None:
-                    reason = "provider_payment_unmatched"
+                    adjustment = uow.payment_adjustments.find_by_provider_ref(
+                        line.provider_ref
+                    )
+                    if adjustment is None:
+                        reason = "provider_movement_unmatched"
+                    else:
+                        expected_amount = adjustment.amount
+                        if adjustment.amount != line.amount:
+                            reason = "payment_adjustment_amount_mismatch"
                 else:
                     payment = uow.payments.get(attempt.payment_id)
                     if payment is None:
