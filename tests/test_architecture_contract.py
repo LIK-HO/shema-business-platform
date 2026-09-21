@@ -126,7 +126,24 @@ def test_kernel_checkpoint_tracks_twelve_elements() -> None:
         assert element in checkpoint
 
 
-def test_legacy_boundary_is_explicit() -> None:
+def test_external_system_boundary_is_empty() -> None:
+    contract = loads(read("architecture/contract.json"))
+    assert contract["external_system_boundary"] == {
+        "integration_targets": [],
+        "transition_dependencies": [],
+        "transactional_mirrors": [],
+    }
+
+    active_docs = (
+        "ARCHITECTURE.md",
+        "docs/V1.4_KERNEL.md",
+        "docs/V1.4_KERNEL_CHECKPOINT.md",
+        "docs/V1.5_RUNTIME.md",
+    )
+    forbidden_names = ("airtable", "replit", "bitrix24")
+    for path in active_docs:
+        content = read(path).lower()
+        assert not any(name in content for name in forbidden_names)
+
     architecture = read("ARCHITECTURE.md")
-    assert "Airtable is legacy/transition data" in architecture
-    assert "MAX is included in the adapter boundary" in architecture
+    assert "MAX is included in the communication adapter boundary" in architecture
