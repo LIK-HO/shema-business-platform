@@ -1,7 +1,5 @@
 import pathlib
 
-import pytest
-
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -18,7 +16,9 @@ def test_release_tree_matches_current_core_baseline() -> None:
 
 
 def test_release_tree_fails_when_maturity_gate_set_changes(tmp_path) -> None:
+    import pytest
     from shema_platform.platform.release import ReleaseContractError, validate_release_tree
+
     for source in (
         "architecture/contract.json",
         "architecture/core_maturity_contract.json",
