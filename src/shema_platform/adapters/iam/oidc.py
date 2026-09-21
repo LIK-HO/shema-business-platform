@@ -6,10 +6,7 @@ from typing import Any, Protocol
 import jwt
 from jwt import PyJWKClient, PyJWTError
 
-from shema_platform.foundation.authentication import (
-    AuthenticatedActor,
-    AuthenticationRequired,
-)
+from shema_platform.foundation.authentication import AuthenticatedActor, AuthenticationRequired
 from shema_platform.foundation.authorization import Permission
 
 
@@ -95,7 +92,7 @@ class OIDCJWTAuthenticator:
     key_provider: SigningKeyProvider
 
     @classmethod
-    def production(cls, configuration: OIDCConfiguration) -> "OIDCJWTAuthenticator":
+    def production(cls, configuration: OIDCConfiguration) -> OIDCJWTAuthenticator:
         return cls(
             configuration=configuration,
             key_provider=PyJWTSigningKeyProvider(
