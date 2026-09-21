@@ -199,6 +199,8 @@ class PaymentAttemptRepository(Protocol):
 
     def get(self, attempt_id: str) -> PaymentAttempt | None: ...
 
+    def find_by_provider_ref(self, provider_ref: str) -> PaymentAttempt | None: ...
+
     def claim_for_send(
         self,
         attempt_id: str,
