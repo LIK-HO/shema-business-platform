@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from shema_platform.application.payment_outbox import PaymentOutboxHandler
 from shema_platform.application.job_runner import PermanentJobError
+from shema_platform.application.payment_outbox import PaymentOutboxHandler
 from shema_platform.foundation.outbox import OutboxEvent
 
 
