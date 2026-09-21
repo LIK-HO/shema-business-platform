@@ -53,6 +53,7 @@ class PaymentProviderResult:
 class VerifiedPaymentEvent:
     event: ProviderEvent
     amount: Money
+    source_payment_ref: str
     payment_status: PaymentAttemptStatus | None = None
     adjustment_kind: PaymentAdjustmentKind | None = None
 
@@ -117,6 +118,8 @@ class PaymentGateway:
         result = self._adapter.verify_webhook(headers=headers, payload=payload)
         if not result.event.signature_verified:
             raise IntegrityViolation("payment webhook signature is not verified")
+        if not result.source_payment_ref.strip():
+            raise IntegrityViolation("webhook source payment reference is required")
         if result.amount.amount <= 0:
             raise IntegrityViolation("webhook payment amount must be positive")
         if result.adjustment_kind is None:
@@ -463,8 +466,20 @@ class PaymentWebhookWorkflow:
                 )
 
             uow.provider_events.add(event)
-            attempt = uow.payment_attempts.find_by_provider_ref(event.provider_ref)
+            attempt = uow.payment_attempts.find_by_provider_ref(
+                verified.source_payment_ref
+            )
             if attempt is None:
+                uow.quarantine.add(
+                    object_type="payment_provider_event",
+                    object_ref=event.event_id,
+                    reason_code="provider_payment_unmatched",
+                    payload={
+                        "provider_ref": event.provider_ref,
+                        "source_payment_ref": verified.source_payment_ref,
+                        "event_type": event.event_type,
+                    },
+                )
                 uow.provider_events.mark_processed(
                     event.event_id,
                     status=ProviderEventStatus.IGNORED,
@@ -484,7 +499,10 @@ class PaymentWebhookWorkflow:
                         resource_id=event.event_id,
                         outcome="review",
                         occurred_at=utc_now(),
-                        metadata={"provider_ref": event.provider_ref},
+                        metadata={
+                            "provider_ref": event.provider_ref,
+                            "source_payment_ref": verified.source_payment_ref,
+                        },
                     )
                 )
                 return PaymentWebhookResult(
@@ -495,9 +513,26 @@ class PaymentWebhookWorkflow:
 
             payment = uow.payments.get(attempt.payment_id)
             if payment is None:
-                raise IntegrityViolation("provider event references missing payment")
-            if verified.amount != payment.amount:
-                raise IntegrityViolation("webhook payment amount does not match intent")
+                uow.quarantine.add(
+                    object_type="payment_provider_event",
+                    object_ref=event.event_id,
+                    reason_code="payment_missing_for_provider_event",
+                    payload={
+                        "provider_ref": event.provider_ref,
+                        "source_payment_ref": verified.source_payment_ref,
+                        "payment_id": attempt.payment_id,
+                    },
+                )
+                uow.provider_events.mark_processed(
+                    event.event_id,
+                    status=ProviderEventStatus.IGNORED,
+                    processed_at=utc_now(),
+                )
+                return PaymentWebhookResult(
+                    event_id=event.event_id,
+                    status="quarantined",
+                    payment_id=None,
+                )
 
             if verified.adjustment_kind is not None:
                 if payment.status is not PaymentIntentStatus.SUCCEEDED:
@@ -612,6 +647,11 @@ class PaymentWebhookWorkflow:
                     event_id=event.event_id,
                     status=verified.adjustment_kind.value,
                     payment_id=payment.payment_id,
+                )
+
+            if verified.amount != payment.amount:
+                raise IntegrityViolation(
+                    "webhook payment amount does not match intent"
                 )
 
             payment_changed = False
