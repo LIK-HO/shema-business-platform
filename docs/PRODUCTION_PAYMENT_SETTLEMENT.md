@@ -50,7 +50,7 @@ Settlement:
 
 expected → reconciling → settled | discrepancy
 
-Succeeded, failed and cancelled Payment Intent states are terminal for the intent. Refunds, reversals and chargebacks are separate append-only movements linked to the original payment.
+Succeeded, failed and cancelled Payment Intent states are terminal for the intent. Refunds, reversals, chargebacks and provider adjustments are separate append-only movements linked to the original payment. They never overwrite the original successful payment fact.
 
 ## Non-negotiable invariants
 
@@ -65,10 +65,11 @@ Succeeded, failed and cancelled Payment Intent states are terminal for the inten
 9. Provider callbacks cannot bypass authorization, policy, audit or business invariants.
 10. Settlement matching is deterministic and restartable.
 11. Reconciliation discrepancies are durable review state.
-12. Refunds, reversals and chargebacks are append-only adjustments.
+12. Refunds, reversals, chargebacks and provider adjustments are append-only facts.
+13. Cumulative post-payment adjustments cannot exceed the captured payment amount.
 13. Monetary calculations do not use binary floating-point.
 14. Operational recovery may reclaim leases but never fabricate payment or settlement success.
-15. Provider credentials, webhook secrets and signing keys are runtime secrets, never repository data.
+16. Provider credentials, webhook secrets and signing keys are runtime secrets, never repository data.
 16. A settlement statement is accepted only with an immutable statement hash.
 17. A settlement cannot close while any reconciliation item remains open.
 
