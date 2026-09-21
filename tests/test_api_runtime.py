@@ -1,7 +1,5 @@
 from fastapi.testclient import TestClient
 
-import shema_platform.foundation.telemetry as telemetry
-
 from shema_platform.experience.api import (
     APIApplication,
     RequestContext,
@@ -29,6 +27,7 @@ from shema_platform.foundation.authentication import (
     AuthenticationRequired,
 )
 from shema_platform.foundation.errors import QuarantineRequired
+from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
 class RejectingAuthenticator(AuthenticationPort):
@@ -127,10 +126,10 @@ def client(application: APIApplication | None = None) -> TestClient:
 
 
 def test_runtime_api_emits_redacted_telemetry() -> None:
-    telemetry = telemetry.InMemoryTelemetrySink()
+    telemetry_sink = InMemoryTelemetrySink()
 
     response = TestClient(
-        create_app(FakeApplication(), FakeAuthenticator(), telemetry=telemetry)
+        create_app(FakeApplication(), FakeAuthenticator(), telemetry=telemetry_sink)
     ).post(
         "/v1/search",
         headers={
@@ -144,7 +143,7 @@ def test_runtime_api_emits_redacted_telemetry() -> None:
     )
 
     assert response.status_code == 200
-    event = telemetry.all()[-1]
+    event = telemetry_sink.all()[-1]
     assert event.name == "http.request.completed"
     assert event.correlation_id == "corr-telemetry"
     assert event.attributes["status"] == 200
