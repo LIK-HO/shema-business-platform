@@ -26,7 +26,13 @@ def test_core_maturity_contract_is_explicit() -> None:
         "observability",
         "release_safety",
     ]
+    assert contract["database_state_ownership_constraints"] is True
     assert contract["migration_safety"]["historical_edit_fails_closed"] is True
+    assert contract["migration_safety"]["latest_required_version"] == 9
+    migration = (ROOT / "db/migrations/0009_state_ownership_invariants.sql").read_text()
+    assert "job_execution_lease_consistency_check" in migration
+    assert "outbox_delivery_lease_consistency_check" in migration
+    assert "commercial_action_send_lease_check" in migration
 
 
 def test_migration_plan_rejects_gaps() -> None:
