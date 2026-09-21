@@ -62,3 +62,32 @@ def test_non_production_is_not_blocked_by_production_only_requirements() -> None
     )
 
     configuration.enforce()
+
+
+def test_api_startup_enforces_production_security_from_environment(monkeypatch) -> None:
+    from shema_platform.experience.api import create_app
+
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("OIDC_ISSUER", "http://issuer.example.com/")
+    monkeypatch.setenv("OIDC_AUDIENCE", "shema-business-platform")
+    monkeypatch.setenv(
+        "OIDC_JWKS_URL",
+        "https://issuer.example.com/.well-known/jwks.json",
+    )
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgresql://app:secret@db.internal:5432/shema",
+    )
+
+    with pytest.raises(
+        RuntimeSecurityViolation,
+        match="production_oidc_issuer_must_be_https",
+    ):
+        create_app(enable_docs=False)
+
+
+def test_api_startup_allows_development_environment(monkeypatch) -> None:
+    from shema_platform.experience.api import create_app
+
+    monkeypatch.setenv("APP_ENV", "development")
+    create_app(enable_docs=True)
