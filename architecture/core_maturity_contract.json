@@ -61,5 +61,36 @@
     "single_transaction": true,
     "gap_free_sequence": true,
     "latest_required_version": 9
+  },
+  "development_manifest": "docs/DEVELOPMENT_MANIFEST.md",
+  "current_stage": "v1.5 Core Maturity Integration & Certification",
+  "core_semantic_freeze_after_certification": true,
+  "certification_controls": {
+    "release_integration": [
+      "unified_v1_5_candidate",
+      "green_ci_supported_versions",
+      "migration_adoption_verified"
+    ],
+    "recovery": [
+      "crash_after_external_effect_integration_drill",
+      "backup_restore_verified",
+      "point_in_time_recovery_verified",
+      "rto_rpo_measured",
+      "upgrade_rollback_verified"
+    ],
+    "operations": [
+      "end_to_end_correlation_proven",
+      "sli_slo_error_budget_baseline",
+      "capacity_overload_baseline"
+    ],
+    "security": [
+      "security_control_matrix",
+      "dependency_supply_chain_gate",
+      "fail_closed_runtime_configuration"
+    ],
+    "final_freeze": [
+      "controlled_release_candidate",
+      "formal_core_semantic_freeze"
+    ]
   }
 }
