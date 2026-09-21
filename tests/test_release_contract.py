@@ -6,11 +6,9 @@ from shema_platform.platform.release import (
 )
 
 
-ROOT = Path(__file__).resolve().parents[1]
-
-
 def test_release_tree_matches_current_core_baseline() -> None:
-    manifest = validate_release_tree(ROOT)
+    root = Path(__file__).resolve().parents[1]
+    manifest = validate_release_tree(root)
 
     assert manifest.application_version == "1.5.0"
     assert manifest.kernel_contract_version == "1.4"
@@ -19,6 +17,7 @@ def test_release_tree_matches_current_core_baseline() -> None:
 
 
 def test_release_tree_fails_when_maturity_gate_set_changes(tmp_path) -> None:
+    root = Path(__file__).resolve().parents[1]
     for source in (
         "architecture/contract.json",
         "architecture/core_maturity_contract.json",
@@ -27,7 +26,7 @@ def test_release_tree_fails_when_maturity_gate_set_changes(tmp_path) -> None:
         target = tmp_path / source
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
-            (ROOT / source).read_text(encoding="utf-8"),
+            (root / source).read_text(encoding="utf-8"),
             encoding="utf-8",
         )
 
@@ -40,7 +39,7 @@ def test_release_tree_fails_when_maturity_gate_set_changes(tmp_path) -> None:
 
     migrations = tmp_path / "db" / "migrations"
     migrations.mkdir(parents=True)
-    for path in sorted((ROOT / "db" / "migrations").glob("*.sql")):
+    for path in sorted((root / "db" / "migrations").glob("*.sql")):
         (migrations / path.name).write_text(
             path.read_text(encoding="utf-8"),
             encoding="utf-8",
