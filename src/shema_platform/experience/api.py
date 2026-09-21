@@ -183,7 +183,7 @@ def create_app(
 ) -> FastAPI:
     app = FastAPI(
         title="Shema Business Platform Canonical API",
-        version="1.4.0",
+        version="1.5.0",
         openapi_url="/openapi.json" if enable_docs else None,
         docs_url="/docs" if enable_docs else None,
         redoc_url="/redoc" if enable_docs else None,
