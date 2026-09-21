@@ -12,8 +12,8 @@ from shema_platform.application.payment_execution import (
     PaymentExecutionState,
     PaymentExecutionWorkflow,
     PaymentGateway,
-    PaymentProviderResult,
     PaymentProviderAdapter,
+    PaymentProviderResult,
     PaymentWebhookWorkflow,
     VerifiedPaymentEvent,
 )
@@ -225,7 +225,7 @@ class MemoryUow:
     outbox: OutboxStore = field(default_factory=OutboxStore)
     audits: MemoryAudit = field(default_factory=MemoryAudit)
 
-    def __enter__(self) -> "MemoryUow":
+    def __enter__(self) -> MemoryUow:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> bool:
@@ -286,7 +286,13 @@ def make_order(status: OrderStatus = OrderStatus.CONFIRMED) -> Order:
 def workflow_parts(
     *,
     order: Order | None = None,
-) -> tuple[MemoryUow, PaymentCreationWorkflow, PaymentExecutionWorkflow, PaymentWebhookWorkflow, FakePaymentAdapter]:
+) -> tuple[
+    MemoryUow,
+    PaymentCreationWorkflow,
+    PaymentExecutionWorkflow,
+    PaymentWebhookWorkflow,
+    FakePaymentAdapter,
+]:
     uow = MemoryUow(
         orders=MemoryOrders(),
         payments=MemoryPayments(),
