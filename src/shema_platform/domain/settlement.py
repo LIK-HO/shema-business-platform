@@ -156,8 +156,6 @@ class SettlementStatement:
             raise ValueError("provider_settlement_ref is required")
         if not self.statement_hash.strip():
             raise ValueError("statement_hash is required")
-        if not self.statement_hash.strip():
-            raise ValueError("statement_hash is required")
         if not self.lines:
             raise ValueError("settlement statement must contain lines")
         if self.settled_at.tzinfo is None:
