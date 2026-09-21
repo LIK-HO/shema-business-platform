@@ -607,12 +607,58 @@ class PaymentWebhookWorkflow:
                         payment_id=payment.payment_id,
                     )
 
+                if verified.amount.currency != payment.amount.currency:
+                    uow.quarantine.add(
+                        object_type="payment_provider_event",
+                        object_ref=event.event_id,
+                        reason_code="payment_adjustment_conflict",
+                        payload={
+                            "payment_id": payment.payment_id,
+                            "provider_ref": event.provider_ref,
+                            "reason": "currency_mismatch",
+                            "expected_currency": payment.amount.currency,
+                            "observed_currency": verified.amount.currency,
+                        },
+                    )
+                    uow.provider_events.mark_processed(
+                        event.event_id,
+                        status=ProviderEventStatus.IGNORED,
+                        processed_at=utc_now(),
+                    )
+                    return PaymentWebhookResult(
+                        event_id=event.event_id,
+                        status="quarantined",
+                        payment_id=payment.payment_id,
+                    )
+
                 adjusted_total = uow.payment_adjustments.total_for_payment(
                     payment.payment_id
                 ).add(verified.amount)
                 if adjusted_total.amount > payment.amount.amount:
-                    raise IntegrityViolation(
-                        "cumulative payment adjustments exceed captured payment"
+                    uow.quarantine.add(
+                        object_type="payment_provider_event",
+                        object_ref=event.event_id,
+                        reason_code="payment_adjustment_conflict",
+                        payload={
+                            "payment_id": payment.payment_id,
+                            "provider_ref": event.provider_ref,
+                            "reason": "cumulative_adjustment_exceeds_capture",
+                            "captured_amount": str(payment.amount.amount),
+                            "current_adjustments": str(
+                                adjusted_total.amount.subtract(verified.amount.amount)
+                            ),
+                            "observed_adjustment": str(verified.amount.amount),
+                        },
+                    )
+                    uow.provider_events.mark_processed(
+                        event.event_id,
+                        status=ProviderEventStatus.IGNORED,
+                        processed_at=utc_now(),
+                    )
+                    return PaymentWebhookResult(
+                        event_id=event.event_id,
+                        status="quarantined",
+                        payment_id=payment.payment_id,
                     )
 
                 adjustment = PaymentAdjustment(
