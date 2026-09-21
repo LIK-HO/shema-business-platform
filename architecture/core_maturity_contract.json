@@ -1,0 +1,50 @@
+{
+  "version": "1.5-core-maturity",
+  "authoritative_core": [
+    "domain",
+    "foundation",
+    "application",
+    "postgres_transactional_persistence",
+    "durable_jobs",
+    "outbox",
+    "canonical_api_semantics"
+  ],
+  "external_boundary": [
+    "concrete_iam_provider",
+    "communication_transport",
+    "intelligence_provider",
+    "ai_model_provider",
+    "ui",
+    "payment_settlement_provider",
+    "airtable",
+    "replit",
+    "bitrix24"
+  ],
+  "maturity_gates": [
+    "correctness",
+    "atomicity",
+    "concurrency",
+    "recovery",
+    "security",
+    "observability",
+    "release_safety"
+  ],
+  "fault_model": [
+    "worker_crash_before_completion",
+    "worker_crash_after_external_effect",
+    "duplicate_delivery",
+    "lease_expiry",
+    "database_rollback",
+    "concurrent_critical_command",
+    "dependency_timeout",
+    "concurrent_deployment",
+    "historical_migration_edit"
+  ],
+  "migration_safety": {
+    "serialized_by_advisory_lock": true,
+    "checksummed": true,
+    "historical_edit_fails_closed": true,
+    "single_transaction": true,
+    "gap_free_sequence": true
+  }
+}
