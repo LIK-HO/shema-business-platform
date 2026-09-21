@@ -4,7 +4,7 @@ import dataclasses
 import typing
 
 import jwt
-from jwt import jwt.PyJWKClient, jwt.PyJWTError
+
 
 
 _SAFE_ASYMMETRIC_ALGORITHMS = frozenset(
