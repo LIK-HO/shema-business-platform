@@ -1,6 +1,7 @@
 # Repository Agent Operating Contract
 
 This repository is governed by:
+0. `docs/UNIVERSAL_DEVELOPMENT_DOCTRINE.md` — canonical development method, applicable as the default engineering rule.
 1. `docs/DEVELOPMENT_MANIFEST.md`
 2. `docs/GITHUB_WORK_PROTOCOL.md`
 3. `docs/DEVELOPMENT_STATE.md`
@@ -8,7 +9,7 @@ This repository is governed by:
 
 ## Mandatory GitHub-session protocol
 
-Before any substantive GitHub read, analysis, write or continuation:
+Before any substantive development read, analysis, write or continuation:
 1. Identify the exact repository, branch and current HEAD.
 2. Read the Development Manifest.
 3. Read the GitHub Work Protocol.
@@ -58,3 +59,8 @@ After Core Maturity Certification, kernel semantics are frozen. New capabilities
 ## Stop rule
 
 If the next step would cross the recorded integrity boundary, stop and re-establish the boundary in the state ledger before proceeding.
+
+
+## Cross-project rule
+
+The same development method applies to every current or future repository/project under active development: recover history and approved roadmap first, determine the exact unfinished integrity boundary, complete one bounded element through verification, persist the interruption state, and only then advance. Project-specific manifests remain authoritative for product semantics.
