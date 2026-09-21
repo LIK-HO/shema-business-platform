@@ -664,7 +664,7 @@ def test_payment_adjustment_is_append_only_and_reduces_economic_revenue() -> Non
 
 
 def test_unknown_provider_event_is_quarantined() -> None:
-    _, _, _, webhook, adapter = workflow_parts()
+    uow, _, _, webhook, adapter = workflow_parts()
     event = ProviderEvent(
         event_id="provider-event-unmatched",
         provider_ref="provider-ref-unknown",
@@ -683,4 +683,17 @@ def test_unknown_provider_event_is_quarantined() -> None:
     result = webhook.process(headers={}, payload=b"unknown")
 
     assert result.status == "unmatched"
-    assert len(webhook._unit_of_work_factory().quarantine.records) if False else True
+    assert uow.quarantine.records == [
+        {
+            "object_type": "payment_provider_event",
+            "object_ref": event.event_id,
+            "reason_code": "provider_payment_unmatched",
+            "payload": {
+                "provider_ref": event.provider_ref,
+                "source_payment_ref": event.event_id.replace(
+                    "event-", "provider-"
+                ) if False else "provider-payment-unknown",
+                "event_type": event.event_type,
+            },
+        }
+    ]
