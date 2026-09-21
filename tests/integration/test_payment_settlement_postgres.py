@@ -20,7 +20,6 @@ from shema_platform.domain.settlement import (
     ReconciliationStatus,
     SettlementLine,
     SettlementRecord,
-    SettlementStatement,
     SettlementStatus,
 )
 from shema_platform.platform.postgres_repositories import (
