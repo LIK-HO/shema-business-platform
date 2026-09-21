@@ -4,7 +4,7 @@
 **Status:** v1.5 Core Maturity Candidate  
 **Current branch:** v1.5/core-maturity  
 **Base:** v1.5-runtime  
-**Current HEAD:** 2224ea7c0032d19bfcd9e5cdaf7d6e489544d207  
+**Current HEAD:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.  
 **Current PR:** #8 — Core Maturity / Migration Safety / Recovery  
 **Kernel baseline:** v1.4 frozen  
 **Runtime baseline:** v1.5.0
@@ -24,6 +24,8 @@
 6. какие принципы считаются архитектурными инвариантами.
 
 После прохождения финальной сертификации зрелости семантика ядра считается frozen. Новые возможности реализуются поверх неё через application workflows, adapters, integrations и experience/product layers.
+
+Работа с GitHub не должна зависеть от памяти предыдущего диалога. Вход в каждый новый development session выполняется по `docs/GITHUB_WORK_PROTOCOL.md`, `docs/DEVELOPMENT_STATE.md` и `AGENTS.md`; текущий branch/HEAD/PR/CI всегда читаются заново из GitHub.
 
 ---
 
@@ -821,6 +823,16 @@ Core изменяется только по доказанному invariant def
 
 ---
 
+## Operational authority
+
+The repository-level operating contract is:
+- `AGENTS.md` — mandatory agent operating rules;
+- `docs/GITHUB_WORK_PROTOCOL.md` — resumable GitHub development protocol;
+- `docs/DEVELOPMENT_STATE.md` — durable interruption cursor;
+- `architecture/development_work_protocol.json` — machine-readable version of the workflow protocol.
+
+The agent must restore these documents before substantive GitHub work. A conversation-memory assumption is never allowed to override the repository state ledger.
+
 ## Authority
 
 Манифест является development-level interpretation of:
@@ -833,5 +845,7 @@ Core изменяется только по доказанному invariant def
 - docs/V1.5_RUNTIME.md
 
 При расхождении документов расхождение считается defect до разрешения.
+
+The current source-tree HEAD is never copied into this manifest as a permanent value. Live GitHub state is authoritative for branch, commit, PR and CI status.
 
 **Новые core semantics не добавляются только потому, что появилась новая feature request.**
