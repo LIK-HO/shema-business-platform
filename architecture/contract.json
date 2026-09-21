@@ -86,7 +86,8 @@
     "iam_authorization_materialization",
     "payment_attempt_send_reservation",
     "provider_event_deduplication",
-    "settlement_reconciliation"
+    "settlement_reconciliation",
+    "payment_outbox_router"
   ],
   "execution_contracts": [
     "permission_then_policy",
@@ -112,7 +113,8 @@
     "payment_attempt_completion_requires_current_lease",
     "provider_event_is_idempotent",
     "settlement_persistence_respects_domain_lifecycle",
-    "reconciliation_discrepancy_is_durable"
+    "reconciliation_discrepancy_is_durable",
+    "payment_outbox_handler_is_explicit"
   ],
   "intelligence": {
     "research_depths": [
