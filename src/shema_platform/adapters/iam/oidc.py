@@ -132,23 +132,23 @@ class OIDCJWTAuthenticator:
     @staticmethod
     def _bearer_token(authorization: str | None) -> str:
         if authorization is None:
-            raise AuthenticationRequired()
-        parts = foundation.authorization.strip().split()
+            raise foundation.authentication.AuthenticationRequired()
+        parts = authorization.strip().split()
         if len(parts) != 2 or parts[0].lower() != "bearer" or not parts[1]:
-            raise AuthenticationRequired()
+            raise foundation.authentication.AuthenticationRequired()
         return parts[1]
 
     @staticmethod
     def _required_string_claim(claims: dict[str, Any], name: str) -> str:
         value = claims.get(name)
         if not isinstance(value, str) or not value.strip():
-            raise AuthenticationRequired()
+            raise foundation.authentication.AuthenticationRequired()
         return value.strip()
 
     def _trust_level(self, claims: dict[str, Any]) -> int:
         value = claims.get(self.configuration.trust_level_claim, 0)
         if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-            raise AuthenticationRequired()
+            raise foundation.authentication.AuthenticationRequired()
         return value
 
     def _permissions(self, claims: dict[str, Any]) -> frozenset[foundation.authorization.Permission]:
@@ -158,14 +158,14 @@ class OIDCJWTAuthenticator:
         elif isinstance(value, (list, tuple, set, frozenset)):
             raw = tuple(value)
         else:
-            raise AuthenticationRequired()
+            raise foundation.authentication.AuthenticationRequired()
 
         permissions: set[foundation.authorization.Permission] = set()
         for item in raw:
             if not isinstance(item, str):
-                raise AuthenticationRequired()
+                raise foundation.authentication.AuthenticationRequired()
             try:
                 permissions.add(foundation.authorization.Permission(item))
             except ValueError:
-                raise AuthenticationRequired() from None
+                raise foundation.authentication.AuthenticationRequired() from None
         return frozenset(permissions)
