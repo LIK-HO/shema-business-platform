@@ -71,7 +71,13 @@ def test_migration_runner_rejects_historical_checksum_drift() -> None:
         drifted = []
         for migration in plan.migrations:
             if migration.version == 1:
-                drifted.append(Migration(migration.version, migration.name, migration.sql + "\n-- drift"))
+                drifted.append(
+                    Migration(
+                        migration.version,
+                        migration.name,
+                        migration.sql + "\n-- drift",
+                    )
+                )
             else:
                 drifted.append(migration)
 
