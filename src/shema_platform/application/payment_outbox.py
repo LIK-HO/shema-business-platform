@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import Protocol
 
-from shema_platform.application.payment_execution import PaymentExecutionWorkflow
-from shema_platform.foundation.errors import PermanentError
+from shema_platform.application.job_runner import PermanentJobError
 from shema_platform.foundation.outbox import OutboxEvent
 
 
@@ -27,20 +25,20 @@ class PaymentOutboxHandler:
 
     def handle(self, event: OutboxEvent) -> object:
         if event.event_type != self.EVENT_TYPE:
-            raise PermanentError(
+            raise PermanentJobError(
                 f"unsupported payment outbox event: {event.event_type}"
             )
         if event.aggregate_type != "payment":
-            raise PermanentError("payment outbox event has invalid aggregate type")
+            raise PermanentJobError("payment outbox event has invalid aggregate type")
 
         payment_id = event.payload.get("payment_id")
         attempt_id = event.payload.get("attempt_id")
         if not isinstance(payment_id, str) or not payment_id.strip():
-            raise PermanentError("payment outbox event is missing payment_id")
+            raise PermanentJobError("payment outbox event is missing payment_id")
         if not isinstance(attempt_id, str) or not attempt_id.strip():
-            raise PermanentError("payment outbox event is missing attempt_id")
+            raise PermanentJobError("payment outbox event is missing attempt_id")
         if event.aggregate_id != payment_id:
-            raise PermanentError("payment outbox aggregate does not match payment_id")
+            raise PermanentJobError("payment outbox aggregate does not match payment_id")
 
         return self._workflow(
             payment_id=payment_id,
