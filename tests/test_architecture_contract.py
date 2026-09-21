@@ -26,6 +26,7 @@ def test_machine_readable_architecture_contract_exists() -> None:
     assert "provider_event" in contract["persistence"]["canonical"]
     assert "settlement_record" in contract["persistence"]["canonical"]
     assert "reconciliation_item" in contract["persistence"]["canonical"]
+    assert "payment_adjustment" in contract["persistence"]["canonical"]
     assert "settlement_line" in contract["persistence"]["canonical"]
     assert "ai_run" in contract["persistence"]["canonical"]
     assert "job_execution" in contract["persistence"]["canonical"]
@@ -105,6 +106,7 @@ def test_database_migrations_are_forward_only_and_declared() -> None:
         "0009_payment_settlement.sql",
         "0010_settlement_lines.sql",
         "0011_settlement_statement_hash.sql",
+        "0012_payment_adjustments.sql",
     ]
     assert "correlation_id" in read("db/migrations/0003_audit_context.sql")
     assert "commercial_action" in read("db/migrations/0004_commercial_execution.sql")
@@ -126,6 +128,7 @@ def test_database_migrations_are_forward_only_and_declared() -> None:
         in read("db/migrations/0010_settlement_lines.sql")
     )
     assert "statement_hash" in read("db/migrations/0011_settlement_statement_hash.sql")
+    assert "create table if not exists payment_adjustment" in read("db/migrations/0012_payment_adjustments.sql")
 
 
 def test_database_migration_contains_foundation_tables() -> None:
