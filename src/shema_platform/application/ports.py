@@ -14,7 +14,11 @@ from shema_platform.domain.payment import (
     ProviderEvent,
 )
 from shema_platform.domain.search import SearchHit
-from shema_platform.domain.settlement import ReconciliationItem, SettlementRecord
+from shema_platform.domain.settlement import (
+    ReconciliationItem,
+    SettlementLine,
+    SettlementRecord,
+)
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.evidence import Evidence
 from shema_platform.foundation.idempotency import IdempotencyRecord
@@ -253,6 +257,10 @@ class SettlementRepository(Protocol):
     def get(self, settlement_id: str) -> SettlementRecord | None: ...
 
     def save(self, settlement: SettlementRecord) -> None: ...
+
+    def add_line(self, line: SettlementLine) -> None: ...
+
+    def list_lines(self, settlement_id: str) -> tuple[SettlementLine, ...]: ...
 
 
 class ReconciliationRepository(Protocol):
