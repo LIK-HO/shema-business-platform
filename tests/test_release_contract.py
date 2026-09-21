@@ -1,7 +1,5 @@
 from pathlib import Path
 
-import pytest
-
 from shema_platform.platform.release import (
     ReleaseContractError,
     validate_release_tree,
@@ -48,5 +46,9 @@ def test_release_tree_fails_when_maturity_gate_set_changes(tmp_path) -> None:
             encoding="utf-8",
         )
 
-    with pytest.raises(ReleaseContractError, match="gates"):
+    try:
         validate_release_tree(tmp_path)
+    except ReleaseContractError as exc:
+        assert "gates" in str(exc)
+    else:
+        raise AssertionError("expected release contract gate failure")
