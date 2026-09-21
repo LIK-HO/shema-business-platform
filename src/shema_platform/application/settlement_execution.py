@@ -248,6 +248,10 @@ class SettlementWorkflow:
             if settlement.status is SettlementStatus.DISCREPANCY:
                 settlement = settlement.resolve_discrepancy()
                 uow.settlements.save(settlement)
+            elif settlement.status is not SettlementStatus.SETTLED:
+                raise IntegrityViolation(
+                    "settlement must be discrepancy or settled before resolution"
+                )
 
             uow.audits.append(
                 AuditRecord(
@@ -275,13 +279,35 @@ class SettlementWorkflow:
 
     def resolve_item(
         self,
-        item: ReconciliationItem,
+        reconciliation_id: str,
+        *,
         resolved_at,
+        actor_id: str = "settlement-operator",
     ) -> ReconciliationItem:
-        if item.status is not ReconciliationStatus.RESOLVED:
-            raise ValueError("resolve_item requires an already-resolved domain item")
         with self._unit_of_work_factory() as uow:
-            return uow.reconciliations.resolve(item)
+            item = uow.reconciliations.get(reconciliation_id)
+            if item is None:
+                raise KeyError(f"unknown reconciliation item: {reconciliation_id}")
+            resolved = item.resolve(resolved_at)
+            resolved = uow.reconciliations.resolve(resolved)
+            uow.audits.append(
+                AuditRecord(
+                    audit_id=str(
+                        uuid5(
+                            NAMESPACE_URL,
+                            f"audit:reconciliation.resolved:{reconciliation_id}",
+                        )
+                    ),
+                    actor_id=actor_id,
+                    action="reconciliation.resolved",
+                    resource_type="reconciliation_item",
+                    resource_id=reconciliation_id,
+                    outcome="resolved",
+                    occurred_at=utc_now(),
+                    metadata={"settlement_id": item.settlement_id},
+                )
+            )
+            return resolved
 
 
 class SettlementStatementVerifier:
