@@ -76,3 +76,18 @@ def test_migration_checksum_is_deterministic() -> None:
 
 def test_migration_integrity_error_is_a_distinct_fail_closed_error() -> None:
     assert issubclass(migrations.MigrationIntegrityError, RuntimeError)
+
+
+def test_application_actor_preserves_verified_permissions() -> None:
+    from shema_platform.application.commands import Actor
+    from shema_platform.foundation.authorization import Permission
+
+    actor = Actor(
+        actor_id="operator-1",
+        trust_level=2,
+        permissions=frozenset({Permission.ORDER_CREATE}),
+    )
+    subject = actor.authorization_subject()
+
+    assert subject.actor_id == "operator-1"
+    assert subject.permissions == frozenset({Permission.ORDER_CREATE})
