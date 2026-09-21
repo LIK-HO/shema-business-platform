@@ -1,5 +1,8 @@
 {
   "version": "1.5-core-maturity",
+  "dependency_boundaries_enforced": true,
+  "external_calls_must_be_outside_uow": true,
+  "release_contract_validation": true,
   "canonical_critical_workflows": [
     "commercial_action_create",
     "order_create"
