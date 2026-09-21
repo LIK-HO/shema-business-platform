@@ -38,7 +38,8 @@
       "provider_event",
       "settlement_record",
       "reconciliation_item",
-      "settlement_line"
+      "settlement_line",
+      "payment_adjustment"
     ],
     "source_observation": [
       "search_candidate"
@@ -57,7 +58,8 @@
       "0008_commercial_send_reservation.sql",
       "0009_payment_settlement.sql",
       "0010_settlement_lines.sql",
-      "0011_settlement_statement_hash.sql"
+      "0011_settlement_statement_hash.sql",
+      "0012_payment_adjustments.sql"
     ]
   },
   "operational_controls": [
@@ -189,7 +191,9 @@
     "settlement_statement_hash_immutable",
     "settlement_line_provider_ref_unique",
     "provider_amount_and_currency_match_payment_intent",
-    "settlement_statement_hash_prevents_replay_or_tamper"
+    "settlement_statement_hash_prevents_replay_or_tamper",
+    "post_payment_adjustments_are_append_only",
+    "cumulative_adjustments_cannot_exceed_captured_payment"
   ],
   "business_loop": [
     "search",
@@ -360,7 +364,12 @@
       "provider_amount_and_currency_must_match_payment_intent",
       "settlement_statement_hash_is_immutable",
       "settlement_line_provider_reference_is_unique_per_settlement",
-      "settlement_cannot_close_with_open_reconciliation_items"
+      "settlement_cannot_close_with_open_reconciliation_items",
+      "refunds_are_separate_from_original_payment_truth",
+      "reversals_are_separate_from_original_payment_truth",
+      "chargebacks_are_separate_from_original_payment_truth",
+      "provider_adjustment_event_is_idempotent_by_immutable_event_id",
+      "cumulative_adjustment_amount_cannot_exceed_captured_payment"
     ],
     "reconciliation_priority": [
       "immutable_provider_payment_reference",
@@ -386,7 +395,10 @@
       "production_provider_merchant_account_webhook_and_reconciliation_procedure",
       "settlement_statement_hash_tamper_test",
       "open_discrepancy_blocks_settlement_close",
-      "resolved_discrepancy_closure_test"
+      "resolved_discrepancy_closure_test",
+      "refund_reversal_chargeback_integration_tests",
+      "duplicate_adjustment_event_test",
+      "cumulative_adjustment_limit_test"
     ]
   }
 }
