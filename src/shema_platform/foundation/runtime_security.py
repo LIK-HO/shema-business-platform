@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
@@ -16,6 +18,17 @@ class RuntimeSecurityConfiguration:
     oidc_audience: str | None
     oidc_jwks_url: str | None
     database_url: str | None
+
+    @classmethod
+    def from_environment(cls, *, docs_enabled: bool) -> "RuntimeSecurityConfiguration":
+        return cls(
+            environment=os.getenv("APP_ENV", "development").strip().lower(),
+            docs_enabled=docs_enabled,
+            oidc_issuer=os.getenv("OIDC_ISSUER"),
+            oidc_audience=os.getenv("OIDC_AUDIENCE"),
+            oidc_jwks_url=os.getenv("OIDC_JWKS_URL"),
+            database_url=os.getenv("DATABASE_URL"),
+        )
 
     def validate(self) -> tuple[str, ...]:
         if self.environment != "production":
