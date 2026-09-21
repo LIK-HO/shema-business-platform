@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from shema_platform.application.commands import Actor
-from shema_platform.application.ports import IdempotencyRepository
 from shema_platform.domain.commercial_action import CommercialAction, CommercialActionStatus
 from shema_platform.domain.order import Order, OrderLine
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
@@ -18,11 +17,9 @@ class OrderService:
         self,
         authorizer: RBACAuthorizer,
         policy: PolicyEngine,
-        idempotency: IdempotencyRepository,
     ) -> None:
         self._authorizer = authorizer
         self._policy = policy
-        self._idempotency = idempotency
 
     def create_from_action(
         self,
@@ -32,7 +29,6 @@ class OrderService:
         action: CommercialAction,
         lines: Sequence[OrderLine],
         request_hash: str,
-        idempotency_key: str | None = None,
     ) -> Order:
         self._authorizer.require(actor.actor_id, Permission.ORDER_CREATE)
 
@@ -65,10 +61,5 @@ class OrderService:
             identity_id=action.identity_id,
             source_action_id=action.action_id,
             lines=tuple(lines),
-        )
-        self._idempotency.reserve(
-            key=idempotency_key or order_id,
-            request_hash=request_hash,
-            result_ref=order_id,
         )
         return order
