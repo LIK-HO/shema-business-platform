@@ -335,8 +335,11 @@ class SettlementStatementVerifier:
             headers=headers,
             payload=payload,
         )
-        if not statement.statement_hash:
-            raise IntegrityViolation("settlement statement has no hash")
+        expected_hash = statement_hash(payload)
+        if statement.statement_hash != expected_hash:
+            raise IntegrityViolation(
+                "settlement statement hash does not match received payload"
+            )
         return statement
 
 
