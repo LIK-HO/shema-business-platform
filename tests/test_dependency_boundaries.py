@@ -1,9 +1,5 @@
 import ast
-from pathlib import Path
-
-
-ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src" / "shema_platform"
+import pathlib
 
 FORBIDDEN_CORE_IMPORTS = {
     "application",
@@ -12,8 +8,11 @@ FORBIDDEN_CORE_IMPORTS = {
     "platform",
 }
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+SRC = ROOT / "src" / "shema_platform"
 
-def imported_modules(path: Path) -> set[str]:
+
+def imported_modules(path: pathlib.Path) -> set[str]:
     tree = ast.parse(path.read_text(encoding="utf-8"))
     modules: set[str] = set()
 
