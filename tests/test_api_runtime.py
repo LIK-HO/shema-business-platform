@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 
+import shema_platform.foundation.telemetry as telemetry
+
 from shema_platform.experience.api import (
     APIApplication,
     RequestContext,
@@ -125,7 +127,7 @@ def client(application: APIApplication | None = None) -> TestClient:
 
 
 def test_runtime_api_emits_redacted_telemetry() -> None:
-    telemetry = InMemoryTelemetrySink()
+    telemetry = telemetry.InMemoryTelemetrySink()
 
     response = TestClient(
         create_app(FakeApplication(), FakeAuthenticator(), telemetry=telemetry)
