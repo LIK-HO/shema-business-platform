@@ -6,8 +6,11 @@ from typing import Any, Protocol
 import jwt
 from jwt import PyJWKClient, PyJWTError
 
-from ...foundation.authentication import AuthenticatedActor, AuthenticationRequired
-from ...foundation.authorization import Permission
+from shema_platform.foundation.authentication import (
+    AuthenticatedActor,
+    AuthenticationRequired,
+)
+from shema_platform.foundation.authorization import Permission
 
 
 _SAFE_ASYMMETRIC_ALGORITHMS = frozenset(
