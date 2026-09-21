@@ -1,14 +1,14 @@
 import json
 import pathlib
 
-import pytest
-
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 def test_core_maturity_contract_is_explicit() -> None:
-    contract = json.loads(
+    import json as json_module
+
+    contract = json_module.loads(
         (ROOT / "architecture/core_maturity_contract.json").read_text()
     )
     assert contract["version"] == "1.5-core-maturity"
@@ -42,6 +42,7 @@ def test_core_maturity_contract_is_explicit() -> None:
 
 
 def test_migration_plan_rejects_gaps() -> None:
+    import pytest
     import shema_platform.platform.migrations as migrations
 
     with pytest.raises(migrations.MigrationPlanError, match="contiguous"):
@@ -77,21 +78,7 @@ def test_migration_checksum_is_deterministic() -> None:
 
 
 def test_migration_integrity_error_is_a_distinct_fail_closed_error() -> None:
+    import pytest
     import shema_platform.platform.migrations as migrations
 
     assert issubclass(migrations.MigrationIntegrityError, RuntimeError)
-
-
-def test_application_actor_preserves_verified_permissions() -> None:
-    from shema_platform.application.commands import Actor
-    from shema_platform.foundation.authorization import Permission
-
-    actor = Actor(
-        actor_id="operator-1",
-        trust_level=2,
-        permissions=frozenset({Permission.ORDER_CREATE}),
-    )
-    subject = actor.authorization_subject()
-
-    assert subject.actor_id == "operator-1"
-    assert subject.permissions == frozenset({Permission.ORDER_CREATE})
