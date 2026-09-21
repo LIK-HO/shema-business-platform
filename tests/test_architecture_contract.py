@@ -128,7 +128,10 @@ def test_database_migrations_are_forward_only_and_declared() -> None:
         in read("db/migrations/0010_settlement_lines.sql")
     )
     assert "statement_hash" in read("db/migrations/0011_settlement_statement_hash.sql")
-    assert "create table if not exists payment_adjustment" in read("db/migrations/0012_payment_adjustments.sql")
+    assert (
+        "create table if not exists payment_adjustment"
+        in read("db/migrations/0012_payment_adjustments.sql")
+    )
 
 
 def test_database_migration_contains_foundation_tables() -> None:
