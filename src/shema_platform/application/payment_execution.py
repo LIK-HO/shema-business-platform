@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from hashlib import sha256
 from typing import Protocol
-from uuid import NAMESPACE_URL, uuid4, uuid5
+from uuid import NAMESPACE_URL, uuid5
 
 from shema_platform.application.commands import Actor
 from shema_platform.application.ports import UnitOfWork
@@ -17,6 +17,7 @@ from shema_platform.domain.payment import (
     PaymentIntent,
     PaymentIntentStatus,
     ProviderEvent,
+    ProviderEventStatus,
 )
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
@@ -296,8 +297,7 @@ class PaymentExecutionWorkflow:
             sending = uow.payment_attempts.claim_for_send(
                 attempt_id,
                 self._worker_id,
-                lease_until=now.replace(microsecond=0)
-                + __import__("datetime").timedelta(seconds=self.SEND_LEASE_SECONDS),
+                lease_until=now + timedelta(seconds=self.SEND_LEASE_SECONDS),
                 now=now,
             )
 
@@ -539,10 +539,7 @@ class PaymentWebhookWorkflow:
 
             uow.provider_events.mark_processed(
                 event.event_id,
-                status=__import__(
-                    "shema_platform.domain.payment",
-                    fromlist=["ProviderEventStatus"],
-                ).ProviderEventStatus.PROCESSED,
+                status=ProviderEventStatus.PROCESSED,
                 processed_at=utc_now(),
             )
             uow.audits.append(
