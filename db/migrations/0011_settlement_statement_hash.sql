@@ -2,7 +2,8 @@ alter table settlement_record
     add column if not exists statement_hash text;
 
 update settlement_record
-set statement_hash = coalesce(statement_hash, provider_settlement_ref);
+set statement_hash = 'legacy:' || provider_settlement_ref
+where statement_hash is null;
 
 alter table settlement_record
     alter column statement_hash set not null;
