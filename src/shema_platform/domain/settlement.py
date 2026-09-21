@@ -23,6 +23,7 @@ class ReconciliationStatus(StrEnum):
 class SettlementRecord:
     settlement_id: str
     provider_settlement_ref: str
+    statement_hash: str
     gross: Money
     fees: Money
     net: Money
@@ -65,6 +66,7 @@ class SettlementRecord:
         return SettlementRecord(
             settlement_id=self.settlement_id,
             provider_settlement_ref=self.provider_settlement_ref,
+            statement_hash=self.statement_hash,
             gross=self.gross,
             fees=self.fees,
             net=self.net,
@@ -152,6 +154,8 @@ class SettlementStatement:
             raise ValueError("statement_id is required")
         if not self.provider_settlement_ref.strip():
             raise ValueError("provider_settlement_ref is required")
+        if not self.statement_hash.strip():
+            raise ValueError("statement_hash is required")
         if not self.statement_hash.strip():
             raise ValueError("statement_hash is required")
         if not self.lines:
