@@ -1605,6 +1605,59 @@ class PostgresPaymentAttemptRepository(PaymentAttemptRepository):
             )
         return self._to_attempt(row)
 
+    def apply_provider_result(
+        self,
+        attempt_id: str,
+        *,
+        status: PaymentAttemptStatus,
+        provider_ref: str | None,
+    ) -> PaymentAttempt:
+        if status not in {
+            PaymentAttemptStatus.PENDING,
+            PaymentAttemptStatus.SUCCEEDED,
+            PaymentAttemptStatus.FAILED,
+        }:
+            raise ValueError("invalid provider result state")
+
+        cursor = self._connection.execute(
+            """
+            update payment_attempt
+            set status = %s,
+                provider_ref = coalesce(%s, provider_ref),
+                send_worker_id = null,
+                send_lease_until = null,
+                updated_at = now()
+            where attempt_id = %s
+              and status not in ('succeeded', 'failed', 'expired')
+            returning
+                attempt_id,
+                payment_id,
+                attempt_number,
+                external_idempotency_key,
+                status,
+                provider_ref,
+                send_worker_id,
+                send_lease_until
+            """,
+            (status.value, provider_ref, attempt_id),
+        )
+        row = cursor.fetchone()
+        if row is not None:
+            return self._to_attempt(row)
+
+        existing = self.get(attempt_id)
+        if existing is None:
+            raise KeyError(f"unknown payment attempt: {attempt_id}")
+        if existing.status is status:
+            return existing
+        if existing.status in {
+            PaymentAttemptStatus.SUCCEEDED,
+            PaymentAttemptStatus.FAILED,
+            PaymentAttemptStatus.EXPIRED,
+        }:
+            return existing
+        raise IntegrityViolation("provider result could not be applied")
+
     @staticmethod
     def _to_attempt(row: tuple[object, ...]) -> PaymentAttempt:
         (
