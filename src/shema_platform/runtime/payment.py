@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from shema_platform.application.outbox_router import OutboxHandlerRouter
 from shema_platform.application.payment_execution import (
     PaymentCreationWorkflow,
     PaymentExecutionWorkflow,
@@ -16,7 +17,6 @@ from shema_platform.application.settlement_execution import (
     SettlementStatementVerifier,
     SettlementWorkflow,
 )
-from shema_platform.application.outbox_router import OutboxHandlerRouter
 from shema_platform.runtime.outbox import build_outbox_router
 from shema_platform.runtime.providers import ProviderRegistry
 
