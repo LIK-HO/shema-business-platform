@@ -1,9 +1,8 @@
 from datetime import UTC, datetime, timedelta
 
 from shema_platform.application.job_runner import JobHandlerRegistry, JobRunner, RetryableJobError
-from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.jobs import JobExecution, JobLease, JobRecord, JobState
-from shema_platform.foundation.outbox import OutboxDelivery, OutboxEvent
+from shema_platform.foundation.outbox import OutboxDelivery, OutboxEvent, OutboxStatus
 from shema_platform.foundation.recovery import RetryPolicy
 
 
@@ -61,6 +60,11 @@ class DrillOutbox:
     def __init__(self, event: OutboxEvent) -> None:
         self.events = {event.event_id: event}
         self.leases = {}
+        self.appended = []
+
+    def append(self, event: OutboxEvent) -> OutboxEvent:
+        self.appended.append(event)
+        return event
 
     def claim_pending(
         self, worker_id: str, *, lease_seconds: int, now: datetime, limit: int
@@ -69,7 +73,7 @@ class DrillOutbox:
             return ()
         event = self.events["event-drill"]
         lease = self.leases.get(event.event_id)
-        if event.status.value != "pending":
+        if event.status is not OutboxStatus.PENDING:
             return ()
         if lease is not None and lease.lease_until > now:
             return ()
@@ -81,6 +85,9 @@ class DrillOutbox:
         )
         self.leases[event.event_id] = delivery
         return (delivery,)
+
+    def pending(self):
+        return tuple(event for event in self.events.values() if event.status is OutboxStatus.PENDING)
 
     def mark_published(self, event_id: str, worker_id: str, *, now: datetime):
         delivery = self.leases[event_id]
@@ -94,18 +101,35 @@ class DrillOutbox:
             event.aggregate_id,
             event.payload,
             event.occurred_at,
-            event.status.__class__.PUBLISHED,
+            OutboxStatus.PUBLISHED,
         )
         self.events[event_id] = published
         del self.leases[event_id]
         return published
 
 
+class DrillAudits:
+    def __init__(self) -> None:
+        self.records = []
+
+    def append(self, record) -> None:
+        self.records.append(record)
+
+
 class DrillUoW:
-    def __init__(self, jobs=None, outbox=None):
+    def __init__(self, jobs):
         self.jobs = jobs
-        self.outbox = outbox
-        self.audits = []
+        self.outbox = DrillOutbox(
+            OutboxEvent(
+                event_id="seed",
+                event_type="seed",
+                aggregate_type="drill",
+                aggregate_id="seed",
+                payload={},
+                occurred_at=datetime.now(UTC),
+            )
+        )
+        self.audits = DrillAudits()
 
     def __enter__(self):
         return self
@@ -116,7 +140,7 @@ class DrillUoW:
 
 def test_job_retry_drill_converges_without_duplicate_side_effect() -> None:
     jobs = DrillJobs()
-    uow = DrillUoW(jobs=jobs)
+    uow = DrillUoW(jobs)
     effects = set()
     failed_once = {"value": False}
 
@@ -128,11 +152,8 @@ def test_job_retry_drill_converges_without_duplicate_side_effect() -> None:
             raise RetryableJobError("crash after side effect")
         return {"ok": True}
 
-    def factory():
-        return uow
-
     runner = JobRunner(
-        factory,
+        lambda: uow,
         JobHandlerRegistry({"drill.job": handler}),
         RetryPolicy(max_attempts=3, initial_delay_seconds=1, max_delay_seconds=4),
         worker_id="worker-drill",
@@ -158,23 +179,21 @@ def test_outbox_publish_crash_drill_reclaims_same_event() -> None:
         occurred_at=datetime.now(UTC),
     )
     outbox = DrillOutbox(event)
-    first_side_effects = []
-    second_side_effects = []
-
     start = datetime.now(UTC)
+
     first_claim = outbox.claim_pending(
         "worker-1", lease_seconds=10, now=start, limit=1
     )[0]
-    first_side_effects.append(first_claim.event.event_id)
+    published_externally = [first_claim.event.event_id]
 
     reclaimed = outbox.claim_pending(
         "worker-2", lease_seconds=10, now=start + timedelta(seconds=10), limit=1
     )[0]
-    second_side_effects.append(reclaimed.event.event_id)
+    retried_externally = [reclaimed.event.event_id]
 
-    assert first_side_effects == second_side_effects
+    assert published_externally == retried_externally
     assert reclaimed.attempt == 2
     published = outbox.mark_published(
         event.event_id, "worker-2", now=start + timedelta(seconds=11)
     )
-    assert published.status.value == "published"
+    assert published.status is OutboxStatus.PUBLISHED
