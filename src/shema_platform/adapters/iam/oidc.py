@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import dataclasses
-import typing
+from dataclasses import dataclass
+from typing import Any, Protocol
 
 import jwt
 from jwt import PyJWKClient, PyJWTError
 
-import shema_platform.foundation.authentication as authentication
-import shema_platform.foundation.authorization as authorization
+from ...foundation.authentication import AuthenticatedActor, AuthenticationRequired
+from ...foundation.authorization import Permission
 
 
 _SAFE_ASYMMETRIC_ALGORITHMS = frozenset(
@@ -26,13 +26,13 @@ _SAFE_ASYMMETRIC_ALGORITHMS = frozenset(
 )
 
 
-class SigningKeyProvider(typing.Protocol):
-    """Resolves a verified issuer signing key without exposing IAM to the domain."""
+class SigningKeyProvider(Protocol):
+    """Resolve an approved issuer signing key."""
 
-    def signing_key(self, token: str) -> typing.Any: ...
+    def signing_key(self, token: str) -> Any: ...
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True)
 class OIDCConfiguration:
     issuer: str
     audience: str
@@ -80,11 +80,11 @@ class PyJWTSigningKeyProvider:
             max_cached_keys=16,
         )
 
-    def signing_key(self, token: str) -> typing.Any:
+    def signing_key(self, token: str) -> Any:
         return self._client.get_signing_key_from_jwt(token).key
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True)
 class OIDCJWTAuthenticator:
     """Provider-neutral OIDC JWT verifier at the runtime adapter boundary."""
 
@@ -101,7 +101,7 @@ class OIDCJWTAuthenticator:
             ),
         )
 
-    def authenticate(self, authorization: str | None) -> authentication.AuthenticatedActor:
+    def authenticate(self, authorization: str | None) -> AuthenticatedActor:
         token = self._bearer_token(authorization)
         try:
             signing_key = self.key_provider.signing_key(token)
@@ -115,7 +115,7 @@ class OIDCJWTAuthenticator:
                 options={"require": ["exp", self.configuration.actor_id_claim]},
             )
         except (PyJWTError, ValueError, TypeError):
-            raise authentication.AuthenticationRequired() from None
+            raise AuthenticationRequired() from None
 
         actor_id = self._required_string_claim(
             claims,
@@ -124,7 +124,7 @@ class OIDCJWTAuthenticator:
         trust_level = self._trust_level(claims)
         permissions = self._permissions(claims)
 
-        return authentication.AuthenticatedActor(
+        return AuthenticatedActor(
             actor_id=actor_id,
             trust_level=trust_level,
             permissions=permissions,
@@ -133,46 +133,40 @@ class OIDCJWTAuthenticator:
     @staticmethod
     def _bearer_token(authorization: str | None) -> str:
         if authorization is None:
-            raise authentication.AuthenticationRequired()
+            raise AuthenticationRequired()
         parts = authorization.strip().split()
         if len(parts) != 2 or parts[0].lower() != "bearer" or not parts[1]:
-            raise authentication.AuthenticationRequired()
+            raise AuthenticationRequired()
         return parts[1]
 
     @staticmethod
-    def _required_string_claim(
-        claims: dict[str, typing.Any],
-        name: str,
-    ) -> str:
+    def _required_string_claim(claims: dict[str, Any], name: str) -> str:
         value = claims.get(name)
         if not isinstance(value, str) or not value.strip():
-            raise authentication.AuthenticationRequired()
+            raise AuthenticationRequired()
         return value.strip()
 
-    def _trust_level(self, claims: dict[str, typing.Any]) -> int:
+    def _trust_level(self, claims: dict[str, Any]) -> int:
         value = claims.get(self.configuration.trust_level_claim, 0)
         if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-            raise authentication.AuthenticationRequired()
+            raise AuthenticationRequired()
         return value
 
-    def _permissions(
-        self,
-        claims: dict[str, typing.Any],
-    ) -> frozenset[authorization.Permission]:
+    def _permissions(self, claims: dict[str, Any]) -> frozenset[Permission]:
         value = claims.get(self.configuration.permissions_claim, ())
         if isinstance(value, str):
             raw = tuple(item for item in value.split() if item)
         elif isinstance(value, (list, tuple, set, frozenset)):
             raw = tuple(value)
         else:
-            raise authentication.AuthenticationRequired()
+            raise AuthenticationRequired()
 
-        permissions: set[authorization.Permission] = set()
+        permissions: set[Permission] = set()
         for item in raw:
             if not isinstance(item, str):
-                raise authentication.AuthenticationRequired()
+                raise AuthenticationRequired()
             try:
-                permissions.add(authorization.Permission(item))
+                permissions.add(Permission(item))
             except ValueError:
-                raise authentication.AuthenticationRequired() from None
+                raise AuthenticationRequired() from None
         return frozenset(permissions)
