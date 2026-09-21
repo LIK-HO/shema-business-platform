@@ -63,7 +63,7 @@ def prepare_database(connection: psycopg.Connection) -> None:
 
 
 def test_postgres_transaction_rollback_restores_database_truth() -> None:
-    identity_id = f"rollback:{uuid4()}"
+    identity_id = str(uuid4())
     tax_id = str(uuid4().int % 10_000_000_000).zfill(10)
 
     with psycopg.connect(DATABASE_URL) as connection:
