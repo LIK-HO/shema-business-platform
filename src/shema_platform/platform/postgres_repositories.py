@@ -1912,7 +1912,11 @@ class PostgresSettlementRepository(SettlementRepository):
             try:
                 expected = {
                     SettlementStatus.RECONCILING: current.begin_reconciliation,
-                    SettlementStatus.SETTLED: current.settle,
+                    SettlementStatus.SETTLED: (
+                        current.settle
+                        if current.status is SettlementStatus.RECONCILING
+                        else current.resolve_discrepancy
+                    ),
                     SettlementStatus.DISCREPANCY: current.mark_discrepancy,
                 }.get(settlement.status)
                 if expected is None or expected() != settlement:
@@ -1932,6 +1936,58 @@ class PostgresSettlementRepository(SettlementRepository):
             """,
             (settlement.status.value, settlement.settlement_id),
         )
+
+    def add_line(self, line: SettlementLine) -> None:
+        self._connection.execute(
+            """
+            insert into settlement_line (
+                line_id,
+                settlement_id,
+                provider_ref,
+                amount,
+                currency,
+                statement_ref
+            )
+            values (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                line.line_id,
+                line.settlement_id,
+                line.provider_ref,
+                line.amount.amount,
+                line.amount.currency,
+                line.statement_ref,
+            ),
+        )
+
+    def list_lines(self, settlement_id: str) -> tuple[SettlementLine, ...]:
+        cursor = self._connection.execute(
+            """
+            select line_id, settlement_id, provider_ref, amount, currency, statement_ref
+            from settlement_line
+            where settlement_id = %s
+            order by line_id
+            """,
+            (settlement_id,),
+        )
+        return tuple(
+            SettlementLine(
+                line_id=str(line_id),
+                settlement_id=str(stored_settlement_id),
+                provider_ref=str(provider_ref),
+                amount=Money(amount, str(currency)),
+                statement_ref=str(statement_ref),
+            )
+            for (
+                line_id,
+                stored_settlement_id,
+                provider_ref,
+                amount,
+                currency,
+                statement_ref,
+            ) in cursor.fetchall()
+        )
+
 
     @staticmethod
     def _to_settlement(row: tuple[object, ...]) -> SettlementRecord:
