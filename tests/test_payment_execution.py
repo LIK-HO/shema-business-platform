@@ -28,6 +28,10 @@ from shema_platform.domain.payment import (
     ProviderEvent,
     ProviderEventStatus,
 )
+from shema_platform.domain.payment_adjustment import (
+    PaymentAdjustment,
+    PaymentAdjustmentKind,
+)
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import (
     AuthorizationSubject,
@@ -162,6 +166,49 @@ class MemoryAttempts:
 
 
 @dataclass
+class MemoryPaymentAdjustments:
+    adjustments: dict[str, PaymentAdjustment] = field(default_factory=dict)
+
+    def add(self, adjustment: PaymentAdjustment) -> None:
+        existing = self.adjustments.get(adjustment.provider_event_id)
+        if existing is not None and existing != adjustment:
+            raise RuntimeError("payment adjustment conflict")
+        self.adjustments[adjustment.provider_event_id] = adjustment
+
+    def get_by_provider_event(
+        self,
+        provider_event_id: str,
+    ) -> PaymentAdjustment | None:
+        return self.adjustments.get(provider_event_id)
+
+    def find_by_provider_ref(
+        self,
+        provider_ref: str,
+    ) -> PaymentAdjustment | None:
+        return next(
+            (
+                adjustment
+                for adjustment in self.adjustments.values()
+                if adjustment.provider_ref == provider_ref
+            ),
+            None,
+        )
+
+    def total_for_payment(self, payment_id: str) -> Money:
+        amounts = [
+            adjustment.amount
+            for adjustment in self.adjustments.values()
+            if adjustment.payment_id == payment_id
+        ]
+        if not amounts:
+            return Money(0, "RUB")
+        total = Money(0, amounts[0].currency)
+        for amount in amounts:
+            total = total.add(amount)
+        return total
+
+
+@dataclass
 class MemoryProviderEvents:
     events: dict[str, ProviderEvent] = field(default_factory=dict)
 
@@ -220,6 +267,7 @@ class MemoryUow:
     payments: MemoryPayments
     payment_attempts: MemoryAttempts
     provider_events: MemoryProviderEvents
+    payment_adjustments: MemoryPaymentAdjustments
     economics: MemoryEconomics
     idempotency: IdempotencyStore = field(default_factory=IdempotencyStore)
     outbox: OutboxStore = field(default_factory=OutboxStore)
@@ -298,6 +346,7 @@ def workflow_parts(
         payments=MemoryPayments(),
         payment_attempts=MemoryAttempts(),
         provider_events=MemoryProviderEvents(),
+        payment_adjustments=MemoryPaymentAdjustments(),
         economics=MemoryEconomics(),
     )
     uow.orders.add(order or make_order())
@@ -535,3 +584,53 @@ def test_payment_gateway_rejects_provider_amount_mismatch() -> None:
 
     with pytest.raises(Exception, match="amount"):
         gateway.create_payment(payment, attempt)
+
+
+def test_payment_adjustment_is_append_only_and_reduces_economic_revenue() -> None:
+    uow, creation, _, webhook, adapter = workflow_parts()
+    created = creation.create(
+        actor=Actor("operator-1", trust_level=2),
+        order_id="order-1",
+        idempotency_key="payment-key-adjustment",
+    )
+    attempt_id = next(iter(uow.payment_attempts.attempts))
+    uow.payment_attempts.apply_provider_result(
+        attempt_id,
+        status=PaymentAttemptStatus.SUCCEEDED,
+        provider_ref="provider-payment-adjustment",
+    )
+    payment = uow.payments.get(created.payment_id)
+    assert payment is not None
+    payment = payment.succeed()
+    uow.payments.save(payment)
+
+    event = ProviderEvent(
+        event_id="provider-adjustment-event-1",
+        provider_ref="provider-refund-1",
+        event_type="payment.refund",
+        signature_verified=True,
+        payload_hash="sha256:refund",
+        received_at=datetime.now(UTC),
+    )
+    adapter.webhook = VerifiedPaymentEvent(
+        event=event,
+        amount=Money(500, "RUB"),
+        adjustment_kind=PaymentAdjustmentKind.REFUND,
+    )
+
+    first = webhook.process(headers={}, payload=b"refund")
+    second = webhook.process(headers={}, payload=b"refund")
+
+    assert first.status == PaymentAdjustmentKind.REFUND.value
+    assert second.status == "duplicate"
+    adjustment = uow.payment_adjustments.get_by_provider_event(event.event_id)
+    assert adjustment is not None
+    assert adjustment.kind is PaymentAdjustmentKind.REFUND
+    assert adjustment.amount == Money(500, "RUB")
+    adjustment_entries = [
+        entry
+        for entry in uow.economics.entries
+        if entry.kind is EconomicKind.ADJUSTMENT
+    ]
+    assert len(adjustment_entries) == 1
+    assert adjustment_entries[0].amount == Money(-500, "RUB")
