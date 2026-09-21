@@ -1,12 +1,17 @@
-import pathlib
+from pathlib import Path
+
+import pytest
+
+from shema_platform.platform.release import (
+    ReleaseContractError,
+    validate_release_tree,
+)
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_release_tree_matches_current_core_baseline() -> None:
-    from shema_platform.platform.release import validate_release_tree
-
     manifest = validate_release_tree(ROOT)
 
     assert manifest.application_version == "1.5.0"
@@ -16,9 +21,6 @@ def test_release_tree_matches_current_core_baseline() -> None:
 
 
 def test_release_tree_fails_when_maturity_gate_set_changes(tmp_path) -> None:
-    import pytest
-    from shema_platform.platform.release import ReleaseContractError, validate_release_tree
-
     for source in (
         "architecture/contract.json",
         "architecture/core_maturity_contract.json",
@@ -34,7 +36,8 @@ def test_release_tree_fails_when_maturity_gate_set_changes(tmp_path) -> None:
     contract = tmp_path / "architecture" / "core_maturity_contract.json"
     text = contract.read_text(encoding="utf-8").replace(
         '"release_safety",',
-        '"release_safety",\n        "unexpected_gate",',
+        '"release_safety",
+        "unexpected_gate",',
     )
     contract.write_text(text, encoding="utf-8")
 
