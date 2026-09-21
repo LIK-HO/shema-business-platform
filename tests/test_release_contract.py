@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from shema_platform.platform.release import (
@@ -31,11 +32,9 @@ def test_release_tree_fails_when_maturity_gate_set_changes(tmp_path) -> None:
         )
 
     contract = tmp_path / "architecture" / "core_maturity_contract.json"
-    text = contract.read_text(encoding="utf-8").replace(
-        '"release_safety",',
-        '"release_safety",\n        "unexpected_gate",',
-    )
-    contract.write_text(text, encoding="utf-8")
+    payload = json.loads(contract.read_text(encoding="utf-8"))
+    payload["maturity_gates"].append("unexpected_gate")
+    contract.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     migrations = tmp_path / "db" / "migrations"
     migrations.mkdir(parents=True)
