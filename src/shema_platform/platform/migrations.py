@@ -124,6 +124,21 @@ class MigrationRunner:
                 for version, name, checksum in applied_rows
             }
 
+            applied_versions = sorted(applied)
+            if applied_versions:
+                expected_versions = list(range(1, applied_versions[-1] + 1))
+                if applied_versions != expected_versions:
+                    raise MigrationIntegrityError(
+                        "applied migration ledger contains a version gap"
+                    )
+                plan_versions = {migration.version for migration in self._plan.migrations}
+                unknown_versions = set(applied_versions) - plan_versions
+                if unknown_versions:
+                    raise MigrationIntegrityError(
+                        "applied migration is missing from current plan: "
+                        + ", ".join(str(version) for version in sorted(unknown_versions))
+                    )
+
             applied_now: list[int] = []
             for migration in self._plan.migrations:
                 existing = applied.get(migration.version)
