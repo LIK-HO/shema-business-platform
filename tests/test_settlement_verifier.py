@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from hashlib import sha256
-from dataclasses import dataclass
 
 import pytest
 
