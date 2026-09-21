@@ -1,14 +1,16 @@
 import json
-import pathlib
+from pathlib import Path
+
+import pytest
+
+from shema_platform.platform import migrations
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_core_maturity_contract_is_explicit() -> None:
-    import json as json_module
-
-    contract = json_module.loads(
+    contract = json.loads(
         (ROOT / "architecture/core_maturity_contract.json").read_text()
     )
     assert contract["version"] == "1.5-core-maturity"
@@ -42,9 +44,6 @@ def test_core_maturity_contract_is_explicit() -> None:
 
 
 def test_migration_plan_rejects_gaps() -> None:
-    import pytest
-    import shema_platform.platform.migrations as migrations
-
     with pytest.raises(migrations.MigrationPlanError, match="contiguous"):
         migrations.MigrationPlan(
             (
@@ -63,8 +62,6 @@ def test_migration_plan_rejects_gaps() -> None:
 
 
 def test_migration_checksum_is_deterministic() -> None:
-    import shema_platform.platform.migrations as migrations
-
     migration = migrations.Migration(
         1,
         "foundation",
@@ -78,7 +75,4 @@ def test_migration_checksum_is_deterministic() -> None:
 
 
 def test_migration_integrity_error_is_a_distinct_fail_closed_error() -> None:
-    import pytest
-    import shema_platform.platform.migrations as migrations
-
     assert issubclass(migrations.MigrationIntegrityError, RuntimeError)
