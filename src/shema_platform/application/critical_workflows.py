@@ -43,10 +43,11 @@ class CommercialActionCreateWorkflow:
         channel: str,
         evidence_refs: tuple[str, ...],
         request_hash: str,
+        idempotency_key: str,
         correlation_id: str | None = None,
     ) -> CommercialAction:
         with self._unit_of_work_factory() as uow:
-            existing = uow.idempotency.get(action_id)
+            existing = uow.idempotency.get(idempotency_key)
             if existing is not None:
                 if existing.request_hash != request_hash:
                     raise IdempotencyConflict(
@@ -76,6 +77,7 @@ class CommercialActionCreateWorkflow:
                 channel=channel,
                 evidence_refs=evidence_refs,
                 request_hash=request_hash,
+                idempotency_key=idempotency_key,
             )
             uow.commercial_actions.add(action)
 
@@ -136,10 +138,11 @@ class OrderCreateWorkflow:
         action_id: str,
         lines: Sequence[OrderLine],
         request_hash: str,
+        idempotency_key: str,
         correlation_id: str | None = None,
     ) -> Order:
         with self._unit_of_work_factory() as uow:
-            existing = uow.idempotency.get(order_id)
+            existing = uow.idempotency.get(idempotency_key)
             if existing is not None:
                 if existing.request_hash != request_hash:
                     raise IdempotencyConflict(
@@ -167,6 +170,7 @@ class OrderCreateWorkflow:
                 action=action,
                 lines=tuple(lines),
                 request_hash=request_hash,
+                idempotency_key=idempotency_key,
             )
             uow.orders.add(order)
 
