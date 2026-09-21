@@ -30,6 +30,7 @@ from shema_platform.foundation.authentication import (
     AuthenticationPort,
     AuthenticationRequired,
 )
+from shema_platform.foundation.authorization import AuthorizationSubject, Permission
 from shema_platform.foundation.errors import (
     AuthorizationError,
     IdempotencyConflict,
@@ -48,7 +49,13 @@ class RequestContext:
     actor_id: str
     trust_level: int
     idempotency_key: str | None
-    permissions: frozenset = frozenset()
+    permissions: frozenset[Permission] = frozenset()
+
+    def authorization_subject(self) -> AuthorizationSubject:
+        return AuthorizationSubject.from_actor(
+            actor_id=self.actor_id,
+            permissions=self.permissions,
+        )
 
 
 class APIApplication(Protocol):
