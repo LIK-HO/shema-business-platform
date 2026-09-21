@@ -1,7 +1,6 @@
 import json
 import pathlib
 
-import pytest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -42,6 +41,7 @@ def test_core_maturity_contract_is_explicit() -> None:
 
 
 def test_migration_plan_rejects_gaps() -> None:
+    import pytest
     import shema_platform.platform.migrations as migrations
 
     with pytest.raises(migrations.MigrationPlanError, match="contiguous"):
@@ -77,6 +77,7 @@ def test_migration_checksum_is_deterministic() -> None:
 
 
 def test_migration_integrity_error_is_a_distinct_fail_closed_error() -> None:
+    import pytest
     import shema_platform.platform.migrations as migrations
 
     assert issubclass(migrations.MigrationIntegrityError, RuntimeError)
