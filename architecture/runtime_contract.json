@@ -20,6 +20,7 @@
   },
   "security": {
     "production_docs_disabled": true,
+    "enforced_at_runtime_startup": true,
     "production_oidc_https_required": true,
     "production_oidc_audience_required": true,
     "development_database_url_forbidden_in_production": true
