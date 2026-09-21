@@ -112,6 +112,11 @@ class PaymentGateway:
         payload: bytes,
     ) -> VerifiedPaymentEvent:
         result = self._adapter.verify_webhook(headers=headers, payload=payload)
+        expected_hash = sha256(payload).hexdigest()
+        if result.event.payload_hash != expected_hash:
+            raise IntegrityViolation(
+                "payment webhook payload hash does not match received payload"
+            )
         if not result.event.signature_verified:
             raise IntegrityViolation("payment webhook signature is not verified")
         if not result.source_payment_ref.strip():
