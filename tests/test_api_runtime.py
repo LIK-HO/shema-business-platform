@@ -27,6 +27,7 @@ from shema_platform.foundation.authentication import (
     AuthenticationRequired,
 )
 from shema_platform.foundation.authorization import Permission
+from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.errors import QuarantineRequired
 
 
@@ -234,3 +235,23 @@ def test_runtime_api_maps_missing_application_to_503() -> None:
 
     assert response.status_code == 503
     assert response.json()["code"] == "application_unavailable"
+
+
+def test_runtime_api_maps_verified_permissions_to_authorization_subject() -> None:
+    class PermissionedAuthenticator(AuthenticationPort):
+        def authenticate(self, authorization: str | None) -> AuthenticatedActor:
+            return AuthenticatedActor(
+                actor_id="operator-1",
+                trust_level=2,
+                permissions=frozenset({Permission.ORDER_CREATE}),
+            )
+
+    response = TestClient(
+        create_app(FakeApplication(), PermissionedAuthenticator())
+    ).post(
+        "/v1/search",
+        headers={"Authorization": "Bearer permissioned-token"},
+        json={"region": "Moscow", "industries": ["logistics"]},
+    )
+
+    assert response.status_code == 200
