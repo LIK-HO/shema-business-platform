@@ -328,7 +328,7 @@ def test_concurrent_action_create_with_same_idempotency_key_returns_one_result()
 
         barrier = Barrier(2)
 
-        def execute_once():
+        def execute_once(worker_index: int):
             workflow = CommercialActionCreateWorkflow(
                 factory(schema),
                 authorizer(Permission.COMMERCIAL_ACTION_CREATE),
@@ -336,7 +336,7 @@ def test_concurrent_action_create_with_same_idempotency_key_returns_one_result()
             )
             barrier.wait(timeout=10)
             return workflow.execute(
-                action_id="action-concurrent-1",
+                action_id=f"action-concurrent-{worker_index}",
                 actor=Actor("operator-1", trust_level=2),
                 identity_id=identity_id,
                 contact_ref="chat:concurrent",
@@ -348,8 +348,8 @@ def test_concurrent_action_create_with_same_idempotency_key_returns_one_result()
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             futures = [
-                executor.submit(execute_once),
-                executor.submit(execute_once),
+                executor.submit(execute_once, 1),
+                executor.submit(execute_once, 2),
             ]
             results = [future.result(timeout=30) for future in futures]
 
