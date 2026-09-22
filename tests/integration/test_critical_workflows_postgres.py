@@ -354,26 +354,30 @@ def test_concurrent_action_create_with_same_idempotency_key_returns_one_result()
             results = [future.result(timeout=30) for future in futures]
 
         assert results[0] == results[1]
+        winner_id = results[0].action_id
+        assert winner_id in {"action-concurrent-1", "action-concurrent-2"}
 
         with psycopg.connect(DATABASE_URL) as conn:
             conn.execute('set search_path to "' + schema + '"')
             assert conn.execute(
                 "select count(*) from commercial_action "
-                "where action_id = 'action-concurrent-1'"
+                "where action_id in ('action-concurrent-1', 'action-concurrent-2')"
             ).fetchone() == (1,)
             assert conn.execute(
-                "select count(*) from idempotency_key "
+                "select result_ref from idempotency_key "
                 "where key = 'idem:concurrent:1'"
-            ).fetchone() == (1,)
+            ).fetchone() == (winner_id,)
             assert conn.execute(
                 "select count(*) from outbox_event "
                 "where event_type = 'commercial_action.created' "
-                "and aggregate_id = 'action-concurrent-1'"
+                "and aggregate_id = %s",
+                (winner_id,),
             ).fetchone() == (1,)
             assert conn.execute(
                 "select count(*) from audit_log "
                 "where action = 'commercial_action.created' "
-                "and resource_id = 'action-concurrent-1'"
+                "and resource_id = %s",
+                (winner_id,),
             ).fetchone() == (1,)
     finally:
         cleanup(schema)
