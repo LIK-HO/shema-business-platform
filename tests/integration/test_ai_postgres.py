@@ -69,6 +69,7 @@ def apply_migrations(connection: psycopg.Connection) -> None:
 def test_ai_gateway_persists_run_and_audit_to_postgres() -> None:
     with psycopg.connect(DATABASE_URL) as connection:
         apply_migrations(connection)
+        connection.commit()
 
         authorizer = RBACAuthorizer(
             (
