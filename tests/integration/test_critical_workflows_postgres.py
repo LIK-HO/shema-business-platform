@@ -1,9 +1,9 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
-from threading import Barrier
 from decimal import Decimal
 from pathlib import Path
+from threading import Barrier
 from uuid import uuid4
 
 import psycopg
