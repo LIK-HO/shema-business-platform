@@ -21,7 +21,6 @@ from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.platform.postgres import PostgresUnitOfWork
 from shema_platform.platform.postgres_repositories import (
     PostgresAIRunRepository,
-    PostgresAuditRepository,
 )
 
 pytestmark = pytest.mark.integration
@@ -84,7 +83,7 @@ def test_ai_gateway_persists_run_and_audit_to_postgres() -> None:
             FakeProvider(),
             authorizer,
             PolicyEngine(),
-            lambda: PostgresUnitOfWork(lambda: connection),
+            lambda: PostgresUnitOfWork(lambda: psycopg.connect(DATABASE_URL)),
         )
 
         result = gateway.execute(
