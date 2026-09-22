@@ -77,6 +77,7 @@ def test_routed_intelligence_persists_evidence_in_postgres() -> None:
 
     with psycopg.connect(DATABASE_URL) as connection:
         apply_migration(connection, ROOT / "db/migrations/0001_foundation.sql")
+        connection.commit()
 
         service = IntelligenceService(
             routing,
@@ -141,7 +142,7 @@ def test_routed_intelligence_fails_closed_before_persisting_partial_evidence() -
         service = IntelligenceService(
             routing,
             ProviderGateway(),
-            PostgresEvidenceRepository(connection),
+            lambda: PostgresUnitOfWork(lambda: psycopg.connect(DATABASE_URL)),
         )
 
         with pytest.raises(QuarantineRequired):
