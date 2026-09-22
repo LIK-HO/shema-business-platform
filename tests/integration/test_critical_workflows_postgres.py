@@ -44,6 +44,9 @@ def connection(schema: str) -> psycopg.Connection:
 
 
 def migrate(schema: str) -> None:
+    with psycopg.connect(DATABASE_URL) as bootstrap:
+        bootstrap.execute('create schema "' + schema + '" ')
+        bootstrap.commit()
     plan = MigrationPlan.from_directory(ROOT / "db" / "migrations")
     MigrationRunner(lambda: connection(schema), plan).apply()
 
