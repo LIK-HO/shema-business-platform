@@ -28,6 +28,7 @@ def make_schema() -> str:
 def connect(schema: str) -> psycopg.Connection:
     connection = psycopg.connect(DATABASE_URL)
     connection.execute("SET search_path TO \"" + schema + "\"")
+    connection.commit()
     return connection
 
 
