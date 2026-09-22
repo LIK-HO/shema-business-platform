@@ -18,6 +18,7 @@ from shema_platform.foundation.authorization import (
     RBACAuthorizer,
 )
 from shema_platform.foundation.policy import PolicyEngine
+from shema_platform.platform.postgres import PostgresUnitOfWork
 from shema_platform.platform.postgres_repositories import (
     PostgresAIRunRepository,
     PostgresAuditRepository,
@@ -83,8 +84,7 @@ def test_ai_gateway_persists_run_and_audit_to_postgres() -> None:
             FakeProvider(),
             authorizer,
             PolicyEngine(),
-            PostgresAuditRepository(connection),
-            runs,
+            lambda: PostgresUnitOfWork(lambda: connection),
         )
 
         result = gateway.execute(
