@@ -33,7 +33,7 @@
 
 Мы на стадии:
 
-**v1.5 Core Maturity Integration & Certification — B6 End-to-End Observability**
+**v1.5 Core Maturity Integration & Certification — B7 Security Certification Matrix**
 
 Это означает:
 - v1.4 business/domain kernel сформирован и frozen;
@@ -42,10 +42,11 @@
 - B3 безопасный adoption существующих v1.4 databases доказан executable integration proof;
 - B4 crash-after-external-effect recovery доказан реальным commercial send integration proof;
 - B5 physical backup/restore/PITR доказан реальным PostgreSQL 16 drill и измеренным RTO/RPO;
-- текущая граница — доказать end-to-end correlation lineage без утечки request bodies или authorization headers;
-- после B6-B10 и финальной сертификации семантика ядра должна быть остановлена от дальнейшего расширения.
+- B6 end-to-end observability correlation доказан реальным HTTP→workflow→audit→telemetry integration proof;
+- текущая граница — формальная security certification matrix на основе уже работающих fail-closed controls;
+- после B7-B10 и финальной сертификации семантика ядра должна быть остановлена от дальнейшего расширения.
 
-CI run #1005 на PR #8 head `918ad61684c89cb59531a9017343d6b326033a3d` завершился зелёным по всем семи jobs. Измеренный PITR drill: RTO 2.039s, RPO 2.053s. PR #8 остаётся открытым, draft и mergeable; это ещё не production release.
+CI run #1011 на PR #8 head `006493ce4ae710324718bff23a57dfcd0b66641a` завершился зелёным по всем семи jobs. PR #8 остаётся открытым, draft и mergeable; это ещё не production release.
 
 # 3. Что уже сделано в ядре
 
@@ -519,8 +520,17 @@ CI run #999 подтвердил recovery после внешнего эффек
 
 CI run #1005 (`35841541121`) прошёл все семь jobs, включая `backup-recovery` и `release-contract`.
 
-## B6 — End-to-end observability proof
-Один полный workflow должен трассироваться от request до external effect и audit без потери correlation.
+## B6 — End-to-end observability correlation — CLOSED / VERIFIED
+
+Доказано через PostgreSQL integration test:
+- incoming correlation ID reaches canonical API context;
+- the same ID reaches a real critical workflow;
+- the ID is persisted in audit;
+- telemetry emits the same ID;
+- authorization headers and request bodies are excluded from telemetry;
+- proof passes on Python 3.12 and 3.13.
+
+CI run #1011 подтвердил B6 вместе с backup-recovery и release-contract.
 
 ## B7 — Security certification matrix
 Каждый production security control получает:
