@@ -213,8 +213,14 @@ class OpenCorporatesProvider:
     def provider_id(self) -> str:
         return "opencorporates"
 
-    def check(self):
+    def check(self, *, call_budget=None):
+        from shema_platform.foundation.provider_budget import ProviderCallBudget
         from shema_platform.foundation.provider_probe import ProbeResult
+
+        if call_budget is not None:
+            if not isinstance(call_budget, ProviderCallBudget):
+                raise TypeError("call_budget must be ProviderCallBudget")
+            call_budget.reserve()
 
         self._throttle()
 
