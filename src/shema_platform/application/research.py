@@ -4,10 +4,6 @@ from dataclasses import dataclass
 from math import isfinite
 from typing import Protocol
 
-from shema_platform.foundation.provider_resource_guard import (
-    ProviderCallDecision,
-    ProviderResourceGuard,
-)
 
 
 @dataclass(frozen=True, slots=True)
