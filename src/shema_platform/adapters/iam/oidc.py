@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, NoReturn, Protocol
 
+import os
+
 import jwt
 
 _SAFE_ASYMMETRIC_ALGORITHMS = frozenset(
@@ -38,6 +40,22 @@ class OIDCConfiguration:
     actor_id_claim: str = "sub"
     trust_level_claim: str = "trust_level"
     permissions_claim: str = "permissions"
+
+    @classmethod
+    def from_environment(cls) -> OIDCConfiguration:
+        """Build production OIDC configuration from environment variables."""
+
+        values = {
+            "issuer": os.getenv("OIDC_ISSUER", "").strip(),
+            "audience": os.getenv("OIDC_AUDIENCE", "").strip(),
+            "jwks_url": os.getenv("OIDC_JWKS_URL", "").strip(),
+        }
+        missing = tuple(name for name, value in values.items() if not value)
+        if missing:
+            raise ValueError(
+                "missing OIDC environment configuration: " + ", ".join(missing)
+            )
+        return cls(**values)
 
     def __post_init__(self) -> None:
         if not self.issuer.startswith("https://"):
