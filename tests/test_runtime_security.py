@@ -86,6 +86,28 @@ def test_api_startup_enforces_production_security_from_environment(monkeypatch) 
         create_app(enable_docs=False)
 
 
+def test_api_startup_auto_wires_oidc_in_production(monkeypatch) -> None:
+    from shema_platform.adapters.iam.oidc import OIDCJWTAuthenticator
+    from shema_platform.experience.api import create_app
+
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("OIDC_ISSUER", "https://issuer.example.com/")
+    monkeypatch.setenv("OIDC_AUDIENCE", "shema-business-platform")
+    monkeypatch.setenv(
+        "OIDC_JWKS_URL",
+        "https://issuer.example.com/.well-known/jwks.json",
+    )
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgresql://app:secret@db.internal:5432/shema",
+    )
+
+    app = create_app(enable_docs=False)
+
+    assert isinstance(app.state.authenticator, OIDCJWTAuthenticator)
+    assert app.state.authenticator.configuration.audience == "shema-business-platform"
+
+
 def test_api_startup_allows_development_environment(monkeypatch) -> None:
     from shema_platform.experience.api import create_app
 
