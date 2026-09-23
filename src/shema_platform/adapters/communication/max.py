@@ -10,7 +10,6 @@ from shema_platform.application.communication import (
     CommunicationSendRequest,
     CommunicationSendResult,
 )
-
 from .safety import ExternalEffectSafety
 
 
