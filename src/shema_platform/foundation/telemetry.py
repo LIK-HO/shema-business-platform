@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -52,6 +54,40 @@ class NoopTelemetrySink:
 
     def emit(self, event: TelemetryEvent) -> None:
         return None
+
+
+class StructuredLoggingTelemetrySink:
+    """Production sink that emits one redacted JSON event per log record."""
+
+    def __init__(
+        self,
+        logger: logging.Logger | None = None,
+        *,
+        level: int = logging.INFO,
+    ) -> None:
+        self._logger = logger or logging.getLogger("shema_platform.telemetry")
+        self._level = level
+
+    def emit(self, event: TelemetryEvent) -> None:
+        payload = {
+            "event": event.name,
+            "occurred_at": event.occurred_at.isoformat(),
+            "correlation_id": event.correlation_id,
+            "attributes": dict(event.attributes),
+        }
+        try:
+            self._logger.log(
+                self._level,
+                json.dumps(
+                    payload,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ),
+            )
+        except Exception:
+            # Telemetry is non-authoritative and must never break the request path.
+            return None
 
 
 class InMemoryTelemetrySink:
