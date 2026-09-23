@@ -77,8 +77,8 @@
   "post_certification": "kernel_semantics_frozen",
   "current_cursor": {
     "stage": "CM-CERTIFICATION",
-    "active_sub_element": "B3_MIGRATION_ADOPTION_PROOF",
-    "rule": "B1 and B2 are closed; B4-B10 must not start until B3 is closed.",
+    "active_sub_element": "B5_BACKUP_RESTORE_PITR_RTO_RPO",
+    "rule": "B1-B4 are closed; B6-B10 must not start until B5 is closed.",
     "live_state_required": [
       "branch",
       "head",
