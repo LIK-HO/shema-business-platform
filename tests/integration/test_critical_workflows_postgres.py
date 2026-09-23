@@ -11,11 +11,11 @@ import psycopg
 import pytest
 
 from shema_platform.application.commands import Actor
+from shema_platform.application.commercial_execution import CommercialActionSendWorkflow
 from shema_platform.application.communication import (
     CommunicationGateway,
     CommunicationSendResult,
 )
-from shema_platform.application.commercial_execution import CommercialActionSendWorkflow
 from shema_platform.application.critical_workflows import (
     CommercialActionCreateWorkflow,
     OrderCreateWorkflow,
