@@ -1,7 +1,7 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Candidate  
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen  
 **Current branch:** v1.5/core-maturity  
 **Base:** v1.5-runtime  
 **Current HEAD:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.  
@@ -33,7 +33,7 @@
 
 Мы на стадии:
 
-**v1.5 Core Maturity Integration & Certification — B7 Security Certification Matrix**
+**v1.5 Core Maturity Certified — B10 Controlled Release Candidate / Final Semantic Freeze**
 
 Это означает:
 - v1.4 business/domain kernel сформирован и frozen;
@@ -43,8 +43,11 @@
 - B4 crash-after-external-effect recovery доказан реальным commercial send integration proof;
 - B5 physical backup/restore/PITR доказан реальным PostgreSQL 16 drill и измеренным RTO/RPO;
 - B6 end-to-end observability correlation доказан реальным HTTP→workflow→audit→telemetry integration proof;
-- текущая граница — формальная security certification matrix на основе уже работающих fail-closed controls;
-- после B7-B10 и финальной сертификации семантика ядра должна быть остановлена от дальнейшего расширения.
+- B7 security certification matrix закрыт и подтверждён CI #1015;
+- B8 SLO/error-budget baseline закрыт и подтверждён CI #1020;
+- B9 capacity/overload baseline закрыт и подтверждён CI #1027;
+- B10 controlled release candidate/final semantic freeze закрыт и подтверждён CI #1035;
+- дальнейшее развитие ядра остановлено: новые возможности реализуются за пределами frozen kernel.
 
 CI run #1011 на PR #8 head `006493ce4ae710324718bff23a57dfcd0b66641a` завершился зелёным по всем семи jobs. PR #8 остаётся открытым, draft и mergeable; это ещё не production release.
 
@@ -532,13 +535,13 @@ CI run #1005 (`35841541121`) прошёл все семь jobs, включая `
 
 CI run #1011 подтвердил B6 вместе с backup-recovery и release-contract.
 
-## B7 — Security certification matrix
+## B7 — Security certification matrix — CLOSED / VERIFIED
 Каждый production security control получает:
 
 control → implementation → test → result → release gate.
 
-## B8 — SLO / error-budget baseline
-Определить минимум для:
+## B8 — SLO / error-budget baseline — CLOSED / VERIFIED
+Определён минимум для:
 - API availability;
 - critical mutation success;
 - job recovery;
@@ -546,8 +549,8 @@ control → implementation → test → result → release gate.
 - external-effect completion;
 - latency.
 
-## B9 — Capacity / overload test
-Проверить:
+## B9 — Capacity / overload test — CLOSED / VERIFIED
+Проверено:
 - concurrent critical commands;
 - worker saturation;
 - retry storm;
@@ -556,8 +559,13 @@ control → implementation → test → result → release gate.
 - rate limiting;
 - graceful degradation.
 
-## B10 — Release candidate
-После B1-B9 сформировать один release candidate и пройти полный certification run.
+## B10 — Controlled release candidate / final semantic freeze — CLOSED / VERIFIED
+
+Проведён финальный controlled release-candidate run CI #1035 (`35892641331`) на HEAD `4f5df0346c544ce30525723e4c8748336615ef75`.
+
+Все семь release gates зелёные. `architecture/release_candidate_contract.json` и `docs/CORE_SEMANTIC_FREEZE.md` закрепляют final boundary: v1.4 kernel semantics frozen, новые функции остаются вне ядра, а исключительный core change требует доказанного invariant/security/data-integrity/fundamental reliability defect, regression tests, impact analysis и rollback plan.
+
+B10 не авторизует merge или production deployment.
 
 ---
 
