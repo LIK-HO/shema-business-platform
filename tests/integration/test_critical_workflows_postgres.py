@@ -490,20 +490,20 @@ def test_concurrent_action_create_with_same_idempotency_key_returns_one_result()
             ]
             results = [future.result(timeout=30) for future in futures]
 
-        assert results[0] == results[1]
+        assert all(result == results[0] for result in results)
         winner_id = results[0].action_id
-        expected_ids = {
+        expected_ids = tuple(
             f"action-concurrent-{worker_index}"
             for worker_index in range(1, worker_count + 1)
-        }
+        )
         assert winner_id in expected_ids
 
         with psycopg.connect(DATABASE_URL) as conn:
             conn.execute('set search_path to "' + schema + '"')
             assert conn.execute(
                 "select count(*) from commercial_action "
-                "where action_id in (" + ",".join(["%s"] * worker_count) + ")"
-            , tuple(expected_ids)
+                "where action_id in (" + ",".join(["%s"] * worker_count) + ")",
+                expected_ids,
             ).fetchone() == (1,)
             assert conn.execute(
                 "select result_ref from idempotency_key "
