@@ -8,7 +8,7 @@ from shema_platform.application.research import (
     ProviderResult,
     ResearchBudget,
 )
-from shema_platform.foundation.provider_resource_guard import (
+from shema_platform.application.provider_resource_guard import (
     ProviderCallDecision,
     ProviderRateLimiter,
     ProviderResourceGuard,
