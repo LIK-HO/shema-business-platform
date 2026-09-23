@@ -26,6 +26,7 @@ from shema_platform.experience.api_models import (
     SearchRequest,
     SearchResponse,
 )
+from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.foundation.authentication import (
     AuthenticatedActor,
     AuthenticationPort,
@@ -236,6 +237,11 @@ def create_app(
         docs_enabled=enable_docs
     )
     runtime_security.enforce()
+
+    if authenticator is None and runtime_security.environment == "production":
+        authenticator = OIDCJWTAuthenticator.production(
+            OIDCConfiguration.from_environment()
+        )
 
     app = FastAPI(
         title="Shema Business Platform Canonical API",
