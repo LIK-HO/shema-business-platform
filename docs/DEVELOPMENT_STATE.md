@@ -16,64 +16,71 @@ The universal development doctrine was added and adopted by the repository agent
 
 Live branch/HEAD/PR/CI are always re-read at session entry; no static HEAD in this ledger is authoritative.
 
+## Completed certification sub-element
+
+**B1 — GREEN CI — CLOSED / VERIFIED**
+
+Integrity evidence:
+- Live PR #8 head verified as `ca3983558919a42c58fc85c71e41dc9d76d10477`.
+- PR #8 remains open, unmerged and mergeable.
+- CI run #970 (`35763575234`) completed successfully against the live head.
+- All five required jobs passed:
+  - quality (3.12)
+  - quality (3.13)
+  - integration (3.12)
+  - integration (3.13)
+  - release-contract
+- The last B1 migration-test failure was isolated to the integration test helper losing `search_path` after rollback; the helper was corrected by committing the schema selection before transactional assertions.
+- No kernel semantics were changed to obtain the green result.
+
 ## Current active element
 
 **CM-CERTIFICATION**
 
 ### Active certification sub-element
 
-**B1 — GREEN CI**
+**B2 — UNIFIED v1.5 CANDIDATE**
 
 Integrity boundary:
-- verify current branch/HEAD/PR/CI live from GitHub;
-- distinguish tooling/CI failure from product failure;
-- close CI quality gate without changing kernel semantics.
-
-### Completed in this boundary
-
-- Development Manifest exists and records the mature-core doctrine.
-- `architecture/core_maturity_contract.json` references the manifest.
-- README and v1.5 maturity documentation reference the manifest.
-- Repository agent operating contract is defined.
-- GitHub work protocol is defined.
-- Development state ledger is the durable interruption point.
+- reconcile the live v1.5 runtime baseline with production IAM and production security/telemetry/supply-chain controls;
+- verify that PRs #6, #7 and #8 can form one coherent candidate without redefining frozen v1.4 semantics;
+- identify and close only integration/release-boundary gaps;
+- keep PostgreSQL as canonical transactional authority and all providers/adapters outside domain truth.
 
 ### Not yet closed
 
 The product itself is still awaiting Core Maturity Certification.
 
-Certification blockers are tracked in the Development Manifest:
-- unified v1.5 candidate;
-- green CI on supported versions;
-- migration adoption proof;
-- crash-after-external-effect integration proof;
-- backup/restore/PITR and measured RTO/RPO;
-- end-to-end correlation proof;
-- security control matrix;
-- SLO/error-budget baseline;
-- capacity/overload baseline;
-- controlled release candidate and final semantic freeze.
+Certification blockers remaining after B1:
+- B2 — unified v1.5 candidate;
+- B3 — migration adoption proof;
+- B4 — crash-after-external-effect integration proof;
+- B5 — backup/restore/PITR and measured RTO/RPO;
+- B6 — end-to-end correlation proof;
+- B7 — security control matrix;
+- B8 — SLO/error-budget baseline;
+- B9 — capacity/overload baseline;
+- B10 — controlled release candidate and final semantic freeze.
 
 ## Exact continuation boundary
 
-Until CM-CERTIFICATION is closed, the active cursor is B1 — GREEN CI. After B1 closes, move to exactly one of B2-B10 in manifest order unless evidence requires a bounded dependency-first exception.
+B1 is closed only after live CI verification and state recording; that evidence is now recorded above.
 
-Every development session must begin with live GitHub branch/HEAD/PR/CI verification, then read this state ledger before selecting work.
+The active cursor is now B2 — UNIFIED v1.5 CANDIDATE.
 
-Until B1 closes, do not start B2-B10 implementation.
+The next development action must begin by:
+1. verify live branch/HEAD/PR state again;
+2. inspect PR #6 (IAM), PR #7 (security/telemetry/supply-chain), PR #8 (core maturity), and their CI/release status;
+3. compare their combined changes against `v1.5-runtime`, the frozen v1.4 contract and the core maturity contract;
+4. select exactly one smallest B2 integration gap;
+5. complete it through implementation + tests + verification;
+6. update this ledger.
 
-The next development action must begin with:
-1. read manifest;
-2. read work protocol;
-3. read this state ledger;
-4. verify current branch/HEAD/PR/CI;
-5. select exactly one certification sub-element;
-6. complete it through implementation + tests + verification;
-7. update this ledger.
+Until B2 closes, do not start B3-B10 implementation.
 
 ## Safe next action
 
-Verify the latest CI run for the current live HEAD. If green, close B1 with evidence and move to B2. If red, fix only the failing B1 boundary, rerun verification, and update this ledger.
+Establish the live unified-candidate baseline across `v1.5-runtime`, PR #6, PR #7 and PR #8, including CI and mergeability, then fix only the first verified B2 integration/release gap.
 
 ## Prohibited until boundary is closed
 
@@ -83,11 +90,13 @@ Verify the latest CI run for the current live HEAD. If green, close B1 with evid
 - no microservice decomposition;
 - no new system-of-record;
 - no migration to Airtable/Replit/Bitrix24 as authority;
-- no broad refactor without an explicit integrity reason.
+- no broad refactor without an explicit integrity reason;
+- no starting B3-B10 ahead of B2 closure.
 
 ## Last verified repository point
 
-- Live PR #8 head at state update time: 5bc6b019274088e9c0f476265292ea586ef77f52
+- Live PR #8 head at the B1 closure boundary: `ca3983558919a42c58fc85c71e41dc9d76d10477`
+- CI run #970 at that head: green
 - This value is evidence only; live GitHub HEAD must always be re-read before continuation.
 
 ## Interruption record
