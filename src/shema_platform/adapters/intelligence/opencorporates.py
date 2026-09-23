@@ -16,6 +16,7 @@ from shema_platform.application.research import (
     ResearchProvider,
 )
 
+
 def _request_json(
     url: str,
     params: Mapping[str, str],
