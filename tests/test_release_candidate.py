@@ -3,7 +3,6 @@ from pathlib import Path
 
 from shema_platform.platform.release import validate_release_tree
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
