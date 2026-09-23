@@ -63,22 +63,24 @@
 - CI run #1015 (`35842598811`) completed successfully against PR #8 and passed the relevant verification gates.
 
 ### B8 — SLO / ERROR-BUDGET BASELINE — CLOSED / VERIFIED
+- `architecture/slo_contract.json` defines six measurable SLIs over a rolling 30-day window.
+- Initial targets and error-budget burn rules are explicit and bounded; they are not production measurements.
+- `docs/SLO_ERROR_BUDGET.md` defines measurement boundaries and non-authoritative telemetry semantics.
+- `tests/test_slo_contract.py` validates contract structure and preservation of frozen kernel authority.
+- CI run #1020 (`35891436907`) passed all seven jobs.
+- The initial Ruff defect in CI #1018 was formatting-only and was corrected without semantic change.
 
-Implementation:
-- `architecture/slo_contract.json` defines six measurable SLIs: API availability, critical mutation success, job recovery, outbox lag, external-effect completion and API latency.
-- All SLOs use a rolling 30-day measurement window.
-- Initial targets and error-budget burn rules are explicit and bounded.
-- The contract states that targets are initial baselines requiring recalibration from real traffic; they are not production measurements.
-- `docs/SLO_ERROR_BUDGET.md` defines measurement boundaries and keeps telemetry observational/non-authoritative.
-- `tests/test_slo_contract.py` validates the SLI set, bounded targets, error-budget calculation and the rule that SLO targets do not change kernel semantics.
+### B9 — CAPACITY / OVERLOAD BASELINE — CLOSED / VERIFIED
+Implementation and evidence:
+- Added `architecture/capacity_overload_contract.json` with explicit acceptance criteria for concurrency, worker leases, bounded retries, queue batching, database contention, rate-limiting boundary and graceful degradation.
+- Added `docs/CAPACITY_OVERLOAD.md` documenting the bounded operational model and explicitly refusing to turn unmeasured throughput into a production capacity claim.
+- Added `tests/test_capacity_overload.py` covering bounded retry policy, contract integrity and 503 graceful degradation.
+- Expanded the existing PostgreSQL critical-command concurrency proof from 2 concurrent workers to an 8-worker barrier-synchronized contention test using one idempotency key; the test proves one durable canonical result and matching idempotency/outbox/audit lineage.
+- Existing worker reclaim/lease safety and outbox dispatch-limit tests were used as B9 evidence; no new kernel semantics were required.
+- Distributed ingress rate limiting remains outside frozen core and is not invented without a measured traffic requirement.
 
-Failure handling:
-- CI run #1018 (`35856870994`) initially failed only on Ruff E501 in the newly added B8 test.
-- The defect was corrected by formatting only; no SLO or kernel semantics changed.
-- Fix commit: `5ae2ea7ec0d6afd555321592fb926e5c9dc3aaf4`.
-
-Final verification:
-- CI run #1020 (`35891436907`) passed all seven jobs on the resulting verified repository state:
+Verification:
+- CI run #1027 (`35891994690`) completed successfully with all seven jobs green:
   - quality 3.12 — success;
   - quality 3.13 — success;
   - integration 3.12 — success;
@@ -86,60 +88,58 @@ Final verification:
   - supply-chain — success;
   - backup-recovery — success;
   - release-contract — success.
-- No new instrumentation or kernel semantic changes were required; existing runtime telemetry and durable state provide the required B8 measurement signals.
-- B8 is therefore CLOSED / VERIFIED.
+- B9 is therefore CLOSED / VERIFIED.
 
 ## Current active certification sub-element
 
-**B9 — CAPACITY / OVERLOAD BASELINE**
+**B10 — CONTROLLED RELEASE CANDIDATE / FINAL CORE SEMANTIC FREEZE**
 
-B9 is now the only active certification boundary before B10 release candidate.
+B10 is the final certification boundary. It is not a feature-development phase.
 
 Required scope:
-1. establish bounded baseline tests for concurrent critical commands;
-2. verify worker saturation and durable-job lease behavior under pressure;
-3. verify retry-storm/queue-backlog behavior and bounded retries;
-4. verify database contention behavior;
-5. verify rate limiting or other overload protection already present;
-6. verify graceful degradation without changing frozen v1.4 semantics;
-7. define measurable capacity/overload acceptance criteria and executable evidence.
+1. reconcile the live repository against the frozen v1.4 kernel contract and v1.5 core-maturity contract;
+2. verify all B1-B9 evidence remains represented in the state ledger and release contract;
+3. verify the release artifact/version metadata is deterministic and consistent;
+4. verify migration baseline, architecture contract, maturity gates and runtime boundaries;
+5. perform one controlled release-candidate verification run;
+6. record the final semantic-freeze decision and explicit post-certification change policy;
+7. do not add product features, new providers, UI, or service decomposition.
+
+B10 does not mean merging or production deployment. Merge/release actions require separate authorization.
 
 ## Exact continuation boundary
 
-B9 must remain bounded to capacity, overload and degradation behavior already described by the maturity manifest.
-
 Allowed:
-- executable load/stress-style tests;
-- bounded test fixtures and test-only concurrency;
-- measurement of queue/lease/retry/database contention behavior;
-- minimal observability needed to prove existing overload behavior.
+- release-contract hardening required to detect inconsistency;
+- final certification evidence and machine-readable freeze markers;
+- deterministic release-candidate validation;
+- documentation/state-ledger reconciliation;
+- focused regression checks for the final frozen boundary.
 
 Not allowed:
 - new business semantics;
-- provider-driven domain changes;
+- new provider integrations;
 - microservice decomposition;
 - new system of record;
-- unrelated refactors;
-- changing frozen v1.4 contracts merely to make a load test pass.
-
-B10 remains prohibited until B9 is closed.
+- broad refactors;
+- production deployment or PR merge without explicit authorization.
 
 ## Safe next action
 
-Read the live B9 maturity requirements and current runtime controls, identify the smallest missing capacity/overload proof, implement only that bounded proof, and run CI before expanding scope.
+Read the live release contract, v1.4 architecture contract, core-maturity contract and current PR/HEAD; identify the smallest missing B10 release-candidate proof and implement only that bounded proof.
 
 ## Last verified repository point
 
 - Branch: `v1.5/core-maturity`
-- PR #8 remains open, unmerged, draft, mergeable.
-- B8 verification evidence: CI #1020 (`35891436907`) fully green.
-- Current state-ledger update records B8 closure and selects B9 as the next bounded element.
-- Live GitHub branch/HEAD remains authoritative and must be re-read before continuing B9.
+- B9 verification evidence: CI #1027 (`35891994690`) fully green.
+- Current PR #8 remains open and unmerged.
+- This ledger update advances the active cursor from B9 to B10.
+- Live GitHub branch/HEAD remains authoritative and must be re-read before continuing B10.
 
 ## Interruption record
 
-If work stops during B9, resume from:
-- active sub-element: B9 Capacity / Overload Baseline;
-- last verified B8 evidence: CI #1020 (`35891436907`);
-- safe resume operation: inspect current runtime capacity/overload controls and implement the smallest missing executable proof;
-- prohibited: B10 implementation, kernel semantic expansion, unrelated refactors.
+If work stops during B10, resume from:
+- active sub-element: B10 Controlled Release Candidate / Final Core Semantic Freeze;
+- last verified B9 evidence: CI #1027 (`35891994690`);
+- safe resume operation: inspect release-contract/freeze evidence and implement only the smallest missing final-certification proof;
+- prohibited: merge, deployment, product expansion, provider-driven domain changes, unrelated refactors.
