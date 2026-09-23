@@ -4,11 +4,13 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from threading import Lock
+from typing import TYPE_CHECKING
 
-from shema_platform.application.research import (
-    ProviderCapability,
-    ResearchBudget,
-)
+if TYPE_CHECKING:
+    from shema_platform.application.research import (
+        ProviderCapability,
+        ResearchBudget,
+    )
 
 
 @dataclass(frozen=True, slots=True)
