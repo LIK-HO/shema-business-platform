@@ -73,7 +73,7 @@ Integrity evidence:
 
 ### Current active certification sub-element
 
-**B7 — SECURITY CERTIFICATION MATRIX**
+**B8 — SLO / ERROR-BUDGET BASELINE**
 
 Integrity boundary:
 - map each production security control to implementation, failure behavior, test evidence and release gate;
@@ -82,21 +82,27 @@ Integrity boundary:
 
 ## Exact continuation boundary
 
-B6 is closed after live verification of PR #8 and CI run #1011.
+B7 is now closed after verifying the existing security certification matrix against the live unified candidate and green CI run #1015.
+
+Live verification:
+- PR #8 head: `21478ab7632d6d231b20cc99c6921ca79abd1cdc`
+- CI run #1015 (`35842598811`) completed successfully.
+- Security matrix `docs/SECURITY_CERTIFICATION_MATRIX.md` maps implementation, failure behavior, executable evidence and release gate for authentication, authorization, production configuration, telemetry, correlation, supply-chain, migration integrity and recovery controls.
+- The matrix explicitly states that it introduces no new security semantics.
 
 The next development action must:
-1. inventory the actual production security controls in runtime/IAM/telemetry/supply-chain;
-2. map each control to concrete code and executable evidence;
-3. identify exactly one missing certification-matrix element;
-4. close only that bounded evidence gap;
+1. define the smallest production SLI/SLO/error-budget baseline required by the manifest;
+2. bind each SLI to an observable runtime signal already present or identify one bounded instrumentation gap;
+3. define alert/error-budget semantics without changing frozen kernel semantics;
+4. add executable validation where needed;
 5. run the relevant CI/release checks;
 6. update this ledger.
 
-Until B7 closes, do not start B8-B10 implementation.
+Until B8 closes, do not start B9-B10 implementation.
 
 ## Safe next action
 
-Build the security certification matrix from the existing runtime controls and identify the smallest missing executable proof.
+Establish the minimum measurable SLO/error-budget baseline for API availability, critical mutation success, job recovery, outbox lag, external-effect completion and latency.
 
 ## Prohibited until boundary is closed
 - no new kernel semantics;
