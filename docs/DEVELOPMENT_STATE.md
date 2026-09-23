@@ -51,7 +51,7 @@
 
 **CM-CERTIFICATION**
 
-### Completed certification sub-element
+### Completed certification sub-elements
 
 **B6 — END-TO-END OBSERVABILITY CORRELATION PROOF — CLOSED / VERIFIED**
 
@@ -65,44 +65,40 @@ Integrity evidence:
 - Backup-recovery and release-contract also passed in the same run.
 - No canonical domain semantics were changed.
 
-### Not yet closed
-- B7 — Security certification matrix
-- B8 — SLO/error-budget baseline
-- B9 — Capacity/overload baseline
-- B10 — Controlled release candidate and final semantic freeze
+**B7 — SECURITY CERTIFICATION MATRIX — CLOSED / VERIFIED**
 
-### Current active certification sub-element
+Integrity evidence:
+- Security matrix `docs/SECURITY_CERTIFICATION_MATRIX.md` maps implementation, failure behavior, executable evidence and release gate for authentication, authorization, production configuration, telemetry, correlation, supply-chain, migration integrity and recovery controls.
+- The matrix explicitly states that it introduces no new security semantics.
+- CI run #1015 (`35842598811`) completed successfully against PR #8 and passed the relevant verification gates.
 
-**B8 — SLO / ERROR-BUDGET BASELINE**
+**B8 — SLO / ERROR-BUDGET BASELINE — IN PROGRESS**
 
-Integrity boundary:
-- map each production security control to implementation, failure behavior, test evidence and release gate;
-- verify fail-closed behavior for authentication, authorization, production configuration, telemetry redaction and dependency/supply-chain controls;
-- do not add new security semantics unless the matrix exposes a proven gap.
+Completed within B8:
+- Added `architecture/slo_contract.json` with six measurable SLIs: API availability, critical mutation success, job recovery, outbox lag, external-effect completion and API latency.
+- Added rolling 30-day initial SLO targets and bounded error-budget burn rules.
+- Explicitly marked targets as baseline assumptions requiring recalibration from real traffic; they are not production measurements.
+- Added `docs/SLO_ERROR_BUDGET.md` documenting measurement boundaries and non-authoritative telemetry semantics.
+- Added `tests/test_slo_contract.py` for structural and kernel-authority validation.
+- Initial CI run #1018 (`35856870994`) failed only on Ruff E501 in the new B8 test file; no test, compile, integration, recovery or release-contract failure was observed because quality stopped at lint.
+- Corrected only the formatting defect; no B8 contract or kernel semantics changed.
+- Fix commit: `5ae2ea7ec0d6afd555321592fb926e5c9dc3aaf4`.
+- Replacement CI run #1019 (`35891354355`) is currently in progress.
 
 ## Exact continuation boundary
 
-B7 is now closed after verifying the existing security certification matrix against the live unified candidate and green CI run #1015.
+The next development action must remain inside B8:
+1. complete CI verification for current head `5ae2ea7ec0d6afd555321592fb926e5c9dc3aaf4`;
+2. if CI fails, fix only concrete B8-related defects exposed by CI;
+3. if CI is green, verify the SLO contract against the active maturity manifest and release gates;
+4. update this ledger to mark B8 CLOSED / VERIFIED only after the full required CI/release evidence is green;
+5. do not start B9 until B8 is closed.
 
-Live verification:
-- PR #8 head: `21478ab7632d6d231b20cc99c6921ca79abd1cdc`
-- CI run #1015 (`35842598811`) completed successfully.
-- Security matrix `docs/SECURITY_CERTIFICATION_MATRIX.md` maps implementation, failure behavior, executable evidence and release gate for authentication, authorization, production configuration, telemetry, correlation, supply-chain, migration integrity and recovery controls.
-- The matrix explicitly states that it introduces no new security semantics.
-
-The next development action must:
-1. define the smallest production SLI/SLO/error-budget baseline required by the manifest;
-2. bind each SLI to an observable runtime signal already present or identify one bounded instrumentation gap;
-3. define alert/error-budget semantics without changing frozen kernel semantics;
-4. add executable validation where needed;
-5. run the relevant CI/release checks;
-6. update this ledger.
-
-Until B8 closes, do not start B9-B10 implementation.
+The B8 contract does not change frozen v1.4 kernel semantics and does not claim measured production performance.
 
 ## Safe next action
 
-Establish the minimum measurable SLO/error-budget baseline for API availability, critical mutation success, job recovery, outbox lag, external-effect completion and latency.
+Finish verification of CI run #1019 for the B8 baseline, then close B8 only if the full required quality, integration, supply-chain, backup-recovery and release-contract gates pass.
 
 ## Prohibited until boundary is closed
 - no new kernel semantics;
@@ -112,22 +108,22 @@ Establish the minimum measurable SLO/error-budget baseline for API availability,
 - no new system-of-record;
 - no migration to Airtable/Replit/Bitrix24 as authority;
 - no broad refactor without an explicit integrity reason;
-- no starting B7-B10 ahead of B6 closure.
+- no B9/B10 implementation.
 
 ## Last verified repository point
-- PR #8 head at B5 closure: `918ad61684c89cb59531a9017343d6b326033a3d`
-- CI run #1011 (`35842247310`): green
-- PR #8: open, unmerged, draft, mergeable
-- Measured PITR RTO/RPO remains 2.039s / 2.053s
+- Branch: `v1.5/core-maturity`
+- PR #8 head: `5ae2ea7ec0d6afd555321592fb926e5c9dc3aaf4`
+- CI run #1018 (`35856870994`): failed only at Ruff E501 in `tests/test_slo_contract.py`; superseded by fix commit above.
+- CI run #1019 (`35891354355`): in progress; not yet sufficient to close B8.
+- PR #8: open, unmerged, draft, mergeable.
+- Measured PITR RTO/RPO remains 2.039s / 2.053s.
 - Live GitHub branch/HEAD remains authoritative and must be re-read before continuation.
 
 ## Interruption record
-If work stops during a sub-element, record:
-- active sub-element;
-- last verified commit;
-- files changed;
-- tests passed;
-- tests failed/pending;
-- exact unfinished operation;
-- safe resume operation;
-- prohibited operations.
+If work stops during B8, resume from:
+- active sub-element: B8 SLO / ERROR-BUDGET BASELINE;
+- last code commit: `5ae2ea7ec0d6afd555321592fb926e5c9dc3aaf4`;
+- pending verification: CI run #1019 (`35891354355`);
+- changed B8 files: `architecture/slo_contract.json`, `docs/SLO_ERROR_BUDGET.md`, `tests/test_slo_contract.py`;
+- safe resume operation: inspect run #1019 and perform only evidence-driven B8 fixes;
+- prohibited: B9/B10 implementation, unrelated refactors, kernel semantic changes.
