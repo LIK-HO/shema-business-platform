@@ -4,6 +4,12 @@ from dataclasses import dataclass
 from math import isfinite
 from typing import Protocol
 
+from shema_platform.application.provider_resource_guard import (
+    ProviderCallDecision,
+    ProviderResourceGuard,
+)
+
+
 
 @dataclass(frozen=True, slots=True)
 class ResearchBudget:
@@ -91,7 +97,13 @@ class ResearchProvider(Protocol):
 
 
 class ProviderGateway:
-    """Deterministic provider waterfall with explicit budget enforcement."""
+    """Deterministic provider waterfall with explicit resource enforcement."""
+
+    def __init__(
+        self,
+        resource_guard: ProviderResourceGuard | None = None,
+    ) -> None:
+        self._resource_guard = resource_guard or ProviderResourceGuard()
 
     def select(
         self,
@@ -136,16 +148,22 @@ class ProviderGateway:
             allowed_source_classes=allowed_source_classes,
         ):
             capability = provider.capability
-            if remaining_calls <= 0 or remaining_sources <= 0:
+            max_sources = min(remaining_sources, 10)
+            decision: ProviderCallDecision = self._resource_guard.authorize(
+                capability,
+                budget,
+                remaining_calls=remaining_calls,
+                remaining_sources=remaining_sources,
+                remaining_tokens=remaining_tokens,
+                remaining_cost=remaining_cost,
+                remaining_time=remaining_time,
+                requested_sources=max_sources,
+            )
+            if decision.stop_operation:
                 break
-            if capability.cost_per_call > remaining_cost:
-                continue
-            if capability.estimated_tokens_per_call > remaining_tokens:
-                continue
-            if capability.estimated_latency_seconds > remaining_time:
+            if not decision.allowed:
                 continue
 
-            max_sources = min(remaining_sources, 10)
             result = provider.research(query, max_sources=max_sources)
 
             if result.provider_id != capability.provider_id:
