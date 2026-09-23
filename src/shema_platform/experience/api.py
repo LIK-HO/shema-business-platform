@@ -9,6 +9,7 @@ from fastapi import APIRouter, FastAPI, Header, Path, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.experience.api_models import (
     CommercialActionCreateRequest,
     CommercialActionResponse,
@@ -26,7 +27,6 @@ from shema_platform.experience.api_models import (
     SearchRequest,
     SearchResponse,
 )
-from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.foundation.authentication import (
     AuthenticatedActor,
     AuthenticationPort,
