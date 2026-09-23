@@ -187,3 +187,38 @@ def test_provider_passes_bounded_timeout_to_external_request() -> None:
     provider.research("company", max_sources=1)
 
     assert requester.calls[0][2] == 30
+
+def test_provider_uses_research_deadline_override() -> None:
+    requester = FakeRequester(
+        status=200,
+        payload={"results": {"companies": []}},
+        calls=[],
+    )
+    provider = OpenCorporatesProvider(
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            timeout_seconds=5,
+            max_requests_per_second=1000,
+        ),
+        requester=requester,
+    )
+
+    provider.research("company", max_sources=1, timeout_seconds=2)
+
+    assert requester.calls[0][2] == 2
+
+
+def test_provider_rejects_non_positive_research_deadline() -> None:
+    provider = OpenCorporatesProvider(
+        configuration(),
+        requester=FakeRequester(
+            status=200,
+            payload={"results": {"companies": []}},
+            calls=[],
+        ),
+    )
+
+    with pytest.raises(ValueError, match="override must be positive"):
+        provider.research("company", max_sources=1, timeout_seconds=0)
+
+
