@@ -7,7 +7,6 @@ from shema_platform.foundation.runtime_security import (
 from shema_platform.foundation.telemetry import StructuredLoggingTelemetrySink
 
 
-
 def production(**overrides):
     values = {
         "environment": "production",
