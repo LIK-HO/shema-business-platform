@@ -1,4 +1,5 @@
 import os
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -10,6 +11,11 @@ import psycopg
 import pytest
 
 from shema_platform.application.commands import Actor
+from shema_platform.application.communication import (
+    CommunicationGateway,
+    CommunicationSendResult,
+)
+from shema_platform.application.commercial_execution import CommercialActionSendWorkflow
 from shema_platform.application.critical_workflows import (
     CommercialActionCreateWorkflow,
     OrderCreateWorkflow,
@@ -232,6 +238,136 @@ def test_critical_create_workflows_are_atomic_and_idempotent() -> None:
             ).fetchone() == (1,)
             assert conn.execute(
                 "select count(*) from idempotency_key where key = 'idem:order:1'"
+            ).fetchone() == (1,)
+    finally:
+        cleanup(schema)
+
+
+class CrashAfterEffectAdapter:
+    channel = "max"
+
+    def __init__(self) -> None:
+        self.effects: dict[str, str] = {}
+        self.calls = []
+        self.crash_after_first_effect = True
+
+    def send(self, request):
+        self.calls.append(request)
+        external_message_id = self.effects.get(request.idempotency_key)
+        if external_message_id is None:
+            external_message_id = "message-b4-1"
+            self.effects[request.idempotency_key] = external_message_id
+            if self.crash_after_first_effect:
+                self.crash_after_first_effect = False
+                raise RuntimeError("process crash after external effect")
+
+        return CommunicationSendResult(
+            action_id=request.action_id,
+            channel=request.channel,
+            external_message_id=external_message_id,
+            accepted=True,
+        )
+
+
+def test_commercial_send_recovers_after_crash_after_external_effect() -> None:
+    schema = make_schema()
+    adapter = CrashAfterEffectAdapter()
+    actor = Actor("operator-1", trust_level=2)
+    action_id = "action-crash-after-effect"
+    idempotency_key = "idem:crash-after-effect"
+    body = "Проверка восстановления"
+
+    try:
+        migrate(schema)
+        identity_id = str(uuid4())
+        seed_verified_identity(schema, identity_id)
+
+        create_workflow = CommercialActionCreateWorkflow(
+            factory(schema),
+            authorizer(Permission.COMMERCIAL_ACTION_CREATE),
+            PolicyEngine(),
+        )
+        create_workflow.execute(
+            action_id=action_id,
+            actor=actor,
+            identity_id=identity_id,
+            contact_ref="chat:crash",
+            channel="max",
+            evidence_refs=("evidence:crash",),
+            request_hash="request:crash:1",
+            idempotency_key="idem:action-crash:1",
+        )
+
+        first_workflow = CommercialActionSendWorkflow(
+            factory(schema),
+            CommunicationGateway(adapter),
+            authorizer(Permission.COMMERCIAL_ACTION_SEND),
+            PolicyEngine(),
+        )
+        first_workflow.SEND_LEASE_SECONDS = 1
+
+        with pytest.raises(RuntimeError, match="process crash after external effect"):
+            first_workflow.execute(
+                actor=actor,
+                action_id=action_id,
+                body=body,
+                idempotency_key=idempotency_key,
+            )
+
+        with psycopg.connect(DATABASE_URL) as conn:
+            conn.execute('set search_path to "' + schema + '"')
+            assert conn.execute(
+                "select status, send_attempt from commercial_action where action_id = %s",
+                (action_id,),
+            ).fetchone() == ("sending", 1)
+            assert conn.execute(
+                "select result_ref from idempotency_key where key = %s",
+                (idempotency_key,),
+            ).fetchone() == ("pending:" + action_id,)
+
+        time.sleep(1.1)
+
+        recovery_workflow = CommercialActionSendWorkflow(
+            factory(schema),
+            CommunicationGateway(adapter),
+            authorizer(Permission.COMMERCIAL_ACTION_SEND),
+            PolicyEngine(),
+        )
+        recovery_workflow.SEND_LEASE_SECONDS = 1
+
+        result = recovery_workflow.execute(
+            actor=actor,
+            action_id=action_id,
+            body=body,
+            idempotency_key=idempotency_key,
+        )
+
+        assert result.external_message_id == "message-b4-1"
+        assert list(adapter.effects) == ["commercial-send:" + action_id]
+        assert len(adapter.calls) == 2
+        assert adapter.calls[0].idempotency_key == adapter.calls[1].idempotency_key
+        assert adapter.calls[0].idempotency_key == "commercial-send:" + action_id
+
+        with psycopg.connect(DATABASE_URL) as conn:
+            conn.execute('set search_path to "' + schema + '"')
+            assert conn.execute(
+                "select status, send_attempt, send_worker_id, send_lease_until "
+                "from commercial_action where action_id = %s",
+                (action_id,),
+            ).fetchone() == ("sent", 2, None, None)
+            assert conn.execute(
+                "select result_ref from idempotency_key where key = %s",
+                (idempotency_key,),
+            ).fetchone() == ("message-b4-1",)
+            assert conn.execute(
+                "select count(*) from outbox_event "
+                "where event_type = 'commercial_action.sent' and aggregate_id = %s",
+                (action_id,),
+            ).fetchone() == (1,)
+            assert conn.execute(
+                "select count(*) from audit_log "
+                "where action = 'commercial_action.sent' and resource_id = %s",
+                (action_id,),
             ).fetchone() == (1,)
     finally:
         cleanup(schema)
