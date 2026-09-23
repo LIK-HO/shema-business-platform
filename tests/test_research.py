@@ -120,7 +120,7 @@ def test_research_gateway_propagates_remaining_time_budget() -> None:
     )
 
     assert len(results) == 1
-    assert candidate.timeouts == [2.5]
+    assert candidate.timeouts == [pytest.approx(2.5)]
 
 
 def test_research_gateway_uses_wall_clock_remaining_time(monkeypatch) -> None:
