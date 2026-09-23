@@ -209,6 +209,40 @@ class OpenCorporatesProvider:
             tokens=0,
         )
 
+    @property
+    def provider_id(self) -> str:
+        return "opencorporates"
+
+    def check(self):
+        from shema_platform.foundation.provider_probe import ProbeResult
+
+        self._throttle()
+
+        try:
+            status, _ = self._requester(
+                self._configuration.endpoint,
+                {
+                    "api_token": self._configuration.api_token,
+                    "q": "__shema_provider_readiness_probe__",
+                    "per_page": "1",
+                    "order": "score",
+                },
+                self._configuration.timeout_seconds,
+            )
+        except Exception:
+            return ProbeResult(
+                reachable=False,
+                error_code="CONNECTION_ERROR",
+            )
+
+        if status == 200:
+            return ProbeResult(reachable=True)
+
+        return ProbeResult(
+            reachable=False,
+            error_code=f"HTTP_{status}",
+        )
+
     def _throttle(self) -> None:
         minimum_interval = 1.0 / self.capability.max_requests_per_second
         with self._rate_lock:
