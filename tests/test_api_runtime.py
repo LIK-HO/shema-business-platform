@@ -26,6 +26,7 @@ from shema_platform.foundation.authentication import (
     AuthenticationPort,
     AuthenticationRequired,
 )
+from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.errors import QuarantineRequired
 
 
@@ -38,6 +39,18 @@ class FakeAuthenticator(AuthenticationPort):
     def authenticate(self, authorization: str | None) -> AuthenticatedActor:
         if authorization == "Bearer test-token":
             return AuthenticatedActor("operator-1", trust_level=2)
+
+        raise AuthenticationRequired()
+
+
+class PermissionedAuthenticator(AuthenticationPort):
+    def authenticate(self, authorization: str | None) -> AuthenticatedActor:
+        if authorization == "Bearer permissioned-token":
+            return AuthenticatedActor(
+                "operator-1",
+                trust_level=2,
+                permissions=frozenset({Permission.ORDER_CREATE}),
+            )
         raise AuthenticationRequired()
 
 
@@ -124,6 +137,26 @@ def client(application: APIApplication | None = None) -> TestClient:
     )
 
 
+def test_runtime_api_propagates_verified_permissions() -> None:
+    captured = {}
+
+    class CapturingApplication(FakeApplication):
+        def search(self, request, context):
+            captured["permissions"] = context.permissions
+            return super().search(request, context)
+
+    response = TestClient(
+        create_app(CapturingApplication(), PermissionedAuthenticator())
+    ).post(
+        "/v1/search",
+        headers={"Authorization": "Bearer permissioned-token"},
+        json={"region": "Moscow", "industries": ["logistics"]},
+    )
+
+    assert response.status_code == 200
+    assert captured["permissions"] == frozenset({Permission.ORDER_CREATE})
+
+
 def test_runtime_api_propagates_correlation_id() -> None:
     response = client(FakeApplication()).post(
         "/v1/search",
@@ -201,3 +234,23 @@ def test_runtime_api_maps_missing_application_to_503() -> None:
 
     assert response.status_code == 503
     assert response.json()["code"] == "application_unavailable"
+
+
+def test_runtime_api_maps_verified_permissions_to_authorization_subject() -> None:
+    class PermissionedAuthenticator(AuthenticationPort):
+        def authenticate(self, authorization: str | None) -> AuthenticatedActor:
+            return AuthenticatedActor(
+                actor_id="operator-1",
+                trust_level=2,
+                permissions=frozenset({Permission.ORDER_CREATE}),
+            )
+
+    response = TestClient(
+        create_app(FakeApplication(), PermissionedAuthenticator())
+    ).post(
+        "/v1/search",
+        headers={"Authorization": "Bearer permissioned-token"},
+        json={"region": "Moscow", "industries": ["logistics"]},
+    )
+
+    assert response.status_code == 200

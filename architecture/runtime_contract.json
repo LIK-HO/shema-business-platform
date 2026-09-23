@@ -1,0 +1,46 @@
+{
+  "version": "1.5.0",
+  "baseline_kernel_contract": "1.4",
+  "runtime": "modular_monolith",
+  "purpose": "Productization/runtime controls over the frozen v1.4 kernel",
+  "iam": {
+    "authentication_boundary": "oidc_jwt_adapter",
+    "issuer_must_use_https": true,
+    "jwks_must_use_https": true,
+    "allowed_algorithms": [
+      "RS256",
+      "RS384",
+      "RS512",
+      "PS256",
+      "PS384",
+      "PS512",
+      "ES256",
+      "ES384",
+      "ES512",
+      "EdDSA"
+    ],
+    "required_claims": [
+      "sub",
+      "iss",
+      "aud",
+      "exp"
+    ],
+    "permission_materialization": true,
+    "unknown_permissions_fail_closed": true,
+    "jwks_cache_bounded": true
+  },
+  "non_authoritative": [
+    "ui",
+    "telemetry",
+    "provider-specific_adapter_metadata"
+  ],
+  "frozen_kernel_authority": [
+    "postgresql",
+    "domain_semantics",
+    "authorization_policy",
+    "evidence",
+    "idempotency",
+    "audit",
+    "outbox"
+  ]
+}

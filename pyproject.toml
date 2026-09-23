@@ -10,6 +10,7 @@ requires-python = ">=3.12"
 dependencies = [
   "fastapi==0.141.1",
   "uvicorn==0.53.0",
+  "PyJWT[crypto]>=2.10,<3",
 ]
 
 [project.optional-dependencies]
@@ -38,3 +39,6 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["shema_platform"]
