@@ -6,11 +6,12 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from .safety import ExternalEffectSafety
 from shema_platform.application.communication import (
     CommunicationSendRequest,
     CommunicationSendResult,
 )
+
+from .safety import ExternalEffectSafety
 
 
 MAX_LIVE_EFFECT_SAFETY = ExternalEffectSafety(
