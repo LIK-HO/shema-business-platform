@@ -10,6 +10,7 @@ requires-python = ">=3.12"
 dependencies = [
   "fastapi==0.141.1",
   "uvicorn==0.53.0",
+  "PyJWT[crypto]>=2.10,<3",
 ]
 
 [project.optional-dependencies]
@@ -19,6 +20,7 @@ dev = [
   "ruff>=0.9,<1",
   "psycopg[binary]>=3.2,<4",
   "httpx>=0.28,<1",
+  "pip-audit>=2.9,<3",
 ]
 
 [tool.pytest.ini_options]
