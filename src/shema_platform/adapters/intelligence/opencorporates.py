@@ -10,13 +10,6 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-from shema_platform.application.research import (
-    ProviderCapability,
-    ProviderResult,
-    ResearchProvider,
-)
-
-
 
 def _request_json(
     url: str,
@@ -109,7 +102,7 @@ class OpenCorporatesConfiguration:
         )
 
 
-class OpenCorporatesProvider(ResearchProvider):
+class OpenCorporatesProvider:
     """Provider adapter that turns OpenCorporates observations into evidence-ready results."""
 
     capability: ProviderCapability
@@ -122,6 +115,8 @@ class OpenCorporatesProvider(ResearchProvider):
             [str, Mapping[str, str], float], tuple[int, bytes]
         ] = _request_json,
     ) -> None:
+        from shema_platform.application.research import ProviderCapability
+
         self._configuration = configuration
         self._requester = requester
         self._rate_lock = Lock()
@@ -136,7 +131,9 @@ class OpenCorporatesProvider(ResearchProvider):
             estimated_latency_seconds=configuration.timeout_seconds,
         )
 
-    def research(self, query: str, *, max_sources: int) -> ProviderResult:
+    def research(self, query: str, *, max_sources: int):
+        from shema_platform.application.research import ProviderResult
+
         if not query.strip():
             raise ValueError("OpenCorporates query is required")
         if max_sources <= 0:
