@@ -17,7 +17,10 @@ def test_capacity_overload_contract_is_bounded() -> None:
     )
     assert contract["version"] == "1.5-capacity-overload-baseline"
     assert contract["policy"]["no_new_kernel_semantics"] is True
-    assert contract["controls"]["concurrent_critical_commands"]["baseline_concurrency"] == 8
+    assert (
+        contract["controls"]["concurrent_critical_commands"]["baseline_concurrency"]
+        == 8
+    )
     assert contract["controls"]["retry_storm"]["max_attempts"] == 5
     assert contract["controls"]["retry_storm"]["maximum_delay_seconds"] == 60
     assert contract["controls"]["queue_backlog"]["outbox_default_batch_limit"] == 100
