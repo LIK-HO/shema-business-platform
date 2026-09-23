@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-research-deadline`
+- Productization branch: `v1.5/productization-research-wall-clock`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `e177b45a0746fa7b9236c5cc3e6cba0976c48bb3`
+- Current productization HEAD: `01ddbd60a0ff78cf5ae9e849f72023ba7fa751e7`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #19 — open, draft, unmerged
-- Active productization phase: P10 — research execution deadline — verified; next phase not started
+- Productization PR: #20 — open, draft, unmerged
+- Active productization phase: P11 — research wall-clock deadline
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -449,4 +449,25 @@ Changed boundary:
 - `docs/RESEARCH_EXECUTION_DEADLINE.md`
 
 No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+## P11 — RESEARCH WALL-CLOCK DEADLINE — IMPLEMENTED / AWAITING CI
+
+Implementation:
+- the research operation captures an authoritative monotonic wall-clock deadline at the start of the provider waterfall;
+- before each provider call, the gateway recomputes the actual remaining wall-clock budget;
+- provider execution receives that remaining time as its timeout cap;
+- provider-reported `latency_seconds` remains usage metadata and cannot extend the operation deadline;
+- when the deadline is exhausted, no further provider execution occurs;
+- a focused regression proves that elapsed wall-clock time reduces the timeout available to the next provider;
+- no automatic retry, scheduler, durable job semantics, global limiter, billing ledger or kernel change was introduced.
+
+Changed boundary:
+- `src/shema_platform/application/research.py`
+- `tests/test_research.py`
+- `architecture/research_wall_clock_contract.json`
+- `docs/RESEARCH_WALL_CLOCK_DEADLINE.md`
+
+CI must pass all seven required gates before P11 is marked CLOSED / VERIFIED.
+
 No merge or deployment authorization is implied.
