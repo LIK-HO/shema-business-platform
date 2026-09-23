@@ -105,8 +105,6 @@ class OpenCorporatesConfiguration:
 class OpenCorporatesProvider:
     """Provider adapter that turns OpenCorporates observations into evidence-ready results."""
 
-    capability: ProviderCapability
-
     def __init__(
         self,
         configuration: OpenCorporatesConfiguration,
