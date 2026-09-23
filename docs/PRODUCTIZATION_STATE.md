@@ -3,9 +3,9 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-provider-activation`
+- Productization branch: `v1.5/productization-provider-health`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `7426feb9197dbdae7e5f5f4eecb7c952b36ea289`
+- Current productization HEAD: `738a054b879d118bc88c43ca8677f3ab4848b435`
 - Core PR: #8 — open, draft, unmerged
 - Productization PR: #9 — open, draft, unmerged
 - v1.4 kernel semantics: frozen
@@ -236,5 +236,51 @@ No kernel, canonical business truth, evidence persistence, or research-routing s
 P6 — PRODUCTION OBSERVABILITY / HEALTH READINESS FOR EXTERNAL PROVIDERS.
 
 The next step is to expose provider readiness as operational health information without turning provider health into canonical business truth: configuration presence, enabled/disabled state, dependency reachability metadata and last-known failure state, with secrets and response payloads excluded.
+
+No merge or deployment authorization is implied.
+
+## P6 — PROVIDER HEALTH / READINESS — CLOSED / VERIFIED
+
+Purpose:
+- expose provider operational readiness without turning provider health into canonical business truth;
+- keep health state bounded to configuration, enablement, reachability, timestamp and error code;
+- provide a secret-free unauthenticated readiness surface for orchestration.
+
+Implementation:
+- `ProviderHealthRegistry` is process-local and stores no secrets or provider response payloads;
+- disabled providers are considered ready by policy;
+- enabled providers are ready only when configured and positively reachable;
+- unknown/unconfigured/unreachable enabled providers make readiness fail closed;
+- `GET /health/ready` returns HTTP 200 when all enabled providers are ready and 503 otherwise;
+- authentication is intentionally bypassed only for this operational endpoint;
+- response contains bounded provider metadata only, with no API tokens, authorization headers, request bodies or provider claims;
+- a pre-existing PITR drill readiness race discovered during certification was hardened with Docker health-check based PostgreSQL source readiness and bounded diagnostics; no business/runtime semantics changed.
+
+Evidence:
+- Final CI run #1062 (`35898648431`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- `src/shema_platform/foundation/provider_health.py`
+- `src/shema_platform/experience/api.py`
+- `tests/test_provider_health.py`
+- `tests/test_runtime_security.py`
+- `architecture/provider_health_contract.json`
+- `docs/PROVIDER_HEALTH.md`
+- `scripts/postgres_pitr_drill.sh` (CI readiness hardening only)
+
+No kernel semantics, canonical business truth, provider intelligence semantics or persistence ownership were changed.
+
+## Next bounded productization boundary
+
+P7 — EXPLICIT PROVIDER READINESS PROBES.
+
+The next step is to connect the health registry to provider-specific, non-business probes. A probe may verify configuration and transport reachability, update only operational health state and emit existing telemetry; it must not fetch or persist business claims, secrets or canonical data.
 
 No merge or deployment authorization is implied.
