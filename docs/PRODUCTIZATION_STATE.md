@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-research-wall-clock`
+- Productization branch: `v1.5/productization-provider-preio-deadline`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `439b1433a019e3add31bcbf86db73ad22b794056`
+- Current productization HEAD: `48636b595a9131bb2c02856caceb0e2bef2131d9`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #20 — open, draft, unmerged
-- Active productization phase: P11 — research wall-clock deadline
+- Productization PR: #21 — open, draft, unmerged
+- Active productization phase: P12 — provider pre-io deadline
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -484,4 +484,24 @@ Changed boundary:
 - `docs/RESEARCH_WALL_CLOCK_DEADLINE.md`
 
 No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+## P12 — PROVIDER PRE-I/O DEADLINE — IMPLEMENTED / AWAITING CI
+
+Implementation:
+- OpenCorporates now includes its provider-local rate-limit wait inside the same execution deadline;
+- the provider computes a monotonic deadline from the effective timeout;
+- if the required throttle wait would consume the remaining deadline, the provider fails closed before external I/O;
+- after a throttle wait, only the remaining timeout is passed to the HTTP requester;
+- focused tests prove both timeout reduction after a bounded wait and fail-closed behavior when the wait cannot fit;
+- no retry scheduler, durable job semantics, global limiter, billing ledger or kernel change was introduced.
+
+Changed boundary:
+- `src/shema_platform/adapters/intelligence/opencorporates.py`
+- `tests/test_opencorporates_provider.py`
+- `architecture/provider_preio_deadline_contract.json`
+- `docs/PROVIDER_PREIO_DEADLINE.md`
+
+CI must pass all seven required gates before P12 is marked CLOSED / VERIFIED.
+
 No merge or deployment authorization is implied.
