@@ -19,7 +19,7 @@ class RuntimeSecurityConfiguration:
     database_url: str | None
 
     @classmethod
-    def from_environment(cls, *, docs_enabled: bool) -> "RuntimeSecurityConfiguration":
+    def from_environment(cls, *, docs_enabled: bool) -> RuntimeSecurityConfiguration:
         return cls(
             environment=os.getenv("APP_ENV", "development").strip().lower(),
             docs_enabled=docs_enabled,
