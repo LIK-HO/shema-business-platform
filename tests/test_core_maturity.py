@@ -30,12 +30,13 @@ def test_core_maturity_contract_is_explicit() -> None:
     ]
     assert contract["database_state_ownership_constraints"] is True
     assert contract["migration_safety"]["historical_edit_fails_closed"] is True
+    adoption = contract["migration_safety"]["existing_schema_adoption"]
     assert contract["migration_safety"]["latest_required_version"] == 9
-    assert contract["migration_safety"]["existing_schema_adoption"]["baseline_version"] == 8
-    assert contract["migration_safety"]["existing_schema_adoption"]["verified_required_schema_shape"] is True
-    assert contract["migration_safety"]["existing_schema_adoption"]["historical_migrations_not_reapplied"] is True
-    assert contract["migration_safety"]["existing_schema_adoption"]["ledger_bootstrap_transactional"] is True
-    assert contract["migration_safety"]["existing_schema_adoption"]["post_adoption_apply_starts_at"] == 9
+    assert adoption["baseline_version"] == 8
+    assert adoption["verified_required_schema_shape"] is True
+    assert adoption["historical_migrations_not_reapplied"] is True
+    assert adoption["ledger_bootstrap_transactional"] is True
+    assert adoption["post_adoption_apply_starts_at"] == 9
     migration = (
         root / "db/migrations/0009_state_ownership_invariants.sql"
     ).read_text()
