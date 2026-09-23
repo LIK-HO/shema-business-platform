@@ -462,7 +462,8 @@ def test_concurrent_action_create_with_same_idempotency_key_returns_one_result()
         identity_id = str(uuid4())
         seed_verified_identity(schema, identity_id)
 
-        barrier = Barrier(2)
+        worker_count = 8
+        barrier = Barrier(worker_count)
 
         def execute_once(worker_index: int):
             workflow = CommercialActionCreateWorkflow(
@@ -482,22 +483,27 @@ def test_concurrent_action_create_with_same_idempotency_key_returns_one_result()
                 idempotency_key="idem:concurrent:1",
             )
 
-        with ThreadPoolExecutor(max_workers=2) as executor:
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
             futures = [
-                executor.submit(execute_once, 1),
-                executor.submit(execute_once, 2),
+                executor.submit(execute_once, worker_index)
+                for worker_index in range(1, worker_count + 1)
             ]
             results = [future.result(timeout=30) for future in futures]
 
         assert results[0] == results[1]
         winner_id = results[0].action_id
-        assert winner_id in {"action-concurrent-1", "action-concurrent-2"}
+        expected_ids = {
+            f"action-concurrent-{worker_index}"
+            for worker_index in range(1, worker_count + 1)
+        }
+        assert winner_id in expected_ids
 
         with psycopg.connect(DATABASE_URL) as conn:
             conn.execute('set search_path to "' + schema + '"')
             assert conn.execute(
                 "select count(*) from commercial_action "
-                "where action_id in ('action-concurrent-1', 'action-concurrent-2')"
+                "where action_id in (" + ",".join(["%s"] * worker_count) + ")"
+            , tuple(expected_ids)
             ).fetchone() == (1,)
             assert conn.execute(
                 "select result_ref from idempotency_key "
