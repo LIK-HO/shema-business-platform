@@ -29,21 +29,22 @@
 
 ---
 
-# 2. Формальный статус на 2026-09-21
+# 2. Формальный статус на 2026-09-23
 
 Мы на стадии:
 
-**v1.5 Core Maturity Integration & Certification**
+**v1.5 Core Maturity Integration & Certification — B3 Migration Adoption Proof**
 
 Это означает:
-- v1.4 business/domain kernel сформирован;
+- v1.4 business/domain kernel сформирован и frozen;
 - основные v1.4 invariants реализованы и hardened;
 - v1.5 runtime boundary сформирован;
-- IAM, production controls и core maturity существуют как отдельные hardening-направления;
-- остаётся свести их в единый release candidate и доказать эксплуатационные свойства;
-- после этого ядро должно быть остановлено от дальнейшего семантического расширения.
+- production IAM, production security/telemetry/supply-chain и core maturity объединены в единый проверяемый v1.5 candidate;
+- B2 unified candidate прошёл полный CI/release-contract/integration verification;
+- текущий следующий риск — безопасное adoption существующих v1.4 databases в текущий checksummed migration ledger;
+- после B3-B10 и финальной сертификации семантика ядра должна быть остановлена от дальнейшего расширения.
 
-Текущий PR #8 ещё не production release: последняя проверка CI была красной из-за одного Ruff I001 в tests/integration/test_critical_workflows_postgres.py. Это release blocker, но не архитектурный дефект.
+CI run #989 на PR #8 head `d2ad09033331683f00bbc73a3a74a1a92ef976af` завершился зелёным по всем шести jobs. PR #8 остаётся открытым, draft и mergeable; это ещё не production release.
 
 ---
 
@@ -254,7 +255,7 @@ Migration 0009 state_ownership_invariants добавляет PostgreSQL constrai
 - production IAM: OIDC/JWT boundary, issuer/audience/expiry, HTTPS, bounded JWKS cache, explicit asymmetric algorithms, permission materialization, fail-closed unknown permissions;
 - production security/telemetry/supply-chain: fail-closed configuration, redacted telemetry, correlation context, запрет записи request bodies и authorization headers, dependency audit.
 
-Эти направления должны быть сведены в единый v1.5 candidate.
+Эти направления сведены в единый проверенный v1.5 candidate; дальнейшая работа идёт через доказательство эксплуатационных свойств и безопасного перехода существующих данных, без изменения frozen v1.4 semantics.
 
 ---
 
@@ -483,11 +484,11 @@ AI output:
 
 # 8. Что ещё необходимо до Core Maturity Certification
 
-## B1 — GREEN CI
-Исправить текущий Ruff I001 и получить полный green на Python 3.12/3.13, unit, integration, release contract и supply-chain.
+## B1 — GREEN CI — CLOSED / VERIFIED
+Полный green подтверждён CI run #970.
 
-## B2 — Unified v1.5 candidate
-Свести в один проверяемый baseline:
+## B2 — Unified v1.5 candidate — CLOSED / VERIFIED
+Единый baseline подтверждён CI run #989:
 - v1.5-runtime;
 - production IAM;
 - production security/telemetry/supply-chain;
@@ -498,7 +499,7 @@ AI output:
 
 existing schema → verified baseline → migration ledger → 0009+
 
-без разрушения данных.
+без разрушения данных. B3 — текущая активная сертификационная граница.
 
 ## B4 — Crash-after-external-effect integration proof
 Доказать:
