@@ -60,7 +60,14 @@
     "historical_edit_fails_closed": true,
     "single_transaction": true,
     "gap_free_sequence": true,
-    "latest_required_version": 9
+    "latest_required_version": 9,
+    "existing_schema_adoption": {
+      "baseline_version": 8,
+      "verified_required_schema_shape": true,
+      "historical_migrations_not_reapplied": true,
+      "ledger_bootstrap_transactional": true,
+      "post_adoption_apply_starts_at": 9
+    }
   },
   "development_manifest": "docs/DEVELOPMENT_MANIFEST.md",
   "current_stage": "v1.5 Core Maturity Integration & Certification",
