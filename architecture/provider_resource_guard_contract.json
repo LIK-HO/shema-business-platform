@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "scope": "intelligence_provider_io",
+  "pre_io_guard": true,
+  "budgets": {
+    "provider_calls": true,
+    "source_count": true,
+    "token_budget": true,
+    "api_cost_limit": true,
+    "time_budget_seconds": true
+  },
+  "rate_limit": {
+    "source": "ProviderCapability.max_requests_per_second",
+    "scope": "process_local",
+    "action_when_exceeded": "skip_external_call"
+  },
+  "canonical_business_state": false,
+  "durable_budget_store": false,
+  "failure_behavior": {
+    "provider_call_budget_exhausted": "stop_operation",
+    "provider_resource_limit": "skip_provider",
+    "provider_rate_limit": "skip_provider"
+  }
+}
