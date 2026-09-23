@@ -33,7 +33,7 @@
 
 Мы на стадии:
 
-**v1.5 Core Maturity Integration & Certification — B5 Backup / Restore / PITR**
+**v1.5 Core Maturity Integration & Certification — B6 End-to-End Observability**
 
 Это означает:
 - v1.4 business/domain kernel сформирован и frozen;
@@ -41,10 +41,11 @@
 - B2 unified v1.5 candidate прошёл полный CI/release verification;
 - B3 безопасный adoption существующих v1.4 databases доказан executable integration proof;
 - B4 crash-after-external-effect recovery доказан реальным commercial send integration proof;
-- текущая граница — измеримая восстановляемость PostgreSQL canonical state с определёнными RTO/RPO;
-- после B5-B10 и финальной сертификации семантика ядра должна быть остановлена от дальнейшего расширения.
+- B5 physical backup/restore/PITR доказан реальным PostgreSQL 16 drill и измеренным RTO/RPO;
+- текущая граница — доказать end-to-end correlation lineage без утечки request bodies или authorization headers;
+- после B6-B10 и финальной сертификации семантика ядра должна быть остановлена от дальнейшего расширения.
 
-CI run #999 на PR #8 head `8969b29b4413acb5eac947761d13059e3ee6b543` завершился зелёным по всем шести jobs. PR #8 остаётся открытым, draft и mergeable; это ещё не production release.
+CI run #1005 на PR #8 head `918ad61684c89cb59531a9017343d6b326033a3d` завершился зелёным по всем семи jobs. Измеренный PITR drill: RTO 2.039s, RPO 2.053s. PR #8 остаётся открытым, draft и mergeable; это ещё не production release.
 
 # 3. Что уже сделано в ядре
 
@@ -504,20 +505,19 @@ existing schema → verified baseline → migration ledger → 0009+
 ## B4 — Crash-after-external-effect integration proof — CLOSED / VERIFIED
 CI run #999 подтвердил recovery после внешнего эффекта для real commercial send path.
 
-## B5 — Backup / Restore / PITR
-Доказать:
+## B5 — Backup / Restore / PITR — CLOSED / VERIFIED
 
-reserve → external effect succeeds → process crash/connection loss → reclaim → retry with same idempotency key → one logical external effect.
+Доказано:
+- physical PostgreSQL 16 base backup;
+- WAL archiving;
+- point-in-time recovery to a controlled target timestamp;
+- preservation of canonical identity, commercial action, order, order line, economics and audit lineage;
+- exclusion of the later sentinel commit;
+- measured RTO = **2.039s**;
+- measured RPO = **2.053s** for the controlled drill window;
+- recovery is a release-gated CI control.
 
-## B5 — Backup / Restore / DR
-Доказать:
-- backup creation;
-- restore;
-- point-in-time recovery;
-- integrity verification;
-- RTO;
-- RPO;
-- recovery from production-like failure.
+CI run #1005 (`35841541121`) прошёл все семь jobs, включая `backup-recovery` и `release-contract`.
 
 ## B6 — End-to-end observability proof
 Один полный workflow должен трассироваться от request до external effect и audit без потери correlation.
