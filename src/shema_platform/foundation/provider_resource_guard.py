@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from threading import Lock
-import time
+from typing import TYPE_CHECKING
 
-from shema_platform.application.research import (
-    ProviderCapability,
-    ResearchBudget,
-)
+if TYPE_CHECKING:
+    from shema_platform.application.research import (
+        ProviderCapability,
+        ResearchBudget,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +57,7 @@ class ProviderResourceGuard:
         remaining_time: float,
         requested_sources: int,
     ) -> ProviderCallDecision:
+        del budget
         if remaining_calls <= 0:
             return ProviderCallDecision(
                 allowed=False,
