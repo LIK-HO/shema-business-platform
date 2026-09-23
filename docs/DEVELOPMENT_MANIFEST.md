@@ -33,20 +33,17 @@
 
 Мы на стадии:
 
-**v1.5 Core Maturity Integration & Certification — B3 Migration Adoption Proof**
+**v1.5 Core Maturity Integration & Certification — B4 Crash-after-External-Effect Proof**
 
 Это означает:
 - v1.4 business/domain kernel сформирован и frozen;
-- основные v1.4 invariants реализованы и hardened;
 - v1.5 runtime boundary сформирован;
-- production IAM, production security/telemetry/supply-chain и core maturity объединены в единый проверяемый v1.5 candidate;
-- B2 unified candidate прошёл полный CI/release-contract/integration verification;
-- текущий следующий риск — безопасное adoption существующих v1.4 databases в текущий checksummed migration ledger;
-- после B3-B10 и финальной сертификации семантика ядра должна быть остановлена от дальнейшего расширения.
+- B2 unified v1.5 candidate прошёл полный CI/release verification;
+- B3 безопасный adoption существующих v1.4 databases в checksummed migration ledger прошёл executable integration proof;
+- текущая граница — доказать recovery после успешного внешнего эффекта при последующем process/connection loss;
+- после B4-B10 и финальной сертификации семантика ядра должна быть остановлена от дальнейшего расширения.
 
-CI run #989 на PR #8 head `d2ad09033331683f00bbc73a3a74a1a92ef976af` завершился зелёным по всем шести jobs. PR #8 остаётся открытым, draft и mergeable; это ещё не production release.
-
----
+CI run #996 на PR #8 head `0e7f22f8fc164abc1fa5b121581d3f9932a606aa` завершился зелёным по всем шести jobs. PR #8 остаётся открытым, draft и mergeable; это ещё не production release.
 
 # 3. Что уже сделано в ядре
 
@@ -206,6 +203,8 @@ Economics:
 ## 3.11. Database Defense-in-Depth
 
 Migration 0009 state_ownership_invariants добавляет PostgreSQL constraints, которые дополнительно запрещают невозможные lease/state combinations для jobs, outbox delivery и commercial send.
+
+Для существующих v1.4 databases принят отдельный adoption path: migrations 0001-0008 не переисполняются. Schema shape сначала проверяется против обязательного v1.4 baseline, затем migration ledger 0001-0008 создаётся транзакционно с утверждёнными checksums, после чего обычный runner продолжает с 0009.
 
 Инвариант закреплён одновременно в domain/application, repository и database.
 
