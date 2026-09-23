@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import collections.abc
 import dataclasses
 import datetime
 import types
-import typing
+from collections.abc import Mapping
+from typing import Protocol
 
 
 _SAFE_ATTRIBUTE_KEYS = frozenset(
@@ -28,7 +28,7 @@ class TelemetryEvent:
     name: str
     occurred_at: datetime.datetime
     correlation_id: str
-    attributes: collections.abc.Mapping[str, object]
+    attributes: Mapping[str, object]
 
     def __post_init__(self) -> None:
         if not self.name.strip():
@@ -42,7 +42,7 @@ class TelemetryEvent:
         object.__setattr__(self, "attributes", types.MappingProxyType(safe))
 
 
-class TelemetrySink(typing.Protocol):
+class TelemetrySink(Protocol):
     """Non-authoritative operational telemetry boundary."""
 
     def emit(self, event: TelemetryEvent) -> None: ...
@@ -72,7 +72,7 @@ def build_event(
     *,
     name: str,
     correlation_id: str,
-    attributes: collections.abc.Mapping[str, object] | None = None,
+    attributes: Mapping[str, object] | None = None,
     occurred_at: datetime.datetime | None = None,
 ) -> TelemetryEvent:
     return TelemetryEvent(
@@ -84,7 +84,7 @@ def build_event(
 
 
 def _sanitize_attributes(
-    attributes: collections.abc.Mapping[str, object],
+    attributes: Mapping[str, object],
 ) -> dict[str, object]:
     safe: dict[str, object] = {}
     for key, value in attributes.items():
