@@ -81,7 +81,7 @@ jobs:
         run: python -m pip install --upgrade pip && pip install -e '.[dev]'
       - name: Dependency audit
         run: |
-          python -m pip freeze | grep -v '^shema-business-platform==' > /tmp/requirements-audit.txt
+          python -m pip freeze | grep -vE '^shema-business-platform(==| @ |$)' > /tmp/requirements-audit.txt
           pip-audit --strict -r /tmp/requirements-audit.txt
 
   release-contract:
