@@ -6,12 +6,12 @@ import psycopg
 import pytest
 
 from shema_platform.platform.migrations import (
+    V1_4_BASELINE_VERSION,
     Migration,
     MigrationBaselineError,
     MigrationIntegrityError,
     MigrationPlan,
     MigrationRunner,
-    V1_4_BASELINE_VERSION,
 )
 
 pytestmark = pytest.mark.integration
