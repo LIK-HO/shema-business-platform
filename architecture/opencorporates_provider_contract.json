@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "provider_id": "opencorporates",
+  "source_class": "corporate_registry_aggregator",
+  "api_version": "0.4",
+  "transport": "https",
+  "authentication": "api_token",
+  "endpoint": "/v0.4/companies/search",
+  "max_sources_per_call": 50,
+  "requires_source_reference_for_claims": true,
+  "canonical_state_write": false,
+  "production_auto_activation": false,
+  "application_boundary": "shema_platform.adapters.intelligence",
+  "evidence_boundary": "ProviderResult -> Evidence",
+  "failure_policy": {
+    "non_200": "fail",
+    "invalid_json": "fail",
+    "missing_provenance_url": "discard_observation"
+  }
+}

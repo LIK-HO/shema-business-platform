@@ -3,9 +3,9 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-provider-safety`
+- Productization branch: `v1.5/productization-opencorporates`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `fe875dd7a7f6045e1a95adc608b4235da6402745`
+- Current productization HEAD: `cf7663072de40ee6fba67cebd731e25bb144d12c`
 - Core PR: #8 — open, draft, unmerged
 - Productization PR: #9 — open, draft, unmerged
 - v1.4 kernel semantics: frozen
@@ -149,3 +149,50 @@ The core and the first three productization controls are now bounded:
 No new core phase is created. Further product work remains outside the frozen kernel and must have its own bounded evidence gate. Live MAX outbound remains explicitly blocked pending provider capability proof.
 
 No merge or deployment authorization is implied by these productization PRs.
+
+## P4 — REAL INTELLIGENCE PROVIDER: OPENCORPORATES — CLOSED / VERIFIED
+
+Purpose:
+- add one concrete production-capable intelligence provider behind the existing `ResearchProvider` / `ProviderCapability` boundary;
+- preserve canonical business truth in the platform and convert provider observations only into the existing evidence flow;
+- make provider configuration explicit, bounded and fail-closed without automatic production activation.
+
+Implementation:
+- `OpenCorporatesConfiguration` loads a required API token and explicit operational limits from environment configuration;
+- `OpenCorporatesProvider` performs read-only HTTPS company search against the versioned `/v0.4/companies/search` endpoint;
+- each materialized claim requires an HTTPS OpenCorporates provenance URL;
+- each call is capped at 50 provider results and locally throttled;
+- non-200 responses and malformed JSON fail closed;
+- external I/O remains outside Unit of Work, preserving the existing intelligence transaction boundary;
+- no canonical identity/order/economics state is mutated by the provider;
+- production auto-activation remains disabled.
+
+External contract evidence:
+- OpenCorporates documents its versioned REST API, API-key authentication, HTTPS usage, version 0.4 company search endpoint, provenance/source URLs and plan-dependent usage limits.
+- Reference recorded in `docs/OPENCORPORATES_PROVIDER.md`.
+
+Evidence:
+- CI run `35897370730` passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- `src/shema_platform/adapters/intelligence/opencorporates.py`
+- `tests/test_opencorporates_provider.py`
+- `architecture/opencorporates_provider_contract.json`
+- `docs/OPENCORPORATES_PROVIDER.md`
+
+No kernel or existing intelligence workflow semantics were changed.
+
+## Next bounded productization boundary
+
+P5 — EXPLICIT PROVIDER ACTIVATION / CONFIGURATION SNAPSHOT.
+
+The next step is not live activation itself. It is to add a controlled composition boundary that can instantiate an explicitly enabled OpenCorporates provider from a versioned configuration snapshot, while remaining fail-closed when the provider is not enabled or its secret configuration is absent.
+
+No provider may become authoritative through activation. No merge or deployment authorization is implied.
