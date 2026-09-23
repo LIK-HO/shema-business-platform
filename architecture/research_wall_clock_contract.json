@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "scope": "research_operation",
+  "deadline_source": "monotonic_wall_clock",
+  "provider_timeout": "remaining_wall_clock_budget",
+  "provider_latency_metadata": "non_authoritative",
+  "non_positive_remaining_time": "skip_provider",
+  "failure_handling": "fail_closed",
+  "automatic_retry": false,
+  "durable_job_semantics": false,
+  "canonical_business_state": false
+}

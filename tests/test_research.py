@@ -120,7 +120,60 @@ def test_research_gateway_propagates_remaining_time_budget() -> None:
     )
 
     assert len(results) == 1
-    assert candidate.timeouts == [2.5]
+    assert candidate.timeouts == [pytest.approx(2.5, abs=1e-4)]
+
+
+def test_research_gateway_uses_wall_clock_remaining_time(monkeypatch) -> None:
+    import shema_platform.application.research as research_module
+
+    now = [100.0]
+    monkeypatch.setattr(research_module.time, "monotonic", lambda: now[0])
+
+    gateway = ProviderGateway()
+    first = provider("first", cost=0.5)
+    second = provider("second", cost=0.5)
+
+    class AdvancingProvider:
+        def __init__(self, wrapped: FakeProvider, advance: float) -> None:
+            self.capability = wrapped.capability
+            self._wrapped = wrapped
+            self._advance = advance
+            self.timeouts = wrapped.timeouts
+
+        def research(
+            self,
+            query: str,
+            *,
+            max_sources: int,
+            timeout_seconds: float | None = None,
+        ) -> ProviderResult:
+            result = self._wrapped.research(
+                query,
+                max_sources=max_sources,
+                timeout_seconds=timeout_seconds,
+            )
+            now[0] += self._advance
+            return result
+
+    first_wrapped = AdvancingProvider(first, 1.5)
+    second_wrapped = AdvancingProvider(second, 0.0)
+
+    results = gateway.research(
+        "Москва логистика",
+        "logistics",
+        [first_wrapped, second_wrapped],
+        ResearchBudget(
+            provider_calls=2,
+            source_count=4,
+            token_budget=40,
+            api_cost_limit=2.0,
+            time_budget_seconds=2.5,
+        ),
+    )
+
+    assert len(results) == 2
+    assert first.timeouts == [2.5]
+    assert second.timeouts == [1.0]
 
 
 def test_provider_results_require_source_references_for_claims() -> None:
