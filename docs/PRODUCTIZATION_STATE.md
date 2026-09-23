@@ -327,3 +327,46 @@ P8 — INTELLIGENCE PROVIDER RESOURCE / COST GUARD.
 The next step is to enforce bounded external intelligence consumption per operation: provider call budget, request-rate budget and explicit rejection before external I/O when the budget is exhausted. The guard will be operational policy only and will not become canonical economic state.
 
 No merge or deployment authorization is implied.
+
+
+## P8 — INTELLIGENCE PROVIDER RESOURCE / COST GUARD — CLOSED / VERIFIED
+
+Purpose:
+- enforce an explicit operation-scoped bound on external provider calls;
+- reject before external I/O when the bound is exhausted;
+- keep the guard process-local and operational rather than turning it into canonical economic state.
+
+Implementation:
+- `ProviderBudget` validates non-negative call limits and positive provider request-rate configuration;
+- `ProviderCallBudget` tracks calls for one operation and reserves a call before external I/O;
+- `ProviderBudgetExceeded` fails closed when the explicit call budget is exhausted;
+- OpenCorporates accepts an optional typed call budget and reserves before invoking the requester;
+- the provider's existing request-rate throttle remains authoritative for provider-specific rate control;
+- no durable spend ledger, billing semantics, global/distributed limiter, retry scheduler or kernel change was introduced.
+
+Evidence:
+- Final CI run #1066 (`35906662100`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- `src/shema_platform/foundation/provider_budget.py`
+- `src/shema_platform/adapters/intelligence/opencorporates.py`
+- `tests/test_provider_budget.py`
+- `architecture/provider_budget_contract.json`
+- `docs/PROVIDER_RESOURCE_BUDGET.md`
+
+No kernel semantics, canonical business truth, durable economics, global limiting or deployment behavior were changed.
+
+## Next bounded productization boundary
+
+P9 — PROVIDER OPERATION EXECUTION POLICY.
+
+The next step is to bound the execution envelope around an external provider operation: explicit timeout/deadline policy and bounded failure handling, without introducing a retry scheduler, durable job semantics or new kernel behavior. The policy must remain outside the frozen kernel and must fail closed rather than permit unbounded external work.
+
+No merge or deployment authorization is implied.
