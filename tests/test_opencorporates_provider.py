@@ -188,6 +188,7 @@ def test_provider_passes_bounded_timeout_to_external_request() -> None:
 
     assert requester.calls[0][2] == 30
 
+
 def test_provider_uses_research_deadline_override() -> None:
     requester = FakeRequester(
         status=200,
