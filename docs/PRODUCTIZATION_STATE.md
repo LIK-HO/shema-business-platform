@@ -3,9 +3,9 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-opencorporates`
+- Productization branch: `v1.5/productization-provider-activation`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `cf7663072de40ee6fba67cebd731e25bb144d12c`
+- Current productization HEAD: `7426feb9197dbdae7e5f5f4eecb7c952b36ea289`
 - Core PR: #8 — open, draft, unmerged
 - Productization PR: #9 — open, draft, unmerged
 - v1.4 kernel semantics: frozen
@@ -196,3 +196,45 @@ P5 — EXPLICIT PROVIDER ACTIVATION / CONFIGURATION SNAPSHOT.
 The next step is not live activation itself. It is to add a controlled composition boundary that can instantiate an explicitly enabled OpenCorporates provider from a versioned configuration snapshot, while remaining fail-closed when the provider is not enabled or its secret configuration is absent.
 
 No provider may become authoritative through activation. No merge or deployment authorization is implied.
+
+## P5 — EXPLICIT PROVIDER ACTIVATION / CONFIGURATION SNAPSHOT — CLOSED / VERIFIED
+
+Purpose:
+- create a controlled composition boundary for the verified OpenCorporates adapter;
+- require explicit feature enablement before composition;
+- keep provider secrets outside versioned configuration snapshots;
+- fail closed on missing secrets or invalid operational values.
+
+Implementation:
+- `OpenCorporatesProviderFactory` composes the adapter only when the versioned snapshot carries `intelligence.opencorporates.enabled=true`;
+- runtime API token is supplied separately and is never copied into `ConfigurationSnapshot`;
+- provider operational settings come from the snapshot and are validated by the existing provider configuration contract;
+- disabled providers are not composed;
+- missing runtime secret causes fail-closed activation failure;
+- no production auto-activation or deployment infrastructure change was introduced.
+
+Evidence:
+- CI run `35897892691` passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- `src/shema_platform/adapters/intelligence/activation.py`
+- `tests/test_opencorporates_activation.py`
+- `architecture/opencorporates_activation_contract.json`
+- `docs/OPENCORPORATES_ACTIVATION.md`
+
+No kernel, canonical business truth, evidence persistence, or research-routing semantics were changed.
+
+## Next bounded productization boundary
+
+P6 — PRODUCTION OBSERVABILITY / HEALTH READINESS FOR EXTERNAL PROVIDERS.
+
+The next step is to expose provider readiness as operational health information without turning provider health into canonical business truth: configuration presence, enabled/disabled state, dependency reachability metadata and last-known failure state, with secrets and response payloads excluded.
+
+No merge or deployment authorization is implied.
