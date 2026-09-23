@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "provider_id": "opencorporates",
+  "feature_flag": "intelligence.opencorporates.enabled",
+  "activation_mode": "explicit_snapshot",
+  "secret_source": "runtime_secret",
+  "secret_keys": [
+    "OPENCORPORATES_API_TOKEN"
+  ],
+  "snapshot_must_not_contain_secrets": true,
+  "production_auto_activation": false,
+  "disabled_behavior": "provider_not_composed",
+  "missing_secret_behavior": "fail",
+  "invalid_snapshot_behavior": "fail",
+  "canonical_state_write": false
+}
