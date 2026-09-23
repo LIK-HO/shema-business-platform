@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import dataclasses
-import datetime
-import types
 from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from types import MappingProxyType
 from typing import Protocol
 
 
@@ -23,10 +23,10 @@ _SAFE_ATTRIBUTE_KEYS = frozenset(
 _MAX_STRING_VALUE_LENGTH = 256
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True)
 class TelemetryEvent:
     name: str
-    occurred_at: datetime.datetime
+    occurred_at: datetime
     correlation_id: str
     attributes: Mapping[str, object]
 
@@ -39,7 +39,7 @@ class TelemetryEvent:
             raise ValueError("occurred_at must be timezone-aware")
 
         safe = _sanitize_attributes(self.attributes)
-        object.__setattr__(self, "attributes", types.MappingProxyType(safe))
+        object.__setattr__(self, "attributes", MappingProxyType(safe))
 
 
 class TelemetrySink(Protocol):
@@ -73,11 +73,11 @@ def build_event(
     name: str,
     correlation_id: str,
     attributes: Mapping[str, object] | None = None,
-    occurred_at: datetime.datetime | None = None,
+    occurred_at: datetime | None = None,
 ) -> TelemetryEvent:
     return TelemetryEvent(
         name=name,
-        occurred_at=occurred_at or datetime.datetime.now(datetime.UTC),
+        occurred_at=occurred_at or datetime.now(UTC),
         correlation_id=correlation_id,
         attributes=attributes or {},
     )
