@@ -44,6 +44,22 @@ def test_core_maturity_contract_is_explicit() -> None:
     assert "outbox_delivery_lease_consistency_check" in migration
     assert "commercial_action_send_lease_check" in migration
 
+    matrix = (root / "docs/SECURITY_CERTIFICATION_MATRIX.md").read_text()
+    for control in (
+        "OIDC issuer HTTPS",
+        "Explicit asymmetric JWT algorithms",
+        "Permission materialization",
+        "Production docs disabled",
+        "Telemetry allow-list redaction",
+        "Authorization headers excluded from telemetry",
+        "Dependency vulnerability gate",
+        "Production PITR recovery",
+    ):
+        assert control in matrix
+    assert "Fail-closed / failure behavior" in matrix
+    assert "Executable evidence" in matrix
+    assert "Release gate" in matrix
+
 
 def test_migration_plan_rejects_gaps() -> None:
     try:
