@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-research-wall-clock`
+- Productization branch: `v1.5/productization-provider-preio-deadline`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `439b1433a019e3add31bcbf86db73ad22b794056`
+- Current productization HEAD: `c48d81ee1dcace8ef3211a026361454849dccb9a`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #20 — open, draft, unmerged
-- Active productization phase: P11 — research wall-clock deadline
+- Productization PR: #21 — open, draft, unmerged
+- Active productization phase: P12 — provider pre-io deadline
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -482,6 +482,40 @@ Changed boundary:
 - `tests/test_research.py`
 - `architecture/research_wall_clock_contract.json`
 - `docs/RESEARCH_WALL_CLOCK_DEADLINE.md`
+
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+## P12 — PROVIDER PRE-I/O DEADLINE — CLOSED / VERIFIED
+
+Purpose:
+- include provider-local rate-limit waiting inside the same execution deadline;
+- fail closed before external I/O when the required pre-I/O wait cannot fit inside the remaining budget;
+- pass only the post-wait timeout to the actual HTTP requester.
+
+Implementation:
+- OpenCorporates derives a monotonic deadline from the effective timeout;
+- rate-limit sleep is permitted only when it fits within that deadline;
+- if the wait would consume the remaining deadline, the provider raises before external I/O;
+- after a bounded wait, the requester receives only the remaining timeout;
+- focused tests prove timeout reduction and fail-closed pre-I/O behavior;
+- no retry scheduler, durable job semantics, global limiter, billing ledger or kernel change was introduced.
+
+Evidence:
+- CI run #1089 (`35910726111`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- `src/shema_platform/adapters/intelligence/opencorporates.py`
+- `tests/test_opencorporates_provider.py`
+- `architecture/provider_preio_deadline_contract.json`
+- `docs/PROVIDER_PREIO_DEADLINE.md`
 
 No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
 No merge or deployment authorization is implied.

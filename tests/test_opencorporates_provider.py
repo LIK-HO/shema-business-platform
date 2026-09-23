@@ -111,7 +111,7 @@ def test_provider_parses_provenanced_company_observations() -> None:
                 "per_page": "10",
                 "order": "score",
             },
-            1,
+            pytest.approx(1, abs=1e-4),
         )
     ]
 
@@ -186,7 +186,7 @@ def test_provider_passes_bounded_timeout_to_external_request() -> None:
 
     provider.research("company", max_sources=1)
 
-    assert requester.calls[0][2] == 30
+    assert requester.calls[0][2] == pytest.approx(30, abs=1e-4)
 
 
 def test_provider_uses_research_deadline_override() -> None:
@@ -206,7 +206,7 @@ def test_provider_uses_research_deadline_override() -> None:
 
     provider.research("company", max_sources=1, timeout_seconds=2)
 
-    assert requester.calls[0][2] == 2
+    assert requester.calls[0][2] == pytest.approx(2, abs=1e-4)
 
 
 def test_provider_rejects_non_positive_research_deadline() -> None:
@@ -223,3 +223,56 @@ def test_provider_rejects_non_positive_research_deadline() -> None:
         provider.research("company", max_sources=1, timeout_seconds=0)
 
 
+
+
+def test_provider_reduces_timeout_by_rate_limit_wait(monkeypatch) -> None:
+    import shema_platform.adapters.intelligence.opencorporates as module
+
+    now = [100.0]
+    monkeypatch.setattr(module.time, "monotonic", lambda: now[0])
+    monkeypatch.setattr(module.time, "sleep", lambda seconds: now.__setitem__(0, now[0] + seconds))
+
+    requester = FakeRequester(
+        status=200,
+        payload={"results": {"companies": []}},
+        calls=[],
+    )
+    provider = OpenCorporatesProvider(
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            timeout_seconds=1,
+            max_requests_per_second=2,
+        ),
+        requester=requester,
+    )
+    provider._last_request_at = 99.8
+
+    provider.research("company", max_sources=1, timeout_seconds=0.5)
+
+    assert requester.calls[0][2] == pytest.approx(0.2, abs=1e-9)
+
+
+def test_provider_rejects_deadline_consumed_by_rate_limit_wait(monkeypatch) -> None:
+    import shema_platform.adapters.intelligence.opencorporates as module
+
+    monkeypatch.setattr(module.time, "monotonic", lambda: 100.0)
+
+    requester = FakeRequester(
+        status=200,
+        payload={"results": {"companies": []}},
+        calls=[],
+    )
+    provider = OpenCorporatesProvider(
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            timeout_seconds=1,
+            max_requests_per_second=1,
+        ),
+        requester=requester,
+    )
+    provider._last_request_at = 99.5
+
+    with pytest.raises(TimeoutError, match="rate-limit wait"):
+        provider.research("company", max_sources=1, timeout_seconds=0.1)
+
+    assert requester.calls == []

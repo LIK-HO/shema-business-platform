@@ -145,14 +145,20 @@ class OpenCorporatesProvider:
         if max_sources <= 0:
             raise ValueError("max_sources must be positive")
 
-        self._throttle()
-
         requested = min(max_sources, 50)
         request_timeout = self._configuration.timeout_seconds
         if timeout_seconds is not None:
             if timeout_seconds <= 0:
                 raise ValueError("timeout_seconds override must be positive")
             request_timeout = min(request_timeout, timeout_seconds)
+
+        deadline = time.monotonic() + request_timeout
+        self._throttle(max_wait_seconds=request_timeout)
+        request_timeout = deadline - time.monotonic()
+        if request_timeout <= 0:
+            raise TimeoutError(
+                "OpenCorporates execution deadline expired before external I/O"
+            )
 
         status, body = self._requester(
             self._configuration.endpoint,
@@ -236,7 +242,14 @@ class OpenCorporatesProvider:
                 raise TypeError("call_budget must be ProviderCallBudget")
             call_budget.reserve()
 
-        self._throttle()
+        request_timeout = self._configuration.timeout_seconds
+        deadline = time.monotonic() + request_timeout
+        self._throttle(max_wait_seconds=request_timeout)
+        request_timeout = deadline - time.monotonic()
+        if request_timeout <= 0:
+            raise TimeoutError(
+                "OpenCorporates execution deadline expired before external I/O"
+            )
 
         try:
             status, _ = self._requester(
@@ -247,7 +260,7 @@ class OpenCorporatesProvider:
                     "per_page": "1",
                     "order": "score",
                 },
-                self._configuration.timeout_seconds,
+                request_timeout,
             )
         except Exception:
             return ProbeResult(
@@ -263,11 +276,15 @@ class OpenCorporatesProvider:
             error_code=f"HTTP_{status}",
         )
 
-    def _throttle(self) -> None:
+    def _throttle(self, *, max_wait_seconds: float | None = None) -> None:
         minimum_interval = 1.0 / self.capability.max_requests_per_second
         with self._rate_lock:
             now = time.monotonic()
             delay = minimum_interval - (now - self._last_request_at)
             if delay > 0:
+                if max_wait_seconds is not None and delay >= max_wait_seconds:
+                    raise TimeoutError(
+                        "OpenCorporates execution deadline would expire during rate-limit wait"
+                    )
                 time.sleep(delay)
             self._last_request_at = time.monotonic()
