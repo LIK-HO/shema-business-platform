@@ -5,10 +5,10 @@
 - Repository: `LIK-HO/shema-business-platform`
 - Productization branch: `v1.5/productization-research-deadline`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `3743a31b2a2c99faafc2fde008f82d91712a2cee`
+- Current productization HEAD: `e177b45a0746fa7b9236c5cc3e6cba0976c48bb3`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #18 — open, draft, unmerged
-- Active productization phase: P10 — research execution deadline
+- Productization PR: #19 — open, draft, unmerged
+- Active productization phase: P10 — research execution deadline — verified; next phase not started
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -412,25 +412,41 @@ P10 — RESEARCH EXECUTION DEADLINE PROPAGATION.
 
 The next bounded control should connect the already-existing `ResearchBudget.time_budget_seconds` to actual provider execution, so a provider operation cannot outlive the remaining research time budget. This must remain outside the frozen kernel, preserve the existing provider budget/cost gates, avoid automatic retries and durable-job semantics, and prove timeout propagation with focused tests.
 
-## P10 — RESEARCH EXECUTION DEADLINE — IMPLEMENTED / AWAITING CI
+## P10 — RESEARCH EXECUTION DEADLINE — CLOSED / VERIFIED
+
+Purpose:
+- bind the existing operation-scoped research time budget to actual external provider execution;
+- prevent a provider operation from receiving a timeout larger than the remaining research budget;
+- keep execution deadline control outside the frozen kernel.
 
 Implementation:
-- the existing `ResearchBudget.time_budget_seconds` is propagated as the remaining execution timeout for each provider operation;
-- the provider cannot receive a timeout larger than the remaining research time budget;
-- OpenCorporates applies the smaller of its configured hard timeout and the propagated research deadline;
-- no provider is executed after the remaining research time budget reaches zero;
+- `ResearchBudget.time_budget_seconds` is propagated as the remaining provider execution timeout;
+- OpenCorporates uses the smaller of its configured provider timeout and the propagated research deadline;
+- provider execution is skipped once no research time remains;
 - non-positive explicit provider deadline overrides fail closed;
-- focused tests cover gateway deadline propagation and provider deadline enforcement;
+- focused gateway, provider and integration tests cover deadline propagation and enforcement;
 - no automatic retry, scheduler, durable job semantics, global limiter, billing ledger or kernel change was introduced.
+
+Evidence:
+- CI run #1081 (`35909122007`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
 
 Changed boundary:
 - `src/shema_platform/application/research.py`
 - `src/shema_platform/adapters/intelligence/opencorporates.py`
 - `tests/test_research.py`
 - `tests/test_opencorporates_provider.py`
+- `tests/test_intelligence.py`
+- `tests/test_research_ai.py`
+- `tests/integration/test_intelligence_postgres.py`
 - `architecture/research_execution_deadline_contract.json`
 - `docs/RESEARCH_EXECUTION_DEADLINE.md`
 
-CI must pass all seven required gates before P10 is marked CLOSED / VERIFIED.
-
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
 No merge or deployment authorization is implied.
