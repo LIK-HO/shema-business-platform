@@ -130,3 +130,25 @@ def test_legacy_boundary_is_explicit() -> None:
     architecture = read("ARCHITECTURE.md")
     assert "Airtable is legacy/transition data" in architecture
     assert "MAX is included in the adapter boundary" in architecture
+
+
+def test_v1_5_unified_runtime_contract_is_additive() -> None:
+    runtime = loads(read("architecture/runtime_contract.json"))
+    kernel = loads(read("architecture/contract.json"))
+
+    assert runtime["version"] == "1.5.0"
+    assert runtime["baseline_kernel_contract"] == "1.4"
+    assert runtime["iam"]["authentication_boundary"] == "oidc_jwt_adapter"
+    assert runtime["iam"]["permission_materialization"] is True
+    assert runtime["iam"]["unknown_permissions_fail_closed"] is True
+    assert "RS256" in runtime["iam"]["allowed_algorithms"]
+    assert "EdDSA" in runtime["iam"]["allowed_algorithms"]
+    assert runtime["observability"]["telemetry_allowlist_based_redaction"] is True
+    assert runtime["observability"]["telemetry_does_not_store_authorization_headers"] is True
+    assert runtime["security"]["production_docs_disabled"] is True
+    assert runtime["security"]["production_oidc_https_required"] is True
+    assert runtime["supply_chain"]["dependency_audit"] == "pip-audit"
+    assert runtime["supply_chain"]["audit_is_release_gate"] is True
+    assert runtime["recovery"]["outbox_reclaim"] is True
+    assert runtime["recovery"]["commercial_send_reclaim"] is True
+    assert kernel["version"] == "1.4"
