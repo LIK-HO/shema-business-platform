@@ -23,6 +23,10 @@ docker run -d \
   -e POSTGRES_DB=shema \
   -p 55432:5432 \
   -v "$ARCHIVE_DIR:/var/lib/postgresql/archive" \
+  --health-cmd="pg_isready -U postgres -d shema" \
+  --health-interval=2s \
+  --health-timeout=2s \
+  --health-retries=60 \
   postgres:16 \
   postgres \
     -c wal_level=replica \
@@ -30,15 +34,23 @@ docker run -d \
     -c "archive_command=test ! -f /var/lib/postgresql/archive/%f && cp %p /var/lib/postgresql/archive/%f" \
   >/dev/null
 
-for _ in {1..60}; do
-  if docker exec "$SOURCE_CONTAINER" pg_isready -U postgres -d shema >/dev/null 2>&1; then
+SOURCE_READY="false"
+for _ in {1..120}; do
+  status="$(docker inspect -f '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' "$SOURCE_CONTAINER" 2>/dev/null || true)"
+  if [[ "$status" == "running healthy" ]]; then
+    SOURCE_READY="true"
+    break
+  fi
+  if [[ "$status" == "exited"* ]]; then
     break
   fi
   sleep 1
 done
 
-if ! docker exec "$SOURCE_CONTAINER" pg_isready -U postgres -d shema >/dev/null 2>&1; then
+if [[ "$SOURCE_READY" != "true" ]]; then
   echo "PostgreSQL source did not become ready" >&2
+  docker inspect "$SOURCE_CONTAINER" >&2 || true
+  docker logs "$SOURCE_CONTAINER" >&2 || true
   exit 1
 fi
 

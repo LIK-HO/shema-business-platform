@@ -39,6 +39,7 @@ from shema_platform.foundation.errors import (
     PolicyDenied,
     QuarantineRequired,
 )
+from shema_platform.foundation.provider_health import ProviderHealthRegistry
 from shema_platform.foundation.runtime_security import RuntimeSecurityConfiguration
 from shema_platform.foundation.telemetry import (
     NoopTelemetrySink,
@@ -164,7 +165,7 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
 
 class AuthenticationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.url.path in {"/docs", "/redoc", "/openapi.json"}:
+        if request.url.path in {"/docs", "/redoc", "/openapi.json", "/health/ready"}:
             return await call_next(request)
 
         authenticator: AuthenticationPort | None = request.app.state.authenticator
@@ -233,6 +234,7 @@ def create_app(
     *,
     enable_docs: bool = True,
     telemetry: TelemetrySink | None = None,
+    provider_health: ProviderHealthRegistry | None = None,
 ) -> FastAPI:
     runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
@@ -253,6 +255,7 @@ def create_app(
     )
     app.state.application = application
     app.state.authenticator = authenticator
+    app.state.provider_health = provider_health or ProviderHealthRegistry()
     default_telemetry: TelemetrySink = (
         StructuredLoggingTelemetrySink()
         if runtime_security.environment == "production"
@@ -351,6 +354,33 @@ def create_app(
         if value is None:
             raise ApplicationUnavailable
         return value
+
+    @app.get("/health/ready")
+    async def provider_readiness(request: Request) -> JSONResponse:
+        registry: ProviderHealthRegistry = request.app.state.provider_health
+        payload = {
+            "ready": registry.ready(),
+            "providers": [
+                {
+                    "providerId": state.provider_id,
+                    "enabled": state.enabled,
+                    "configured": state.configured,
+                    "reachable": state.reachable,
+                    "lastCheckedAt": (
+                        state.last_checked_at.isoformat()
+                        if state.last_checked_at is not None
+                        else None
+                    ),
+                    "lastErrorCode": state.last_error_code,
+                }
+                for state in registry.snapshot()
+            ],
+        }
+        return JSONResponse(
+            status_code=200 if registry.ready() else 503,
+            content=payload,
+            headers={"X-Correlation-Id": request.state.correlation_id},
+        )
 
     router = APIRouter(prefix="/v1")
 
