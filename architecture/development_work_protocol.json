@@ -77,8 +77,8 @@
   "post_certification": "kernel_semantics_frozen",
   "current_cursor": {
     "stage": "CM-CERTIFICATION",
-    "active_sub_element": "B2_UNIFIED_V1_5_CANDIDATE",
-    "rule": "B1 is closed and B3-B10 must not start until B2 is closed.",
+    "active_sub_element": "B3_MIGRATION_ADOPTION_PROOF",
+    "rule": "B1 and B2 are closed; B4-B10 must not start until B3 is closed.",
     "live_state_required": [
       "branch",
       "head",
