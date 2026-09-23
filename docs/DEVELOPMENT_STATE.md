@@ -8,7 +8,7 @@
 - PR: #8
 - Kernel: v1.4 frozen
 - Runtime: v1.5.0
-- Development stage: v1.5 Core Maturity Integration & Certification
+- Development stage: **v1.5 Core Maturity Certified / Kernel Frozen**
 
 ## Completed certification sub-elements
 
@@ -45,7 +45,7 @@
 - Measured RPO: **2.053 seconds** for the controlled drill window.
 - CI run #1005 (`35841541121`) completed successfully against PR #8 head `918ad61684c89cb59531a9017343d6b326033a3d`.
 - All seven jobs passed: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup-recovery and release-contract.
-- The backup/recovery result is now a release-gated executable control, not only documentation.
+- The backup/recovery result is a release-gated executable control, not only documentation.
 
 ### B6 — END-TO-END OBSERVABILITY CORRELATION PROOF — CLOSED / VERIFIED
 - Added PostgreSQL integration proof for the canonical HTTP commercial-action creation path.
@@ -71,16 +71,19 @@
 - The initial Ruff defect in CI #1018 was formatting-only and was corrected without semantic change.
 
 ### B9 — CAPACITY / OVERLOAD BASELINE — CLOSED / VERIFIED
-Implementation and evidence:
-- Added `architecture/capacity_overload_contract.json` with explicit acceptance criteria for concurrency, worker leases, bounded retries, queue batching, database contention, rate-limiting boundary and graceful degradation.
-- Added `docs/CAPACITY_OVERLOAD.md` documenting the bounded operational model and explicitly refusing to turn unmeasured throughput into a production capacity claim.
-- Added `tests/test_capacity_overload.py` covering bounded retry policy, contract integrity and 503 graceful degradation.
-- Expanded the existing PostgreSQL critical-command concurrency proof from 2 concurrent workers to an 8-worker barrier-synchronized contention test using one idempotency key; the test proves one durable canonical result and matching idempotency/outbox/audit lineage.
-- Existing worker reclaim/lease safety and outbox dispatch-limit tests were used as B9 evidence; no new kernel semantics were required.
-- Distributed ingress rate limiting remains outside frozen core and is not invented without a measured traffic requirement.
+- `architecture/capacity_overload_contract.json` defines bounded acceptance criteria for concurrency, worker leases, retry storms, queue backlog, database contention, rate-limiting boundary and graceful degradation.
+- `docs/CAPACITY_OVERLOAD.md` documents the behavioral baseline and explicitly avoids unmeasured throughput claims.
+- `tests/test_capacity_overload.py` covers bounded retry policy, contract integrity and 503 graceful degradation.
+- Existing PostgreSQL critical-command contention proof was expanded to 8 concurrent workers using one idempotency key and one durable canonical result.
+- CI run #1027 (`35891994690`) passed all seven jobs.
 
-Verification:
-- CI run #1027 (`35891994690`) completed successfully with all seven jobs green:
+### B10 — CONTROLLED RELEASE CANDIDATE / FINAL CORE SEMANTIC FREEZE — CLOSED / VERIFIED / FROZEN
+- Added `architecture/release_candidate_contract.json` requiring B1-B9 evidence and all mandatory release-control artifacts.
+- Hardened `src/shema_platform/platform/release.py` to fail closed when the release candidate, certification boundary, required control artifacts or final-freeze policy are incomplete.
+- Added `tests/test_release_candidate.py` and reconciled the existing negative release-contract fixture.
+- Added `docs/CORE_SEMANTIC_FREEZE.md` as the explicit post-certification change policy.
+- Updated `docs/DEVELOPMENT_MANIFEST.md` to the certified/frozen status.
+- CI run #1036 (`35892865534`) completed successfully on final manifest-synced HEAD `080b51aba24340c782632d56c5ce3f82b8c4cd1b`, with all seven jobs green:
   - quality 3.12 — success;
   - quality 3.13 — success;
   - integration 3.12 — success;
@@ -88,58 +91,43 @@ Verification:
   - supply-chain — success;
   - backup-recovery — success;
   - release-contract — success.
-- B9 is therefore CLOSED / VERIFIED.
+- CI #1032 exposed a Ruff import-format defect; CI #1034 exposed a release-test fixture gap; both were fixed before final certification.
+- No production deployment or merge authorization is implied.
 
-## Current active certification sub-element
+## Certification result
 
-**B10 — CONTROLLED RELEASE CANDIDATE / FINAL CORE SEMANTIC FREEZE**
+**v1.5 Core Maturity is now certified and the kernel is frozen.**
 
-B10 is the final certification boundary. It is not a feature-development phase.
+This means:
+- v1.4 kernel semantics are the durable business/domain contract;
+- v1.5 maturity/runtime controls are verified around that kernel;
+- new product capabilities belong outside the kernel;
+- ordinary feature work must not reopen core semantics;
+- exceptional core changes require a proven invariant/security/data-integrity/fundamental reliability defect plus regression tests, impact analysis and rollback planning.
 
-Required scope:
-1. reconcile the live repository against the frozen v1.4 kernel contract and v1.5 core-maturity contract;
-2. verify all B1-B9 evidence remains represented in the state ledger and release contract;
-3. verify the release artifact/version metadata is deterministic and consistent;
-4. verify migration baseline, architecture contract, maturity gates and runtime boundaries;
-5. perform one controlled release-candidate verification run;
-6. record the final semantic-freeze decision and explicit post-certification change policy;
-7. do not add product features, new providers, UI, or service decomposition.
+There is **no B11 core-expansion phase**.
 
-B10 does not mean merging or production deployment. Merge/release actions require separate authorization.
-
-## Exact continuation boundary
+## Post-certification operating boundary
 
 Allowed:
-- release-contract hardening required to detect inconsistency;
-- final certification evidence and machine-readable freeze markers;
-- deterministic release-candidate validation;
-- documentation/state-ledger reconciliation;
-- focused regression checks for the final frozen boundary.
+- product/application workflows outside the kernel;
+- concrete providers and integrations behind adapters;
+- Web/PWA/Android/experience layers;
+- operational tuning supported by measured production evidence;
+- security or reliability fixes meeting the documented exception rule.
 
-Not allowed:
-- new business semantics;
-- new provider integrations;
-- microservice decomposition;
-- new system of record;
-- broad refactors;
-- production deployment or PR merge without explicit authorization.
-
-## Safe next action
-
-Read the live release contract, v1.4 architecture contract, core-maturity contract and current PR/HEAD; identify the smallest missing B10 release-candidate proof and implement only that bounded proof.
+Prohibited:
+- broadening the kernel for convenience;
+- provider-specific domain semantics;
+- new system-of-record dependencies;
+- microservice decomposition without a measured constraint;
+- merge or production deployment without explicit authorization.
 
 ## Last verified repository point
 
 - Branch: `v1.5/core-maturity`
-- B9 verification evidence: CI #1027 (`35891994690`) fully green.
-- Current PR #8 remains open and unmerged.
-- This ledger update advances the active cursor from B9 to B10.
-- Live GitHub branch/HEAD remains authoritative and must be re-read before continuing B10.
-
-## Interruption record
-
-If work stops during B10, resume from:
-- active sub-element: B10 Controlled Release Candidate / Final Core Semantic Freeze;
-- last verified B9 evidence: CI #1027 (`35891994690`);
-- safe resume operation: inspect release-contract/freeze evidence and implement only the smallest missing final-certification proof;
-- prohibited: merge, deployment, product expansion, provider-driven domain changes, unrelated refactors.
+- HEAD: `080b51aba24340c782632d56c5ce3f82b8c4cd1b`
+- PR #8: open, unmerged, draft.
+- Final certification evidence: CI #1036 (`35892865534`) fully green.
+- v1.4 kernel semantics: frozen.
+- v1.5 core maturity: certified.
