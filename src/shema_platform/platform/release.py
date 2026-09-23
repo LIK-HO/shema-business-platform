@@ -56,11 +56,38 @@ def validate_release_tree(root: Path) -> ReleaseManifest:
     required_certification = {"B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9"}
     if set(candidate.get("required_certification_elements", ())) != required_certification:
         raise ReleaseContractError("release candidate certification boundary is incomplete")
+    required_controls = candidate.get("required_release_controls", ())
+    required_control_paths = {
+        "architecture_contract": root / "architecture" / "contract.json",
+        "core_maturity_contract": root / "architecture" / "core_maturity_contract.json",
+        "migration_baseline": root / "db" / "migrations" / "0009_state_ownership_invariants.sql",
+        "security_certification_matrix": root / "docs" / "SECURITY_CERTIFICATION_MATRIX.md",
+        "slo_error_budget_baseline": root / "architecture" / "slo_contract.json",
+        "capacity_overload_baseline": root / "architecture" / "capacity_overload_contract.json",
+        "backup_recovery_drill": root / "scripts" / "postgres_pitr_drill.sh",
+        "supply_chain_audit": root / ".github" / "workflows" / "ci.yml",
+    }
+    if set(required_controls) != set(required_control_paths):
+        raise ReleaseContractError("release control set is incomplete or changed unexpectedly")
+    missing_controls = [
+        name for name, path in required_control_paths.items() if not path.is_file()
+    ]
+    if missing_controls:
+        raise ReleaseContractError(
+            "release controls are missing: " + ", ".join(sorted(missing_controls))
+        )
+
     freeze_policy = candidate.get("final_freeze_policy", {})
-    if freeze_policy.get("kernel_semantics_frozen_after_green_release_candidate") is not True:
-        raise ReleaseContractError("final freeze policy is not enabled")
-    if freeze_policy.get("new_features_stay_outside_core") is not True:
-        raise ReleaseContractError("post-certification feature boundary is not enabled")
+    required_freeze_flags = (
+        "kernel_semantics_frozen_after_green_release_candidate",
+        "new_features_stay_outside_core",
+        "core_change_requires_proven_invariant_or_security_or_data_integrity_or_fundamental_reliability_defect",
+        "core_change_requires_regression_tests",
+        "core_change_requires_impact_analysis",
+        "core_change_requires_rollback_plan",
+    )
+    if any(freeze_policy.get(flag) is not True for flag in required_freeze_flags):
+        raise ReleaseContractError("final freeze policy is incomplete")
 
     required_gates = {
         "correctness",
