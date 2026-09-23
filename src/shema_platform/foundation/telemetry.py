@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 import dataclasses
 import datetime
 import types
-from collections.abc import Mapping
 from typing import Protocol
 
 
