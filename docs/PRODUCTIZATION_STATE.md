@@ -370,3 +370,23 @@ P9 — PROVIDER OPERATION EXECUTION POLICY.
 The next step is to bound the execution envelope around an external provider operation: explicit timeout/deadline policy and bounded failure handling, without introducing a retry scheduler, durable job semantics or new kernel behavior. The policy must remain outside the frozen kernel and must fail closed rather than permit unbounded external work.
 
 No merge or deployment authorization is implied.
+
+
+## P9 — PROVIDER OPERATION EXECUTION POLICY — IMPLEMENTED / AWAITING CI
+
+Implementation:
+- OpenCorporates provider timeout is now explicitly hard-bounded to 30 seconds;
+- the configured timeout is passed to the external requester;
+- invalid/unbounded timeout configuration fails closed;
+- tests prove both rejection of timeout values above the contract and propagation of the bounded timeout;
+- no automatic retry, scheduler, durable job semantics, global limiter or kernel change was introduced.
+
+Changed boundary:
+- `src/shema_platform/adapters/intelligence/opencorporates.py`
+- `tests/test_opencorporates_provider.py`
+- `architecture/provider_execution_policy_contract.json`
+- `docs/PROVIDER_OPERATION_EXECUTION_POLICY.md`
+
+CI must pass all seven required gates before P9 is marked CLOSED / VERIFIED.
+
+No merge or deployment authorization is implied.
