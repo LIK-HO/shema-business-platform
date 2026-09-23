@@ -115,3 +115,66 @@ def test_api_startup_allows_development_environment(monkeypatch) -> None:
 
     monkeypatch.setenv("APP_ENV", "development")
     create_app(enable_docs=True)
+
+
+def test_provider_health_registry_fails_closed_until_reachable() -> None:
+    from shema_platform.foundation.provider_health import ProviderHealthRegistry
+
+    registry = ProviderHealthRegistry()
+    registry.register(
+        "opencorporates",
+        enabled=True,
+        configured=True,
+    )
+
+    assert registry.ready() is False
+
+    registry.mark_reachable("opencorporates")
+
+    assert registry.ready() is True
+
+
+def test_provider_health_does_not_store_error_payload() -> None:
+    from shema_platform.foundation.provider_health import ProviderHealthRegistry
+
+    registry = ProviderHealthRegistry()
+    registry.register("opencorporates", enabled=True, configured=True)
+    registry.mark_unreachable(
+        "opencorporates",
+        error_code="HTTP_401",
+    )
+
+    state = registry.snapshot()[0]
+
+    assert state.last_error_code == "HTTP_401"
+    assert "secret" not in str(state)
+
+
+def test_health_ready_endpoint_is_unauthenticated_and_redacted(monkeypatch) -> None:
+    from fastapi.testclient import TestClient
+
+    from shema_platform.experience.api import create_app
+    from shema_platform.foundation.provider_health import ProviderHealthRegistry
+
+    monkeypatch.setenv("APP_ENV", "development")
+    registry = ProviderHealthRegistry()
+    registry.register("opencorporates", enabled=True, configured=False)
+    app = create_app(provider_health=registry)
+
+    response = TestClient(app).get("/health/ready")
+
+    assert response.status_code == 503
+    payload = response.json()
+    assert payload["ready"] is False
+    assert payload["providers"] == [
+        {
+            "providerId": "opencorporates",
+            "enabled": True,
+            "configured": False,
+            "reachable": None,
+            "lastCheckedAt": None,
+            "lastErrorCode": None,
+        }
+    ]
+    assert "api_token" not in response.text
+    assert "Authorization" not in response.text
