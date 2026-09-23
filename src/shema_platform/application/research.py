@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import time
 from math import isfinite
 from typing import Protocol
 
@@ -133,7 +134,7 @@ class ProviderGateway:
         remaining_sources = budget.source_count
         remaining_tokens = budget.token_budget
         remaining_cost = budget.api_cost_limit
-        remaining_time = budget.time_budget_seconds
+        deadline = time.monotonic() + budget.time_budget_seconds
         results: list[ProviderResult] = []
 
         for provider in self.select(
@@ -142,6 +143,7 @@ class ProviderGateway:
             allowed_source_classes=allowed_source_classes,
         ):
             capability = provider.capability
+            remaining_time = deadline - time.monotonic()
             if remaining_calls <= 0 or remaining_sources <= 0 or remaining_time <= 0:
                 break
             if capability.cost_per_call > remaining_cost:
@@ -179,6 +181,5 @@ class ProviderGateway:
             remaining_sources -= len(result.source_refs)
             remaining_tokens -= result.tokens
             remaining_cost -= result.cost
-            remaining_time -= result.latency_seconds
 
         return tuple(results)
