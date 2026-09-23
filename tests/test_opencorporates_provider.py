@@ -159,3 +159,31 @@ def test_provider_fails_on_invalid_json() -> None:
 
     with pytest.raises(ValueError, match="invalid JSON"):
         provider.research("company", max_sources=5)
+
+
+def test_configuration_rejects_unbounded_timeout() -> None:
+    with pytest.raises(ValueError, match="must not exceed 30"):
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            timeout_seconds=30.1,
+        )
+
+
+def test_provider_passes_bounded_timeout_to_external_request() -> None:
+    requester = FakeRequester(
+        status=200,
+        payload={"results": {"companies": []}},
+        calls=[],
+    )
+    provider = OpenCorporatesProvider(
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            timeout_seconds=30,
+            max_requests_per_second=1000,
+        ),
+        requester=requester,
+    )
+
+    provider.research("company", max_sources=1)
+
+    assert requester.calls[0][2] == 30
