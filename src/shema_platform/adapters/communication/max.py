@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from shema_platform.adapters.communication.safety import ExternalEffectSafety
+from .safety import ExternalEffectSafety
 from shema_platform.application.communication import (
     CommunicationSendRequest,
     CommunicationSendResult,
