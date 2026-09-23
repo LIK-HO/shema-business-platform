@@ -16,10 +16,6 @@ from shema_platform.application.research import (
     ResearchProvider,
 )
 
-
-Requester = Callable[[str, Mapping[str, str], float], tuple[int, bytes]]
-
-
 def _request_json(
     url: str,
     params: Mapping[str, str],
@@ -120,7 +116,9 @@ class OpenCorporatesProvider(ResearchProvider):
         self,
         configuration: OpenCorporatesConfiguration,
         *,
-        requester: Requester = _request_json,
+        requester: Callable[
+            [str, Mapping[str, str], float], tuple[int, bytes]
+        ] = _request_json,
     ) -> None:
         self._configuration = configuration
         self._requester = requester
