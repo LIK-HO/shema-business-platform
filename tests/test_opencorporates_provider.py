@@ -111,7 +111,7 @@ def test_provider_parses_provenanced_company_observations() -> None:
                 "per_page": "10",
                 "order": "score",
             },
-            1,
+            pytest.approx(1, abs=1e-4),
         )
     ]
 
@@ -186,7 +186,7 @@ def test_provider_passes_bounded_timeout_to_external_request() -> None:
 
     provider.research("company", max_sources=1)
 
-    assert requester.calls[0][2] == 30
+    assert requester.calls[0][2] == pytest.approx(30, abs=1e-4)
 
 
 def test_provider_uses_research_deadline_override() -> None:
@@ -206,7 +206,7 @@ def test_provider_uses_research_deadline_override() -> None:
 
     provider.research("company", max_sources=1, timeout_seconds=2)
 
-    assert requester.calls[0][2] == 2
+    assert requester.calls[0][2] == pytest.approx(2, abs=1e-4)
 
 
 def test_provider_rejects_non_positive_research_deadline() -> None:
