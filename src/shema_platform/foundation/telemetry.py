@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from types import MappingProxyType
 from typing import Protocol
 
-
 _SAFE_ATTRIBUTE_KEYS = frozenset(
     {
         "component",
