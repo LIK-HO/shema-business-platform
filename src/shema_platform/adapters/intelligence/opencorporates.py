@@ -131,7 +131,13 @@ class OpenCorporatesProvider:
             estimated_latency_seconds=configuration.timeout_seconds,
         )
 
-    def research(self, query: str, *, max_sources: int):
+    def research(
+        self,
+        query: str,
+        *,
+        max_sources: int,
+        timeout_seconds: float | None = None,
+    ):
         from shema_platform.application.research import ProviderResult
 
         if not query.strip():
@@ -142,6 +148,12 @@ class OpenCorporatesProvider:
         self._throttle()
 
         requested = min(max_sources, 50)
+        request_timeout = self._configuration.timeout_seconds
+        if timeout_seconds is not None:
+            if timeout_seconds <= 0:
+                raise ValueError("timeout_seconds override must be positive")
+            request_timeout = min(request_timeout, timeout_seconds)
+
         status, body = self._requester(
             self._configuration.endpoint,
             {
@@ -150,7 +162,7 @@ class OpenCorporatesProvider:
                 "per_page": str(requested),
                 "order": "score",
             },
-            self._configuration.timeout_seconds,
+            request_timeout,
         )
 
         try:
