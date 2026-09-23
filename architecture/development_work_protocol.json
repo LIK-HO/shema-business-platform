@@ -77,8 +77,8 @@
   "post_certification": "kernel_semantics_frozen",
   "current_cursor": {
     "stage": "CM-CERTIFICATION",
-    "active_sub_element": "B6_END_TO_END_OBSERVABILITY_CORRELATION_PROOF",
-    "rule": "B1-B5 are closed; B7-B10 must not start until B6 is closed.",
+    "active_sub_element": "B7_SECURITY_CERTIFICATION_MATRIX",
+    "rule": "B1-B6 are closed; B8-B10 must not start until B7 is closed.",
     "live_state_required": [
       "branch",
       "head",
