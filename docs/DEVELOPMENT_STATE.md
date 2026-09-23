@@ -51,40 +51,52 @@
 
 **CM-CERTIFICATION**
 
-### Active certification sub-element
+### Completed certification sub-element
 
-**B6 — END-TO-END OBSERVABILITY CORRELATION PROOF**
+**B6 — END-TO-END OBSERVABILITY CORRELATION PROOF — CLOSED / VERIFIED**
 
-Integrity boundary:
-- prove correlation lineage across request/canonical API, authorization/policy, critical command, idempotency, transaction/audit and durable execution where applicable;
-- ensure non-authoritative telemetry never becomes canonical truth;
-- verify no request body or authorization header is emitted;
-- do not add new business semantics.
+Integrity evidence:
+- Added PostgreSQL integration proof for the canonical HTTP commercial-action creation path.
+- `X-Correlation-Id` is accepted by the canonical API boundary and returned unchanged.
+- The correlation ID reaches `RequestContext` and the real `CommercialActionCreateWorkflow`.
+- The workflow persists the same correlation ID into the canonical `audit_log` row.
+- Telemetry records the same correlation ID while allow-list redaction excludes authorization headers and request bodies.
+- The proof passed on both Python 3.12 and 3.13 in CI run #1011 (`35842247310`).
+- Backup-recovery and release-contract also passed in the same run.
+- No canonical domain semantics were changed.
 
 ### Not yet closed
-- B6 — End-to-end observability correlation proof
 - B7 — Security certification matrix
 - B8 — SLO/error-budget baseline
 - B9 — Capacity/overload baseline
 - B10 — Controlled release candidate and final semantic freeze
 
+### Current active certification sub-element
+
+**B7 — SECURITY CERTIFICATION MATRIX**
+
+Integrity boundary:
+- map each production security control to implementation, failure behavior, test evidence and release gate;
+- verify fail-closed behavior for authentication, authorization, production configuration, telemetry redaction and dependency/supply-chain controls;
+- do not add new security semantics unless the matrix exposes a proven gap.
+
 ## Exact continuation boundary
 
-B5 is closed after live verification of PR #8 and CI run #1005.
+B6 is closed after live verification of PR #8 and CI run #1011.
 
 The next development action must:
-1. inspect current correlation propagation from canonical API through critical workflows and audit/telemetry;
-2. identify exactly one smallest missing end-to-end observability proof;
-3. implement only that bounded proof/test path;
-4. verify correlation continuity and redaction;
+1. inventory the actual production security controls in runtime/IAM/telemetry/supply-chain;
+2. map each control to concrete code and executable evidence;
+3. identify exactly one missing certification-matrix element;
+4. close only that bounded evidence gap;
 5. run the relevant CI/release checks;
 6. update this ledger.
 
-Until B6 closes, do not start B7-B10 implementation.
+Until B7 closes, do not start B8-B10 implementation.
 
 ## Safe next action
 
-Establish the current correlation-id lineage across the canonical API and one critical workflow, then add the smallest executable E2E proof without changing domain semantics.
+Build the security certification matrix from the existing runtime controls and identify the smallest missing executable proof.
 
 ## Prohibited until boundary is closed
 - no new kernel semantics;
@@ -98,9 +110,9 @@ Establish the current correlation-id lineage across the canonical API and one cr
 
 ## Last verified repository point
 - PR #8 head at B5 closure: `918ad61684c89cb59531a9017343d6b326033a3d`
-- CI run #1005 (`35841541121`): green
+- CI run #1011 (`35842247310`): green
 - PR #8: open, unmerged, draft, mergeable
-- Measured PITR RTO/RPO: 2.039s / 2.053s
+- Measured PITR RTO/RPO remains 2.039s / 2.053s
 - Live GitHub branch/HEAD remains authoritative and must be re-read before continuation.
 
 ## Interruption record
