@@ -5,7 +5,7 @@
 - Repository: `LIK-HO/shema-business-platform`
 - Productization branch: `v1.5/productization-research-wall-clock`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `01ddbd60a0ff78cf5ae9e849f72023ba7fa751e7`
+- Current productization HEAD: `439b1433a019e3add31bcbf86db73ad22b794056`
 - Core PR: #8 — open, draft, unmerged
 - Productization PR: #20 — open, draft, unmerged
 - Active productization phase: P11 — research wall-clock deadline
@@ -451,16 +451,31 @@ Changed boundary:
 No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
 No merge or deployment authorization is implied.
 
-## P11 — RESEARCH WALL-CLOCK DEADLINE — IMPLEMENTED / AWAITING CI
+## P11 — RESEARCH WALL-CLOCK DEADLINE — CLOSED / VERIFIED
+
+Purpose:
+- make the research operation's elapsed-time budget authoritative from a monotonic wall-clock deadline;
+- prevent provider-reported latency metadata from extending the execution envelope;
+- keep the deadline control outside the frozen kernel.
 
 Implementation:
-- the research operation captures an authoritative monotonic wall-clock deadline at the start of the provider waterfall;
-- before each provider call, the gateway recomputes the actual remaining wall-clock budget;
+- the gateway captures a monotonic deadline at the start of the provider waterfall;
+- before each provider call, the actual remaining wall-clock budget is recomputed;
 - provider execution receives that remaining time as its timeout cap;
-- provider-reported `latency_seconds` remains usage metadata and cannot extend the operation deadline;
-- when the deadline is exhausted, no further provider execution occurs;
-- a focused regression proves that elapsed wall-clock time reduces the timeout available to the next provider;
+- provider-reported `latency_seconds` remains usage metadata and cannot extend the deadline;
+- when the wall-clock budget is exhausted, no further provider executes;
+- focused regression coverage proves the deadline shrinks with elapsed wall-clock time;
 - no automatic retry, scheduler, durable job semantics, global limiter, billing ledger or kernel change was introduced.
+
+Evidence:
+- CI run #1086 (`35910036890`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
 
 Changed boundary:
 - `src/shema_platform/application/research.py`
@@ -468,6 +483,5 @@ Changed boundary:
 - `architecture/research_wall_clock_contract.json`
 - `docs/RESEARCH_WALL_CLOCK_DEADLINE.md`
 
-CI must pass all seven required gates before P11 is marked CLOSED / VERIFIED.
-
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
 No merge or deployment authorization is implied.
