@@ -3,9 +3,9 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-provider-health`
+- Productization branch: `v1.5/productization-provider-probes`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `738a054b879d118bc88c43ca8677f3ab4848b435`
+- Current productization HEAD: `c42706645ae77f289b16b51f5c38f6defeccc48b`
 - Core PR: #8 — open, draft, unmerged
 - Productization PR: #9 — open, draft, unmerged
 - v1.4 kernel semantics: frozen
@@ -282,5 +282,48 @@ No kernel semantics, canonical business truth, provider intelligence semantics o
 P7 — EXPLICIT PROVIDER READINESS PROBES.
 
 The next step is to connect the health registry to provider-specific, non-business probes. A probe may verify configuration and transport reachability, update only operational health state and emit existing telemetry; it must not fetch or persist business claims, secrets or canonical data.
+
+No merge or deployment authorization is implied.
+
+## P7 — EXPLICIT PROVIDER READINESS PROBES — CLOSED / VERIFIED
+
+Purpose:
+- connect provider-specific transport probes to the P6 operational health registry without running them implicitly from health checks;
+- keep probe evidence strictly operational and non-business;
+- use the existing non-authoritative telemetry boundary for probe outcomes.
+
+Implementation:
+- `ProviderReadinessProbe` / `ProviderProbeRunner` provide the generic explicit probe boundary;
+- disabled providers are never probed;
+- successful probes update only provider reachability and check time;
+- failed probes update only bounded error codes and emit safe telemetry metadata;
+- exceptions and provider response bodies are never persisted or emitted;
+- OpenCorporates probe uses the versioned HTTPS endpoint with a dedicated readiness query, requests at most one result, and evaluates HTTP status without parsing the returned body;
+- `/health/ready` remains probe-free and therefore cheap/deterministic.
+
+Evidence:
+- CI run #1064 (`35899255814`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- `src/shema_platform/foundation/provider_probe.py`
+- `src/shema_platform/adapters/intelligence/opencorporates.py`
+- `tests/test_provider_probe.py`
+- `architecture/provider_probe_contract.json`
+- `docs/PROVIDER_READINESS_PROBES.md`
+
+No kernel, canonical business, intelligence routing or persistence semantics were changed.
+
+## Next bounded productization boundary
+
+P8 — INTELLIGENCE PROVIDER RESOURCE / COST GUARD.
+
+The next step is to enforce bounded external intelligence consumption per operation: provider call budget, request-rate budget and explicit rejection before external I/O when the budget is exhausted. The guard will be operational policy only and will not become canonical economic state.
 
 No merge or deployment authorization is implied.
