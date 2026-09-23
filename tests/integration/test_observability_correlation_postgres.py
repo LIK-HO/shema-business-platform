@@ -10,7 +10,10 @@ from shema_platform.application.commands import Actor
 from shema_platform.application.critical_workflows import CommercialActionCreateWorkflow
 from shema_platform.domain.identity import Identity, IdentityState
 from shema_platform.experience.api import create_app
-from shema_platform.experience.api_models import CommercialActionCreateRequest, CommercialActionResponse
+from shema_platform.experience.api_models import (
+    CommercialActionCreateRequest,
+    CommercialActionResponse,
+)
 from shema_platform.foundation.authentication import AuthenticatedActor, AuthenticationRequired
 from shema_platform.foundation.authorization import AuthorizationSubject, Permission, RBACAuthorizer
 from shema_platform.foundation.policy import PolicyEngine
