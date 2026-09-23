@@ -5,7 +5,7 @@
 - Repository: `LIK-HO/shema-business-platform`
 - Productization branch: `v1.5/productization-provider-preio-deadline`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `48636b595a9131bb2c02856caceb0e2bef2131d9`
+- Current productization HEAD: `c48d81ee1dcace8ef3211a026361454849dccb9a`
 - Core PR: #8 — open, draft, unmerged
 - Productization PR: #21 — open, draft, unmerged
 - Active productization phase: P12 — provider pre-io deadline
@@ -486,15 +486,30 @@ Changed boundary:
 No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
 No merge or deployment authorization is implied.
 
-## P12 — PROVIDER PRE-I/O DEADLINE — IMPLEMENTED / AWAITING CI
+## P12 — PROVIDER PRE-I/O DEADLINE — CLOSED / VERIFIED
+
+Purpose:
+- include provider-local rate-limit waiting inside the same execution deadline;
+- fail closed before external I/O when the required pre-I/O wait cannot fit inside the remaining budget;
+- pass only the post-wait timeout to the actual HTTP requester.
 
 Implementation:
-- OpenCorporates now includes its provider-local rate-limit wait inside the same execution deadline;
-- the provider computes a monotonic deadline from the effective timeout;
-- if the required throttle wait would consume the remaining deadline, the provider fails closed before external I/O;
-- after a throttle wait, only the remaining timeout is passed to the HTTP requester;
-- focused tests prove both timeout reduction after a bounded wait and fail-closed behavior when the wait cannot fit;
+- OpenCorporates derives a monotonic deadline from the effective timeout;
+- rate-limit sleep is permitted only when it fits within that deadline;
+- if the wait would consume the remaining deadline, the provider raises before external I/O;
+- after a bounded wait, the requester receives only the remaining timeout;
+- focused tests prove timeout reduction and fail-closed pre-I/O behavior;
 - no retry scheduler, durable job semantics, global limiter, billing ledger or kernel change was introduced.
+
+Evidence:
+- CI run #1089 (`35910726111`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
 
 Changed boundary:
 - `src/shema_platform/adapters/intelligence/opencorporates.py`
@@ -502,6 +517,5 @@ Changed boundary:
 - `architecture/provider_preio_deadline_contract.json`
 - `docs/PROVIDER_PREIO_DEADLINE.md`
 
-CI must pass all seven required gates before P12 is marked CLOSED / VERIFIED.
-
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
 No merge or deployment authorization is implied.
