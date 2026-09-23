@@ -7,9 +7,11 @@ import pytest
 
 from shema_platform.platform.migrations import (
     Migration,
+    MigrationBaselineError,
     MigrationIntegrityError,
     MigrationPlan,
     MigrationRunner,
+    V1_4_BASELINE_VERSION,
 )
 
 pytestmark = pytest.mark.integration
@@ -88,6 +90,95 @@ def test_migration_runner_rejects_historical_checksum_drift() -> None:
         with psycopg.connect(DATABASE_URL) as cleanup:
             cleanup.execute("drop schema \"" + schema + "\" cascade")
             cleanup.commit()
+
+
+def test_migration_runner_adopts_existing_v1_4_schema_without_reapplying_historical_ddl() -> None:
+    schema = make_schema()
+    with psycopg.connect(DATABASE_URL) as bootstrap:
+        bootstrap.execute("create schema \"" + schema + "\"")
+        bootstrap.commit()
+
+    try:
+        plan = MigrationPlan.from_directory(ROOT / "db" / "migrations")
+        with connect(schema) as legacy:
+            for migration in plan.migrations[:V1_4_BASELINE_VERSION]:
+                legacy.execute(migration.sql)
+            legacy.execute(
+                """
+                insert into identity (
+                    identity_id, canonical_name, state
+                )
+                values (
+                    '00000000-0000-0000-0000-000000000101',
+                    'Legacy v1.4 sentinel',
+                    'verified'
+                )
+                """
+            )
+            legacy.commit()
+
+        runner = MigrationRunner(lambda: connect(schema), plan)
+
+        adopted = runner.adopt_existing_schema()
+        assert adopted.applied == ()
+        assert adopted.current_version == V1_4_BASELINE_VERSION
+
+        post_adoption = runner.apply()
+        assert post_adoption.applied == (V1_4_BASELINE_VERSION + 1,)
+        assert post_adoption.current_version == len(plan.migrations)
+
+        with connect(schema) as check:
+            row = check.execute(
+                "select canonical_name from identity where identity_id = %s",
+                ("00000000-0000-0000-0000-000000000101",),
+            ).fetchone()
+            assert row == ("Legacy v1.4 sentinel",)
+
+            rows = check.execute(
+                "select version from schema_migration order by version"
+            ).fetchall()
+            assert rows == [(version,) for version in range(1, len(plan.migrations) + 1)]
+    finally:
+        with psycopg.connect(DATABASE_URL) as cleanup:
+            cleanup.execute("drop schema \"" + schema + "\" cascade")
+            cleanup.commit()
+
+
+def test_migration_runner_rejects_incomplete_existing_schema_without_bootstrapping_ledger() -> None:
+    schema = make_schema()
+    with psycopg.connect(DATABASE_URL) as bootstrap:
+        bootstrap.execute("create schema \"" + schema + "\"")
+        bootstrap.commit()
+
+    try:
+        with connect(schema) as legacy:
+            legacy.execute(
+                """
+                create table identity (
+                    identity_id uuid primary key,
+                    canonical_name text not null
+                )
+                """
+            )
+            legacy.commit()
+
+        plan = MigrationPlan.from_directory(ROOT / "db" / "migrations")
+        runner = MigrationRunner(lambda: connect(schema), plan)
+
+        with pytest.raises(MigrationBaselineError, match="missing required columns"):
+            runner.adopt_existing_schema()
+
+        with connect(schema) as check:
+            ledger = check.execute(
+                "select to_regclass(%s)",
+                (schema + ".schema_migration",),
+            ).fetchone()
+            assert ledger == (None,)
+    finally:
+        with psycopg.connect(DATABASE_URL) as cleanup:
+            cleanup.execute("drop schema \"" + schema + "\" cascade")
+            cleanup.commit()
+
 
 def test_state_ownership_constraints_reject_impossible_lease_shapes() -> None:
     schema = make_schema()
