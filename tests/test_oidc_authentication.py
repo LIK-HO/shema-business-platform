@@ -136,6 +136,29 @@ def test_oidc_rejects_unknown_permission(authenticator) -> None:
         )
 
 
+def test_oidc_configuration_loads_from_environment(monkeypatch) -> None:
+    monkeypatch.setenv("OIDC_ISSUER", "https://issuer.example.test/")
+    monkeypatch.setenv("OIDC_AUDIENCE", "shema-business-platform")
+    monkeypatch.setenv(
+        "OIDC_JWKS_URL",
+        "https://issuer.example.test/.well-known/jwks.json",
+    )
+
+    configuration = OIDCConfiguration.from_environment()
+
+    assert configuration.issuer == "https://issuer.example.test/"
+    assert configuration.audience == "shema-business-platform"
+    assert configuration.jwks_url.endswith("/.well-known/jwks.json")
+
+
+def test_oidc_configuration_rejects_missing_environment(monkeypatch) -> None:
+    for name in ("OIDC_ISSUER", "OIDC_AUDIENCE", "OIDC_JWKS_URL"):
+        monkeypatch.delenv(name, raising=False)
+
+    with pytest.raises(ValueError, match="missing OIDC environment configuration"):
+        OIDCConfiguration.from_environment()
+
+
 def test_oidc_requires_https_and_safe_algorithms() -> None:
     with pytest.raises(ValueError, match="HTTPS"):
         OIDCConfiguration(
