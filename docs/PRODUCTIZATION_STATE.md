@@ -59,3 +59,45 @@ Current MAX outbound status:
 ## Stop condition
 
 Do not reopen v1.4/v1.5 core semantics for productization convenience.
+
+## P2 — PRODUCTION STRUCTURED OBSERVABILITY — CLOSED / VERIFIED
+
+Purpose:
+- compose a real operational telemetry sink in production without making telemetry authoritative;
+- preserve the existing correlation and attribute-redaction contract;
+- ensure telemetry backend failure cannot break the request path.
+
+Implementation:
+- `StructuredLoggingTelemetrySink` emits one redacted JSON record per telemetry event;
+- production `create_app()` composes the structured sink by default;
+- explicit telemetry injection remains supported for tests and controlled composition;
+- the existing allow-list remains the only source of emitted attributes;
+- sink failures are swallowed because operational telemetry is non-authoritative.
+
+Evidence:
+- CI run #1043 (`35894711738`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- `src/shema_platform/foundation/telemetry.py`
+- `src/shema_platform/experience/api.py`
+- `tests/test_telemetry.py`
+- `tests/test_runtime_security.py`
+
+No kernel semantic change was made.
+
+## Next bounded productization boundary
+
+P3 — external-provider safety boundary.
+
+The next implementation must prove provider capabilities before any live external effect is activated. A provider adapter may expose health/configuration and explicit capability metadata, but it must not be treated as crash-safe merely because it has a send endpoint.
+
+For MAX specifically, live outbound send remains blocked until an evidence-backed reconciliation/idempotency mechanism is established that is compatible with the kernel's crash/retry semantics.
+
+No merge or deployment authorization is implied by these productization PRs.

@@ -42,6 +42,7 @@ from shema_platform.foundation.errors import (
 from shema_platform.foundation.runtime_security import RuntimeSecurityConfiguration
 from shema_platform.foundation.telemetry import (
     NoopTelemetrySink,
+    StructuredLoggingTelemetrySink,
     TelemetrySink,
     build_event,
 )
@@ -252,7 +253,12 @@ def create_app(
     )
     app.state.application = application
     app.state.authenticator = authenticator
-    app.state.telemetry = telemetry or NoopTelemetrySink()
+    default_telemetry: TelemetrySink = (
+        StructuredLoggingTelemetrySink()
+        if runtime_security.environment == "production"
+        else NoopTelemetrySink()
+    )
+    app.state.telemetry = telemetry if telemetry is not None else default_telemetry
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(CorrelationMiddleware)
 
