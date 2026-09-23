@@ -1,5 +1,6 @@
 import pytest
 
+from shema_platform.foundation.telemetry import StructuredLoggingTelemetrySink
 from shema_platform.foundation.runtime_security import (
     RuntimeSecurityConfiguration,
     RuntimeSecurityViolation,
@@ -106,6 +107,7 @@ def test_api_startup_auto_wires_oidc_in_production(monkeypatch) -> None:
 
     assert isinstance(app.state.authenticator, OIDCJWTAuthenticator)
     assert app.state.authenticator.configuration.audience == "shema-business-platform"
+    assert isinstance(app.state.telemetry, StructuredLoggingTelemetrySink)
 
 
 def test_api_startup_allows_development_environment(monkeypatch) -> None:
