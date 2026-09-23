@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "probe_mode": "explicit_only",
+  "health_endpoint_runs_probes": false,
+  "probe_result": {
+    "fields": [
+      "reachable",
+      "error_code"
+    ],
+    "payload": false
+  },
+  "provider_payload_persistence": false,
+  "canonical_state_write": false,
+  "telemetry": {
+    "events": [
+      "provider.probe.completed",
+      "provider.probe.failed"
+    ],
+    "allowed_attributes": [
+      "component",
+      "operation",
+      "provider",
+      "status",
+      "error_code"
+    ]
+  },
+  "failure_policy": {
+    "transport_exception": "PROBE_EXCEPTION_OR_CONNECTION_ERROR",
+    "non_200": "HTTP_<status>",
+    "secret_or_response_body": "never persisted or emitted"
+  }
+}
