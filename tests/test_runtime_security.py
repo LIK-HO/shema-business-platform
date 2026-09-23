@@ -1,10 +1,11 @@
 import pytest
 
-from shema_platform.foundation.telemetry import StructuredLoggingTelemetrySink
 from shema_platform.foundation.runtime_security import (
     RuntimeSecurityConfiguration,
     RuntimeSecurityViolation,
 )
+from shema_platform.foundation.telemetry import StructuredLoggingTelemetrySink
+
 
 
 def production(**overrides):
