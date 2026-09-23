@@ -50,7 +50,13 @@ class FakeProvider(ResearchProvider):
             latency_seconds=0.1,
         )
 
-    def research(self, query: str, *, max_sources: int) -> ProviderResult:
+    def research(
+        self,
+        query: str,
+        *,
+        max_sources: int,
+        timeout_seconds: float | None = None,
+    ) -> ProviderResult:
         return self._result
 
 
