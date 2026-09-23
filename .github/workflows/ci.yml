@@ -67,3 +67,51 @@ jobs:
         run: python -m pip install --upgrade pip && pip install -e '.[dev]'
       - name: Integration tests
         run: pytest -m integration
+
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install package
+        run: python -m pip install --upgrade pip && pip install -e '.[dev]'
+      - name: Dependency audit
+        run: |
+          python -m pip freeze --exclude-editable > /tmp/requirements-audit.txt
+          pip-audit --strict -r /tmp/requirements-audit.txt
+
+  backup-recovery:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install package
+        run: python -m pip install --upgrade pip && pip install -e '.[dev]'
+      - name: Run PostgreSQL physical backup and PITR drill
+        run: bash scripts/postgres_pitr_drill.sh
+
+  release-contract:
+    needs:
+      - quality
+      - backup-recovery
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install package
+        run: python -m pip install --upgrade pip && pip install -e .
+      - name: Validate release contract
+        run: python -m shema_platform.platform.release

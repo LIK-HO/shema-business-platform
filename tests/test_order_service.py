@@ -18,7 +18,6 @@ from shema_platform.foundation.errors import (
     PolicyDenied,
     QuarantineRequired,
 )
-from shema_platform.foundation.idempotency import IdempotencyStore
 from shema_platform.foundation.policy import PolicyEngine
 
 
@@ -33,7 +32,6 @@ def service() -> OrderService:
             )
         ),
         PolicyEngine(),
-        IdempotencyStore(),
     )
 
 
@@ -96,7 +94,6 @@ def test_order_requires_permission_before_policy() -> None:
     no_permission = OrderService(
         RBACAuthorizer(),
         PolicyEngine(),
-        IdempotencyStore(),
     )
 
     with pytest.raises(AuthorizationError, match="permission denied"):

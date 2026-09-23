@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from .authorization import Permission
+
 
 class AuthenticationRequired(Exception):
     """The request did not carry a valid authenticated principal."""
@@ -12,6 +14,7 @@ class AuthenticationRequired(Exception):
 class AuthenticatedActor:
     actor_id: str
     trust_level: int
+    permissions: frozenset[Permission] = frozenset()
 
     def __post_init__(self) -> None:
         if not self.actor_id.strip():

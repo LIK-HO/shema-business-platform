@@ -1,0 +1,37 @@
+{
+  "version": "1.5-release-candidate-contract",
+  "release_version": "1.5.0",
+  "status": "candidate",
+  "frozen_kernel_contract_version": "1.4",
+  "core_maturity_contract_version": "1.5-core-maturity",
+  "required_certification_elements": [
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8",
+    "B9"
+  ],
+  "required_release_controls": [
+    "architecture_contract",
+    "core_maturity_contract",
+    "migration_baseline",
+    "security_certification_matrix",
+    "slo_error_budget_baseline",
+    "capacity_overload_baseline",
+    "backup_recovery_drill",
+    "supply_chain_audit"
+  ],
+  "final_freeze_policy": {
+    "kernel_semantics_frozen_after_green_release_candidate": true,
+    "new_features_stay_outside_core": true,
+    "core_change_requires_proven_invariant_or_security_or_data_integrity_or_fundamental_reliability_defect": true,
+    "core_change_requires_regression_tests": true,
+    "core_change_requires_impact_analysis": true,
+    "core_change_requires_rollback_plan": true
+  },
+  "no_production_deployment_or_merge_authorization": true
+}

@@ -63,6 +63,24 @@ class MemoryRuns:
 
 
 @dataclass
+class MemoryAIState:
+    audits: MemoryAudit = field(default_factory=MemoryAudit)
+    runs: MemoryRuns = field(default_factory=MemoryRuns)
+
+
+class MemoryAIUnitOfWork:
+    def __init__(self, state: MemoryAIState) -> None:
+        self.audits = state.audits
+        self.ai_runs = state.runs
+
+    def __enter__(self) -> "MemoryAIUnitOfWork":
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> bool:
+        return False
+
+
+@dataclass
 class FakeAIProvider:
     provider_id: str = "fake-model"
 
@@ -92,12 +110,12 @@ def ai_gateway() -> AIGateway:
             ),
         )
     )
+    state = MemoryAIState()
     return AIGateway(
         FakeAIProvider(),
         authorizer,
         PolicyEngine(),
-        MemoryAudit(),
-        MemoryRuns(),
+        lambda: MemoryAIUnitOfWork(state),
     )
 
 

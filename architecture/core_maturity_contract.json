@@ -1,0 +1,103 @@
+{
+  "version": "1.5-core-maturity",
+  "dependency_boundaries_enforced": true,
+  "external_calls_must_be_outside_uow": true,
+  "verified_permissions_reach_application_actor": true,
+  "release_contract_validation": true,
+  "canonical_critical_workflows": [
+    "commercial_action_create",
+    "order_create"
+  ],
+  "critical_workflows_require": [
+    "canonical_postgresql_identity_lookup",
+    "explicit_operation_idempotency_key",
+    "business_state_idempotency_outbox_audit_atomic_commit"
+  ],
+  "authoritative_core": [
+    "domain",
+    "foundation",
+    "application",
+    "postgres_transactional_persistence",
+    "durable_jobs",
+    "outbox",
+    "canonical_api_semantics"
+  ],
+  "external_boundary": [
+    "concrete_iam_provider",
+    "communication_transport",
+    "intelligence_provider",
+    "ai_model_provider",
+    "ui",
+    "payment_settlement_provider",
+    "airtable",
+    "replit",
+    "bitrix24"
+  ],
+  "maturity_gates": [
+    "correctness",
+    "atomicity",
+    "concurrency",
+    "recovery",
+    "security",
+    "observability",
+    "release_safety"
+  ],
+  "fault_model": [
+    "worker_crash_before_completion",
+    "worker_crash_after_external_effect",
+    "duplicate_delivery",
+    "lease_expiry",
+    "database_rollback",
+    "concurrent_critical_command",
+    "dependency_timeout",
+    "concurrent_deployment",
+    "historical_migration_edit"
+  ],
+  "database_state_ownership_constraints": true,
+  "migration_safety": {
+    "serialized_by_advisory_lock": true,
+    "checksummed": true,
+    "historical_edit_fails_closed": true,
+    "single_transaction": true,
+    "gap_free_sequence": true,
+    "latest_required_version": 9,
+    "existing_schema_adoption": {
+      "baseline_version": 8,
+      "verified_required_schema_shape": true,
+      "historical_migrations_not_reapplied": true,
+      "ledger_bootstrap_transactional": true,
+      "post_adoption_apply_starts_at": 9
+    }
+  },
+  "development_manifest": "docs/DEVELOPMENT_MANIFEST.md",
+  "current_stage": "v1.5 Core Maturity Integration & Certification",
+  "core_semantic_freeze_after_certification": true,
+  "certification_controls": {
+    "release_integration": [
+      "unified_v1_5_candidate",
+      "green_ci_supported_versions",
+      "migration_adoption_verified"
+    ],
+    "recovery": [
+      "crash_after_external_effect_integration_drill",
+      "backup_restore_verified",
+      "point_in_time_recovery_verified",
+      "rto_rpo_measured",
+      "upgrade_rollback_verified"
+    ],
+    "operations": [
+      "end_to_end_correlation_proven",
+      "sli_slo_error_budget_baseline",
+      "capacity_overload_baseline"
+    ],
+    "security": [
+      "security_control_matrix",
+      "dependency_supply_chain_gate",
+      "fail_closed_runtime_configuration"
+    ],
+    "final_freeze": [
+      "controlled_release_candidate",
+      "formal_core_semantic_freeze"
+    ]
+  }
+}

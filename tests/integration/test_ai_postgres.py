@@ -18,9 +18,9 @@ from shema_platform.foundation.authorization import (
     RBACAuthorizer,
 )
 from shema_platform.foundation.policy import PolicyEngine
+from shema_platform.platform.postgres import PostgresUnitOfWork
 from shema_platform.platform.postgres_repositories import (
     PostgresAIRunRepository,
-    PostgresAuditRepository,
 )
 
 pytestmark = pytest.mark.integration
@@ -69,6 +69,7 @@ def apply_migrations(connection: psycopg.Connection) -> None:
 def test_ai_gateway_persists_run_and_audit_to_postgres() -> None:
     with psycopg.connect(DATABASE_URL) as connection:
         apply_migrations(connection)
+        connection.commit()
 
         authorizer = RBACAuthorizer(
             (
@@ -83,8 +84,7 @@ def test_ai_gateway_persists_run_and_audit_to_postgres() -> None:
             FakeProvider(),
             authorizer,
             PolicyEngine(),
-            PostgresAuditRepository(connection),
-            runs,
+            lambda: PostgresUnitOfWork(lambda: psycopg.connect(DATABASE_URL)),
         )
 
         result = gateway.execute(

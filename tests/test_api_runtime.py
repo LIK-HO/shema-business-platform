@@ -26,7 +26,9 @@ from shema_platform.foundation.authentication import (
     AuthenticationPort,
     AuthenticationRequired,
 )
+from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.errors import QuarantineRequired
+from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
 class RejectingAuthenticator(AuthenticationPort):
@@ -38,6 +40,17 @@ class FakeAuthenticator(AuthenticationPort):
     def authenticate(self, authorization: str | None) -> AuthenticatedActor:
         if authorization == "Bearer test-token":
             return AuthenticatedActor("operator-1", trust_level=2)
+        raise AuthenticationRequired()
+
+
+class PermissionedAuthenticator(AuthenticationPort):
+    def authenticate(self, authorization: str | None) -> AuthenticatedActor:
+        if authorization == "Bearer permissioned-token":
+            return AuthenticatedActor(
+                "operator-1",
+                trust_level=2,
+                permissions=frozenset({Permission.ORDER_CREATE}),
+            )
         raise AuthenticationRequired()
 
 
@@ -122,6 +135,52 @@ def client(application: APIApplication | None = None) -> TestClient:
             FakeAuthenticator() if application is not None else None,
         )
     )
+
+
+def test_runtime_api_propagates_verified_permissions() -> None:
+    captured = {}
+
+    class CapturingApplication(FakeApplication):
+        def search(self, request, context):
+            captured["permissions"] = context.permissions
+            return super().search(request, context)
+
+    response = TestClient(
+        create_app(CapturingApplication(), PermissionedAuthenticator())
+    ).post(
+        "/v1/search",
+        headers={"Authorization": "Bearer permissioned-token"},
+        json={"region": "Moscow", "industries": ["logistics"]},
+    )
+
+    assert response.status_code == 200
+    assert captured["permissions"] == frozenset({Permission.ORDER_CREATE})
+
+
+def test_runtime_api_emits_redacted_telemetry() -> None:
+    telemetry_sink = InMemoryTelemetrySink()
+
+    response = TestClient(
+        create_app(FakeApplication(), FakeAuthenticator(), telemetry=telemetry_sink)
+    ).post(
+        "/v1/search",
+        headers={
+            "Authorization": "Bearer test-token",
+            "X-Correlation-Id": "corr-telemetry",
+        },
+        json={
+            "region": "Moscow",
+            "industries": ["logistics"],
+        },
+    )
+
+    assert response.status_code == 200
+    event = telemetry_sink.all()[-1]
+    assert event.name == "http.request.completed"
+    assert event.correlation_id == "corr-telemetry"
+    assert event.attributes["status"] == 200
+    assert "authorization" not in event.attributes
+    assert "body" not in event.attributes
 
 
 def test_runtime_api_propagates_correlation_id() -> None:

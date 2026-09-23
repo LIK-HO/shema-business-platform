@@ -1,0 +1,44 @@
+{
+  "version": "1.5-capacity-overload-baseline",
+  "status": "baseline",
+  "policy": {
+    "no_new_kernel_semantics": true,
+    "measurement_is_for_behavioral_boundaries_not_capacity_claims": true,
+    "rate_limiting_is_not_a_frozen_kernel_authority": true
+  },
+  "controls": {
+    "concurrent_critical_commands": {
+      "acceptance": "same idempotency key converges to one durable business result",
+      "evidence": "tests/integration/test_critical_workflows_postgres.py::test_concurrent_action_create_with_same_idempotency_key_returns_one_result",
+      "baseline_concurrency": 8
+    },
+    "worker_saturation": {
+      "acceptance": "worker ownership remains lease-guarded and stale workers cannot complete reclaimed work",
+      "evidence": "tests/integration/test_postgres_jobs.py::test_postgres_job_retry_advances_attempt_after_reclaim"
+    },
+    "retry_storm": {
+      "max_attempts": 5,
+      "maximum_delay_seconds": 60,
+      "acceptance": "retryable work is bounded by policy and does not retry indefinitely",
+      "evidence": "src/shema_platform/foundation/recovery.py"
+    },
+    "queue_backlog": {
+      "outbox_default_batch_limit": 100,
+      "acceptance": "dispatcher claims a bounded batch and does not require unbounded in-memory delivery",
+      "evidence": "tests/test_outbox_dispatcher.py::test_outbox_dispatcher_respects_limit"
+    },
+    "db_contention": {
+      "acceptance": "critical duplicate contention is serialized by PostgreSQL uniqueness/transactional locking",
+      "evidence": "tests/integration/test_critical_workflows_postgres.py::test_concurrent_action_create_with_same_idempotency_key_returns_one_result"
+    },
+    "rate_limiting": {
+      "status": "outside-frozen-core",
+      "acceptance": "no distributed ingress rate limiter is added to the kernel without a measured product/edge requirement",
+      "evidence": "docs/CAPACITY_OVERLOAD.md"
+    },
+    "graceful_degradation": {
+      "acceptance": "unavailable application dependencies expose bounded HTTP failure rather than false success",
+      "evidence": "tests/test_api_runtime.py::test_runtime_api_maps_missing_application_to_503"
+    }
+  }
+}

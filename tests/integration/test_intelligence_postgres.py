@@ -20,7 +20,7 @@ from shema_platform.application.research_routing import (
     SourceRule,
 )
 from shema_platform.foundation.errors import QuarantineRequired
-from shema_platform.platform.postgres_repositories import PostgresEvidenceRepository
+from shema_platform.platform.postgres import PostgresUnitOfWork
 
 pytestmark = pytest.mark.integration
 
@@ -77,11 +77,12 @@ def test_routed_intelligence_persists_evidence_in_postgres() -> None:
 
     with psycopg.connect(DATABASE_URL) as connection:
         apply_migration(connection, ROOT / "db/migrations/0001_foundation.sql")
+        connection.commit()
 
         service = IntelligenceService(
             routing,
             ProviderGateway(),
-            PostgresEvidenceRepository(connection),
+            lambda: PostgresUnitOfWork(lambda: psycopg.connect(DATABASE_URL)),
         )
 
         run = service.run(
@@ -141,7 +142,7 @@ def test_routed_intelligence_fails_closed_before_persisting_partial_evidence() -
         service = IntelligenceService(
             routing,
             ProviderGateway(),
-            PostgresEvidenceRepository(connection),
+            lambda: PostgresUnitOfWork(lambda: psycopg.connect(DATABASE_URL)),
         )
 
         with pytest.raises(QuarantineRequired):

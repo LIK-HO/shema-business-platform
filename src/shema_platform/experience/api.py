@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from time import monotonic
 from typing import Protocol
 from uuid import uuid4
 
@@ -30,11 +31,18 @@ from shema_platform.foundation.authentication import (
     AuthenticationPort,
     AuthenticationRequired,
 )
+from shema_platform.foundation.authorization import AuthorizationSubject, Permission
 from shema_platform.foundation.errors import (
     AuthorizationError,
     IdempotencyConflict,
     PolicyDenied,
     QuarantineRequired,
+)
+from shema_platform.foundation.runtime_security import RuntimeSecurityConfiguration
+from shema_platform.foundation.telemetry import (
+    NoopTelemetrySink,
+    TelemetrySink,
+    build_event,
 )
 
 
@@ -48,6 +56,13 @@ class RequestContext:
     actor_id: str
     trust_level: int
     idempotency_key: str | None
+    permissions: frozenset[Permission] = frozenset()
+
+    def authorization_subject(self) -> AuthorizationSubject:
+        return AuthorizationSubject.from_actor(
+            actor_id=self.actor_id,
+            permissions=self.permissions,
+        )
 
 
 class APIApplication(Protocol):
@@ -105,8 +120,42 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         correlation_id = request.headers.get("X-Correlation-Id") or str(uuid4())
         request.state.correlation_id = correlation_id
+        started = monotonic()
 
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception as exc:
+            telemetry: TelemetrySink = request.app.state.telemetry
+            telemetry.emit(
+                build_event(
+                    name="http.request.failed",
+                    correlation_id=correlation_id,
+                    attributes={
+                        "component": "http",
+                        "operation": request.method,
+                        "status": 500,
+                        "duration_ms": round((monotonic() - started) * 1000, 2),
+                        "error_code": type(exc).__name__,
+                    },
+                )
+            )
+            raise
+
+        telemetry = request.app.state.telemetry
+        route = getattr(request.scope.get("route"), "path", "unknown")
+        telemetry.emit(
+            build_event(
+                name="http.request.completed",
+                correlation_id=correlation_id,
+                attributes={
+                    "component": "http",
+                    "operation": request.method,
+                    "route": route,
+                    "status": response.status_code,
+                    "duration_ms": round((monotonic() - started) * 1000, 2),
+                },
+            )
+        )
         response.headers["X-Correlation-Id"] = correlation_id
         return response
 
@@ -151,6 +200,7 @@ def _context(
         actor_id=actor.actor_id,
         trust_level=actor.trust_level,
         idempotency_key=idempotency_key,
+        permissions=actor.permissions,
     )
 
 
@@ -180,7 +230,13 @@ def create_app(
     authenticator: AuthenticationPort | None = None,
     *,
     enable_docs: bool = True,
+    telemetry: TelemetrySink | None = None,
 ) -> FastAPI:
+    runtime_security = RuntimeSecurityConfiguration.from_environment(
+        docs_enabled=enable_docs
+    )
+    runtime_security.enforce()
+
     app = FastAPI(
         title="Shema Business Platform Canonical API",
         version="1.5.0",
@@ -190,6 +246,7 @@ def create_app(
     )
     app.state.application = application
     app.state.authenticator = authenticator
+    app.state.telemetry = telemetry or NoopTelemetrySink()
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(CorrelationMiddleware)
 
