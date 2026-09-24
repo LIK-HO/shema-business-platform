@@ -1,5 +1,10 @@
 """Provider-neutral AI adapter contracts outside the frozen kernel."""
 
+from shema_platform.adapters.ai.yandexgpt import (
+    YandexGPTConfiguration,
+    YandexGPTExecutionError,
+    YandexGPTProvider,
+)
 from shema_platform.adapters.ai.contracts import (
     AIModelProvenance,
     AIProviderActivation,
@@ -19,6 +24,9 @@ from shema_platform.adapters.ai.contracts import (
 )
 
 __all__ = [
+    "YandexGPTConfiguration",
+    "YandexGPTExecutionError",
+    "YandexGPTProvider",
     "AIModelProvenance",
     "AIProviderActivation",
     "AIProviderAdapter",
