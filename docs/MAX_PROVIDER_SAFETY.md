@@ -1,8 +1,26 @@
 # MAX Provider Safety Assessment
 
-**Assessment date:** 2026-09-23
+**Assessment date:** 2026-09-24
 
 ## Current published API
+
+### Current official contract verified 2026-09-24
+
+The current official MAX developer documentation confirms the following live contract:
+
+- outbound messages use `POST https://platform-api2.max.ru/messages`;
+- authentication is via `Authorization: <access_token>`;
+- documented target parameters are `user_id` or `chat_id`;
+- documented message-body fields include `text`, `attachments`, `link`, `notify` and `format`;
+- the published POST `/messages` contract does not document a provider-side idempotency key or equivalent request-deduplication field;
+- the successful response returns the created `message` object.
+
+The published read surface `GET /messages` accepts `message_ids` or retrieves messages from a chat with optional time bounds and count. `GET /messages/{messageId}` requires the message ID itself. Neither published method provides a deterministic lookup by the platform's durable commercial-action idempotency key.
+
+Source references:
+- https://dev.max.ru/docs-api/methods/POST/messages
+- https://dev.max.ru/docs-api/methods/GET/messages
+- https://dev.max.ru/docs-api/methods/GET/messages/-messageId-
 
 The published MAX developer contract documents outbound message creation as:
 
@@ -28,14 +46,17 @@ The platform's commercial-send workflow is explicitly designed to survive a proc
 
 The current published MAX contract does not provide sufficient documented evidence for either capability. This is a **capability-not-proven** decision, not a claim that MAX can never provide such a mechanism.
 
-Accordingly:
+Accordingly, as of 2026-09-24:
 
-```
+```text
 MAX_LIVE_EFFECT_SAFETY = {
     supports_idempotency: false,
     supports_reconciliation: false,
+    activation: "fail_closed",
 }
 ```
+
+This is a capability-not-proven decision. It does not claim that MAX can never provide such a mechanism; it states that the current published contract does not prove the semantics required by this platform's crash-after-external-effect workflow.
 
 The live MAX outbound adapter must not be activated.
 

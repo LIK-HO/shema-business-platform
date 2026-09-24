@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "provider": "max",
+  "surface": "live_outbound_messages",
+  "activation": "fail_closed",
+  "supports_idempotency": false,
+  "supports_reconciliation": false,
+  "evidence_ref": "max:published-api-contract:2026-09-24",
+  "evidence_sources": [
+    "https://dev.max.ru/docs-api/methods/POST/messages",
+    "https://dev.max.ru/docs-api/methods/GET/messages",
+    "https://dev.max.ru/docs-api/methods/GET/messages/-messageId-"
+  ],
+  "required_proof_before_activation": [
+    "durable external-effect key mapping",
+    "duplicate submission behavior after lost response or process crash",
+    "deterministic reconciliation without prior message_id knowledge",
+    "same-key different-content mismatch detection",
+    "real-provider integration proof or official provider contract with equivalent semantics"
+  ],
+  "frozen_kernel_unchanged": true
+}
