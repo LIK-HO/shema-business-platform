@@ -8,7 +8,7 @@
 - Current productization HEAD: `66381f2daf27a0335cd8ae355bdc1762878d3dbb`
 - Core PR: #8 — open, draft, unmerged
 - Productization PR: #30 — open, draft, unmerged
-- Active productization phase: P21 — duplicate provider observation collapse
+- Active productization phase: P22 — productization hardening review
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -916,3 +916,44 @@ P22 — PRODUCTIZATION HARDENING REVIEW.
 Before adding another provider-specific micro-control, re-audit the productization contract against mature-system invariants, existing P1–P21 controls, current failure modes and measurable production risk. Only a gap with non-redundant risk reduction should become new code; otherwise the hardening slice should close and move to the next product surface.
 
 No merge or deployment authorization is implied.
+
+
+## P22 — PRODUCTIZATION HARDENING REVIEW — CLOSED / VERIFIED
+
+Review scope:
+- re-audit the concrete OpenCorporates productization boundary against the mature-system invariants and the frozen-core change policy;
+- distinguish real residual risk from controls that would only duplicate P1–P21;
+- determine the next product surface from the live repository rather than extending one adapter indefinitely.
+
+Verified coverage:
+- input/resource bounds: query length, encoded request envelope and response body size;
+- execution safety: operation timeout, rate-limit wait budget, pre-I/O deadline and resource/cost guard;
+- failure behavior: non-success HTTP failure before JSON materialization;
+- readiness/health: explicit provider activation, readiness probes and health state;
+- provenance integrity: exact HTTPS host, company path, canonical URL shape, port/query/fragment rejection;
+- observation integrity: bounded field sizes/types, payload identity consistency and deterministic duplicate collapse;
+- evidence determinism: canonical provenance references and first-valid-observation selection;
+- security/release/recovery controls: P1–P12 and the core B1–B10 certification gates remain the governing outer controls.
+
+Review result:
+- no additional OpenCorporates micro-control was identified that provides a clearly non-redundant reduction in a currently evidenced production risk;
+- the frozen kernel remains untouched;
+- continuing to add provider-specific checks here would violate the bounded-complexity and stable-core direction unless new measured risk appears.
+
+Decision:
+- close the OpenCorporates provider-hardening slice at P22;
+- move productization effort to the next real product surface: live MAX outbound-effect safety and production adapter proof;
+- preserve the existing fail-closed MAX safety decision until provider-side idempotency or deterministic reconciliation is actually proven.
+
+Evidence:
+- state-only CI #1112 (`36001089545`) passed all seven required jobs on ledger HEAD `0b5e285a1dcac909e964b84dc8b2cae71218c206`.
+
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P23 — MAX LIVE EFFECT SAFETY / REAL ADAPTER PROOF.
+
+Scope is limited to proving or safely refusing live MAX outbound effects: exact external-effect key semantics, lost-response recovery, duplicate submission behavior, mismatch detection and real-provider integration evidence. If the provider cannot prove the required semantics, the correct outcome is continued fail-closed quarantine rather than speculative activation.
+
+No kernel semantic change is implied.
