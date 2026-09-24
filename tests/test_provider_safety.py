@@ -47,7 +47,7 @@ def test_provider_without_safety_proof_fails_closed() -> None:
         provider="max",
         supports_idempotency=False,
         supports_reconciliation=False,
-        evidence_ref="max:published-api-contract:2026-09-23",
+        evidence_ref="max:published-api-contract:2026-09-24",
     )
 
     with pytest.raises(
@@ -85,7 +85,7 @@ def test_safe_adapter_rejects_uncertified_provider_during_composition() -> None:
                 provider="max",
                 supports_idempotency=False,
                 supports_reconciliation=False,
-                evidence_ref="max:published-api-contract:2026-09-23",
+                evidence_ref="max:published-api-contract:2026-09-24",
             ),
         )
 
