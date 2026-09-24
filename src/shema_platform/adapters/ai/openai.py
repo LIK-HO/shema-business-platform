@@ -14,7 +14,6 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 from shema_platform.application.ai import AIProvider, AIRun, AITask
 from shema_platform.foundation.provider_probe import ProbeResult
 
-
 DEFAULT_MODEL = "gpt-6-luna"
 DEFAULT_TIMEOUT_SECONDS = 15.0
 MAX_TIMEOUT_SECONDS = 30.0
