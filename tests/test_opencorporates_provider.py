@@ -55,6 +55,22 @@ def test_configuration_rejects_non_https_base_url() -> None:
         )
 
 
+def test_configuration_rejects_non_positive_response_limit() -> None:
+    with pytest.raises(ValueError, match="must be positive"):
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            max_response_bytes=0,
+        )
+
+
+def test_configuration_rejects_response_limit_above_hard_cap() -> None:
+    with pytest.raises(ValueError, match="must not exceed 4194304"):
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            max_response_bytes=4_194_305,
+        )
+
+
 def test_provider_parses_provenanced_company_observations() -> None:
     requester = FakeRequester(
         status=200,
@@ -128,6 +144,58 @@ def test_provider_caps_requested_sources_at_api_limit() -> None:
 
     assert result.claims == ()
     assert requester.calls[0][1]["per_page"] == "50"
+
+
+def test_provider_rejects_oversized_custom_requester_response() -> None:
+    class OversizedRequester:
+        def __call__(
+            self,
+            url: str,
+            params: dict[str, str],
+            timeout_seconds: float,
+        ) -> tuple[int, bytes]:
+            return 200, b"x" * (1024 * 1024 + 1)
+
+    provider = OpenCorporatesProvider(
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            max_response_bytes=1024 * 1024,
+        ),
+        requester=OversizedRequester(),
+    )
+
+    with pytest.raises(ValueError, match="exceeds configured max_response_bytes"):
+        provider.research("company", max_sources=1)
+
+
+def test_request_json_enforces_transport_response_limit(monkeypatch) -> None:
+    import shema_platform.adapters.intelligence.opencorporates as module
+
+    class FakeResponse:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, traceback):
+            return None
+
+        def read(self, size: int) -> bytes:
+            return b"x" * size
+
+    monkeypatch.setattr(
+        module,
+        "urlopen",
+        lambda request, timeout: FakeResponse(),
+    )
+
+    with pytest.raises(ValueError, match="exceeds configured max_response_bytes"):
+        module._request_json(
+            "https://api.opencorporates.com/v0.4/companies/search",
+            {"q": "company"},
+            1,
+            8,
+        )
 
 
 def test_provider_fails_on_http_error() -> None:
@@ -223,14 +291,16 @@ def test_provider_rejects_non_positive_research_deadline() -> None:
         provider.research("company", max_sources=1, timeout_seconds=0)
 
 
-
-
 def test_provider_reduces_timeout_by_rate_limit_wait(monkeypatch) -> None:
     import shema_platform.adapters.intelligence.opencorporates as module
 
     now = [100.0]
     monkeypatch.setattr(module.time, "monotonic", lambda: now[0])
-    monkeypatch.setattr(module.time, "sleep", lambda seconds: now.__setitem__(0, now[0] + seconds))
+    monkeypatch.setattr(
+        module.time,
+        "sleep",
+        lambda seconds: now.__setitem__(0, now[0] + seconds),
+    )
 
     requester = FakeRequester(
         status=200,

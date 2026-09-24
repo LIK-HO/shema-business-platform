@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-provider-preio-deadline`
+- Productization branch: `v1.5/productization-provider-response-cap`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `c48d81ee1dcace8ef3211a026361454849dccb9a`
+- Current productization HEAD: `66381f2daf27a0335cd8ae355bdc1762878d3dbb`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #21 — open, draft, unmerged
-- Active productization phase: P12 — provider pre-io deadline
+- Productization PR: #22 — open, draft, unmerged
+- Active productization phase: P13 — provider response size cap
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -502,7 +502,7 @@ Implementation:
 - no retry scheduler, durable job semantics, global limiter, billing ledger or kernel change was introduced.
 
 Evidence:
-- CI run #1089 (`35910726111`) passed all seven required jobs:
+- CI run #1090 (`35910936638`) passed all seven required jobs:
   - quality 3.12 — success;
   - quality 3.13 — success;
   - integration 3.12 — success;
@@ -518,4 +518,49 @@ Changed boundary:
 - `docs/PROVIDER_PREIO_DEADLINE.md`
 
 No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+
+## P13 — PROVIDER RESPONSE SIZE CAP — CLOSED / VERIFIED
+
+Purpose:
+- bound the maximum external provider response payload;
+- enforce the response limit at both the HTTP transport and adapter boundary;
+- fail closed before JSON materialization when the configured response ceiling is exceeded.
+
+Implementation:
+- OpenCorporates uses a 1 MiB default response ceiling with a hard 4 MiB configuration maximum;
+- the HTTP transport reads at most max_response_bytes + 1 bytes and rejects oversized responses before returning them to the adapter;
+- the adapter rechecks the returned byte length before JSON parsing, protecting the existing injected/requester test seam as well;
+- readiness probes use the same bounded transport path;
+- focused tests cover non-positive and over-cap configuration, transport-level rejection and adapter-level rejection;
+- no kernel, retry scheduler, durable job semantics, global limiter, billing ledger or deployment semantic was introduced.
+
+Evidence:
+- CI run #1093 (35995465195) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+During verification, the first P13 candidate failed six existing unit tests because it changed the injected requester callable signature. The bounded implementation was corrected to preserve the pre-existing three-argument requester contract; the final CI run then passed all seven gates.
+
+Changed boundary:
+- src/shema_platform/adapters/intelligence/opencorporates.py
+- tests/test_opencorporates_provider.py
+- architecture/provider_response_size_contract.json
+- docs/PROVIDER_RESPONSE_SIZE_LIMIT.md
+
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P14 — PROVIDER REQUEST-INPUT ENVELOPE.
+
+The next boundary is to bound the input side of concrete provider calls: query size and the resulting outbound request envelope before external I/O, while preserving the existing ResearchProvider contract and avoiding provider-specific semantics in the kernel. First verify the current upstream/provider request limits and existing application validation, then implement the smallest compatible fail-closed bound.
+
 No merge or deployment authorization is implied.

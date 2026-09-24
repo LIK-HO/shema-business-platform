@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "scope": "external_provider_response",
+  "default_max_response_bytes": 1048576,
+  "hard_max_response_bytes": 4194304,
+  "enforcement": "transport_and_adapter",
+  "oversize": "fail_closed_before_json_materialization",
+  "memory_bound": "transport_read_is_limited_to_max_response_bytes_plus_one",
+  "canonical_business_state": false
+}
