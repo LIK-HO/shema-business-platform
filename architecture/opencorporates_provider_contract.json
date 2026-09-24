@@ -16,6 +16,7 @@
     "non_200": "fail_before_json_materialization",
     "invalid_json": "fail",
     "missing_provenance_url": "discard_observation",
-    "provenance_host": "require_exact_https_opencorporates_com"
+    "provenance_host": "require_exact_https_opencorporates_com",
+    "provenance_path": "require_https_opencorporates_company_reference_path"
   }
 }

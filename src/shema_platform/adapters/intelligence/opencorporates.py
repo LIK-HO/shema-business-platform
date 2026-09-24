@@ -23,9 +23,19 @@ def _is_valid_provenance_url(source_ref: str) -> bool:
         parsed = urlsplit(source_ref)
     except ValueError:
         return False
+
+    path = parsed.path.rstrip("/")
+    segments = path.split("/")
     return (
         parsed.scheme == "https"
         and parsed.hostname == "opencorporates.com"
+        and not parsed.query
+        and not parsed.fragment
+        and len(segments) == 4
+        and segments[0] == ""
+        and segments[1] == "companies"
+        and bool(segments[2])
+        and bool(segments[3])
     )
 
 
