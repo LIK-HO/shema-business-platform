@@ -1073,10 +1073,99 @@ Non-goals:
 - no automatic fallback routing;
 - no merge or deployment authorization.
 
-## Next bounded productization boundary
+## P26 — CONCRETE AI PROVIDER: YANDEXGPT — CLOSED / VERIFIED
 
-P26 — CONCRETE AI PROVIDER IMPLEMENTATION BOUNDARY.
+Purpose:
+- add exactly one approved cloud AI provider behind the frozen provider-neutral AI Gateway contract;
+- prove the concrete adapter boundary without modifying frozen application semantics;
+- fail closed on credential, policy, deadline, size, token-usage, cost-estimation, authentication, authorization, rate-limit and malformed-response violations;
+- keep provider credentials runtime-only and provider state outside canonical business persistence.
 
-Implement exactly one approved provider integration at a time, beginning only after its current external API/license/resource contract is verified. The implementation must remain behind `src/shema_platform/adapters/ai/`, use explicit activation/readiness, bounded request/response/resource/time controls, provenance and audit/telemetry discipline, and fail-closed behavior. No automatic cloud/local fallback and no provider-owned canonical business state.
+Implementation:
+- `src/shema_platform/adapters/ai/yandexgpt.py`
+- `tests/test_yandexgpt_provider.py`
+- `architecture/yandexgpt_provider_contract.json`
+- `docs/YANDEXGPT_PROVIDER.md`
+
+External evidence snapshot:
+- Yandex Cloud AI Studio current documentation was checked on 2026-09-24;
+- current official documentation supports the AI Studio OpenAI-compatible endpoint `https://ai.api.cloud.yandex.net/v1`, model URI pattern `gpt://<folder_ID>/<model_ID>/latest`, chat completions, API-key authentication and `yc.ai.languageModels.execute`;
+- current Yandex Cloud Terms of Use are tracked by the adapter architecture contract.
+
+Bounded controls:
+- explicit activation and readiness;
+- runtime-only credentials;
+- HTTPS-only transport;
+- bounded request/response/input/output/deadline/cost controls;
+- typed fail-closed failures;
+- no automatic retry;
+- no provider-owned persistence;
+- no automatic cloud/local fallback;
+- no live production traffic activation by this phase.
+
+Evidence:
+- CI run #1139 (`36048166863`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- Verified substantive implementation head: `73e8ae1db748dea23240f955528cb1d40fe94a38`.
+- No frozen kernel file was changed.
 
 No merge or deployment authorization is implied.
+
+## P27 — AI PROVIDER COMPOSITION / ACTIVATION PROOF — CLOSED / VERIFIED
+
+Purpose:
+- compose the verified YandexGPT adapter with the frozen AIGateway without changing kernel semantics;
+- pass evidence/context/budget/deadline through an immutable request-scoped composition scope;
+- prove explicit activation/readiness, prompt materialization, provider selection, observability, budget propagation, frozen-Gateway persistence/audit and fail-closed activation;
+- preserve production provider activation as an explicit separate boundary.
+
+Implementation:
+- `src/shema_platform/adapters/ai/composition.py`
+- `tests/test_ai_composition.py`
+- `architecture/ai_provider_composition_contract.json`
+- `docs/AI_PROVIDER_COMPOSITION.md`
+
+Composition boundary:
+- frozen `src/shema_platform/application/ai.py` remains unchanged;
+- `ContextVar` scope is immutable and reset in `finally`;
+- invocation without scope fails closed before provider I/O;
+- correlation ID is mandatory;
+- disabled/non-explicit/not-ready providers fail closed;
+- adapter responses are revalidated at the composition boundary;
+- canonical AIRun persistence and audit remain owned by the frozen AIGateway;
+- telemetry is redacted/non-authoritative and cannot break the request path;
+- no production YandexGPT route was wired or activated.
+
+Evidence:
+- CI run #1148 (`36049519191`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- Verified substantive composition head: `21df9a7668e7a0b2fd97e38730c4421893d98c11`.
+- P27 test proof included scope leakage prevention, nested restoration, thread isolation, explicit activation/readiness gating, frozen-Gateway persistence/audit and typed failure telemetry.
+
+No merge or deployment authorization is implied.
+
+## P28 — PRODUCTION AI ACTIVATION GATE — NOT_STARTED
+
+Purpose:
+- introduce an explicit, reversible production activation contract for the already verified YandexGPT composition;
+- require runtime configuration snapshot, credential presence, explicit operator activation, readiness, cost/deadline ceilings, observability and rollback state before production traffic is permitted;
+- preserve default-disabled / fail-closed behavior;
+- keep activation outside frozen kernel semantics.
+
+Non-goals:
+- no new provider;
+- no local model runtime;
+- no automatic cloud/local fallback;
+- no implicit production enablement;
+- no merge or deployment authorization.
