@@ -12,6 +12,24 @@ from urllib.request import Request, urlopen
 
 DEFAULT_MAX_RESPONSE_BYTES = 1_048_576
 MAX_MAX_RESPONSE_BYTES = 4_194_304
+DEFAULT_MAX_QUERY_CHARS = 1_024
+MAX_MAX_QUERY_CHARS = 4_096
+DEFAULT_MAX_REQUEST_URL_BYTES = 8_192
+MAX_MAX_REQUEST_URL_BYTES = 16_384
+
+
+def _build_request_url(
+    url: str,
+    params: Mapping[str, str],
+    *,
+    max_request_url_bytes: int,
+) -> str:
+    request_url = f"{url}?{urlencode(params)}"
+    if len(request_url.encode("utf-8")) > max_request_url_bytes:
+        raise ValueError(
+            "OpenCorporates request URL exceeds configured max_request_url_bytes"
+        )
+    return request_url
 
 
 def _read_bounded(stream, *, max_response_bytes: int) -> bytes:
@@ -28,9 +46,14 @@ def _request_json(
     params: Mapping[str, str],
     timeout_seconds: float,
     max_response_bytes: int,
+    max_request_url_bytes: int,
 ) -> tuple[int, bytes]:
     request = Request(
-        url=f"{url}?{urlencode(params)}",
+        url=_build_request_url(
+            url,
+            params,
+            max_request_url_bytes=max_request_url_bytes,
+        ),
         headers={
             "Accept": "application/json",
             "User-Agent": "shema-business-platform/1.5",
@@ -59,6 +82,8 @@ class OpenCorporatesConfiguration:
     base_url: str = "https://api.opencorporates.com"
     timeout_seconds: float = 5.0
     max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES
+    max_query_chars: int = DEFAULT_MAX_QUERY_CHARS
+    max_request_url_bytes: int = DEFAULT_MAX_REQUEST_URL_BYTES
     cost_per_call: float = 0.0
     max_requests_per_second: float = 1.0
     coverage: frozenset[str] = frozenset(
@@ -81,6 +106,18 @@ class OpenCorporatesConfiguration:
                 os.getenv(
                     "OPENCORPORATES_MAX_RESPONSE_BYTES",
                     str(DEFAULT_MAX_RESPONSE_BYTES),
+                )
+            ),
+            max_query_chars=int(
+                os.getenv(
+                    "OPENCORPORATES_MAX_QUERY_CHARS",
+                    str(DEFAULT_MAX_QUERY_CHARS),
+                )
+            ),
+            max_request_url_bytes=int(
+                os.getenv(
+                    "OPENCORPORATES_MAX_REQUEST_URL_BYTES",
+                    str(DEFAULT_MAX_REQUEST_URL_BYTES),
                 )
             ),
             cost_per_call=float(
@@ -118,6 +155,18 @@ class OpenCorporatesConfiguration:
         if self.max_response_bytes > MAX_MAX_RESPONSE_BYTES:
             raise ValueError(
                 "max_response_bytes must not exceed 4194304"
+            )
+        if self.max_query_chars <= 0:
+            raise ValueError("max_query_chars must be positive")
+        if self.max_query_chars > MAX_MAX_QUERY_CHARS:
+            raise ValueError(
+                "max_query_chars must not exceed 4096"
+            )
+        if self.max_request_url_bytes <= 0:
+            raise ValueError("max_request_url_bytes must be positive")
+        if self.max_request_url_bytes > MAX_MAX_REQUEST_URL_BYTES:
+            raise ValueError(
+                "max_request_url_bytes must not exceed 16384"
             )
         if self.cost_per_call < 0:
             raise ValueError("cost_per_call cannot be negative")
@@ -157,6 +206,9 @@ class OpenCorporatesProvider:
                     params,
                     timeout,
                     max_response_bytes=configuration.max_response_bytes,
+                    max_request_url_bytes=(
+                        configuration.max_request_url_bytes
+                    ),
                 )
             )
         else:
@@ -182,12 +234,32 @@ class OpenCorporatesProvider:
     ):
         from shema_platform.application.research import ProviderResult
 
-        if not query.strip():
+        if not isinstance(query, str):
+            raise TypeError("OpenCorporates query must be a string")
+
+        cleaned_query = query.strip()
+        if not cleaned_query:
             raise ValueError("OpenCorporates query is required")
+        if len(cleaned_query) > self._configuration.max_query_chars:
+            raise ValueError(
+                "OpenCorporates query exceeds configured max_query_chars"
+            )
         if max_sources <= 0:
             raise ValueError("max_sources must be positive")
 
         requested = min(max_sources, 50)
+        params = {
+            "api_token": self._configuration.api_token,
+            "q": cleaned_query,
+            "per_page": str(requested),
+            "order": "score",
+        }
+        _build_request_url(
+            self._configuration.endpoint,
+            params,
+            max_request_url_bytes=self._configuration.max_request_url_bytes,
+        )
+
         request_timeout = self._configuration.timeout_seconds
         if timeout_seconds is not None:
             if timeout_seconds <= 0:
@@ -204,12 +276,7 @@ class OpenCorporatesProvider:
 
         status, body = self._requester(
             self._configuration.endpoint,
-            {
-                "api_token": self._configuration.api_token,
-                "q": query.strip(),
-                "per_page": str(requested),
-                "order": "score",
-            },
+            params,
             request_timeout,
         )
         if len(body) > self._configuration.max_response_bytes:
@@ -288,6 +355,18 @@ class OpenCorporatesProvider:
                 raise TypeError("call_budget must be ProviderCallBudget")
             call_budget.reserve()
 
+        params = {
+            "api_token": self._configuration.api_token,
+            "q": "__shema_provider_readiness_probe__",
+            "per_page": "1",
+            "order": "score",
+        }
+        _build_request_url(
+            self._configuration.endpoint,
+            params,
+            max_request_url_bytes=self._configuration.max_request_url_bytes,
+        )
+
         request_timeout = self._configuration.timeout_seconds
         deadline = time.monotonic() + request_timeout
         self._throttle(max_wait_seconds=request_timeout)
@@ -300,12 +379,7 @@ class OpenCorporatesProvider:
         try:
             status, _ = self._requester(
                 self._configuration.endpoint,
-                {
-                    "api_token": self._configuration.api_token,
-                    "q": "__shema_provider_readiness_probe__",
-                    "per_page": "1",
-                    "order": "score",
-                },
+                params,
                 request_timeout,
             )
         except Exception:

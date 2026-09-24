@@ -71,6 +71,44 @@ def test_configuration_rejects_response_limit_above_hard_cap() -> None:
         )
 
 
+def test_configuration_rejects_non_positive_query_limit() -> None:
+    with pytest.raises(ValueError, match="max_query_chars must be positive"):
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            max_query_chars=0,
+        )
+
+
+def test_configuration_rejects_query_limit_above_hard_cap() -> None:
+    with pytest.raises(ValueError, match="max_query_chars must not exceed 4096"):
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            max_query_chars=4_097,
+        )
+
+
+def test_configuration_rejects_non_positive_request_url_limit() -> None:
+    with pytest.raises(
+        ValueError,
+        match="max_request_url_bytes must be positive",
+    ):
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            max_request_url_bytes=0,
+        )
+
+
+def test_configuration_rejects_request_url_limit_above_hard_cap() -> None:
+    with pytest.raises(
+        ValueError,
+        match="max_request_url_bytes must not exceed 16384",
+    ):
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            max_request_url_bytes=16_385,
+        )
+
+
 def test_provider_parses_provenanced_company_observations() -> None:
     requester = FakeRequester(
         status=200,
@@ -130,6 +168,109 @@ def test_provider_parses_provenanced_company_observations() -> None:
             pytest.approx(1, abs=1e-4),
         )
     ]
+
+
+def test_provider_rejects_query_before_external_io() -> None:
+    calls: list[dict[str, str]] = []
+
+    def requester(url, params, timeout_seconds):
+        calls.append(params)
+        return 200, b'{"ignored":true}'
+
+    provider = OpenCorporatesProvider(
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            max_query_chars=8,
+            max_requests_per_second=1000,
+        ),
+        requester=requester,
+    )
+
+    with pytest.raises(ValueError, match="query exceeds configured max_query_chars"):
+        provider.research("123456789", max_sources=1)
+
+    assert calls == []
+
+
+def test_provider_trims_query_before_validation_and_request() -> None:
+    requester = FakeRequester(
+        status=200,
+        payload={"results": {"companies": []}},
+        calls=[],
+    )
+    provider = OpenCorporatesProvider(
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            max_query_chars=8,
+            max_requests_per_second=1000,
+        ),
+        requester=requester,
+    )
+
+    provider.research("  company  ", max_sources=1)
+
+    assert requester.calls[0][1]["q"] == "company"
+
+
+def test_provider_rejects_non_string_query() -> None:
+    provider = OpenCorporatesProvider(configuration(), requester=lambda *args: (200, b'{"results":{"companies":[]}}'))
+
+    with pytest.raises(TypeError, match="query must be a string"):
+        provider.research(123, max_sources=1)  # type: ignore[arg-type]
+
+
+def test_provider_rejects_request_url_before_external_io() -> None:
+    calls: list[dict[str, str]] = []
+
+    def requester(url, params, timeout_seconds):
+        calls.append(params)
+        return 200, b'{"ignored":true}'
+
+    provider = OpenCorporatesProvider(
+        OpenCorporatesConfiguration(
+            api_token="secret-token",
+            max_query_chars=1000,
+            max_request_url_bytes=120,
+            max_requests_per_second=1000,
+        ),
+        requester=requester,
+    )
+
+    with pytest.raises(ValueError, match="request URL exceeds configured max_request_url_bytes"):
+        provider.research("company", max_sources=50)
+
+    assert calls == []
+
+
+def test_request_json_enforces_request_url_limit_before_transport(
+    monkeypatch,
+) -> None:
+    import shema_platform.adapters.intelligence.opencorporates as module
+
+    calls = []
+
+    monkeypatch.setattr(
+        module,
+        "urlopen",
+        lambda request, timeout: calls.append(request),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="request URL exceeds configured max_request_url_bytes",
+    ):
+        module._request_json(
+            "https://api.opencorporates.com/v0.4/companies/search",
+            {
+                "api_token": "secret-token",
+                "q": "company",
+            },
+            1,
+            1024,
+            32,
+        )
+
+    assert calls == []
 
 
 def test_provider_caps_requested_sources_at_api_limit() -> None:
@@ -195,6 +336,7 @@ def test_request_json_enforces_transport_response_limit(monkeypatch) -> None:
             {"q": "company"},
             1,
             8,
+            8192,
         )
 
 
