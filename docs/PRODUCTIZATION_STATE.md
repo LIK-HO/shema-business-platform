@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: v1.5/productization-ai-hardening-review
+- Productization branch: v1.5/productization-ai-workflow-proof
 - Frozen core baseline: a3eec47ea68882631ebf24b3998b431f2dc83600
-- Last verified P24 implementation HEAD: 87795abc7e117baa261733dcfa37f6b8bc140b6b
+- Last verified P26 implementation HEAD: 0ce4da40f4615b36fb3dafeba27e57715a65e4c6
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #32 — open, draft, unmerged
-- Active productization phase: P25 — AI provider hardening review
+- Productization PR: #34 — open, draft, unmerged
+- Active productization phase: P26 — AI workflow integration proof — CLOSED / VERIFIED
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -1105,5 +1105,44 @@ No merge or deployment authorization is implied.
 P26 — AI WORKFLOW INTEGRATION PROOF.
 
 Scope is limited to one real application workflow using the existing AIGateway and verified OpenAI adapter, with explicit authorization/policy/evidence/budget semantics and durable ai_run persistence. No domain semantic change, no AI ownership of business truth, and no automatic provider retry semantics are permitted.
+
+No merge or deployment authorization is implied.
+
+
+## P26 — AI WORKFLOW INTEGRATION PROOF — CLOSED / VERIFIED
+
+Purpose:
+- prove one complete application composition path from the verified OpenAI provider through AIGateway to canonical PostgreSQL ai_run and audit persistence;
+- prove the workflow without live paid provider inference in CI.
+
+Implementation:
+- tests/integration/test_ai_openai_postgres.py composes the real OpenAIProvider with the real AIGateway and PostgresUnitOfWork;
+- the provider HTTP requester is a deterministic test seam, so no external OpenAI effect or credential is used;
+- the proof validates authorization/policy/evidence/budget handling, provider response parsing, durable ai_run persistence and correlated ai.run audit persistence;
+- PostgreSQL duration precision is treated as storage representation rather than a semantic mismatch; all other AIRun fields remain exact.
+
+Contract/documentation:
+- architecture/ai_workflow_integration_contract.json
+- docs/AI_WORKFLOW_INTEGRATION.md
+
+Evidence:
+- CI run #1123 (36043634737) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+No kernel, domain, migration, retry, billing or canonical business-state semantics were changed.
+No live paid provider activation was performed.
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P27 — AI WORKFLOW HARDENING REVIEW.
+
+Re-audit the P26 composition boundary for non-redundant production risk before adding more workflow behavior. Focus on retry semantics, failure/recovery, observability, evidence freshness and whether a real business workflow is justified next. Close the slice rather than expanding it when no measured gap remains.
 
 No merge or deployment authorization is implied.
