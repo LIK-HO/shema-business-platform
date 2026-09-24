@@ -7,8 +7,8 @@
 - Frozen core baseline: a3eec47ea68882631ebf24b3998b431f2dc83600
 - Current productization HEAD: live from this branch; never treated as a static manifest fact
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: new policy-reset PR — draft, unmerged
-- Active productization phase: P24 — AI provider policy baseline — IN_PROGRESS / AWAITING CI
+- Productization PR: #35 — open, draft, unmerged
+- Active productization phase: P25 — AI provider adapter contracts — IN_PROGRESS
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -995,7 +995,7 @@ Changed boundary:
 
 No merge or deployment authorization is implied.
 
-## P24 — AI PROVIDER POLICY BASELINE — IN_PROGRESS / AWAITING CI
+## P24 — AI PROVIDER POLICY BASELINE — CLOSED / VERIFIED
 
 Purpose:
 - roll back the concrete AI-provider implementation path to the last constructive boundary before provider creation;
@@ -1024,11 +1024,58 @@ Manifest:
 
 No kernel semantic, PostgreSQL schema, migration, retry or canonical business-state semantics were changed.
 No provider was activated.
+
+Evidence:
+- CI run #1126 (`36045792076`) passed all seven required jobs on the complete policy branch:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
 No merge or deployment authorization is implied.
+
+## P25 — AI PROVIDER ADAPTER CONTRACTS — IN_PROGRESS
+
+Purpose:
+- define one provider-neutral adapter contract for approved cloud AI and local/self-hosted LLM runtimes;
+- keep provider/model specifics outside the frozen kernel;
+- make capability, configuration, timeout/resource, output/evidence and fail-closed semantics explicit before any concrete provider activation;
+- prevent provider adapters from acquiring canonical business-state authority.
+
+Scope:
+- cloud adapter classes are limited to the approved YandexGPT and GigaChat provider families;
+- local/self-hosted adapters support installable models only when the recorded model license permits free commercial use for the intended scenario;
+- adapter contracts expose no direct persistence or canonical business-state mutation;
+- provider credentials remain runtime-only;
+- provider selection and model/configuration version are observable and reproducible;
+- no implicit cloud↔local fallback;
+- provider-specific retries are forbidden unless a future provider contract proves safe repeat semantics;
+- transport errors, malformed output, policy violations, budget exhaustion and deadline exhaustion fail closed.
+
+Contract boundary to define next:
+- request envelope and correlation identity;
+- provider/model identity and configuration snapshot;
+- capability declaration and readiness state;
+- bounded deadline/resource policy;
+- response envelope with provenance/evidence metadata;
+- typed failure taxonomy;
+- activation and deactivation semantics;
+- audit/telemetry fields without secrets or raw provider payload leakage.
+
+Non-goals:
+- no concrete YandexGPT or GigaChat implementation;
+- no local model runtime installation;
+- no new cloud provider;
+- no kernel semantic change;
+- no automatic fallback routing;
+- no merge or deployment authorization.
 
 ## Next bounded productization boundary
 
-P25 — AI PROVIDER ADAPTER CONTRACTS.
+P26 — CONCRETE AI PROVIDER IMPLEMENTATION BOUNDARY.
 
 Define provider-neutral adapter contracts for the two approved cloud providers and the local/self-hosted model runtime without implementing or activating a specific provider until its current API/license/resource contract is verified.
 
