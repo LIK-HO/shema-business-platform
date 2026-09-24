@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "status": "bounded_contract",
+  "authority": "docs/DEVELOPMENT_MANIFEST.md",
+  "policy_reference": "architecture/ai_provider_policy.json",
+  "frozen_kernel_impact": false,
+  "implementation": "src/shema_platform/adapters/ai/contracts.py",
+  "gateway_bridge": "future bounded integration; frozen application.ai is not modified by this phase",
+  "approved_cloud_provider_ids": [
+    "yandexgpt",
+    "gigachat"
+  ],
+  "local_self_hosted": {
+    "enabled": true,
+    "free_commercial_use_verification_required": true,
+    "required_provenance": [
+      "source_ref",
+      "license_name",
+      "license_url",
+      "license_checked_at",
+      "artifact_digest",
+      "runtime",
+      "security_status"
+    ]
+  },
+  "runtime_controls": {
+    "explicit_activation_required": true,
+    "readiness_required": true,
+    "bounded_deadline_required": true,
+    "bounded_resource_limits_required": true,
+    "provider_selection_observable": true,
+    "implicit_cloud_to_local_fallback": false,
+    "implicit_local_to_cloud_fallback": false
+  },
+  "response_controls": {
+    "provider_id_match_required": true,
+    "task_match_required": true,
+    "prompt_version_match_required": true,
+    "input_refs_match_required": true,
+    "evidence_refs_subset_required": true,
+    "configuration_version_match_required": true,
+    "budget_limits_rechecked": true,
+    "raw_provider_payload_not_part_of_response_contract": true
+  },
+  "failure_policy": {
+    "typed_failure_codes": true,
+    "provider_specific_retry_forbidden_without_evidence": true,
+    "fail_closed_on_policy_budget_deadline_or_response_violation": true
+  }
+}
