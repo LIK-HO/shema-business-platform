@@ -274,11 +274,12 @@ def test_failed_provider_call_resets_scope_and_emits_typed_failure() -> None:
 
 
 def test_scope_isolation_and_restore_across_threads() -> None:
-undefined
+    def worker(correlation_id: str) -> str:
+        with bind_ai_execution_scope(
             evidence_refs=("evidence:1",),
             context=context(correlation_id=correlation_id),
             budget=budget(),
-        ) as scope:
+        ):
             return current_ai_execution_scope().context.correlation_id or ""
 
     with ThreadPoolExecutor(max_workers=2) as executor:
@@ -290,7 +291,6 @@ undefined
 
     with pytest.raises(AIProviderCompositionError):
         current_ai_execution_scope()
-
 
 def test_nested_scope_restores_outer_context() -> None:
     outer_context = context("corr-outer")
