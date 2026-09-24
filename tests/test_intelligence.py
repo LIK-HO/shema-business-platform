@@ -57,7 +57,13 @@ class FakeProvider(ResearchProvider):
     result: ProviderResult
     transaction_probe: Callable[[], bool] | None = None
 
-    def research(self, query: str, *, max_sources: int) -> ProviderResult:
+    def research(
+        self,
+        query: str,
+        *,
+        max_sources: int,
+        timeout_seconds: float | None = None,
+    ) -> ProviderResult:
         if self.transaction_probe is not None and self.transaction_probe():
             raise AssertionError("research provider call occurred inside Unit of Work")
         return self.result

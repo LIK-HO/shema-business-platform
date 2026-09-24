@@ -30,7 +30,13 @@ class FakeProvider:
     capability: ProviderCapability
     cost: float
 
-    def research(self, query: str, *, max_sources: int) -> ProviderResult:
+    def research(
+        self,
+        query: str,
+        *,
+        max_sources: int,
+        timeout_seconds: float | None = None,
+    ) -> ProviderResult:
         return ProviderResult(
             provider_id=self.provider_id,
             source_class=self.capability.source_class,

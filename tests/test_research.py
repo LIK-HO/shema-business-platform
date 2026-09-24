@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pytest
 
@@ -15,8 +15,16 @@ from shema_platform.application.research import (
 class FakeProvider(ResearchProvider):
     capability: ProviderCapability
     result: ProviderResult
+    timeouts: list[float | None] = field(default_factory=list)
 
-    def research(self, query: str, *, max_sources: int) -> ProviderResult:
+    def research(
+        self,
+        query: str,
+        *,
+        max_sources: int,
+        timeout_seconds: float | None = None,
+    ) -> ProviderResult:
+        self.timeouts.append(timeout_seconds)
         return self.result
 
 
@@ -92,6 +100,27 @@ def test_research_gateway_enforces_budget() -> None:
 
     assert len(results) == 1
     assert results[0].provider_id == "cheap"
+
+
+def test_research_gateway_propagates_remaining_time_budget() -> None:
+    gateway = ProviderGateway()
+    candidate = provider("deadline-aware", cost=0.5)
+
+    results = gateway.research(
+        "Москва логистика",
+        "logistics",
+        [candidate],
+        ResearchBudget(
+            provider_calls=1,
+            source_count=2,
+            token_budget=20,
+            api_cost_limit=1.0,
+            time_budget_seconds=2.5,
+        ),
+    )
+
+    assert len(results) == 1
+    assert candidate.timeouts == [2.5]
 
 
 def test_provider_results_require_source_references_for_claims() -> None:

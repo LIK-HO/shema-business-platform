@@ -87,7 +87,13 @@ class ProviderResult:
 class ResearchProvider(Protocol):
     capability: ProviderCapability
 
-    def research(self, query: str, *, max_sources: int) -> ProviderResult: ...
+    def research(
+        self,
+        query: str,
+        *,
+        max_sources: int,
+        timeout_seconds: float | None = None,
+    ) -> ProviderResult: ...
 
 
 class ProviderGateway:
@@ -136,7 +142,7 @@ class ProviderGateway:
             allowed_source_classes=allowed_source_classes,
         ):
             capability = provider.capability
-            if remaining_calls <= 0 or remaining_sources <= 0:
+            if remaining_calls <= 0 or remaining_sources <= 0 or remaining_time <= 0:
                 break
             if capability.cost_per_call > remaining_cost:
                 continue
@@ -146,7 +152,11 @@ class ProviderGateway:
                 continue
 
             max_sources = min(remaining_sources, 10)
-            result = provider.research(query, max_sources=max_sources)
+            result = provider.research(
+                query,
+                max_sources=max_sources,
+                timeout_seconds=remaining_time,
+            )
 
             if result.provider_id != capability.provider_id:
                 raise ValueError("provider result has mismatched provider_id")
