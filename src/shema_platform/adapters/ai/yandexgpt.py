@@ -180,6 +180,13 @@ def _request_json(
     except HTTPError as exc:
         body = _read_bounded(exc, max_bytes=max_response_bytes)
         return exc.code, body
+    except TimeoutError as exc:
+        raise YandexGPTExecutionError(
+            AIProviderFailure(
+                code=AIProviderFailureCode.DEADLINE_EXCEEDED,
+                message="YandexGPT request timed out",
+            )
+        ) from exc
     except URLError as exc:
         raise YandexGPTExecutionError(
             AIProviderFailure(
@@ -418,7 +425,15 @@ class YandexGPTProvider(AIProviderAdapter):
                     )
                 )
 
-            cost = self._cost_estimator(input_tokens, output_tokens)
+            try:
+                cost = self._cost_estimator(input_tokens, output_tokens)
+            except Exception as exc:
+                raise YandexGPTExecutionError(
+                    AIProviderFailure(
+                        code=AIProviderFailureCode.CONFIGURATION,
+                        message="YandexGPT cost estimator failed",
+                    )
+                ) from exc
             if not isfinite(cost) or cost < 0:
                 raise YandexGPTExecutionError(
                     AIProviderFailure(
