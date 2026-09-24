@@ -284,15 +284,15 @@ class OpenCorporatesProvider:
                 "OpenCorporates response exceeds configured max_response_bytes"
             )
 
-        try:
-            payload = json.loads(body)
-        except json.JSONDecodeError as exc:
-            raise ValueError("OpenCorporates returned invalid JSON") from exc
-
         if status != 200:
             raise ConnectionError(
                 f"OpenCorporates request failed with HTTP {status}"
             )
+
+        try:
+            payload = json.loads(body)
+        except json.JSONDecodeError as exc:
+            raise ValueError("OpenCorporates returned invalid JSON") from exc
 
         companies = payload.get("results", {}).get("companies", [])
         if not isinstance(companies, list):

@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-provider-request-input-envelope`
+- Productization branch: `v1.5/productization-provider-failure-path`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
 - Current productization HEAD: `66381f2daf27a0335cd8ae355bdc1762878d3dbb`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #23 — open, draft, unmerged
-- Active productization phase: P14 — provider request-input envelope
+- Productization PR: #24 — open, draft, unmerged
+- Active productization phase: P15 — provider failure-path materialization guard
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -609,5 +609,49 @@ No merge or deployment authorization is implied.
 P15 — PROVIDER FAILURE-PATH MATERIALIZATION GUARD.
 
 The next boundary is to make non-success HTTP responses fail before JSON materialization in the concrete provider adapter. This keeps bounded error bodies from being parsed as business payloads, preserves the existing fail-closed status semantics, and remains entirely outside the frozen kernel. No automatic retry or provider-specific business interpretation should be introduced.
+
+No merge or deployment authorization is implied.
+
+
+## P15 — PROVIDER FAILURE-PATH MATERIALIZATION GUARD — CLOSED / VERIFIED
+
+Purpose:
+- reject non-success OpenCorporates HTTP responses before JSON materialization;
+- preserve the existing fail-closed ConnectionError semantics while keeping response-size enforcement intact;
+- prevent bounded provider error bodies from entering the business-payload parser.
+
+Implementation:
+- response size remains checked first;
+- HTTP status is evaluated before json.loads();
+- non-200 responses fail immediately with the existing ConnectionError contract;
+- only HTTP 200 responses proceed to JSON materialization;
+- readiness probes retain their operational-only behavior;
+- focused regression coverage proves a non-JSON 503 response fails as HTTP 503 rather than being reported as invalid JSON;
+- no retry scheduler, automatic retry, durable job semantics, billing ledger, or kernel semantic was introduced.
+
+Evidence:
+- CI run #1099 (`35997915177`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- src/shema_platform/adapters/intelligence/opencorporates.py
+- tests/test_opencorporates_provider.py
+- architecture/opencorporates_provider_contract.json
+- docs/PROVIDER_FAILURE_PATH_MATERIALIZATION.md
+
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P16 — PROVIDER PROVENANCE HOST VALIDATION.
+
+The next boundary is to validate that materialized OpenCorporates provenance URLs actually resolve to the expected OpenCorporates host rather than merely any HTTPS origin. This is an evidence-integrity guard at the concrete adapter boundary; it must not promote external provenance into canonical truth or change frozen kernel semantics.
 
 No merge or deployment authorization is implied.

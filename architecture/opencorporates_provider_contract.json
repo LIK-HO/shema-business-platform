@@ -13,7 +13,7 @@
   "application_boundary": "shema_platform.adapters.intelligence",
   "evidence_boundary": "ProviderResult -> Evidence",
   "failure_policy": {
-    "non_200": "fail",
+    "non_200": "fail_before_json_materialization",
     "invalid_json": "fail",
     "missing_provenance_url": "discard_observation"
   }
