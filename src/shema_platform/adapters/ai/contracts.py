@@ -165,14 +165,19 @@ class AIProviderReadiness:
             raise ValueError("provider_id is required")
         if self.state is AIProviderReadinessState.READY and self.error_code:
             raise ValueError("ready provider cannot carry an error_code")
+        if self.state not in {
+            AIProviderReadinessState.READY,
+            AIProviderReadinessState.DISABLED,
+        } and self.checked_at is None:
+            raise ValueError("non-disabled readiness requires checked_at")
         if (
             self.state not in {
                 AIProviderReadinessState.READY,
                 AIProviderReadinessState.DISABLED,
             }
-            and self.checked_at is None
+            and not self.error_code
         ):
-            raise ValueError("non-disabled readiness requires checked_at")
+            raise ValueError("non-ready state requires an error_code")
 
 
 @dataclass(frozen=True, slots=True)
@@ -291,6 +296,10 @@ def validate_provider_response(
         raise ValueError("provider response has mismatched task_id")
     if run.prompt_version != request.task.prompt_version:
         raise ValueError("provider response has mismatched prompt_version")
+    if run.model != descriptor.model_id:
+        raise ValueError("provider response has mismatched model_id")
+    if run.model_version != descriptor.model_version:
+        raise ValueError("provider response has mismatched model_version")
     if tuple(run.input_refs) != tuple(request.input_refs):
         raise ValueError("provider response has mismatched input_refs")
     if not set(run.evidence_refs).issubset(request.evidence_refs):
@@ -307,3 +316,6 @@ def validate_provider_response(
         request.deadline_seconds,
     ):
         raise ValueError("provider response exceeded duration budget")
+    output_bytes = len(run.output.encode("utf-8"))
+    if output_bytes > descriptor.resource_limits.max_response_bytes:
+        raise ValueError("provider response exceeded response-size limit")
