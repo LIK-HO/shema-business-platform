@@ -85,6 +85,8 @@ class OpenCorporatesConfiguration:
             raise ValueError("OpenCorporates base_url must use HTTPS")
         if self.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive")
+        if self.timeout_seconds > 30.0:
+            raise ValueError("timeout_seconds must not exceed 30")
         if self.cost_per_call < 0:
             raise ValueError("cost_per_call cannot be negative")
         if self.max_requests_per_second <= 0:

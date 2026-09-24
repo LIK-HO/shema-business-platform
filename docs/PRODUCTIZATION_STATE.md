@@ -3,11 +3,11 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-provider-probes`
+- Productization branch: `v1.5/productization-provider-execution-policy`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `c42706645ae77f289b16b51f5c38f6defeccc48b`
+- Current productization HEAD: `960fe785875a19b76a6f8d82294901457853db91`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #9 — open, draft, unmerged
+- Productization PR: #18 — open, draft, unmerged
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -370,3 +370,43 @@ P9 — PROVIDER OPERATION EXECUTION POLICY.
 The next step is to bound the execution envelope around an external provider operation: explicit timeout/deadline policy and bounded failure handling, without introducing a retry scheduler, durable job semantics or new kernel behavior. The policy must remain outside the frozen kernel and must fail closed rather than permit unbounded external work.
 
 No merge or deployment authorization is implied.
+
+
+## P9 — PROVIDER OPERATION EXECUTION POLICY — CLOSED / VERIFIED
+
+Purpose:
+- bound the execution envelope of the external OpenCorporates operation;
+- fail closed on non-positive or over-limit timeout configuration;
+- keep the execution policy outside the frozen kernel.
+
+Implementation:
+- OpenCorporates provider timeout is explicitly bounded to a maximum of 30 seconds;
+- the bounded timeout is passed directly to the external requester;
+- timeout values above the contract are rejected before external I/O;
+- focused tests prove both rejection of an over-limit timeout and propagation of the 30-second boundary;
+- no automatic retry, scheduler, durable job semantics, global limiter or kernel change was introduced.
+
+Evidence:
+- CI run #1076 (`35907917054`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- `src/shema_platform/adapters/intelligence/opencorporates.py`
+- `tests/test_opencorporates_provider.py`
+- `architecture/provider_execution_policy_contract.json`
+- `docs/PROVIDER_OPERATION_EXECUTION_POLICY.md`
+
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P10 — RESEARCH EXECUTION DEADLINE PROPAGATION.
+
+The next bounded control should connect the already-existing `ResearchBudget.time_budget_seconds` to actual provider execution, so a provider operation cannot outlive the remaining research time budget. This must remain outside the frozen kernel, preserve the existing provider budget/cost gates, avoid automatic retries and durable-job semantics, and prove timeout propagation with focused tests.
