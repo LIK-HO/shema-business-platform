@@ -233,7 +233,7 @@ def test_provider_rejects_request_url_before_external_io() -> None:
         OpenCorporatesConfiguration(
             api_token="secret-token",
             max_query_chars=1000,
-            max_request_url_bytes=120,
+            max_request_url_bytes=100,
             max_requests_per_second=1000,
         ),
         requester=requester,
