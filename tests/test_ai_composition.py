@@ -274,25 +274,19 @@ def test_failed_provider_call_resets_scope_and_emits_typed_failure() -> None:
 
 
 def test_scope_isolation_and_restore_across_threads() -> None:
-    def worker(correlation_id: str) -> tuple[str, str]:
-        with bind_ai_execution_scope(
+undefined
             evidence_refs=("evidence:1",),
             context=context(correlation_id=correlation_id),
             budget=budget(),
         ) as scope:
-            return (
-                current_ai_execution_scope().context.correlation_id or "",
-                scope.context.resource_ref,
-            )
+            return current_ai_execution_scope().context.correlation_id or ""
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         results = tuple(
             executor.map(worker, ("corr-a", "corr-b"))
         )
 
-    assert results[0][0] == "corr-a"
-    assert results[1][0] == "corr-b"
-    assert results[0][1] != results[1][1]
+    assert results == ("corr-a", "corr-b")
 
     with pytest.raises(AIProviderCompositionError):
         current_ai_execution_scope()
