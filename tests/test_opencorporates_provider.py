@@ -13,18 +13,15 @@ from shema_platform.adapters.intelligence.opencorporates import (
 class FakeRequester:
     status: int
     payload: dict
-    calls: list[tuple[str, dict, float, int]]
+    calls: list[tuple[str, dict, float]]
 
     def __call__(
         self,
         url: str,
         params: dict[str, str],
         timeout_seconds: float,
-        max_response_bytes: int,
     ) -> tuple[int, bytes]:
-        self.calls.append(
-            (url, params, timeout_seconds, max_response_bytes)
-        )
+        self.calls.append((url, params, timeout_seconds))
         return self.status, json.dumps(self.payload).encode()
 
 
@@ -131,7 +128,6 @@ def test_provider_parses_provenanced_company_observations() -> None:
                 "order": "score",
             },
             pytest.approx(1, abs=1e-4),
-            1_048_576,
         )
     ]
 
@@ -157,14 +153,13 @@ def test_provider_rejects_oversized_custom_requester_response() -> None:
             url: str,
             params: dict[str, str],
             timeout_seconds: float,
-            max_response_bytes: int,
         ) -> tuple[int, bytes]:
-            return 200, b"x" * (max_response_bytes + 1)
+            return 200, b"x" * (1024 * 1024 + 1)
 
     provider = OpenCorporatesProvider(
         OpenCorporatesConfiguration(
             api_token="secret",
-            max_response_bytes=8,
+            max_response_bytes=1024 * 1024,
         ),
         requester=OversizedRequester(),
     )
@@ -222,7 +217,6 @@ def test_provider_fails_on_invalid_json() -> None:
             url: str,
             params: dict[str, str],
             timeout_seconds: float,
-            max_response_bytes: int,
         ) -> tuple[int, bytes]:
             return 200, b"not-json"
 

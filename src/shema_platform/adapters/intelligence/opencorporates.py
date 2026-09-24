@@ -144,13 +144,23 @@ class OpenCorporatesProvider:
         configuration: OpenCorporatesConfiguration,
         *,
         requester: Callable[
-            [str, Mapping[str, str], float, int], tuple[int, bytes]
-        ] = _request_json,
+            [str, Mapping[str, str], float], tuple[int, bytes]
+        ] | None = None,
     ) -> None:
         from shema_platform.application.research import ProviderCapability
 
         self._configuration = configuration
-        self._requester = requester
+        if requester is None:
+            self._requester = (
+                lambda url, params, timeout: _request_json(
+                    url,
+                    params,
+                    timeout,
+                    max_response_bytes=configuration.max_response_bytes,
+                )
+            )
+        else:
+            self._requester = requester
         self._rate_lock = Lock()
         self._last_request_at = 0.0
         self.capability = ProviderCapability(
@@ -201,7 +211,6 @@ class OpenCorporatesProvider:
                 "order": "score",
             },
             request_timeout,
-            self._configuration.max_response_bytes,
         )
         if len(body) > self._configuration.max_response_bytes:
             raise ValueError(
@@ -298,7 +307,6 @@ class OpenCorporatesProvider:
                     "order": "score",
                 },
                 request_timeout,
-                self._configuration.max_response_bytes,
             )
         except Exception:
             return ProbeResult(
