@@ -29,7 +29,7 @@ The external provider call remains outside the database transaction because that
 
 ## Concurrency / scope safety
 
-The scope is a frozen dataclass stored in `contextvars.ContextVar`, not a mutable process-global object. Tests cover nested reset and independent thread contexts.
+The scope is a frozen dataclass stored in `contextvars.ContextVar`, not a mutable process-global object. Tests cover nested scope restoration and independent thread contexts.
 
 ## Persistence and truth
 
