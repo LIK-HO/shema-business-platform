@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: v1.5/productization-ai-provider
+- Productization branch: v1.5/productization-ai-hardening-review
 - Frozen core baseline: a3eec47ea68882631ebf24b3998b431f2dc83600
 - Last verified P24 implementation HEAD: 87795abc7e117baa261733dcfa37f6b8bc140b6b
 - Core PR: #8 — open, draft, unmerged
 - Productization PR: #32 — open, draft, unmerged
-- Active productization phase: P24 — AI provider production boundary — CLOSED / VERIFIED
+- Active productization phase: P25 — AI provider hardening review
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -1069,5 +1069,41 @@ No merge or deployment authorization is implied.
 P25 — AI PROVIDER HARDENING REVIEW.
 
 Before wiring OpenAI inference into a durable business workflow or adding further provider-specific controls, re-audit P24 against observed failure modes, gateway budget/evidence semantics, production observability and measurable provider risk. Only a non-redundant gap should become new code; otherwise the provider boundary remains closed and the next product surface is selected from the live repository.
+
+No merge or deployment authorization is implied.
+
+
+## P25 — AI PROVIDER HARDENING REVIEW — CLOSED / VERIFIED
+
+Purpose:
+- re-audit the P24 OpenAI provider against the frozen core, AI Gateway boundary, current provider contract, security, resource/cost controls, recovery semantics and bounded-complexity rule.
+
+Verified:
+- current OpenAI public documentation continues to match the P24 contract for Responses, store=false, max_output_tokens, response status/output/usage and GET /models/{model};
+- GPT-6 Luna remains the current model id and the reviewed standard short-context pricing snapshot remains $0.10 input / $0.50 output per 1M tokens;
+- explicit activation, runtime secret isolation, exact HTTPS origin, redirect rejection, bounded input/output/body/response sizes, timeout, local rate guard, cost guard and fail-closed readiness remain covered;
+- the existing AIGateway still owns authorization, policy, evidence membership, budgets, audit and durable ai_run persistence;
+- no provider-specific retry, reconciliation, billing ledger or canonical business-state semantics are needed at this boundary;
+- no non-redundant provider-hardening gap was identified.
+
+Implementation:
+- docs/OPENAI_PROVIDER_HARDENING_REVIEW.md
+
+Decision:
+- close the P24 provider-hardening slice at P25;
+- preserve the existing provider adapter boundary unchanged;
+- select the next bounded product surface: real AI workflow integration proof.
+
+Evidence:
+- current P24 CI run #1119 (36039965091) passed all seven required jobs;
+- current OpenAI public documentation was re-checked on 2026-09-24.
+
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P26 — AI WORKFLOW INTEGRATION PROOF.
+
+Scope is limited to one real application workflow using the existing AIGateway and verified OpenAI adapter, with explicit authorization/policy/evidence/budget semantics and durable ai_run persistence. No domain semantic change, no AI ownership of business truth, and no automatic provider retry semantics are permitted.
 
 No merge or deployment authorization is implied.
