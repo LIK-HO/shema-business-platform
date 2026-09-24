@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-max-live-effect-safety`
-- Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `66381f2daf27a0335cd8ae355bdc1762878d3dbb`
+- Productization branch: v1.5/productization-ai-provider
+- Frozen core baseline: a3eec47ea68882631ebf24b3998b431f2dc83600
+- Last verified P24 implementation HEAD: 87795abc7e117baa261733dcfa37f6b8bc140b6b
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #31 — open, draft, unmerged
-- Active productization phase: P23 — MAX live effect safety / real adapter proof
+- Productization PR: #32 — open, draft, unmerged
+- Active productization phase: P24 — AI provider production boundary — CLOSED / VERIFIED
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -995,10 +995,79 @@ Changed boundary:
 
 No merge or deployment authorization is implied.
 
+## P24 — AI PROVIDER PRODUCTION BOUNDARY — CLOSED / VERIFIED
+
+Purpose:
+- add one concrete production-capable AI provider behind the frozen provider-neutral AIProvider boundary;
+- enforce explicit activation, bounded resource consumption, output integrity and evidence-reference discipline;
+- keep external inference outside the Unit of Work and canonical business truth under the existing AIGateway/PostgreSQL authority.
+
+Provider contract:
+- OpenAI Responses API at exact origin https://api.openai.com and path /v1/responses;
+- readiness uses GET /v1/models/{model} without inference;
+- default model is gpt-6-luna, with the model and operational limits held in versioned configuration;
+- requests set store=false, enable no tools, and do not enable background/conversation state in this adapter;
+- HTTP redirects, alternate hosts, explicit ports, query/fragment base URLs and malformed provider responses fail closed.
+
+Operational controls:
+- maximum timeout: 30 seconds;
+- bounded input, request-body, output-token, response-byte and output-character sizes;
+- process-local request-rate guard;
+- per-call preflight and post-response cost guard using the versioned pricing snapshot;
+- no automatic provider retry, because paid inference is not treated as idempotent by this adapter;
+- readiness failures return bounded operational error codes through ProbeResult.
+
+Output/evidence integrity:
+- completed response, response id, model and usage are required;
+- total_tokens must equal input_tokens + output_tokens;
+- only textual message / output_text items are materialized;
+- prompt and evidence construction are delegated to injected resolvers;
+- existing AIGateway remains authoritative for authorization, policy, caller-supplied evidence membership, budget checks, audit and durable ai_run persistence.
+
+Activation:
+- ai.openai.enabled=true is required in the explicit ConfigurationSnapshot;
+- OPENAI_API_KEY remains runtime secret state and is never copied into versioned configuration;
+- missing secret or resolver dependencies fail closed;
+- there is no production auto-activation.
+
+Supply-chain and persistence boundary:
+- no OpenAI SDK dependency was added; the adapter uses the existing standard-library HTTPS stack;
+- no migration, durable provider ledger, billing ledger, retry scheduler, canonical business-state writer or kernel semantic was added.
+
+External contract evidence:
+- OpenAI's current model catalog identifies GPT-6 Luna (gpt-6-luna) as an efficient model for focused/high-volume work and lists its current standard input/output pricing at $0.10/$0.50 per 1M tokens;
+- the current Responses API reference documents max_output_tokens, store, heterogeneous output items and usage metrics;
+- the current Models API documents GET /models/{model} for model visibility/readiness;
+- the evidence snapshot is 2026-09-24 and is recorded in architecture/openai_provider_contract.json.
+
+Evidence:
+- CI run #1119 (36039965091) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- src/shema_platform/adapters/ai/__init__.py
+- src/shema_platform/adapters/ai/openai.py
+- src/shema_platform/adapters/ai/activation.py
+- tests/test_openai_provider.py
+- tests/test_openai_activation.py
+- tests/test_openai_contract.py
+- architecture/openai_provider_contract.json
+- docs/OPENAI_PROVIDER.md
+
+No v1.4 kernel, application gateway semantics, PostgreSQL schema, migration, canonical business truth, commercial-effect semantics or deployment rule was changed.
+No production provider activation was performed.
+No merge or deployment authorization is implied.
+
 ## Next bounded productization boundary
 
-P24 — AI PROVIDER PRODUCTION BOUNDARY.
+P25 — AI PROVIDER HARDENING REVIEW.
 
-The AI Gateway is already a provider-neutral application boundary with authorization, evidence, policy, budget, audit and provider-result consistency checks. The next bounded step is to introduce one concrete production AI provider only after its provider-specific contract, timeout/resource limits, output/evidence integrity and fail-closed activation semantics are explicit. No provider should be assumed or activated merely because the gateway exists.
+Before wiring OpenAI inference into a durable business workflow or adding further provider-specific controls, re-audit P24 against observed failure modes, gateway budget/evidence semantics, production observability and measurable provider risk. Only a non-redundant gap should become new code; otherwise the provider boundary remains closed and the next product surface is selected from the live repository.
 
 No merge or deployment authorization is implied.
