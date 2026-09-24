@@ -154,7 +154,7 @@ def test_api_key_is_not_in_configuration_repr() -> None:
 
 
 def test_activation_and_readiness_start_ready() -> None:
-    instance = provider(requester=requester_for())
+    instance = build_provider(requester=requester_for())
     assert instance.activation().enabled is True
     assert instance.activation().explicit is True
     assert instance.readiness().state is AIProviderReadinessState.READY
@@ -174,7 +174,7 @@ def test_http_failures_are_typed_and_fail_closed(
     status: int,
     code: AIProviderFailureCode,
 ) -> None:
-    instance = provider(requester=requester_for(status=status, body=b"{}"))
+    instance = build_provider(requester=requester_for(status=status, body=b"{}"))
 
     with pytest.raises(YandexGPTExecutionError) as exc:
         instance.invoke(request())
@@ -188,7 +188,7 @@ def test_invalid_usage_is_rejected_without_guessing_cost() -> None:
     body = response_body()
     data = json.loads(body)
     data["usage"].pop("total_tokens")
-    instance = provider(
+    instance = build_provider(
         requester=requester_for(body=json.dumps(data).encode("utf-8"))
     )
 
@@ -199,7 +199,7 @@ def test_invalid_usage_is_rejected_without_guessing_cost() -> None:
 
 
 def test_response_size_limit_fails_closed() -> None:
-    instance = provider(
+    instance = build_provider(
         config=default_configuration(max_response_bytes=16),
         requester=requester_for(body=b"{" + b"x" * 100 + b"}"),
     )
@@ -219,7 +219,7 @@ def test_prompt_input_limit_fails_before_external_call() -> None:
         raise AssertionError("external I/O must not happen")
 
     instance = YandexGPTProvider(
-        configuration(max_input_chars=4),
+        default_configuration(max_input_chars=4),
         prompt_renderer=lambda _: "too long",
         cost_estimator=lambda *_: 0.1,
         requester=requester,
@@ -234,7 +234,7 @@ def test_prompt_input_limit_fails_before_external_call() -> None:
 
 def test_deadline_budget_is_bounded_before_external_call() -> None:
     captured: dict[str, object] = {}
-    instance = provider(
+    instance = build_provider(
         requester=requester_for(captured=captured),
     )
     result = instance.invoke(request(duration=2))
@@ -243,8 +243,8 @@ def test_deadline_budget_is_bounded_before_external_call() -> None:
 
 
 def test_model_response_must_fit_output_budget() -> None:
-    instance = provider(
-        configuration=configuration(max_output_tokens=2),
+    instance = build_provider(
+        config=default_configuration(max_output_tokens=2),
         requester=requester_for(body=response_body(completion_tokens=5)),
     )
     with pytest.raises(YandexGPTExecutionError) as exc:
