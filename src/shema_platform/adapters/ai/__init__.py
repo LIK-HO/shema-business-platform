@@ -17,6 +17,14 @@ from shema_platform.adapters.ai.contracts import (
     validate_provider_activation,
     validate_provider_response,
 )
+from shema_platform.adapters.ai.composition import (
+    AIExecutionScope,
+    AIProviderCompositionError,
+    ScopedAIProvider,
+    bind_ai_execution_scope,
+    current_ai_execution_scope,
+    execute_scoped_ai,
+)
 from shema_platform.adapters.ai.yandexgpt import (
     YandexGPTConfiguration,
     YandexGPTExecutionError,
@@ -24,6 +32,12 @@ from shema_platform.adapters.ai.yandexgpt import (
 )
 
 __all__ = [
+    "AIExecutionScope",
+    "AIProviderCompositionError",
+    "ScopedAIProvider",
+    "bind_ai_execution_scope",
+    "current_ai_execution_scope",
+    "execute_scoped_ai",
     "YandexGPTConfiguration",
     "YandexGPTExecutionError",
     "YandexGPTProvider",
