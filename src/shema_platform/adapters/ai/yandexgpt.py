@@ -57,7 +57,7 @@ class YandexGPTConfiguration:
     activation_version: str = "yandexgpt-activation:v1"
 
     @classmethod
-    def from_environment(cls) -> "YandexGPTConfiguration":
+    def from_environment(cls) -> YandexGPTConfiguration:
         return cls(
             api_key=os.getenv("YANDEXGPT_API_KEY", "").strip(),
             model_uri=os.getenv(
