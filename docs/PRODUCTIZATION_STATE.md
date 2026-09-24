@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-provider-failure-path`
+- Productization branch: `v1.5/productization-provider-provenance-host`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
 - Current productization HEAD: `66381f2daf27a0335cd8ae355bdc1762878d3dbb`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #24 — open, draft, unmerged
-- Active productization phase: P15 — provider failure-path materialization guard
+- Productization PR: #25 — open, draft, unmerged
+- Active productization phase: P16 — provider provenance host validation
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -653,5 +653,49 @@ No merge or deployment authorization is implied.
 P16 — PROVIDER PROVENANCE HOST VALIDATION.
 
 The next boundary is to validate that materialized OpenCorporates provenance URLs actually resolve to the expected OpenCorporates host rather than merely any HTTPS origin. This is an evidence-integrity guard at the concrete adapter boundary; it must not promote external provenance into canonical truth or change frozen kernel semantics.
+
+No merge or deployment authorization is implied.
+
+
+## P16 — PROVIDER PROVENANCE HOST VALIDATION — CLOSED / VERIFIED
+
+Purpose:
+- ensure materialized OpenCorporates provenance references actually use the expected provider origin;
+- reject arbitrary HTTPS origins, host lookalikes and userinfo-based URL confusion;
+- keep evidence-integrity validation at the concrete adapter boundary.
+
+Implementation:
+- provenance URLs are parsed with urllib.parse.urlsplit;
+- the scheme must be HTTPS;
+- the parsed hostname must be exactly opencorporates.com;
+- invalid or lookalike provenance references discard only the affected observation;
+- no network fetch is introduced for provenance validation;
+- focused tests cover an arbitrary HTTPS origin, a lookalike suffix host and userinfo confusion while retaining a valid OpenCorporates reference;
+- no kernel, retry scheduler, durable job, billing ledger or deployment semantic was introduced.
+
+Evidence:
+- CI run #1101 (`35998364952`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- src/shema_platform/adapters/intelligence/opencorporates.py
+- tests/test_opencorporates_provider.py
+- architecture/opencorporates_provider_contract.json
+- docs/PROVIDER_PROVENANCE_HOST_VALIDATION.md
+
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P17 — PROVIDER PROVENANCE PATH VALIDATION.
+
+The next boundary is to constrain accepted OpenCorporates provenance paths to the documented company-reference shape without performing a network fetch. This remains an evidence-integrity guard in the concrete adapter and must not alter canonical truth or frozen kernel semantics.
 
 No merge or deployment authorization is implied.
