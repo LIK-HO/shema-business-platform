@@ -77,7 +77,7 @@ class MemoryAIUnitOfWork:
         self.audits = state.audits
         self.ai_runs = state.runs
 
-    def __enter__(self) -> "MemoryAIUnitOfWork":
+    def __enter__(self) -> MemoryAIUnitOfWork:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> bool:
