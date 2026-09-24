@@ -417,11 +417,14 @@ class YandexGPTProvider(AIProviderAdapter):
                         message="YandexGPT token usage is internally inconsistent",
                     )
                 )
-            if output_tokens > request.budget.max_tokens:
+            if output_tokens > min(
+                request.budget.max_tokens,
+                self._configuration.max_output_tokens,
+            ):
                 raise YandexGPTExecutionError(
                     AIProviderFailure(
                         code=AIProviderFailureCode.RESOURCE_EXHAUSTED,
-                        message="YandexGPT completion exceeded operation token budget",
+                        message="YandexGPT completion exceeded configured token budget",
                     )
                 )
 
