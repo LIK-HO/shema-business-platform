@@ -1,5 +1,13 @@
 """Provider-neutral AI adapter contracts outside the frozen kernel."""
 
+from shema_platform.adapters.ai.composition import (
+    AIExecutionScope,
+    AIProviderCompositionError,
+    ScopedAIProvider,
+    bind_ai_execution_scope,
+    current_ai_execution_scope,
+    execute_scoped_ai,
+)
 from shema_platform.adapters.ai.contracts import (
     AIModelProvenance,
     AIProviderActivation,
@@ -16,14 +24,6 @@ from shema_platform.adapters.ai.contracts import (
     AIProviderRoutingPolicy,
     validate_provider_activation,
     validate_provider_response,
-)
-from shema_platform.adapters.ai.composition import (
-    AIExecutionScope,
-    AIProviderCompositionError,
-    ScopedAIProvider,
-    bind_ai_execution_scope,
-    current_ai_execution_scope,
-    execute_scoped_ai,
 )
 from shema_platform.adapters.ai.yandexgpt import (
     YandexGPTConfiguration,
