@@ -2,9 +2,9 @@ import json
 import pytest
 
 from shema_platform.adapters.ai.contracts import (
-    AIProviderRequest,
-    AIProviderReadinessState,
     AIProviderFailureCode,
+    AIProviderReadinessState,
+    AIProviderRequest,
 )
 from shema_platform.adapters.ai.yandexgpt import (
     YandexGPTConfiguration,
