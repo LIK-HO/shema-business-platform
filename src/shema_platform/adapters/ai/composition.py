@@ -14,6 +14,7 @@ from shema_platform.adapters.ai.contracts import (
     AIProviderReadinessState,
     AIProviderRequest,
     validate_provider_activation,
+    validate_provider_response,
 )
 from shema_platform.application.ai import (
     AIBudget,
@@ -159,9 +160,6 @@ class ScopedAIProvider:
         scope = current_ai_execution_scope()
         started = monotonic()
 
-        if task.task_id != task.task_id:
-            raise AssertionError("unreachable task identity check")
-
         descriptor = self._adapter.descriptor()
         activation = self._adapter.activation()
         try:
@@ -207,6 +205,11 @@ class ScopedAIProvider:
 
         try:
             response = self._adapter.invoke(request)
+            validate_provider_response(
+                descriptor,
+                request,
+                response,
+            )
         except AIProviderCompositionError:
             raise
         except Exception as exc:
