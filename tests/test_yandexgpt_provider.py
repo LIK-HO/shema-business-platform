@@ -1,4 +1,5 @@
 import json
+
 import pytest
 
 from shema_platform.adapters.ai.contracts import (
@@ -11,11 +12,7 @@ from shema_platform.adapters.ai.yandexgpt import (
     YandexGPTExecutionError,
     YandexGPTProvider,
 )
-from shema_platform.application.ai import (
-    AIBudget,
-    AIExecutionContext,
-    AITask,
-)
+from shema_platform.application.ai import AIBudget, AIExecutionContext, AITask
 
 
 def request(*, max_tokens: int = 100, duration: float = 5) -> AIProviderRequest:
