@@ -1,6 +1,4 @@
 import json
-from datetime import UTC, datetime
-
 import pytest
 
 from shema_platform.adapters.ai.contracts import (
@@ -44,7 +42,7 @@ def request(*, max_tokens: int = 100, duration: float = 5) -> AIProviderRequest:
     )
 
 
-def configuration(**overrides: object) -> YandexGPTConfiguration:
+def default_configuration(**overrides: object) -> YandexGPTConfiguration:
     values = {
         "api_key": "secret-not-persisted",
         "model_uri": "gpt://folder/yandexgpt/latest",
@@ -111,13 +109,13 @@ def requester_for(
     return requester
 
 
-def provider(
+def build_provider(
     *,
     requester,
-    configuration: YandexGPTConfiguration | None = None,
+    config: YandexGPTConfiguration | None = None,
 ) -> YandexGPTProvider:
     return YandexGPTProvider(
-        configuration or configuration(),
+        config or default_configuration(),
         prompt_renderer=lambda _: "Do the bounded task.",
         cost_estimator=lambda input_tokens, output_tokens: (
             (input_tokens + output_tokens) * 0.01
@@ -128,7 +126,7 @@ def provider(
 
 def test_yandexgpt_success_builds_bounded_request_and_response() -> None:
     captured: dict[str, object] = {}
-    instance = provider(requester=requester_for(captured=captured))
+    instance = build_provider(requester=requester_for(captured=captured))
     result = instance.invoke(request())
 
     assert result.run.provider_id == "yandexgpt"
@@ -152,7 +150,7 @@ def test_yandexgpt_success_builds_bounded_request_and_response() -> None:
 
 
 def test_api_key_is_not_in_configuration_repr() -> None:
-    assert "secret-not-persisted" not in repr(configuration())
+    assert "secret-not-persisted" not in repr(default_configuration())
 
 
 def test_activation_and_readiness_start_ready() -> None:
@@ -202,7 +200,7 @@ def test_invalid_usage_is_rejected_without_guessing_cost() -> None:
 
 def test_response_size_limit_fails_closed() -> None:
     instance = provider(
-        configuration=configuration(max_response_bytes=16),
+        config=default_configuration(max_response_bytes=16),
         requester=requester_for(body=b"{" + b"x" * 100 + b"}"),
     )
 
