@@ -61,9 +61,6 @@ class AIExecutionScope:
         if len(self.evidence_refs) != len(set(self.evidence_refs)):
             raise ValueError("evidence_refs must be unique")
 
-    @property
-    def operation_id(self) -> str:
-        return f"{self.context.correlation_id}:{self.context.resource_ref}"
 
 
 _CURRENT_SCOPE: ContextVar[AIExecutionScope | None] = ContextVar(
@@ -194,7 +191,7 @@ class ScopedAIProvider:
             raise AIProviderCompositionError(failure)
 
         request = AIProviderRequest(
-            operation_id=scope.operation_id,
+            operation_id=f"{scope.context.correlation_id}:{task.task_id}",
             task=task,
             input_refs=tuple(input_refs),
             evidence_refs=scope.evidence_refs,
