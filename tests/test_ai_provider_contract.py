@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import UTC, datetime
 
 import pytest
@@ -209,4 +210,61 @@ def test_readiness_is_fail_closed() -> None:
             state=AIProviderReadinessState.READY,
             checked_at=datetime(2026, 9, 24, tzinfo=UTC),
             error_code='unexpected',
+        )
+
+def test_provider_response_rejects_model_identity_and_output_size_mismatch() -> None:
+    task = AITask("task:1", "qualification", "prompt:v1")
+    request = AIProviderRequest(
+        operation_id="op:1",
+        task=task,
+        input_refs=("identity:1",),
+        evidence_refs=("evidence:1",),
+        context=AIExecutionContext(
+            actor_id="operator",
+            resource_ref="identity:1",
+            actor_trust_level=2,
+            resource_trust_level=2,
+            evidence_level=2,
+            configuration_version="cfg:1",
+        ),
+        budget=AIBudget(max_tokens=100, max_cost=1, max_duration_seconds=5),
+        deadline_seconds=5,
+    )
+    response = AIProviderResponse(
+        run=AIRun(
+            run_id="run:1",
+            task_id="task:1",
+            provider_id="yandexgpt",
+            model="wrong-model",
+            model_version="wrong-version",
+            prompt_version="prompt:v1",
+            input_refs=("identity:1",),
+            evidence_refs=("evidence:1",),
+            output="toolong",
+            tokens=10,
+            cost=0.01,
+            duration_seconds=1,
+        ),
+        configuration_version="cfg:1",
+        provenance_ref="evidence:provider:1",
+        provider_request_id="request:1",
+        observed_at=datetime(2026, 9, 24, tzinfo=UTC),
+    )
+    small_limits = replace(limits(), max_response_bytes=4)
+    small_descriptor = replace(
+        descriptor("yandexgpt", AIProviderKind.CLOUD, free=False),
+        resource_limits=small_limits,
+    )
+    with pytest.raises(ValueError, match="mismatched model_id"):
+        validate_provider_response(small_descriptor, request, response)
+
+    matching_response = replace(
+        response,
+        run=replace(response.run, model="model-1", model_version="1"),
+    )
+    with pytest.raises(ValueError, match="response-size"):
+        validate_provider_response(
+            small_descriptor,
+            request,
+            matching_response,
         )
