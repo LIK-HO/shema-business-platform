@@ -1,0 +1,74 @@
+{
+  "version": "1.0",
+  "provider_id": "openai",
+  "model_default": "gpt-6-luna",
+  "api": {
+    "transport": "https",
+    "base_url": "https://api.openai.com",
+    "responses_endpoint": "/v1/responses",
+    "readiness_endpoint": "/v1/models/{model}",
+    "store": false,
+    "tools_enabled": false,
+    "redirects": "fail_closed"
+  },
+  "activation": {
+    "feature_flag": "ai.openai.enabled",
+    "mode": "explicit_snapshot",
+    "secret_source": "runtime_secret",
+    "secret_key": "OPENAI_API_KEY",
+    "production_auto_activation": false,
+    "missing_secret_behavior": "fail",
+    "missing_prompt_resolver_behavior": "fail",
+    "missing_evidence_resolver_behavior": "fail",
+    "canonical_state_write": false
+  },
+  "operational_bounds": {
+    "timeout_seconds_max": 30,
+    "max_input_chars_max": 65536,
+    "max_output_tokens_max": 8192,
+    "max_response_bytes_max": 4194304,
+    "max_request_body_bytes_max": 524288,
+    "max_output_chars_max": 262144,
+    "process_local_max_requests_per_second": true,
+    "max_cost_usd_per_call_required": true
+  },
+  "output_integrity": {
+    "require_completed_response": true,
+    "require_response_id": true,
+    "require_model": true,
+    "require_usage": true,
+    "require_text_output": true,
+    "usage_total_must_equal_input_plus_output": true,
+    "evidence_refs_from_configured_resolver": true
+  },
+  "failure_policy": {
+    "non_200": "fail",
+    "invalid_json": "fail",
+    "missing_usage": "fail",
+    "incomplete_response": "fail",
+    "empty_text_output": "fail",
+    "oversized_input_or_output": "fail",
+    "preflight_cost_exceeded": "fail_before_external_io",
+    "response_cost_exceeded": "fail"
+  },
+  "retry_policy": {
+    "automatic_provider_retry": false,
+    "reason": "paid inference is not assumed idempotent"
+  },
+  "persistence": {
+    "provider_call_outside_uow": true,
+    "canonical_business_truth": false,
+    "ai_run_is_persisted_by_existing_gateway": true
+  },
+  "external_effect": {
+    "commercial_effect": false,
+    "provider_state_mutation": false
+  },
+  "evidence_sources": [
+    "https://developers.openai.com/api/docs/models",
+    "https://developers.openai.com/api/reference/cli/resources/responses/methods/create",
+    "https://developers.openai.com/api/reference/cli/resources/models/methods/retrieve",
+    "https://developers.openai.com/api/docs/guides/production-best-practices"
+  ],
+  "evidence_snapshot": "2026-09-24"
+}
