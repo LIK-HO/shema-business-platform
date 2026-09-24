@@ -18,6 +18,13 @@
     "missing_provenance_url": "discard_observation",
     "provenance_host": "require_exact_https_opencorporates_com",
     "provenance_path": "require_https_opencorporates_company_reference_path",
-    "provenance_canonicalization": "canonical_https_opencorporates_company_url"
+    "provenance_canonicalization": "canonical_https_opencorporates_company_url",
+    "observation_fields": {
+      "company_name_max_chars": 512,
+      "jurisdiction_code_max_chars": 32,
+      "company_number_max_chars": 128,
+      "current_status_max_chars": 64,
+      "non_string_identity_fields": "discard_observation"
+    }
   }
 }

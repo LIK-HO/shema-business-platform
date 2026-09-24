@@ -462,6 +462,129 @@ def test_provider_discards_non_company_provenance_paths() -> None:
     assert result.source_refs == ()
 
 
+def test_provider_discards_oversized_observation_fields() -> None:
+    oversized_name = "N" * 513
+    oversized_jurisdiction = "J" * 33
+    oversized_company_number = "C" * 129
+    oversized_status = "S" * 65
+    requester = FakeRequester(
+        status=200,
+        payload={
+            "results": {
+                "companies": [
+                    {
+                        "company": {
+                            "name": oversized_name,
+                            "company_number": "1",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com/companies/gb/1"
+                            ),
+                        }
+                    },
+                    {
+                        "company": {
+                            "name": "Valid Company",
+                            "company_number": oversized_company_number,
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com/companies/gb/2"
+                            ),
+                        }
+                    },
+                    {
+                        "company": {
+                            "name": "Valid Company",
+                            "company_number": "3",
+                            "jurisdiction_code": oversized_jurisdiction,
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com/companies/gb/3"
+                            ),
+                        }
+                    },
+                    {
+                        "company": {
+                            "name": "Valid Company",
+                            "company_number": "4",
+                            "jurisdiction_code": "gb",
+                            "current_status": oversized_status,
+                            "opencorporates_url": (
+                                "https://opencorporates.com/companies/gb/4"
+                            ),
+                        }
+                    },
+                    {
+                        "company": {
+                            "name": "Valid Company",
+                            "company_number": "5",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com/companies/gb/5"
+                            ),
+                        }
+                    },
+                ]
+            }
+        },
+        calls=[],
+    )
+    provider = OpenCorporatesProvider(configuration(), requester=requester)
+
+    result = provider.research("company", max_sources=10)
+
+    assert len(result.claims) == 1
+    assert result.source_refs == (
+        "https://opencorporates.com/companies/gb/5",
+    )
+
+
+def test_provider_discards_non_string_observation_identity_fields() -> None:
+    requester = FakeRequester(
+        status=200,
+        payload={
+            "results": {
+                "companies": [
+                    {
+                        "company": {
+                            "name": "Valid Name",
+                            "company_number": 123,
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com/companies/gb/6"
+                            ),
+                        }
+                    },
+                    {
+                        "company": {
+                            "name": "Valid Name",
+                            "company_number": "7",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com/companies/gb/7"
+                            ),
+                        }
+                    },
+                ]
+            }
+        },
+        calls=[],
+    )
+    provider = OpenCorporatesProvider(configuration(), requester=requester)
+
+    result = provider.research("company", max_sources=10)
+
+    assert len(result.claims) == 1
+    assert result.source_refs == (
+        "https://opencorporates.com/companies/gb/7",
+    )
+
+
 def test_provider_rejects_oversized_custom_requester_response() -> None:
     class OversizedRequester:
         def __call__(

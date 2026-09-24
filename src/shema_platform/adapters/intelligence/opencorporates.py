@@ -16,6 +16,10 @@ DEFAULT_MAX_QUERY_CHARS = 1_024
 MAX_MAX_QUERY_CHARS = 4_096
 DEFAULT_MAX_REQUEST_URL_BYTES = 8_192
 MAX_MAX_REQUEST_URL_BYTES = 16_384
+MAX_COMPANY_NAME_CHARS = 512
+MAX_JURISDICTION_CODE_CHARS = 32
+MAX_COMPANY_NUMBER_CHARS = 128
+MAX_CURRENT_STATUS_CHARS = 64
 
 
 def _canonicalize_provenance_url(source_ref: str) -> str | None:
@@ -44,6 +48,22 @@ def _canonicalize_provenance_url(source_ref: str) -> str | None:
         "https://opencorporates.com/companies/"
         f"{segments[2]}/{segments[3]}"
     )
+
+
+def _bounded_observation_text(
+    value: object,
+    *,
+    max_chars: int,
+    default: str,
+) -> str | None:
+    if value is None:
+        return default
+    if not isinstance(value, str):
+        return None
+    cleaned = value.strip()
+    if not cleaned or len(cleaned) > max_chars:
+        return None
+    return cleaned
 
 
 def _build_request_url(
@@ -345,14 +365,33 @@ class OpenCorporatesProvider:
             )
             if canonical_source_ref is None:
                 continue
-            if not isinstance(name, str) or not name.strip():
-                continue
-
-            jurisdiction = str(company.get("jurisdiction_code") or "unknown")
-            company_number = str(company.get("company_number") or "unknown")
-            current_status = str(
-                company.get("current_status") or "unknown"
+            clean_name = _bounded_observation_text(
+                name,
+                max_chars=MAX_COMPANY_NAME_CHARS,
+                default="",
             )
+            jurisdiction = _bounded_observation_text(
+                company.get("jurisdiction_code"),
+                max_chars=MAX_JURISDICTION_CODE_CHARS,
+                default="unknown",
+            )
+            company_number = _bounded_observation_text(
+                company.get("company_number"),
+                max_chars=MAX_COMPANY_NUMBER_CHARS,
+                default="unknown",
+            )
+            current_status = _bounded_observation_text(
+                company.get("current_status"),
+                max_chars=MAX_CURRENT_STATUS_CHARS,
+                default="unknown",
+            )
+            if (
+                not clean_name
+                or jurisdiction is None
+                or company_number is None
+                or current_status is None
+            ):
+                continue
             claims.append(
                 "OpenCorporates company observation: "
                 f"name={name.strip()}; "
