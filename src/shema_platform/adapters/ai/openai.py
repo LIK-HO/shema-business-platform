@@ -9,7 +9,7 @@ from math import isfinite
 from threading import Lock
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlsplit
-from urllib.request import HTTPRedirectHandler, Request, build_opener
+from urllib.request import build_opener, HTTPRedirectHandler, Request
 
 from shema_platform.application.ai import AIProvider, AIRun, AITask
 from shema_platform.foundation.provider_probe import ProbeResult
