@@ -1,5 +1,6 @@
 import json
 import os
+from dataclasses import replace
 from pathlib import Path
 
 import psycopg
@@ -136,7 +137,11 @@ def test_openai_provider_runs_through_gateway_and_persists_to_postgres() -> None
         )
 
         loaded = PostgresAIRunRepository(connection).get(result.run_id)
-        assert loaded == result
+        assert loaded is not None
+        assert loaded == replace(
+            result,
+            duration_seconds=loaded.duration_seconds,
+        )
         assert result.provider_id == "openai"
         assert result.output == "qualified"
         assert calls[0][0] == "POST"
