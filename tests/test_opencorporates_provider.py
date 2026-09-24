@@ -290,6 +290,73 @@ def test_provider_caps_requested_sources_at_api_limit() -> None:
     assert requester.calls[0][1]["per_page"] == "50"
 
 
+def test_provider_discards_non_opencorporates_provenance_host() -> None:
+    requester = FakeRequester(
+        status=200,
+        payload={
+            "results": {
+                "companies": [
+                    {
+                        "company": {
+                            "name": "Trusted Name",
+                            "company_number": "1",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": "https://example.com/companies/gb/1",
+                        }
+                    },
+                    {
+                        "company": {
+                            "name": "Attacker Lookalike",
+                            "company_number": "2",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com.evil.example/companies/gb/2"
+                            ),
+                        }
+                    },
+                    {
+                        "company": {
+                            "name": "Userinfo Lookalike",
+                            "company_number": "3",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com@evil.example/companies/gb/3"
+                            ),
+                        }
+                    },
+                    {
+                        "company": {
+                            "name": "Valid Name",
+                            "company_number": "4",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com/companies/gb/4"
+                            ),
+                        }
+                    },
+                ]
+            }
+        },
+        calls=[],
+    )
+    provider = OpenCorporatesProvider(configuration(), requester=requester)
+
+    result = provider.research("company", max_sources=10)
+
+    assert result.claims == (
+        "OpenCorporates company observation: "
+        "name=Valid Name; company_number=4; "
+        "jurisdiction=gb; current_status=Active",
+    )
+    assert result.source_refs == (
+        "https://opencorporates.com/companies/gb/4",
+    )
+
+
 def test_provider_rejects_oversized_custom_requester_response() -> None:
     class OversizedRequester:
         def __call__(
