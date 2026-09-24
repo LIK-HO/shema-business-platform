@@ -7,7 +7,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from threading import Lock
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, urlopen
 
 DEFAULT_MAX_RESPONSE_BYTES = 1_048_576
@@ -16,6 +16,17 @@ DEFAULT_MAX_QUERY_CHARS = 1_024
 MAX_MAX_QUERY_CHARS = 4_096
 DEFAULT_MAX_REQUEST_URL_BYTES = 8_192
 MAX_MAX_REQUEST_URL_BYTES = 16_384
+
+
+def _is_valid_provenance_url(source_ref: str) -> bool:
+    try:
+        parsed = urlsplit(source_ref)
+    except ValueError:
+        return False
+    return (
+        parsed.scheme == "https"
+        and parsed.hostname == "opencorporates.com"
+    )
 
 
 def _build_request_url(
@@ -310,8 +321,8 @@ class OpenCorporatesProvider:
 
             source_ref = company.get("opencorporates_url")
             name = company.get("name")
-            if not isinstance(source_ref, str) or not source_ref.startswith(
-                "https://"
+            if not isinstance(source_ref, str) or not _is_valid_provenance_url(
+                source_ref
             ):
                 continue
             if not isinstance(name, str) or not name.strip():
