@@ -355,6 +355,25 @@ def test_provider_fails_on_http_error() -> None:
         provider.research("company", max_sources=5)
 
 
+def test_provider_rejects_non_200_before_json_materialization() -> None:
+    class InvalidErrorPayloadRequester:
+        def __call__(
+            self,
+            url: str,
+            params: dict[str, str],
+            timeout_seconds: float,
+        ) -> tuple[int, bytes]:
+            return 503, b"not-json"
+
+    provider = OpenCorporatesProvider(
+        configuration(),
+        requester=InvalidErrorPayloadRequester(),
+    )
+
+    with pytest.raises(ConnectionError, match="HTTP 503"):
+        provider.research("company", max_sources=1)
+
+
 def test_provider_fails_on_invalid_json() -> None:
     class InvalidJSONRequester:
         def __call__(
