@@ -643,6 +643,68 @@ def test_provider_discards_identity_mismatch_with_provenance_path() -> None:
     )
 
 
+def test_provider_collapses_duplicate_observations_by_canonical_source_ref() -> None:
+    requester = FakeRequester(
+        status=200,
+        payload={
+            "results": {
+                "companies": [
+                    {
+                        "company": {
+                            "name": "First Observation",
+                            "company_number": "1",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com/companies/gb/1/"
+                            ),
+                        }
+                    },
+                    {
+                        "company": {
+                            "name": "Conflicting Duplicate",
+                            "company_number": "1",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Inactive",
+                            "opencorporates_url": (
+                                "https://opencorporates.com/companies/gb/1"
+                            ),
+                        }
+                    },
+                    {
+                        "company": {
+                            "name": "Second Source",
+                            "company_number": "2",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com/companies/gb/2"
+                            ),
+                        }
+                    },
+                ]
+            }
+        },
+        calls=[],
+    )
+    provider = OpenCorporatesProvider(configuration(), requester=requester)
+
+    result = provider.research("company", max_sources=10)
+
+    assert result.claims == (
+        "OpenCorporates company observation: "
+        "name=First Observation; company_number=1; "
+        "jurisdiction=gb; current_status=Active",
+        "OpenCorporates company observation: "
+        "name=Second Source; company_number=2; "
+        "jurisdiction=gb; current_status=Active",
+    )
+    assert result.source_refs == (
+        "https://opencorporates.com/companies/gb/1",
+        "https://opencorporates.com/companies/gb/2",
+    )
+
+
 def test_provider_rejects_oversized_custom_requester_response() -> None:
     class OversizedRequester:
         def __call__(
