@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "workflow": "ai_openai_gateway_postgres",
+  "provider": "openai",
+  "gateway": "shema_platform.application.ai.AIGateway",
+  "persistence": {
+    "authority": "postgresql",
+    "ai_run": true,
+    "audit": true
+  },
+  "proof": {
+    "provider_call_is_external": true,
+    "provider_transport_is_stubbed": true,
+    "real_paid_provider_call": false,
+    "gateway_authorization_required": true,
+    "evidence_required": true,
+    "budget_enforced": true,
+    "durable_ai_run_required": true,
+    "durable_audit_required": true
+  },
+  "prohibited": [
+    "domain_semantic_change",
+    "ai_owned_business_truth",
+    "automatic_provider_retry",
+    "new_system_of_record",
+    "live_paid_inference_in_ci"
+  ]
+}
