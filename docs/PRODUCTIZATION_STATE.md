@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-provider-response-cap`
+- Productization branch: `v1.5/productization-provider-request-input-envelope`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
 - Current productization HEAD: `66381f2daf27a0335cd8ae355bdc1762878d3dbb`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #22 — open, draft, unmerged
-- Active productization phase: P13 — provider response size cap
+- Productization PR: #23 — open, draft, unmerged
+- Active productization phase: P14 — provider request-input envelope
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -562,5 +562,52 @@ No merge or deployment authorization is implied.
 P14 — PROVIDER REQUEST-INPUT ENVELOPE.
 
 The next boundary is to bound the input side of concrete provider calls: query size and the resulting outbound request envelope before external I/O, while preserving the existing ResearchProvider contract and avoiding provider-specific semantics in the kernel. First verify the current upstream/provider request limits and existing application validation, then implement the smallest compatible fail-closed bound.
+
+No merge or deployment authorization is implied.
+
+
+## P14 — PROVIDER REQUEST-INPUT ENVELOPE — CLOSED / VERIFIED
+
+Purpose:
+- bound the input side of a concrete external provider operation;
+- reject oversized provider queries and oversized encoded GET request envelopes before rate-limit waiting and external I/O;
+- preserve the existing three-argument requester seam and keep the control outside the frozen kernel.
+
+Implementation:
+- OpenCorporates query input is required to be a string, trimmed before validation, and capped at 1,024 Unicode characters by default;
+- configurable query limit is hard-capped at 4,096 characters;
+- the complete encoded request URL is capped at 8,192 bytes by default and 16,384 bytes maximum;
+- the pre-I/O envelope check occurs before provider throttling;
+- the HTTP transport repeats the request-URL bound immediately before urlopen;
+- readiness probes use the same request-envelope bound;
+- focused tests prove fail-closed behavior, no requester invocation on oversized input, configuration hard caps and compatibility with the existing requester seam;
+- no kernel, retry scheduler, durable job, global limiter, billing ledger or deployment semantic was introduced.
+
+Evidence:
+- CI run #1097 (35997442399) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+During verification, the first candidate exposed one lint-only test defect and the next candidate exposed one incorrect test threshold; both were corrected without changing production semantics. Final CI #1097 was fully green on HEAD 18322ce554511ea56cc36662a7cbac7cda47dd48.
+
+Changed boundary:
+- src/shema_platform/adapters/intelligence/opencorporates.py
+- tests/test_opencorporates_provider.py
+- architecture/provider_request_input_contract.json
+- docs/PROVIDER_REQUEST_INPUT_ENVELOPE.md
+
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P15 — PROVIDER FAILURE-PATH MATERIALIZATION GUARD.
+
+The next boundary is to make non-success HTTP responses fail before JSON materialization in the concrete provider adapter. This keeps bounded error bodies from being parsed as business payloads, preserves the existing fail-closed status semantics, and remains entirely outside the frozen kernel. No automatic retry or provider-specific business interpretation should be introduced.
 
 No merge or deployment authorization is implied.
