@@ -26,6 +26,7 @@
       "current_status_max_chars": 64,
       "non_string_identity_fields": "discard_observation"
     },
-    "observation_identity_consistency": "require_payload_identity_match_provenance_path"
+    "observation_identity_consistency": "require_payload_identity_match_provenance_path",
+    "duplicate_provenance": "one_observation_per_canonical_provenance_reference"
   }
 }

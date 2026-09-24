@@ -358,6 +358,7 @@ class OpenCorporatesProvider:
 
         claims: list[str] = []
         source_refs: list[str] = []
+        seen_source_refs: set[str] = set()
 
         for item in companies[:requested]:
             company = item.get("company") if isinstance(item, dict) else None
@@ -404,6 +405,9 @@ class OpenCorporatesProvider:
                 or (jurisdiction, company_number) != provenance_identity
             ):
                 continue
+            if canonical_source_ref in seen_source_refs:
+                continue
+            seen_source_refs.add(canonical_source_ref)
             claims.append(
                 "OpenCorporates company observation: "
                 f"name={name.strip()}; "
