@@ -475,6 +475,55 @@ AI output:
 - проходит policy;
 - не может самостоятельно менять критическое состояние.
 
+## 7.4A. AI Provider Policy
+
+AI Gateway остаётся provider-neutral application boundary. Конкретные модели и провайдеры не являются частью frozen kernel.
+
+### Облачные AI-провайдеры
+
+Разрешены только два облачных AI-класса:
+- **YandexGPT** через Yandex Cloud AI Studio;
+- **GigaChat** через GigaChat API.
+
+Любой другой облачный LLM/AI provider считается **запрещённым по умолчанию** и не может быть активирован без отдельного архитектурного решения и явного изменения этого манифеста.
+
+Для облачных провайдеров обязательны:
+- отдельный adapter;
+- explicit activation;
+- runtime-only credentials;
+- bounded request/response/resource/cost/time limits;
+- readiness/health;
+- provenance/evidence discipline;
+- fail-closed behavior;
+- отсутствие прямого доступа провайдера к canonical business state;
+- отсутствие автоматического provider-specific retry без доказанной семантики повторного выполнения.
+
+### Локальные / self-hosted LLM
+
+Система должна поддерживать установку и использование локальных/self-hosted LLM-моделей с **правом бесплатного использования для предполагаемого коммерческого сценария**.
+
+«Бесплатное использование» означает отсутствие обязательной лицензионной/API-платы за использование самой модели; вычислительные ресурсы, электричество, GPU/CPU, хранение и эксплуатация остаются операционными затратами.
+
+Для каждой установленной локальной модели должны быть зафиксированы:
+- model identifier и version;
+- источник/репозиторий;
+- license и URL лицензии;
+- дата проверки прав на использование;
+- artifact/model digest;
+- runtime/adapter;
+- resource limits;
+- статус безопасности и происхождения.
+
+Локальная модель подключается только через тот же provider-neutral AI Gateway. Она не становится canonical truth и не получает прямого права изменять критическое состояние.
+
+### Правило выбора
+
+- Cloud AI → только YandexGPT или GigaChat.
+- Local/self-hosted AI → разрешён только при подтверждённом праве бесплатного коммерческого использования.
+- Нет неявного fallback Cloud → Local или Local → Cloud.
+- Провайдер, модель и configuration version должны быть наблюдаемы и воспроизводимы.
+- Появление нового AI provider не является основанием для изменения frozen kernel.
+
 ## 7.5. Controlled Change
 
 Каждое изменение core должно ответить:
@@ -828,9 +877,9 @@ Simple core first → standard patterns → measured scaling → extracted servi
 **Core Maturity = CERTIFIED**
 
 Дальше новые возможности идут за пределами ядра:
-- concrete providers;
+- approved cloud AI providers: YandexGPT and GigaChat;
+- installable local/self-hosted free-use LLMs;
 - MAX transport;
-- AI providers;
 - intelligence providers;
 - payments/settlement;
 - Web/PWA/Android;

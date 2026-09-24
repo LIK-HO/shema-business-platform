@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-max-live-effect-safety`
-- Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
-- Current productization HEAD: `66381f2daf27a0335cd8ae355bdc1762878d3dbb`
+- Productization branch: v1.5/productization-ai-policy
+- Frozen core baseline: a3eec47ea68882631ebf24b3998b431f2dc83600
+- Current productization HEAD: live from this branch; never treated as a static manifest fact
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #31 — open, draft, unmerged
-- Active productization phase: P23 — MAX live effect safety / real adapter proof
+- Productization PR: new policy-reset PR — draft, unmerged
+- Active productization phase: P24 — AI provider policy baseline — CLOSED / VERIFIED
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -995,10 +995,41 @@ Changed boundary:
 
 No merge or deployment authorization is implied.
 
+## P24 — AI PROVIDER POLICY BASELINE — CLOSED / VERIFIED
+
+Purpose:
+- roll back the concrete AI-provider implementation path to the last constructive boundary before provider creation;
+- preserve the existing provider-neutral AI Gateway in the frozen kernel;
+- define the allowed AI provider classes before any concrete adapter is implemented.
+
+Rollback boundary:
+- P23 remains the last verified productization implementation boundary;
+- the OpenAI provider branch, hardening branch and workflow-proof branch are not part of this working line;
+- no concrete cloud AI provider is activated or installed by this policy change.
+
+Policy:
+- Cloud AI allowlist: YandexGPT and GigaChat only;
+- all other cloud AI providers are denied by default and require an explicit manifest/architecture change;
+- local/self-hosted LLM installation is permitted when the model license grants free use for the intended commercial scenario;
+- local model provenance, license evidence, artifact digest, runtime and resource limits must be recorded;
+- no implicit cloud↔local fallback;
+- all concrete providers remain adapters behind the existing AIGateway and cannot own canonical business truth.
+
+Machine-readable policy:
+- architecture/ai_provider_policy.json
+- docs/AI_PROVIDER_POLICY.md
+
+Manifest:
+- docs/DEVELOPMENT_MANIFEST.md updated with the binding AI provider policy.
+
+No kernel semantic, PostgreSQL schema, migration, retry or canonical business-state semantics were changed.
+No provider was activated.
+No merge or deployment authorization is implied.
+
 ## Next bounded productization boundary
 
-P24 — AI PROVIDER PRODUCTION BOUNDARY.
+P25 — AI PROVIDER ADAPTER CONTRACTS.
 
-The AI Gateway is already a provider-neutral application boundary with authorization, evidence, policy, budget, audit and provider-result consistency checks. The next bounded step is to introduce one concrete production AI provider only after its provider-specific contract, timeout/resource limits, output/evidence integrity and fail-closed activation semantics are explicit. No provider should be assumed or activated merely because the gateway exists.
+Define provider-neutral adapter contracts for the two approved cloud providers and the local/self-hosted model runtime without implementing or activating a specific provider until its current API/license/resource contract is verified.
 
 No merge or deployment authorization is implied.
