@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from math import isfinite
 from typing import Protocol
 
@@ -14,19 +14,19 @@ from shema_platform.application.ai import (
 )
 
 
-class AIProviderKind(str, Enum):
+class AIProviderKind(StrEnum):
     CLOUD = "cloud"
     LOCAL_SELF_HOSTED = "local_self_hosted"
 
 
-class AIProviderReadinessState(str, Enum):
+class AIProviderReadinessState(StrEnum):
     DISABLED = "disabled"
     READY = "ready"
     NOT_CONFIGURED = "not_configured"
     UNHEALTHY = "unhealthy"
 
 
-class AIProviderFailureCode(str, Enum):
+class AIProviderFailureCode(StrEnum):
     CONFIGURATION = "configuration"
     NOT_READY = "not_ready"
     AUTHENTICATION = "authentication"
