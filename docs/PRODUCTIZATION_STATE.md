@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: v1.5/productization-ai-policy
+- Productization branch: v1.5/productization-ai-adapter-contracts
 - Frozen core baseline: a3eec47ea68882631ebf24b3998b431f2dc83600
 - Current productization HEAD: live from this branch; never treated as a static manifest fact
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #35 — open, draft, unmerged
-- Active productization phase: P25 — AI provider adapter contracts — IN_PROGRESS
+- Productization PR: #36 — open, draft, unmerged
+- Active productization phase: P26 — concrete approved AI provider — NOT_STARTED
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -1037,7 +1037,7 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P25 — AI PROVIDER ADAPTER CONTRACTS — IN_PROGRESS
+## P25 — AI PROVIDER ADAPTER CONTRACTS — CLOSED / VERIFIED
 
 Purpose:
 - define one provider-neutral adapter contract for approved cloud AI and local/self-hosted LLM runtimes;
@@ -1077,6 +1077,6 @@ Non-goals:
 
 P26 — CONCRETE AI PROVIDER IMPLEMENTATION BOUNDARY.
 
-Define provider-neutral adapter contracts for the two approved cloud providers and the local/self-hosted model runtime without implementing or activating a specific provider until its current API/license/resource contract is verified.
+Implement exactly one approved provider integration at a time, beginning only after its current external API/license/resource contract is verified. The implementation must remain behind `src/shema_platform/adapters/ai/`, use explicit activation/readiness, bounded request/response/resource/time controls, provenance and audit/telemetry discipline, and fail-closed behavior. No automatic cloud/local fallback and no provider-owned canonical business state.
 
 No merge or deployment authorization is implied.
