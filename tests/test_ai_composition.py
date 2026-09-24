@@ -282,7 +282,7 @@ def test_scope_isolation_and_restore_across_threads() -> None:
         ) as scope:
             return (
                 current_ai_execution_scope().context.correlation_id or "",
-                scope.operation_id,
+                scope.context.resource_ref,
             )
 
     with ThreadPoolExecutor(max_workers=2) as executor:
@@ -296,6 +296,27 @@ def test_scope_isolation_and_restore_across_threads() -> None:
 
     with pytest.raises(AIProviderCompositionError):
         current_ai_execution_scope()
+
+
+def test_nested_scope_restores_outer_context() -> None:
+    outer_context = context("corr-outer")
+    inner_context = context("corr-inner")
+
+    with bind_ai_execution_scope(
+        evidence_refs=("evidence:outer",),
+        context=outer_context,
+        budget=budget(),
+    ):
+        assert current_ai_execution_scope().context.correlation_id == "corr-outer"
+
+        with bind_ai_execution_scope(
+            evidence_refs=("evidence:inner",),
+            context=inner_context,
+            budget=budget(),
+        ):
+            assert current_ai_execution_scope().context.correlation_id == "corr-inner"
+
+        assert current_ai_execution_scope().context.correlation_id == "corr-outer"
 
 
 @dataclass(frozen=True)
