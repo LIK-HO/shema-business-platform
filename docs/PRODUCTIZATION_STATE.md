@@ -8,7 +8,7 @@
 - Current productization HEAD: live from this branch; never treated as a static manifest fact
 - Core PR: #8 — open, draft, unmerged
 - Productization PR: #38 — open, draft, unmerged
-- Active productization phase: P27 — AI provider composition / activation proof — IN_PROGRESS
+- Active productization phase: P28 — production AI activation gate — NOT_STARTED
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
