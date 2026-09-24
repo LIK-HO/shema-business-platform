@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-provider-observation-identity`
+- Productization branch: `v1.5/productization-provider-duplicate-observation`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
 - Current productization HEAD: `66381f2daf27a0335cd8ae355bdc1762878d3dbb`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #29 — open, draft, unmerged
-- Active productization phase: P20 — provider observation identity consistency
+- Productization PR: #30 — open, draft, unmerged
+- Active productization phase: P21 — duplicate provider observation collapse
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -871,5 +871,48 @@ No merge or deployment authorization is implied.
 P21 — DUPLICATE PROVIDER OBSERVATION COLLAPSE.
 
 The next boundary is deterministic deduplication of provider observations by canonical provenance reference before claim construction. Multiple payload entries for the same canonical source should produce one evidence observation rather than repeated identical claims.
+
+No merge or deployment authorization is implied.
+
+
+## P21 — DUPLICATE PROVIDER OBSERVATION COLLAPSE — CLOSED / VERIFIED
+
+Purpose:
+- prevent repeated provider payload entries for the same canonical provenance reference from producing repeated evidence claims;
+- keep output deterministic by preserving the first valid observation;
+- maintain one accepted claim per canonical provider provenance reference.
+
+Implementation:
+- a local `seen_source_refs` set is maintained per provider research call;
+- deduplication occurs only after provenance canonicalization, field bounds and identity consistency checks have passed;
+- the first valid observation wins deterministically;
+- subsequent observations with the same canonical provenance reference are discarded before claim construction;
+- regression coverage uses a trailing-slash canonical duplicate with conflicting payload content and verifies that only the first observation is retained;
+- no kernel, persistence, network, retry, billing or deployment semantics were introduced.
+
+Evidence:
+- CI run #1111 (`36000817047`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- src/shema_platform/adapters/intelligence/opencorporates.py
+- tests/test_opencorporates_provider.py
+- architecture/opencorporates_provider_contract.json
+- docs/PROVIDER_DUPLICATE_OBSERVATION_COLLAPSE.md
+
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P22 — PRODUCTIZATION HARDENING REVIEW.
+
+Before adding another provider-specific micro-control, re-audit the productization contract against mature-system invariants, existing P1–P21 controls, current failure modes and measurable production risk. Only a gap with non-redundant risk reduction should become new code; otherwise the hardening slice should close and move to the next product surface.
 
 No merge or deployment authorization is implied.
