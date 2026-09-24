@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-provider-provenance-canonical`
+- Productization branch: `v1.5/productization-provider-observation-bounds`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
 - Current productization HEAD: `66381f2daf27a0335cd8ae355bdc1762878d3dbb`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #27 — open, draft, unmerged
-- Active productization phase: P18 — provider provenance canonicalization
+- Productization PR: #28 — open, draft, unmerged
+- Active productization phase: P19 — provider observation field bounds
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -784,5 +784,49 @@ No merge or deployment authorization is implied.
 P19 — PROVIDER OBSERVATION FIELD BOUNDS.
 
 The next boundary is to bound and validate the concrete provider observation fields used to construct evidence claims, especially company name, jurisdiction code and company number. The control should reject oversized or structurally invalid provider fields before claim construction, without inventing business semantics or changing canonical kernel truth.
+
+No merge or deployment authorization is implied.
+
+
+## P19 — PROVIDER OBSERVATION FIELD BOUNDS — CLOSED / VERIFIED
+
+Purpose:
+- bound concrete provider observation fields before evidence claim construction;
+- prevent oversized or structurally invalid provider values from expanding claim/evidence payloads;
+- keep provider-specific resource and integrity controls outside the frozen kernel.
+
+Implementation:
+- company name is limited to 512 characters;
+- jurisdiction code is limited to 32 characters;
+- company number is limited to 128 characters;
+- current status is limited to 64 characters;
+- non-string identity/status fields are rejected for the affected observation instead of being stringified;
+- focused tests cover oversized name, jurisdiction, company number and status values plus non-string company-number input;
+- the limits are explicitly platform operational bounds, not claims about an upstream provider hard limit.
+
+Evidence:
+- CI run #1107 (`35999850541`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- src/shema_platform/adapters/intelligence/opencorporates.py
+- tests/test_opencorporates_provider.py
+- architecture/opencorporates_provider_contract.json
+- docs/PROVIDER_OBSERVATION_FIELD_BOUNDS.md
+
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P20 — PROVIDER OBSERVATION IDENTITY CONSISTENCY.
+
+The next boundary is to require the provider payload's jurisdiction and company number to agree with the canonical OpenCorporates provenance path before constructing a claim. Mismatched observations should be discarded locally; no canonical business state or upstream provider semantics should be inferred.
 
 No merge or deployment authorization is implied.
