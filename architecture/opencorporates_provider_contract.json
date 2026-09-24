@@ -25,6 +25,7 @@
       "company_number_max_chars": 128,
       "current_status_max_chars": 64,
       "non_string_identity_fields": "discard_observation"
-    }
+    },
+    "observation_identity_consistency": "require_payload_identity_match_provenance_path"
   }
 }
