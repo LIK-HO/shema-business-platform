@@ -66,6 +66,14 @@ def _bounded_observation_text(
     return cleaned
 
 
+def _provenance_identity(canonical_source_ref: str) -> tuple[str, str] | None:
+    parsed = urlsplit(canonical_source_ref)
+    segments = parsed.path.split("/")
+    if len(segments) != 4 or segments[1] != "companies":
+        return None
+    return segments[2], segments[3]
+
+
 def _build_request_url(
     url: str,
     params: Mapping[str, str],
@@ -365,6 +373,9 @@ class OpenCorporatesProvider:
             )
             if canonical_source_ref is None:
                 continue
+            provenance_identity = _provenance_identity(canonical_source_ref)
+            if provenance_identity is None:
+                continue
             clean_name = _bounded_observation_text(
                 name,
                 max_chars=MAX_COMPANY_NAME_CHARS,
@@ -390,6 +401,7 @@ class OpenCorporatesProvider:
                 or jurisdiction is None
                 or company_number is None
                 or current_status is None
+                or (jurisdiction, company_number) != provenance_identity
             ):
                 continue
             claims.append(
