@@ -357,6 +357,74 @@ def test_provider_discards_non_opencorporates_provenance_host() -> None:
     )
 
 
+def test_provider_canonicalizes_provenance_trailing_slash_and_deduplicates() -> None:
+    requester = FakeRequester(
+        status=200,
+        payload={
+            "results": {
+                "companies": [
+                    {
+                        "company": {
+                            "name": "Canonical Name",
+                            "company_number": "1",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": "https://opencorporates.com/companies/gb/1/",
+                        }
+                    },
+                    {
+                        "company": {
+                            "name": "Canonical Duplicate",
+                            "company_number": "1",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": "https://opencorporates.com/companies/gb/1",
+                        }
+                    },
+                ]
+            }
+        },
+        calls=[],
+    )
+    provider = OpenCorporatesProvider(configuration(), requester=requester)
+
+    result = provider.research("company", max_sources=10)
+
+    assert result.source_refs == (
+        "https://opencorporates.com/companies/gb/1",
+    )
+
+
+def test_provider_rejects_explicit_non_default_provenance_port() -> None:
+    requester = FakeRequester(
+        status=200,
+        payload={
+            "results": {
+                "companies": [
+                    {
+                        "company": {
+                            "name": "Non Default Port",
+                            "company_number": "1",
+                            "jurisdiction_code": "gb",
+                            "current_status": "Active",
+                            "opencorporates_url": (
+                                "https://opencorporates.com:444/companies/gb/1"
+                            ),
+                        }
+                    }
+                ]
+            }
+        },
+        calls=[],
+    )
+    provider = OpenCorporatesProvider(configuration(), requester=requester)
+
+    result = provider.research("company", max_sources=10)
+
+    assert result.claims == ()
+    assert result.source_refs == ()
+
+
 def test_provider_discards_non_company_provenance_paths() -> None:
     refs = (
         "https://opencorporates.com/search?q=gb/1",
