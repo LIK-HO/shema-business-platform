@@ -8,7 +8,7 @@
 - Current productization HEAD: live from this branch; never treated as a static manifest fact
 - Core PR: #8 — open, draft, unmerged
 - Productization PR: new policy-reset PR — draft, unmerged
-- Active productization phase: P24 — AI provider policy baseline — CLOSED / VERIFIED
+- Active productization phase: P24 — AI provider policy baseline — IN_PROGRESS / AWAITING CI
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -995,7 +995,7 @@ Changed boundary:
 
 No merge or deployment authorization is implied.
 
-## P24 — AI PROVIDER POLICY BASELINE — CLOSED / VERIFIED
+## P24 — AI PROVIDER POLICY BASELINE — IN_PROGRESS / AWAITING CI
 
 Purpose:
 - roll back the concrete AI-provider implementation path to the last constructive boundary before provider creation;
