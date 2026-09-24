@@ -116,8 +116,8 @@ class YandexGPTConfiguration:
             raise ValueError("max_input_chars is outside the allowed range")
         if self.max_output_tokens <= 0 or self.max_output_tokens > MAX_OUTPUT_TOKENS:
             raise ValueError("max_output_tokens is outside the allowed range")
-        if not isfinite(self.max_cost) or self.max_cost < 0:
-            raise ValueError("max_cost must be finite and non-negative")
+        if not isfinite(self.max_cost) or self.max_cost <= 0:
+            raise ValueError("max_cost must be finite and positive")
         if not self.configuration_version:
             raise ValueError("configuration_version is required")
         if not self.activation_version:
@@ -238,11 +238,11 @@ class YandexGPTProvider(AIProviderAdapter):
         return AIModelProvenance(
             source_ref="https://yandex.cloud/en/docs/overview/api",
             license_name="Yandex Cloud service terms",
-            license_url="https://yandex.cloud/en/docs/legal",
+            license_url="https://yandex.com/legal/cloud_termsofuse/en/",
             license_checked_at=None,
             artifact_digest=None,
             runtime="Yandex Cloud AI Studio",
-            security_status="runtime-provider-policy-verified",
+            security_status="external-provider-contract-verified",
             free_commercial_use_verified=False,
         )
 
@@ -315,6 +315,14 @@ class YandexGPTProvider(AIProviderAdapter):
                 max_response_bytes=self._configuration.max_response_bytes,
                 requester=self._requester,
             )
+            if len(body) > self._configuration.max_response_bytes:
+                raise YandexGPTExecutionError(
+                    AIProviderFailure(
+                        code=AIProviderFailureCode.INVALID_RESPONSE,
+                        message="YandexGPT response exceeded configured response-size limit",
+                    )
+                )
+
             if status in (401, 403):
                 raise YandexGPTExecutionError(
                     AIProviderFailure(
