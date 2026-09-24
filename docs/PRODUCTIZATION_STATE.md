@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: `v1.5/productization-provider-provenance-path`
+- Productization branch: `v1.5/productization-provider-provenance-canonical`
 - Frozen core baseline: `a3eec47ea68882631ebf24b3998b431f2dc83600`
 - Current productization HEAD: `66381f2daf27a0335cd8ae355bdc1762878d3dbb`
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #26 — open, draft, unmerged
-- Active productization phase: P17 — provider provenance path validation
+- Productization PR: #27 — open, draft, unmerged
+- Active productization phase: P18 — provider provenance canonicalization
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -740,5 +740,49 @@ No merge or deployment authorization is implied.
 P18 — PROVIDER PROVENANCE CANONICALIZATION.
 
 The next boundary is to canonicalize accepted OpenCorporates provenance references to one deterministic representation before evidence construction. The control should only normalize equivalent local URL syntax; it must not perform network access or turn provider provenance into canonical business truth.
+
+No merge or deployment authorization is implied.
+
+
+## P18 — PROVIDER PROVENANCE CANONICALIZATION — CLOSED / VERIFIED
+
+Purpose:
+- normalize accepted OpenCorporates provenance references into one deterministic representation before evidence construction;
+- remove representational ambiguity without performing network access;
+- preserve the rule that provider provenance is evidence metadata, not canonical business truth.
+
+Implementation:
+- accepted references are rebuilt as `https://opencorporates.com/companies/{jurisdiction}/{company_number}`;
+- explicit non-default ports are rejected;
+- an optional trailing slash is removed;
+- query strings and fragments remain forbidden;
+- existing source-reference deduplication collapses equivalent canonical references;
+- focused tests verify trailing-slash normalization, deterministic output, deduplication and explicit-port rejection;
+- no kernel, retry scheduler, durable job, billing ledger or deployment semantic was introduced.
+
+Evidence:
+- CI run #1105 (`35999366725`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+
+Changed boundary:
+- src/shema_platform/adapters/intelligence/opencorporates.py
+- tests/test_opencorporates_provider.py
+- architecture/opencorporates_provider_contract.json
+- docs/PROVIDER_PROVENANCE_CANONICALIZATION.md
+
+No kernel, canonical business-truth, persistence, retry-scheduler or deployment semantics were changed.
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P19 — PROVIDER OBSERVATION FIELD BOUNDS.
+
+The next boundary is to bound and validate the concrete provider observation fields used to construct evidence claims, especially company name, jurisdiction code and company number. The control should reject oversized or structurally invalid provider fields before claim construction, without inventing business semantics or changing canonical kernel truth.
 
 No merge or deployment authorization is implied.

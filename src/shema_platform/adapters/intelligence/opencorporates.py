@@ -18,24 +18,31 @@ DEFAULT_MAX_REQUEST_URL_BYTES = 8_192
 MAX_MAX_REQUEST_URL_BYTES = 16_384
 
 
-def _is_valid_provenance_url(source_ref: str) -> bool:
+def _canonicalize_provenance_url(source_ref: str) -> str | None:
     try:
         parsed = urlsplit(source_ref)
     except ValueError:
-        return False
+        return None
 
     path = parsed.path.rstrip("/")
     segments = path.split("/")
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname != "opencorporates.com"
+        or parsed.port is not None
+        or parsed.query
+        or parsed.fragment
+        or len(segments) != 4
+        or segments[0] != ""
+        or segments[1] != "companies"
+        or not segments[2]
+        or not segments[3]
+    ):
+        return None
+
     return (
-        parsed.scheme == "https"
-        and parsed.hostname == "opencorporates.com"
-        and not parsed.query
-        and not parsed.fragment
-        and len(segments) == 4
-        and segments[0] == ""
-        and segments[1] == "companies"
-        and bool(segments[2])
-        and bool(segments[3])
+        "https://opencorporates.com/companies/"
+        f"{segments[2]}/{segments[3]}"
     )
 
 
@@ -331,9 +338,12 @@ class OpenCorporatesProvider:
 
             source_ref = company.get("opencorporates_url")
             name = company.get("name")
-            if not isinstance(source_ref, str) or not _is_valid_provenance_url(
-                source_ref
-            ):
+            canonical_source_ref = (
+                _canonicalize_provenance_url(source_ref)
+                if isinstance(source_ref, str)
+                else None
+            )
+            if canonical_source_ref is None:
                 continue
             if not isinstance(name, str) or not name.strip():
                 continue
@@ -350,7 +360,7 @@ class OpenCorporatesProvider:
                 f"jurisdiction={jurisdiction}; "
                 f"current_status={current_status}"
             )
-            source_refs.append(source_ref)
+            source_refs.append(canonical_source_ref)
 
         return ProviderResult(
             provider_id=self.capability.provider_id,
