@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: v1.5/productization-ai-adapter-contracts
+- Productization branch: v1.5/productization-ai-yandexgpt
 - Frozen core baseline: a3eec47ea68882631ebf24b3998b431f2dc83600
 - Current productization HEAD: live from this branch; never treated as a static manifest fact
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #36 — open, draft, unmerged
-- Active productization phase: P26 — concrete approved AI provider — NOT_STARTED
+- Productization PR: #37 — open, draft, unmerged
+- Active productization phase: P27 — AI provider composition / activation proof — NOT_STARTED
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 

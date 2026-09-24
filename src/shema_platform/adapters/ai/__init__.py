@@ -17,8 +17,16 @@ from shema_platform.adapters.ai.contracts import (
     validate_provider_activation,
     validate_provider_response,
 )
+from shema_platform.adapters.ai.yandexgpt import (
+    YandexGPTConfiguration,
+    YandexGPTExecutionError,
+    YandexGPTProvider,
+)
 
 __all__ = [
+    "YandexGPTConfiguration",
+    "YandexGPTExecutionError",
+    "YandexGPTProvider",
     "AIModelProvenance",
     "AIProviderActivation",
     "AIProviderAdapter",

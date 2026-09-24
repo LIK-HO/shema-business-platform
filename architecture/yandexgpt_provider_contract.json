@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "status": "bounded_concrete_provider",
+  "provider": "yandexgpt",
+  "frozen_kernel_impact": false,
+  "implementation": "src/shema_platform/adapters/ai/yandexgpt.py",
+  "official_external_contract": {
+    "base_url": "https://ai.api.cloud.yandex.net/v1",
+    "chat_endpoint": "https://ai.api.cloud.yandex.net/v1/chat/completions",
+    "model_uri_pattern": "gpt://<folder_ID>/<model_ID>/latest",
+    "authentication": "Authorization: Api-Key <API_key>",
+    "required_scope": "yc.ai.languageModels.execute"
+  },
+  "runtime_controls": {
+    "explicit_activation_required": true,
+    "readiness_state_required": true,
+    "runtime_only_credentials": true,
+    "https_only": true,
+    "request_deadline_bounded": true,
+    "request_body_bounded": true,
+    "response_size_bounded": true,
+    "input_size_bounded": true,
+    "output_token_budget_bounded": true,
+    "cost_estimator_required": true,
+    "automatic_retry": false
+  },
+  "response_controls": {
+    "http_status_validated": true,
+    "json_shape_validated": true,
+    "token_usage_required": true,
+    "token_usage_consistency_required": true,
+    "provider_request_id_captured": true,
+    "configuration_version_captured": true,
+    "provenance_reference_captured": true,
+    "gateway_response_validation_reused": true
+  },
+  "security": {
+    "api_key_not_in_repr": true,
+    "request_bodies_not_persisted_by_adapter": true,
+    "raw_provider_payload_not_returned": true,
+    "canonical_business_state_access": false
+  },
+  "composition_boundary": {
+    "prompt_renderer_injected": true,
+    "reason": "Frozen AIGateway/AITask does not carry raw prompt text; adapter does not invent prompt semantics."
+  },
+  "scope_stop": {
+    "no_gigachat_implementation": true,
+    "no_local_model_runtime": true,
+    "no_fallback_routing": true,
+    "no_kernel_change": true,
+    "no_provider_owned_persistence": true,
+    "no_merge_or_deployment_authorization": true
+  }
+}
