@@ -10,11 +10,24 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+DEFAULT_MAX_RESPONSE_BYTES = 1_048_576
+MAX_MAX_RESPONSE_BYTES = 4_194_304
+
+
+def _read_bounded(stream, *, max_response_bytes: int) -> bytes:
+    body = stream.read(max_response_bytes + 1)
+    if len(body) > max_response_bytes:
+        raise ValueError(
+            "OpenCorporates response exceeds configured max_response_bytes"
+        )
+    return body
+
 
 def _request_json(
     url: str,
     params: Mapping[str, str],
     timeout_seconds: float,
+    max_response_bytes: int,
 ) -> tuple[int, bytes]:
     request = Request(
         url=f"{url}?{urlencode(params)}",
@@ -26,9 +39,15 @@ def _request_json(
     )
     try:
         with urlopen(request, timeout=timeout_seconds) as response:
-            return response.status, response.read()
+            return response.status, _read_bounded(
+                response,
+                max_response_bytes=max_response_bytes,
+            )
     except HTTPError as exc:
-        return exc.code, exc.read()
+        return exc.code, _read_bounded(
+            exc,
+            max_response_bytes=max_response_bytes,
+        )
     except URLError as exc:
         raise ConnectionError("OpenCorporates request failed") from exc
 
@@ -39,6 +58,7 @@ class OpenCorporatesConfiguration:
     api_version: str = "0.4"
     base_url: str = "https://api.opencorporates.com"
     timeout_seconds: float = 5.0
+    max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES
     cost_per_call: float = 0.0
     max_requests_per_second: float = 1.0
     coverage: frozenset[str] = frozenset(
@@ -56,6 +76,12 @@ class OpenCorporatesConfiguration:
             api_version=os.getenv("OPENCORPORATES_API_VERSION", "0.4").strip(),
             timeout_seconds=float(
                 os.getenv("OPENCORPORATES_TIMEOUT_SECONDS", "5")
+            ),
+            max_response_bytes=int(
+                os.getenv(
+                    "OPENCORPORATES_MAX_RESPONSE_BYTES",
+                    str(DEFAULT_MAX_RESPONSE_BYTES),
+                )
             ),
             cost_per_call=float(
                 os.getenv("OPENCORPORATES_COST_PER_CALL", "0")
@@ -87,6 +113,12 @@ class OpenCorporatesConfiguration:
             raise ValueError("timeout_seconds must be positive")
         if self.timeout_seconds > 30.0:
             raise ValueError("timeout_seconds must not exceed 30")
+        if self.max_response_bytes <= 0:
+            raise ValueError("max_response_bytes must be positive")
+        if self.max_response_bytes > MAX_MAX_RESPONSE_BYTES:
+            raise ValueError(
+                "max_response_bytes must not exceed 4194304"
+            )
         if self.cost_per_call < 0:
             raise ValueError("cost_per_call cannot be negative")
         if self.max_requests_per_second <= 0:
@@ -112,7 +144,7 @@ class OpenCorporatesProvider:
         configuration: OpenCorporatesConfiguration,
         *,
         requester: Callable[
-            [str, Mapping[str, str], float], tuple[int, bytes]
+            [str, Mapping[str, str], float, int], tuple[int, bytes]
         ] = _request_json,
     ) -> None:
         from shema_platform.application.research import ProviderCapability
@@ -169,7 +201,12 @@ class OpenCorporatesProvider:
                 "order": "score",
             },
             request_timeout,
+            self._configuration.max_response_bytes,
         )
+        if len(body) > self._configuration.max_response_bytes:
+            raise ValueError(
+                "OpenCorporates response exceeds configured max_response_bytes"
+            )
 
         try:
             payload = json.loads(body)
@@ -261,6 +298,7 @@ class OpenCorporatesProvider:
                     "order": "score",
                 },
                 request_timeout,
+                self._configuration.max_response_bytes,
             )
         except Exception:
             return ProbeResult(
