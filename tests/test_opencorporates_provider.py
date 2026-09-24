@@ -213,7 +213,10 @@ def test_provider_trims_query_before_validation_and_request() -> None:
 
 
 def test_provider_rejects_non_string_query() -> None:
-    provider = OpenCorporatesProvider(configuration(), requester=lambda *args: (200, b'{"results":{"companies":[]}}'))
+    def requester(*args):
+        return 200, b'{"results":{"companies":[]}}'
+
+    provider = OpenCorporatesProvider(configuration(), requester=requester)
 
     with pytest.raises(TypeError, match="query must be a string"):
         provider.research(123, max_sources=1)  # type: ignore[arg-type]
