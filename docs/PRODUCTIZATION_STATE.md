@@ -1785,12 +1785,12 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P45 — v1.5 PRODUCTIZATION READINESS AUDIT — IN_PROGRESS
+## P45 — v1.5 PRODUCTIZATION READINESS AUDIT — CLOSED / VERIFIED
 
 Purpose:
-- consolidate the verified evidence from AI promotion and MAX external-effect safety into one readiness assessment;
-- explicitly identify remaining production blockers;
-- avoid adding functionality unless a demonstrated readiness gap requires it.
+- consolidate the certified v1.5 productization evidence into one machine-readable readiness assessment;
+- identify remaining production blockers without adding functionality;
+- prevent an aggregate "ready" claim while any mandatory external-effect safety gate remains unproven.
 
 Implementation:
 - `src/shema_platform/platform/productization_readiness.py`;
@@ -1799,12 +1799,47 @@ Implementation:
 - `docs/P45_PRODUCTIZATION_READINESS.md`;
 - executable contract proof in `tests/test_architecture_contract.py`.
 
-Expected assessment:
-- AI/core/release controls pass from existing certified contracts;
-- MAX platform-side external-effect safety passes;
-- MAX provider-side idempotency is currently not certified;
-- MAX provider-side reconciliation is currently not certified;
-- therefore the aggregate readiness status remains `blocked`.
+Evidence:
+- CI run #1237 (`36118166208`) passed all seven required jobs on HEAD `d9e43e24bcf596500eeadf0b459bd51f28d3b442`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- The readiness assessment is intentionally `blocked`, not `ready`.
+- All audited internal/platform controls pass:
+  - frozen kernel/core semantic freeze;
+  - release baseline;
+  - AI promotion policy and activation/rollback rehearsal;
+  - platform-side MAX idempotency and ambiguous-outcome safety;
+  - read-only quarantine control;
+  - overall scope safety.
+- The only remaining blockers are external MAX provider guarantees:
+  1. provider-side idempotency for `POST /messages` is not documented/certified;
+  2. provider-side reconciliation semantics for `POST /messages` are not documented/certified.
+- No override mechanism exists in the readiness gate.
+- No live MAX or AI provider traffic was used.
+- No database schema, HTTP route or frozen kernel semantic was changed.
+
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P46 — EXTERNAL PROVIDER BLOCKER HOLD / EVIDENCE REVALIDATION.
+
+Purpose:
+- keep v1.5 productization in a controlled hold state while the only unresolved blockers are external provider guarantees;
+- revalidate provider-side evidence before any future live outbound activation;
+- prevent engineering work from fabricating or assuming an external guarantee.
+
+Operational rule:
+- do not add MAX automatic retry;
+- do not enable live MAX outbound;
+- do not introduce a compensating provider or cloud/local fallback;
+- re-run the readiness assessment whenever new official provider evidence becomes available;
+- promote only if the provider-side idempotency/reconciliation blockers are genuinely closed by authoritative evidence.
 
 Scope stop:
 - no new provider;
@@ -1815,8 +1850,4 @@ Scope stop:
 - no live external traffic;
 - no merge/deploy.
 
-Evidence:
-- implementation is complete on the P45 branch;
-- full seven-job CI gate pending.
-
-No merge or deployment authorization is implied.
+P46 is intentionally an evidence-hold phase. There is no justified production-code expansion until the external blocker changes.
