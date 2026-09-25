@@ -1416,7 +1416,7 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P34 — GIGACHAT APPLICATION COMPOSITION / ACTIVATION PROOF — IN_PROGRESS
+## P34 — GIGACHAT APPLICATION COMPOSITION / ACTIVATION PROOF — CLOSED / VERIFIED
 
 Purpose:
 - compose the verified GigaChat adapter and activation gate with the existing provider-neutral AI application service;
@@ -1429,12 +1429,42 @@ Implementation:
 - `tests/test_gigachat_application_composition.py`;
 - executable composition-contract proof in `tests/test_architecture_contract.py`.
 
+Evidence:
+- CI run #1193 (`36111351211`) passed all seven required jobs on HEAD `c56b31704630ebc3875cd93f038d94a9c6fa3a76`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- No frozen kernel file was changed.
+- No database schema/migration was changed.
+- No HTTP route was changed.
+- No live provider traffic was enabled.
+
+Next:
+- P35 — explicit GigaChat runtime assembly.
+
+## P35 — GIGACHAT RUNTIME ASSEMBLY — IN_PROGRESS
+
+Purpose:
+- add the explicit runtime composition root for the already verified GigaChat application composition;
+- keep activation and rollback operator-controlled;
+- preserve the canonical `create_app()` HTTP boundary without adding request-level provider selection.
+
+Implementation:
+- `src/shema_platform/experience/gigachat_runtime_composition.py`;
+- `architecture/gigachat_runtime_assembly_contract.json`;
+- `docs/P35_GIGACHAT_RUNTIME_ASSEMBLY.md`;
+- `tests/test_gigachat_runtime_composition.py`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
 Boundary:
-- composition injects the existing provider-neutral `AIExecutionService`;
-- canonical AIRun persistence and audit remain inside frozen `AIGateway`;
-- trust resolution remains the existing application boundary;
-- composition construction and service creation do not activate GigaChat;
-- activation and rollback remain explicit.
+- runtime construction must not activate GigaChat or perform provider network I/O;
+- the runtime delegates to the existing P34 composition and frozen `AIGateway`;
+- activation and rollback remain explicit;
+- provider selection is not exposed through the HTTP request.
 
 Scope stop:
 - no new provider;
@@ -1443,10 +1473,13 @@ Scope stop:
 - no Cloud ↔ Local fallback;
 - no frozen kernel change;
 - no database schema/migration;
-- no HTTP/application runtime wiring;
-- no live traffic.
+- no HTTP route change;
+- no automatic production activation;
+- no live provider traffic.
 
-Next:
-- full seven-job CI gate;
-- close P34 only after composition, architecture, security and release checks are green.
+Evidence:
+- CI run #1194 (`36111764539`) caught one Ruff import-order defect in the new runtime module; the defect is formatting-only and has been corrected on the branch.
+- Awaiting the post-fix seven-job CI gate before P35 can close.
+
+No merge or deployment authorization is implied.
 
