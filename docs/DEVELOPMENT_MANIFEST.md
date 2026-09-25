@@ -834,6 +834,187 @@ Experience layer не считается завершённым по факту 
 - multi-device continuity;
 - operational control surface.
 
+# 5C. Контур подготовки первого контакта
+
+Search/Intelligence не заканчивается квалификацией.
+
+Для каждого подходящего клиента система должна уметь перейти из verified intelligence в безопасно подготовленное первое обращение:
+
+DOSSIER → ЛПР/ROLE HYPOTHESIS → CONTACT CONTEXT → VALUE HYPOTHESIS → SCRIPT → OBJECTION BRANCHES → NEXT STEP
+
+Обязательно:
+- определение роли/ЛПР только по доступным и допустимым данным;
+- evidence-backed reason for contact;
+- персонализация только на основании проверенных фактов;
+- отдельное поле для inference/hypothesis;
+- запрет выдуманных фактов о клиенте, ЛПР, его потребности или предыдущих отношениях;
+- сценарии для gatekeeper / wrong person / interested / not now / price request / document request;
+- фиксация dossier snapshot и evidence version, на основании которых сформирован скрипт;
+- рекомендации следующего шага без автоматического критического действия без server-side authorization.
+
+## 5C.1. Сценарий обращения
+
+Минимальная структура:
+- контекст;
+- причина релевантности;
+- конкретное подтверждённое наблюдение;
+- гипотеза потребности;
+- короткий диагностический вопрос;
+- предложение ценности;
+- следующий шаг.
+
+Система должна уметь показать оператору также:
+- что нельзя утверждать;
+- какие факты требуют повторной проверки;
+- какие вопросы лучше задать вместо предположения.
+
+# 5D. Конструктор документов и юридическая конфигурация
+
+Система должна иметь отдельный Document & Legal Configuration layer, не являющийся частью frozen domain kernel.
+
+Его задача:
+тип контрагентов → налоговый/правовой режим → тип работ/услуг → схема расчёта → требования к оформлению → предлагаемый комплект документов → версия шаблонов → legal/evidence status
+
+## 5D.1. Матрица конфигураций
+
+Минимально поддерживаются конфигурации:
+- ООО → ООО;
+- ООО → ИП;
+- ООО → ИП на НПД;
+- ООО → физлицо — плательщик НПД, где такая модель допустима;
+- ИП → ООО;
+- ИП → ИП;
+- ИП → ИП на НПД;
+- ИП → физлицо — плательщик НПД;
+- и обратные направления, если конкретная сделка юридически допустима.
+
+Конфигурация должна также учитывать:
+- применяемый налоговый режим;
+- НДС/не НДС, когда применимо;
+- вид работ/услуг;
+- оплату;
+- приёмку;
+- ЭДО/электронную подпись;
+- особенности конкретной сделки;
+- дату и версию действующих правил.
+
+Система не должна зашивать налоговые ставки или правовые последствия как вечные constants.
+
+## 5D.2. Document Pack Builder
+
+Для каждой конфигурации система предлагает:
+- обязательные документы;
+- условно обязательные;
+- рекомендуемые;
+- дополнительные;
+- неприменимые.
+
+Типы могут включать:
+- коммерческое предложение;
+- сопроводительное письмо;
+- договор;
+- заявка/заказ;
+- спецификация;
+- ТЗ;
+- акт;
+- счёт/иные расчётные документы, когда применимо;
+- УПД/иные первичные документы, когда применимо;
+- NPD-status verification;
+- NPD receipt/check control;
+- отчёт/фотофиксацию/подтверждение результата, если это часть сделки.
+
+ФНС указывает, что при работе с плательщиком НПД статус можно проверять по ИНН на официальном сервисе, а чек НПД является ключевым подтверждающим документом расходов; акт может дополнять чек, но не заменяет его.
+
+## 5D.3. Template governance
+
+Каждый шаблон должен иметь:
+- template_id;
+- version;
+- effective_from;
+- configuration applicability;
+- legal source references;
+- last legal review;
+- generation snapshot;
+- checksum;
+- change reason.
+
+Документогенерация должна быть детерминированной и аудируемой.
+
+## 5D.4. Legal safety
+
+Система:
+- не делает автономных юридических выводов при отсутствии достаточного основания;
+- показывает применённые правила и источники;
+- переводит неоднозначные конфигурации в LEGAL_REVIEW_REQUIRED;
+- не подменяет профессиональную юридическую консультацию;
+- не генерирует фиктивные реквизиты, обязательства или факты.
+
+Юридическая конфигурация должна учитывать действующее российское регулирование по ГК РФ, первичным учётным документам, электронной подписи, НПД и персональным данным; соответствующие источники должны быть версионированы в системе.
+
+# 5E. Ручная проверка контрагента
+
+Нужна отдельная operator-first команда:
+
+Проверить по ИНН / ОГРН / ОГРНИП
+
+Она должна использовать тот же Search/Intelligence/Evidence pipeline, а не отдельную упрощённую логику.
+
+Результат должен включать:
+- canonical identity;
+- регистрационные сведения;
+- статус;
+- ключевые доступные официальные сведения;
+- рисковые сигналы;
+- evidence;
+- freshness;
+- contradictions;
+- источники;
+- history/revalidation;
+- recommended next step;
+- downloadable verification report.
+
+Для российских юрлиц и ИП стартовым authoritative layer должен быть официальный контур ФНС. Сервис «Прозрачный бизнес» поддерживает поиск по ИНН/ОГРН/названию для организаций и ИНН/ОГРНИП/ФИО для ИП и объединяет государственные сведения; ФНС отдельно подчёркивает необходимость комплексной оценки, а не вывода по одному индикатору.
+
+Для НПД должна поддерживаться датированная проверка статуса через официальный сервис ФНС по ИНН.
+
+Ручная проверка не создаёт отдельную truth authority: результат материализуется в тот же Evidence/Identity boundary.
+
+# 5F. Приоритет качества внешнего контура
+
+При конфликте целей внешний контур применяет порядок:
+
+truth → identity → evidence → freshness → interpretation → operator usability → speed/cost
+
+Это означает:
+- нельзя жертвовать идентификацией ради количества найденных кандидатов;
+- нельзя жертвовать provenance ради удобного summary;
+- нельзя скрывать conflict ради «чистого» профиля;
+- нельзя расширять R3/R4 на весь массив без необходимости;
+- нельзя делать один непрозрачный score заменой доказательств.
+
+Зрелые открытые системы показывают этот принцип различными средствами: Aleph использует cross-referencing и investigation workspaces; OpenSanctions разделяет candidate retrieval и matching и учитывает identifiers/contradicting attributes; Sayari разделяет identity resolution и possibly-same-as; OpenCTI отдельно моделирует reliability источника и confidence информации; FollowTheMoney хранит provenance на уровне statements.
+
+## 5F.1. Баланс качества и сложности
+
+Не строить:
+- универсальный граф всех сущностей;
+- бесконечный scoring engine;
+- десятки одинаковых provider-specific правил;
+- автоматическую «истину» из AI summary;
+- отдельный mini-CRM внутри intelligence layer.
+
+Строить:
+- сильные common primitives;
+- provider-neutral evidence contracts;
+- bounded research modes;
+- explainable resolution;
+- selective deep research;
+- compact operator view;
+- reusable document/configuration engine.
+
+Подробный алгоритм закреплён в:
+docs/EXTERNAL_INTELLIGENCE_AND_CONTACT_SYSTEM.md.
+
 # 6. Семь gates зрелости
 
 ## Gate 1 — Correctness
@@ -1368,6 +1549,21 @@ Least privilege → fail closed → isolate → encrypt → audit → test → r
 Simple core first → standard patterns → measured scaling → extracted services only when justified
 
 ---
+
+# 13C. Definition of Done — Contact Preparation / Legal Documents / Counterparty Check
+
+- [ ] Contact preparation is evidence-grounded and snapshot-versioned.
+- [ ] LPR/role hypotheses are distinguishable from verified facts.
+- [ ] First-contact scripts contain controlled branches and explicit non-claims.
+- [ ] Document Pack Builder selects documents from a configuration matrix.
+- [ ] Legal templates are versioned, source-linked and effective-date aware.
+- [ ] Ambiguous legal configurations fail closed to LEGAL_REVIEW_REQUIRED.
+- [ ] Manual INN/OGRN/OGRNIP checks use the same Identity/Evidence pipeline.
+- [ ] NPD status verification is available by INN and date.
+- [ ] Required NPD cheque/check controls are represented in relevant document packs.
+- [ ] Generated documents, evidence snapshots and configuration versions are auditable.
+- [ ] No document template or AI output silently creates legal authority.
+- [ ] The operator can move from verified intelligence to a prepared contact and document set without reconstructing the dossier manually.
 
 # 13B. Definition of Done — Mature Search / Intelligence System
 
