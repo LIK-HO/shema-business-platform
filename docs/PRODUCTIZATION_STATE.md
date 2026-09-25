@@ -1713,29 +1713,43 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P43 — MAX AMBIGUOUS-OUTCOME FAIL-CLOSED / RECONCILIATION BOUNDARY.
+## P43 — MAX AMBIGUOUS-OUTCOME FAIL-CLOSED / RECONCILIATION BOUNDARY — IN_PROGRESS
 
 Purpose:
-- determine whether the existing commercial-action/quarantine machinery can safely handle an ambiguous MAX external outcome without automatic replay;
-- preserve business truth when the provider contract cannot prove idempotent retry;
-- keep the live adapter blocked unless reconciliation is deterministic.
+- prevent an unknown MAX external outcome from becoming an automatic second outbound effect;
+- use the existing `quarantine_record` model without a database migration;
+- preserve durable idempotency, audit and outbox evidence.
 
-Planned boundary:
-- classify provider timeout / unknown delivery outcome separately from confirmed rejection;
-- transition the commercial action to an uncertain/quarantine state instead of automatically retrying;
-- preserve stable external-effect idempotency key and audit/correlation context;
-- provide a deterministic reconciliation path only when an unambiguous provider message identity is available;
-- prove that ambiguous outcomes never trigger an automatic second external send.
+Implementation:
+- `src/shema_platform/foundation/errors.py`;
+- `src/shema_platform/application/ports.py`;
+- `src/shema_platform/platform/postgres.py`;
+- `src/shema_platform/application/commercial_execution.py`;
+- `tests/test_commercial_execution.py`;
+- `architecture/max_ambiguous_outcome_safety_contract.json`;
+- `docs/P43_MAX_AMBIGUOUS_OUTCOME_SAFETY.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Safety boundary:
+- `ExternalEffectUnknown` represents an ambiguous external effect;
+- the current `CommercialAction` is durably set to `FAILED`;
+- the existing quarantine table receives a non-sensitive record with request hash and stable external-effect key;
+- an outbox event and audit record are committed atomically with the failed business state;
+- the command idempotency reservation remains `pending:<action_id>`;
+- subsequent invocation cannot reclaim the failed action and therefore cannot reach the communication adapter;
+- no provider-side reconciliation semantics are invented.
 
 Scope stop:
-- no live MAX activation;
+- no live MAX traffic;
 - no provider credentials;
 - no new provider;
-- no database schema/migration unless the frozen existing quarantine model demonstrably cannot represent the state;
-- no frozen-kernel semantic change;
-- no automatic MAX retry;
-- no outbound network in tests.
+- no automatic retry;
+- no database schema/migration;
+- no frozen kernel semantic change;
+- no HTTP route change.
 
-P43 is a safety/reconciliation phase, not a live activation phase.
+Evidence:
+- implementation is complete on the P43 branch;
+- full seven-job CI gate pending.
+
+No merge or deployment authorization is implied.
