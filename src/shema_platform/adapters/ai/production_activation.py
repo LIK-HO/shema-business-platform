@@ -25,7 +25,6 @@ from shema_platform.foundation.telemetry import (
     build_event,
 )
 
-
 PRODUCTION_FEATURE_FLAG = "ai.yandexgpt.production.enabled"
 API_KEY_ENV = "YANDEXGPT_API_KEY"
 
