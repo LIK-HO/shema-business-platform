@@ -254,8 +254,8 @@ components:
         taskType: { type: string, minLength: 1 }
         promptVersion: { type: string, minLength: 1 }
         resourceRef: { type: string, minLength: 1 }
-        inputRefs: { type: array, minItems: 1, items: { type: string } }
-        evidenceRefs: { type: array, minItems: 1, items: { type: string } }
+        inputRefs: { type: array, minItems: 1, maxItems: 64, items: { type: string } }
+        evidenceRefs: { type: array, minItems: 1, maxItems: 64, items: { type: string } }
         evidenceRequired: { type: boolean, default: true }
         maxTokens: { type: integer, minimum: 1, maximum: 16384 }
         maxCost: { type: number, exclusiveMinimum: 0, maximum: 1000 }
