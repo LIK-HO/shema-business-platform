@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, datetime
+from importlib import import_module
 from pathlib import Path
 
 import pytest
 
-import shema_platform.platform.ai_promotion_gate as ai_promotion_gate
+ai_promotion_gate = import_module(
+    "shema_platform.platform.ai_promotion_gate"
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
