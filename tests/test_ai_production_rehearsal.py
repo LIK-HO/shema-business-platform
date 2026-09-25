@@ -69,9 +69,13 @@ def gigachat_snapshot() -> ConfigurationSnapshot:
 
 def execution_context(configuration_version: str) -> AIExecutionContext:
     return AIExecutionContext(
+        actor_id="p40-operator",
+        resource_ref="identity:p40",
+        actor_trust_level=2,
+        resource_trust_level=2,
+        evidence_level=2,
         correlation_id=f"p40:{configuration_version}",
         configuration_version=configuration_version,
-        actor_id="p40-operator",
     )
 
 
