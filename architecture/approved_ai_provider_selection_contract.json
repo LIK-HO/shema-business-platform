@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "status": "bounded_operator_level_provider_selection",
+  "frozen_kernel_impact": false,
+  "selection": {
+    "layer": "composition_root",
+    "allowed_providers": [
+      "yandexgpt",
+      "gigachat"
+    ],
+    "immutable_for_composed_instance": true,
+    "client_controls_provider": false,
+    "http_request_controls_provider": false,
+    "selection_has_provider_fallback": false
+  },
+  "activation": {
+    "automatic_activation": false,
+    "network_calls_during_selection": false,
+    "provider_specific_activation_gates_remain_authoritative": true
+  },
+  "provider_policy": {
+    "openai_approved": false,
+    "local_runtime_added": false,
+    "cloud_local_fallback": false
+  },
+  "scope_stop": {
+    "no_kernel_semantic_change": true,
+    "no_database_schema_change": true,
+    "no_new_provider": true,
+    "no_http_route_change": true,
+    "no_client_provider_field": true,
+    "no_automatic_production_activation": true,
+    "no_live_provider_traffic": true
+  }
+}
