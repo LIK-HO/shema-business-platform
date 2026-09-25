@@ -154,6 +154,62 @@ def test_v1_5_unified_runtime_contract_is_additive() -> None:
     assert kernel["version"] == "1.4"
 
 
+def test_ai_end_to_end_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_end_to_end_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["proofs"]["canonical_airun_persistence"] is True
+    assert contract["proofs"]["canonical_audit_persistence"] is True
+    assert contract["proofs"]["correlation_propagation"] is True
+    assert contract["proofs"]["server_side_trust_resolution"] is True
+    assert contract["proofs"]["expired_evidence_fails_closed"] is True
+    assert contract["proofs"]["provider_not_invoked_on_trust_failure"] is True
+    assert contract["test_transport"]["production_provider_added"] is False
+    assert contract["test_transport"]["network_dependency"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_live_traffic"] is True
+    assert contract["scope_stop"]["no_openai"] is True
+
+
+def test_ai_runtime_assembly_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_runtime_assembly_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["assembly"]["construction_activates_provider"] is False
+    assert contract["activation"]["default_enabled"] is False
+    assert contract["activation"]["explicit_operator"] is True
+    assert contract["activation"]["automatic_startup_activation"] is False
+    assert contract["provider_policy"]["cloud_allowlist"] == ["yandexgpt", "gigachat"]
+    assert contract["provider_policy"]["implicit_cloud_local_fallback"] is False
+    assert contract["provider_policy"]["openai_approved"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_live_traffic_activation"] is True
+    assert contract["scope_stop"]["no_openai"] is True
+
+
+def test_ai_application_composition_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_application_composition_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["trust_resolution"]["resource_source"] == "identity.state"
+    assert contract["trust_resolution"]["evidence_source"] == "evidence"
+    assert contract["trust_resolution"]["subject_must_match_resource"] is True
+    assert contract["trust_resolution"]["expiry_required"] is True
+    assert contract["execution"]["canonical_persistence"] == "frozen_AIGateway"
+    assert contract["execution"]["audit"] == "frozen_AIGateway"
+    assert contract["activation"]["default_enabled"] is False
+    assert contract["activation"]["explicit_operator"] is True
+    assert contract["activation"]["implicit_cloud_local_fallback"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_openai"] is True
+
+
 def test_ai_http_route_contract_is_bounded() -> None:
     route = loads(read("architecture/ai_api_route_contract.json"))
 

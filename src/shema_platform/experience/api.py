@@ -9,6 +9,7 @@ from fastapi import APIRouter, FastAPI, Header, Path, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from shema_platform.adapters.ai.composition import AIProviderCompositionError
 from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.experience.api_models import (
     AIRunRequest,
@@ -343,6 +344,19 @@ def create_app(
             status_code=423,
             code="review_required",
             message=str(exc),
+        )
+
+    @app.exception_handler(AIProviderCompositionError)
+    async def ai_provider_composition_error(
+        request: Request,
+        exc: AIProviderCompositionError,
+    ) -> JSONResponse:
+        return _error(
+            request,
+            status_code=503,
+            code="ai_provider_unavailable",
+            message=exc.failure.message,
+            details={"failureCode": exc.failure.code.value},
         )
 
     @app.exception_handler(KeyError)

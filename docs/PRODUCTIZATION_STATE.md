@@ -1201,29 +1201,12 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P29 — PRODUCTION YANDEXGPT ROUTE WIRING — NOT_STARTED
-
-Purpose:
-- connect the already verified P27 composition and P28 production gate to the runtime application path;
-- preserve frozen `AIGateway` semantics and explicit operator-controlled activation;
-- keep provider selection, configuration version, deadlines, budgets, readiness and rollback observable at the route boundary.
-
-Scope stop:
-- no new AI provider;
-- no GigaChat implementation in this phase;
-- no local/self-hosted runtime;
-- no cloud/local fallback;
-- no changes to canonical business-state semantics;
-- no automatic production traffic enablement.
-
-
 
 ## P29 — PRODUCTION YANDEXGPT ROUTE WIRING — CLOSED / VERIFIED
 
 Purpose:
-- expose a canonical bounded AI execution route through the existing HTTP application boundary;
-- keep provider choice, model identity, trust levels, credentials and production activation outside client control;
-- preserve frozen AIGateway semantics and P28 activation gating.
+- expose the canonical bounded HTTP boundary for one AI execution;
+- keep provider selection, model identity, trust levels, credentials and production activation outside client control.
 
 Implementation:
 - `src/shema_platform/experience/api.py`
@@ -1231,16 +1214,181 @@ Implementation:
 - `api/openapi.yaml`
 - `architecture/ai_api_route_contract.json`
 - `docs/P29_AI_ROUTE_WIRING.md`
-- route/runtime/API contract tests.
 
-Current boundary:
+Verified boundary:
 - `POST /v1/ai/run` delegates to `APIApplication.run_ai()`;
-- absent application composition remains HTTP 503;
-- no provider is selected by HTTP input;
-- no trust level is accepted from the client;
-- no production activation occurs merely because the route exists;
-- no kernel/application.ai/database semantics were changed.
+- HTTP cannot choose provider/model or assert trust;
+- missing application composition returns HTTP 503;
+- provider activation is not implicit;
+- no frozen kernel, `application.ai`, database schema, GigaChat implementation, local runtime or fallback routing changed.
 
-Next:
-- run the full seven-job CI gate;
-- close P29 only if route, contract and regression checks are green.
+Evidence:
+- implementation head `f0ca7cf407ce52881e4ffedb562eb52ff1976d95`;
+- CI run #1166 (`36100279023`) passed all seven required jobs.
+
+## P30 — CONCRETE YANDEXGPT APPLICATION COMPOSITION — CLOSED / VERIFIED
+
+Purpose:
+- close the application-side composition between the canonical HTTP AI route and the verified frozen AIGateway + P27 composition + P28 production gate;
+- resolve resource/evidence trust from canonical PostgreSQL state rather than client assertions;
+- keep provider-specific behavior outside frozen kernel semantics.
+
+Implementation boundary:
+- `src/shema_platform/application/ai_runtime.py`;
+- `src/shema_platform/platform/ai_trust.py`;
+- `src/shema_platform/adapters/ai/application_composition.py`;
+- `src/shema_platform/experience/ai_application.py`;
+- `architecture/ai_application_composition_contract.json`;
+- `docs/P30_AI_APPLICATION_COMPOSITION.md`.
+
+Security boundary:
+- AI permission is checked before resource/evidence trust lookup;
+- resource trust is derived only from canonical `identity.state`;
+- evidence must exist, belong to the resource, be active and unexpired;
+- evidence trust is derived only from canonical T0..T4 values;
+- client cannot provide actor/resource/evidence trust levels;
+- missing/invalid evidence fails closed to quarantine.
+
+Persistence boundary:
+- canonical AIRun persistence and audit remain owned by frozen `AIGateway`;
+- provider execution remains outside Unit of Work;
+- no database schema or migration changed.
+
+Provider policy:
+- cloud AI allow-list: YandexGPT and GigaChat;
+- local/self-hosted LLMs require verified free commercial-use rights;
+- no implicit cloud/local fallback;
+- OpenAI is not an approved platform provider;
+- P30 adds no GigaChat implementation and no local runtime.
+
+Activation:
+- default disabled;
+- explicit operator activation required;
+- rollback remains explicit;
+- no automatic production traffic activation.
+
+Evidence:
+- CI run #1175 (`36101871136`) passed all seven required jobs on HEAD `94654e6fbca6c11cdd7f5b6e6bc6ee777f10638e`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- No frozen kernel file was changed.
+
+No merge or deployment authorization is implied.
+
+## P31 — EXPLICIT PRODUCTION APPLICATION ASSEMBLY — CLOSED / VERIFIED
+
+Purpose:
+- provide one explicit, provider-aware runtime assembly boundary that composes the already verified YandexGPT application capability into the canonical API without silently activating production traffic.
+
+Implementation:
+- `src/shema_platform/experience/runtime_composition.py`;
+- `architecture/ai_runtime_assembly_contract.json`;
+- `docs/P31_EXPLICIT_RUNTIME_APPLICATION_ASSEMBLY.md`;
+- `tests/test_runtime_composition.py`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Verified boundary:
+- construction injects configuration, telemetry, UnitOfWork and canonical trust resolver;
+- construction returns a typed `APIApplication` composition;
+- creating the assembly does not activate YandexGPT;
+- activation and rollback are explicit;
+- `create_app()` remains the canonical HTTP boundary.
+
+Provider policy:
+- cloud AI allow-list remains YandexGPT and GigaChat only;
+- local/self-hosted LLMs require verified free commercial-use rights;
+- no implicit Cloud ↔ Local fallback;
+- OpenAI is not an approved platform provider.
+
+Evidence:
+- CI run #1177 (`36102121741`) passed all seven required jobs on HEAD `e8e07dde3ec4a37008891526c295778cc8f584a9`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- No frozen kernel file was changed.
+
+No merge or deployment authorization is implied.
+
+## P32 — END-TO-END AI EXECUTION PROOF — CLOSED / VERIFIED
+
+Purpose:
+- prove the complete assembled AI path from canonical HTTP/APIApplication through frozen AIGateway, P27 composition and P28 gate using deterministic non-production transport;
+- prove canonical AIRun persistence, audit, correlation and fail-closed behavior.
+
+Implementation:
+- `tests/integration/test_ai_end_to_end.py`;
+- `architecture/ai_end_to_end_contract.json`;
+- `docs/P32_AI_END_TO_END_PROOF.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Verified path:
+- canonical HTTP `POST /v1/ai/run`;
+- provider-neutral application service;
+- frozen AIGateway;
+- P27 scoped composition;
+- P28 production activation gate;
+- deterministic test transport implementing the existing YandexGPT provider contract;
+- PostgreSQL AIRun and audit persistence.
+
+Verified failures:
+- authorization precedes trust lookup;
+- expired evidence fails closed with HTTP 423;
+- provider is not invoked when evidence is unusable;
+- activation remains explicit;
+- no live provider network is used in CI.
+
+Provider policy:
+- cloud AI allow-list remains YandexGPT and GigaChat;
+- local/self-hosted LLMs require verified free commercial-use rights;
+- no implicit Cloud ↔ Local fallback;
+- OpenAI is not an approved platform provider.
+
+Evidence:
+- CI run #1185 (`36103181749`) passed all seven required jobs on HEAD `18edd595704102cbf55df2b19d7367fb34e67ca2`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- No frozen kernel file was changed.
+- No database schema/migration was changed.
+
+No merge or deployment authorization is implied.
+
+## P33 — GIGACHAT PROVIDER CONTRACT + BOUNDED ADAPTER — NOT_STARTED
+
+Purpose:
+- implement the second explicitly approved cloud AI provider behind the existing provider-neutral AI Gateway;
+- preserve the same fail-closed controls already proven for YandexGPT;
+- avoid any new kernel or Gateway semantics.
+
+Planned scope:
+- current official GigaChat API contract verification;
+- provider adapter behind existing AI provider contracts;
+- runtime-only credentials;
+- bounded timeout/size/token/cost controls;
+- explicit readiness and activation;
+- provider-result validation and provenance;
+- deterministic adapter tests and full seven-job CI.
+
+Scope stop:
+- no OpenAI;
+- no new cloud provider;
+- no local runtime;
+- no Cloud ↔ Local fallback;
+- no frozen kernel change;
+- no database schema/migration;
+- no automatic production activation;
+- no live traffic by this phase.
+
