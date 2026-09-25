@@ -1617,10 +1617,10 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P40 — CONTROLLED AI PRODUCTION ACTIVATION / ROLLBACK REHEARSAL — IN_PROGRESS
+## P40 — CONTROLLED AI PRODUCTION ACTIVATION / ROLLBACK REHEARSAL — CLOSED / VERIFIED
 
 Purpose:
-- prove the final operator-controlled promotion path from a green P39 assessment to an explicit provider activation decision and reversible rollback;
+- prove the final operator-controlled promotion path from a green P39 assessment to explicit provider activation and reversible rollback;
 - exercise both approved provider gates using deterministic transports only;
 - prove that promotion approval does not itself activate traffic;
 - prove rollback blocks subsequent requests and restores the disabled safety state.
@@ -1631,27 +1631,43 @@ Implementation:
 - `docs/P40_AI_ACTIVATION_REHEARSAL.md`;
 - executable contract proof in `tests/test_architecture_contract.py`.
 
-Boundary:
-- P39 assessment and explicit approval are prerequisites;
-- YandexGPT and GigaChat are rehearsed independently;
-- activation starts from disabled state;
-- activation emits the existing production activation telemetry;
-- deterministic requesters prove activation performs no provider network call;
-- explicit rollback emits rollback telemetry;
-- post-rollback configuration-version traffic is blocked.
-
-Scope stop:
-- no new provider;
-- no HTTP route change;
-- no database schema/migration;
-- no frozen kernel semantic change;
-- no automatic activation;
-- no Cloud ↔ Local fallback;
-- no live provider traffic;
-- no merge or deployment.
-
 Evidence:
-- implementation is complete on the P40 branch;
-- full seven-job CI gate pending.
+- CI run #1215 (`36114866521`) passed all seven required jobs on implementation HEAD `91d4e832d07a03d2b7beaf28e887c3abfcb9601f`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- P39 promotion assessment and explicit operator approval were exercised before provider activation.
+- Approval did not change either provider gate from disabled.
+- YandexGPT and GigaChat activation were exercised independently.
+- Deterministic requesters proved activation performed no provider network I/O.
+- Existing activation telemetry was emitted for activation and rollback.
+- Explicit rollback restored disabled state and blocked configuration-version traffic.
+- No production runtime code was changed.
+- No frozen kernel file, database schema, HTTP route or provider contract was changed.
+- No live provider traffic was used.
 
 No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P41 — V1.5 PRODUCTIZATION EXIT REVIEW / SCOPE LOCK.
+
+Purpose:
+- consolidate the verified v1.5 productization evidence into one exit manifest;
+- prove that the implemented productization controls remain outside frozen v1.4 kernel semantics;
+- explicitly enumerate remaining product work versus frozen/core-complete areas to prevent unbounded kernel expansion.
+
+Scope:
+- evidence aggregation and contract consistency only;
+- no new runtime path;
+- no new provider;
+- no database schema/migration;
+- no HTTP contract change;
+- no automatic production activation;
+- no live AI traffic.
+
+P41 is an exit-control phase, not another kernel expansion phase.
