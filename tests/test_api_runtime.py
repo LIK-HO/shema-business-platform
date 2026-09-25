@@ -6,6 +6,8 @@ from shema_platform.experience.api import (
     create_app,
 )
 from shema_platform.experience.api_models import (
+    AIRunRequest,
+    AIRunResponse,
     CommercialActionCreateRequest,
     CommercialActionResponse,
     CommunicationResult,
