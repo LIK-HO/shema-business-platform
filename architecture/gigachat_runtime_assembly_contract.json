@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "status": "bounded_gigachat_runtime_assembly",
+  "frozen_kernel_impact": false,
+  "assembly": {
+    "root": "shema_platform.experience.gigachat_runtime_composition.GigaChatRuntimeAssembly",
+    "application": "AIOnlyAPIApplication",
+    "composition": "GigaChatApplicationComposition",
+    "construction_activates_provider": false,
+    "http_factory": "create_app"
+  },
+  "activation": {
+    "default_enabled": false,
+    "explicit_operator": true,
+    "rollback": true,
+    "automatic_startup_activation": false,
+    "network_calls_during_construction": false
+  },
+  "provider_policy": {
+    "cloud_allowlist": [
+      "yandexgpt",
+      "gigachat"
+    ],
+    "client_controls_provider": false,
+    "implicit_cloud_local_fallback": false,
+    "openai_approved": false
+  },
+  "scope_stop": {
+    "no_kernel_semantic_change": true,
+    "no_database_schema_change": true,
+    "no_new_provider": true,
+    "no_http_route_change": true,
+    "no_provider_selection_in_request": true,
+    "no_automatic_production_activation": true,
+    "no_openai": true,
+    "no_live_traffic_activation": true
+  }
+}
