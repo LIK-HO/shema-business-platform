@@ -77,7 +77,7 @@ Process:
 
 Use a blocking → matching → clustering → splitting pattern for scale, while keeping ambiguous matches separate from canonical identities.
 
-This follows the mature pattern documented by Sayari, while OpenSanctions demonstrates the additional value of identifier-aware matching and explicit thresholds for reducing false positives. citeturn963979search0turn963979search5
+This follows the mature pattern documented by Sayari, while OpenSanctions demonstrates the additional value of identifier-aware matching and explicit thresholds for reducing false positives.
 
 ### Stage 3 — Evidence collection
 
@@ -96,7 +96,7 @@ For each material claim capture:
 
 Do not collapse source reliability and claim confidence into one opaque score.
 
-A trusted source can still contain a wrong or outdated fact; an unusual source can contain a correct observation. OpenCTI explicitly distinguishes source reliability from information confidence, and FollowTheMoney supports statement-level provenance and temporal metadata. citeturn963979search6turn963979search10
+A trusted source can still contain a wrong or outdated fact; an unusual source can contain a correct observation. OpenCTI explicitly distinguishes source reliability from information confidence, and FollowTheMoney supports statement-level provenance and temporal metadata.
 
 ### Stage 4 — Corroboration / contradiction analysis
 
@@ -152,7 +152,7 @@ For high-value or ambiguous cases, pivot through:
 
 Graph relationships are evidence-bearing links, not canonical truth by themselves.
 
-Aleph and ICIJ demonstrate the value of cross-dataset entity relationships, timelines and graph exploration for investigative work. citeturn992429search4turn992429search15turn187991search2
+Aleph and ICIJ demonstrate the value of cross-dataset entity relationships, timelines and graph exploration for investigative work.
 
 ### Stage 7 — Qualification
 
@@ -304,9 +304,9 @@ The operator must have a dedicated manual check action:
 
 The same intelligence pipeline is used, but the entry point is deterministic.
 
-For Russian counterparties the check should start from official FNS sources, including the "Transparent Business" service, which provides access to current EGRUL/EGRIP-related information and supports search by INN/OGRN/name or OGRNIP/INN/FIO. FNS also emphasizes that separate indicators should be considered together rather than treated as a standalone proof of reliability. citeturn992429search9turn992429search10
+For Russian counterparties the check should start from official FNS sources, including the "Transparent Business" service, which provides access to current EGRUL/EGRIP-related information and supports search by INN/OGRN/name or OGRNIP/INN/FIO. FNS also emphasizes that separate indicators should be considered together rather than treated as a standalone proof of reliability.
 
-For an NPD counterparty, the system should additionally support date-specific status verification by INN through the official FNS NPD status service. FNS explicitly identifies this check as relevant before entering contracts and states that the generated NPD receipt is the key document supporting the customer's expense for an NPD transaction. citeturn177528search0turn177528search11
+For an NPD counterparty, the system should additionally support date-specific status verification by INN through the official FNS NPD status service. FNS explicitly identifies this check as relevant before entering contracts and states that the generated NPD receipt is the key document supporting the customer's expense for an NPD transaction.
 
 Manual check output:
 - identity;
@@ -342,7 +342,7 @@ Examples:
 - ownership network → official records where available, then structured investigative datasets;
 - reputation signal → source-attributed evidence, never an unqualified system verdict.
 
-ICIJ explicitly warns that its Offshore Leaks data is a partial investigative dataset, can contain duplicates, covers defined time ranges and should not by itself be treated as a complete account of a business. The system should model such limitations instead of hiding them. citeturn187991search0turn187991search16
+ICIJ explicitly warns that its Offshore Leaks data is a partial investigative dataset, can contain duplicates, covers defined time ranges and should not by itself be treated as a complete account of a business. The system should model such limitations instead of hiding them.
 
 ## 5. Quality model
 
@@ -437,7 +437,7 @@ For person-related information:
 - audit;
 - secure handling.
 
-Russian personal-data rules require lawful and purpose-limited processing; the current 152-FZ version expressly defines these principles and includes rules for public personal-data sources. citeturn795335search0turn795335search9turn795335search16
+Russian personal-data rules require lawful and purpose-limited processing; the current 152-FZ version expressly defines these principles and includes rules for public personal-data sources.
 
 No scraping, access or collection method is allowed merely because it is technically possible.
 
@@ -490,3 +490,24 @@ What should we say?
 What must we avoid claiming?  
 Which legal/document configuration applies?  
 What is the safest next action?**
+
+
+## 13. External research basis
+
+Primary reference classes used to shape this boundary:
+- OCCRP Aleph — open-source investigative data platform, cross-referencing, investigations, timelines and graph exploration:
+  https://docs.aleph.occrp.org/
+- OpenSanctions — entity matching, candidate retrieval, identifier-aware scoring and dataset scoping:
+  https://www.opensanctions.org/docs/api/
+- Sayari — entity resolution, blocking/matching, identity vs possibly-same-as resolution:
+  https://documentation.sayari.com/sayari-library/entity-resolution/entity-resolution
+- FollowTheMoney — statement-level provenance and structured entity/relationship model:
+  https://followthemoney.tech/docs/
+- OpenCTI — source reliability and information confidence as separate concepts:
+  https://docs.opencti.io/latest/usage/reliability-confidence/
+- ICIJ Offshore Leaks — graph-based investigative data with explicit dataset/time-scope limitations:
+  https://offshoreleaks.icij.org/
+- FNS Transparent Business — Russian legal-entity/counterparty information:
+  https://pb.nalog.ru/
+- FNS NPD status service:
+  https://npd.nalog.ru/check-status/
