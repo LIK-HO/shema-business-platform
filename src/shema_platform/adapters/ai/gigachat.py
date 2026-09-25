@@ -678,7 +678,7 @@ class GigaChatProvider(AIProviderAdapter):
                 )
 
             run = AIRun(
-                run_id=str(response_id or request.operation_id),
+                run_id=str(uuid4()),
                 task_id=request.task.task_id,
                 provider_id=self.provider_id,
                 model=self._configuration.model,
