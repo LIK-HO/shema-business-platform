@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: v1.5/production-ai-activation-gate
+- Productization branch: v1.5/production-yandexgpt-route
 - Frozen core baseline: a3eec47ea68882631ebf24b3998b431f2dc83600
 - Current productization HEAD: live from this branch; never treated as a static manifest fact
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #39 — open, draft, unmerged
-- Active productization phase: P29 — production YandexGPT route wiring — NOT_STARTED
+- Productization PR: #40 — open, draft, unmerged
+- Active productization phase: P29 — production YandexGPT route wiring — IN_PROGRESS
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -1216,3 +1216,31 @@ Scope stop:
 - no changes to canonical business-state semantics;
 - no automatic production traffic enablement.
 
+
+
+## P29 — PRODUCTION YANDEXGPT ROUTE WIRING — IN_PROGRESS
+
+Purpose:
+- expose a canonical bounded AI execution route through the existing HTTP application boundary;
+- keep provider choice, model identity, trust levels, credentials and production activation outside client control;
+- preserve frozen AIGateway semantics and P28 activation gating.
+
+Implementation:
+- `src/shema_platform/experience/api.py`
+- `src/shema_platform/experience/api_models.py`
+- `api/openapi.yaml`
+- `architecture/ai_api_route_contract.json`
+- `docs/P29_AI_ROUTE_WIRING.md`
+- route/runtime/API contract tests.
+
+Current boundary:
+- `POST /v1/ai/run` delegates to `APIApplication.run_ai()`;
+- absent application composition remains HTTP 503;
+- no provider is selected by HTTP input;
+- no trust level is accepted from the client;
+- no production activation occurs merely because the route exists;
+- no kernel/application.ai/database semantics were changed.
+
+Next:
+- run the full seven-job CI gate;
+- close P29 only if route, contract and regression checks are green.
