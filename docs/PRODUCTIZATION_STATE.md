@@ -1752,31 +1752,62 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P44 — MAX QUARANTINE RECONCILIATION CONTRACT / READ-ONLY OPERATOR CONTROL.
+## P44 — MAX QUARANTINE RECONCILIATION CONTRACT / READ-ONLY OPERATOR CONTROL — CLOSED / VERIFIED
 
 Purpose:
-- define a safe operator-level procedure for inspecting ambiguous MAX sends and determining what evidence would be sufficient to resolve them;
-- keep reconciliation state-changing operations disabled until provider-side evidence is strong enough;
-- make the uncertainty state operationally visible without creating a second outbound path.
+- define a safe read path for ambiguous MAX sends;
+- expose existing quarantine evidence without mutating business state;
+- keep reconciliation and outbound retry disabled.
 
-Planned boundary:
-- read-only quarantine lookup by commercial action and stable external-effect key;
-- structured reconciliation evidence model;
-- explicit statuses: unresolved / evidence-found / operator-reviewed;
-- audit-only operator review record;
-- fail-closed default: review never changes `CommercialAction` to `SENT` and never sends a message;
-- no live MAX call in the read-only control;
-- no automatic retry.
+Implementation:
+- `src/shema_platform/platform/quarantine_read.py`;
+- `tests/test_quarantine_read.py`;
+- `architecture/quarantine_read_model_contract.json`;
+- `docs/P44_QUARANTINE_READ_MODEL.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Evidence:
+- CI run #1230 (`36117561164`) passed all seven required jobs on HEAD `793d0541ea6f461da962ec998447e02ddb1b2b11`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- The read model is SELECT-only and bounded.
+- It supports lookup by object/action and optional reason and bounded open-record listing.
+- No new permission or public route was added.
+- No quarantine resolution, commercial-action mutation, `FAILED → SENT` transition or outbound send path exists.
+- No database migration was required.
+- No live MAX credentials or network traffic were used.
+- No frozen kernel semantic change was made.
+
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P45 — PRODUCTION PROMOTION / EXTERNAL-COMMUNICATION READINESS AUDIT.
+
+Purpose:
+- consolidate the verified evidence from AI promotion and MAX external-effect safety into one release-readiness assessment;
+- identify any remaining gates that prevent treating v1.5 productization as production-capable;
+- avoid adding functionality unless an actual readiness gap is demonstrated.
+
+Planned assessment:
+- frozen-kernel integrity and release contract;
+- AI: P39/P40 evidence and explicit activation/rollback;
+- MAX: P41/P42/P43/P44 evidence and current provider-side idempotency gap;
+- IAM, observability, recovery and supply-chain gates;
+- explicit list of blockers vs verified controls.
 
 Scope stop:
-- no live MAX credentials;
-- no outbound network;
 - no new provider;
-- no database schema/migration unless an existing read model is provably insufficient;
+- no new execution path;
+- no database migration;
 - no frozen kernel semantic change;
-- no automatic retry;
-- no direct `FAILED → SENT` transition.
+- no automatic production activation;
+- no live external traffic;
+- no merge/deploy.
 
-P44 is an operator safety/control phase, not a live MAX activation phase.
+P45 is an evidence/audit phase first. Implementation is conditional on a demonstrated production-readiness gap.
