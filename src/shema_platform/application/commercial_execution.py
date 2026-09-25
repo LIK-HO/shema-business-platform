@@ -11,10 +11,18 @@ from shema_platform.application.communication import (
     CommunicationSendResult,
 )
 from shema_platform.application.ports import UnitOfWork
-from shema_platform.domain.commercial_action import CommercialActionStatus
+from shema_platform.domain.commercial_action import (
+    CommercialAction,
+    CommercialActionStatus,
+)
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
-from shema_platform.foundation.errors import IdempotencyConflict, PolicyDenied, QuarantineRequired
+from shema_platform.foundation.errors import (
+    ExternalEffectUnknown,
+    IdempotencyConflict,
+    PolicyDenied,
+    QuarantineRequired,
+)
 from shema_platform.foundation.outbox import OutboxEvent, utc_now
 from shema_platform.foundation.policy import Decision, PolicyContext, PolicyEngine
 
@@ -52,6 +60,84 @@ class CommercialActionSendWorkflow:
     @staticmethod
     def effect_idempotency_key(action_id: str) -> str:
         return f"commercial-send:{action_id}"
+
+    def _quarantine_unknown_external_effect(
+        self,
+        *,
+        actor: Actor,
+        action_id: str,
+        request_hash: str,
+        idempotency_key: str,
+        worker_id: str,
+        error: ExternalEffectUnknown,
+    ) -> None:
+        with self._unit_of_work_factory() as uow:
+            current = uow.commercial_actions.get(action_id)
+            if current is None:
+                raise KeyError(f"unknown commercial action: {action_id}")
+
+            failed = CommercialAction(
+                action_id=current.action_id,
+                identity_id=current.identity_id,
+                contact_ref=current.contact_ref,
+                channel=current.channel,
+                evidence_refs=current.evidence_refs,
+                status=CommercialActionStatus.FAILED,
+                send_attempt=current.send_attempt,
+            )
+            uow.commercial_actions.save(failed)
+
+            uow.quarantine.add(
+                object_type="commercial_action",
+                object_ref=action_id,
+                reason_code="external_effect_unknown",
+                payload={
+                    "request_hash": request_hash,
+                    "command_idempotency_key": idempotency_key,
+                    "external_effect_idempotency_key": self.effect_idempotency_key(
+                        action_id
+                    ),
+                    "send_attempt": current.send_attempt,
+                },
+            )
+
+            event_key = (
+                "commercial-action.external-effect-unknown:"
+                f"{action_id}:{request_hash}"
+            )
+            occurred_at = utc_now()
+            uow.outbox.append(
+                OutboxEvent(
+                    event_id=str(uuid5(NAMESPACE_URL, event_key)),
+                    event_type="commercial_action.external_effect_unknown",
+                    aggregate_type="commercial_action",
+                    aggregate_id=action_id,
+                    payload={
+                        "action_id": action_id,
+                        "channel": current.channel,
+                        "reason_code": "external_effect_unknown",
+                        "request_hash": request_hash,
+                    },
+                    occurred_at=occurred_at,
+                )
+            )
+            uow.audits.append(
+                AuditRecord(
+                    audit_id=str(uuid5(NAMESPACE_URL, f"audit:{event_key}")),
+                    actor_id=actor.actor_id,
+                    action="commercial_action.external_effect_unknown",
+                    resource_type="commercial_action",
+                    resource_id=action_id,
+                    outcome="quarantined",
+                    occurred_at=occurred_at,
+                    metadata={
+                        "channel": current.channel,
+                        "send_attempt": current.send_attempt,
+                        "worker_id": worker_id,
+                        "error_type": type(error).__name__,
+                    },
+                )
+            )
 
     def execute(
         self,
@@ -125,11 +211,24 @@ class CommercialActionSendWorkflow:
                 now=now,
             )
 
-        result = self._communication_gateway.send(
-            sending,
-            body=body,
-            idempotency_key=self.effect_idempotency_key(action_id),
-        )
+        try:
+            result = self._communication_gateway.send(
+                sending,
+                body=body,
+                idempotency_key=self.effect_idempotency_key(action_id),
+            )
+        except ExternalEffectUnknown as exc:
+            self._quarantine_unknown_external_effect(
+                actor=actor,
+                action_id=action_id,
+                request_hash=request_hash,
+                idempotency_key=idempotency_key,
+                worker_id=worker_id,
+                error=exc,
+            )
+            raise QuarantineRequired(
+                "external communication outcome is unknown; action quarantined"
+            ) from exc
 
         with self._unit_of_work_factory() as uow:
             completed = uow.idempotency.complete(

@@ -1,0 +1,37 @@
+{
+  "version": "1.0",
+  "status": "max_ambiguous_external_effect_fail_closed",
+  "frozen_kernel_impact": false,
+  "trigger": {
+    "error_type": "ExternalEffectUnknown",
+    "meaning": "external effect outcome cannot be determined safely"
+  },
+  "handling": {
+    "commercial_action_status_after_trigger": "failed",
+    "quarantine_reason_code": "external_effect_unknown",
+    "idempotency_result_ref_remains_pending": true,
+    "outbox_event": "commercial_action.external_effect_unknown",
+    "audit_outcome": "quarantined",
+    "automatic_external_replay": false
+  },
+  "replay_proof": {
+    "same_command_after_quarantine_reaches_adapter": false,
+    "same_command_after_quarantine_raises": "QuarantineRequired",
+    "stable_external_effect_idempotency_key_preserved": true
+  },
+  "persistence": {
+    "quarantine_table": "quarantine_record",
+    "new_migration_required": false,
+    "business_state_and_outbox_audit_atomic": true
+  },
+  "scope_stop": {
+    "no_live_max_network": true,
+    "no_provider_credentials": true,
+    "no_new_provider": true,
+    "no_automatic_retry": true,
+    "no_database_schema_change": true,
+    "no_frozen_kernel_semantic_change": true,
+    "no_http_route_change": true,
+    "no_provider_reconciliation_guess": true
+  }
+}

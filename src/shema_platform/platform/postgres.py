@@ -15,6 +15,7 @@ if TYPE_CHECKING:
         JobRepository,
         OrderRepository,
         OutboxRepository,
+        QuarantineRepository,
     )
 
 
@@ -50,6 +51,7 @@ class PostgresUnitOfWork:
         self._connection: DBConnection | None = None
         self.identities: IdentityRepository | None = None
         self.evidence: EvidenceRepository | None = None
+        self.quarantine: QuarantineRepository | None = None
         self.audits: AuditRepository | None = None
         self.idempotency: IdempotencyRepository | None = None
         self.outbox: OutboxRepository | None = None
@@ -81,11 +83,13 @@ class PostgresUnitOfWork:
             PostgresJobRepository,
             PostgresOrderRepository,
             PostgresOutboxRepository,
+            PostgresQuarantineRepository,
         )
 
         connection = self.connection
         self.identities = PostgresIdentityRepository(connection)
         self.evidence = PostgresEvidenceRepository(connection)
+        self.quarantine = PostgresQuarantineRepository(connection)
         self.audits = PostgresAuditRepository(connection)
         self.idempotency = PostgresIdempotencyRepository(connection)
         self.outbox = PostgresOutboxRepository(connection)
@@ -101,6 +105,7 @@ class PostgresUnitOfWork:
         self._connection = None
         self.identities = None
         self.evidence = None
+        self.quarantine = None
         self.audits = None
         self.idempotency = None
         self.outbox = None
