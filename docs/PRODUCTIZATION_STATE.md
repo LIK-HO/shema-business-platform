@@ -1537,22 +1537,52 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P38 — AI PRODUCTION OBSERVABILITY CONTRACT.
+## P38 — AI PRODUCTION OBSERVABILITY CONTRACT — IN_PROGRESS
 
 Purpose:
-- make the already implemented AI execution path operationally observable using provider-neutral telemetry;
-- define mandatory event fields and prohibited sensitive data;
-- verify activation, execution, failure and rollback signals without introducing a second execution path.
+- formalize the existing AI telemetry boundary as an operational contract;
+- expose only safe provider/configuration/operator metadata;
+- verify activation, execution, failure and rollback observability without adding a second execution path.
+
+Implementation:
+- `src/shema_platform/foundation/telemetry.py`;
+- `src/shema_platform/adapters/ai/composition.py`;
+- `src/shema_platform/adapters/ai/production_activation.py`;
+- `src/shema_platform/adapters/ai/gigachat_activation.py`;
+- `tests/test_telemetry.py`;
+- `tests/test_ai_composition.py`;
+- `tests/test_ai_production_activation.py`;
+- `tests/test_gigachat_activation.py`;
+- `architecture/ai_production_observability_contract.json`;
+- `docs/P38_AI_PRODUCTION_OBSERVABILITY.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Boundary:
+- provider execution events expose provider and configuration version;
+- production activation/rollback events expose provider, explicit operator and configuration version;
+- correlation ID remains mandatory;
+- all attributes pass through the existing redaction allowlist and bounded string handling;
+- telemetry remains non-authoritative and backend failures cannot break execution.
+
+Prohibited telemetry data:
+- credentials;
+- authorization headers;
+- prompts;
+- input/evidence references;
+- provider outputs;
+- model inputs.
 
 Scope stop:
+- no new telemetry backend;
 - no new provider;
 - no HTTP route change;
 - no database schema/migration;
 - no frozen kernel semantic change;
-- no new telemetry backend;
-- no credentials, prompts, evidence payloads or model inputs in telemetry;
 - no automatic activation;
 - no live provider traffic.
 
+Evidence:
+- implementation and focused tests are complete on the P38 branch;
+- full seven-job CI gate pending.
+
+No merge or deployment authorization is implied.
