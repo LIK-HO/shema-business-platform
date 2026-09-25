@@ -50,12 +50,7 @@ def test_operator_approval_is_explicit_and_does_not_activate_provider() -> None:
 
 def test_approval_fails_closed_for_non_promotable_assessment() -> None:
     assessment = assess_ai_promotion(ROOT)
-    blocked = assessment.__class__(
-        **{
-            **assessment.__dict__,
-            "automatic_activation": True,
-        }
-    )
+    blocked = replace(assessment, automatic_activation=True)
 
     with pytest.raises(
         AIPromotionGateError,
@@ -89,5 +84,6 @@ def test_promotion_gate_contract_has_no_activation_or_credential_path() -> None:
 
     assert "activate_yandexgpt" not in source
     assert "activate_gigachat" not in source
-    assert "YANDEXGPT_API_KEY" in source
+    assert "authorization_key=" not in source
+    assert "api_key=" not in source
     assert "GIGACHAT_AUTHORIZATION_KEY" not in source
