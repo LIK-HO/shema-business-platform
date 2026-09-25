@@ -436,3 +436,32 @@ def test_ai_promotion_release_gate_contract_is_bounded() -> None:
     assert contract["scope_stop"]["no_automatic_production_activation"] is True
     assert contract["scope_stop"]["no_live_provider_traffic"] is True
     assert contract["scope_stop"]["no_duplicate_recovery_drill"] is True
+
+def test_ai_activation_rehearsal_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_activation_rehearsal_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["rehearsal"]["providers"] == [
+        "yandexgpt",
+        "gigachat",
+    ]
+    assert contract["rehearsal"]["deterministic_transport_only"] is True
+    assert contract["rehearsal"]["live_provider_network"] is False
+    assert contract["rehearsal"]["explicit_activation_required"] is True
+    assert contract["rehearsal"]["explicit_rollback_required"] is True
+    assert contract["rehearsal"]["post_rollback_traffic_blocked"] is True
+    assert contract["rehearsal"]["promotion_approval_does_not_activate"] is True
+    assert contract["proof"]["activation_telemetry"] is True
+    assert contract["proof"]["rollback_telemetry"] is True
+    assert contract["proof"]["activation_starts_from_disabled"] is True
+    assert contract["proof"]["no_requester_called_during_activation"] is True
+    assert contract["proof"]["configuration_version_gate_restored"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_activation"] is True
+    assert contract["scope_stop"]["no_cloud_local_fallback"] is True
+    assert contract["scope_stop"]["no_live_provider_traffic"] is True
+    assert contract["scope_stop"]["no_merge_or_deploy"] is True
