@@ -140,7 +140,12 @@ def test_activation_requires_explicit_operator_and_emits_non_authoritative_event
     assert gate.state.configuration_version == "cfg:yandexgpt-prod-v1"
     events = telemetry.all()
     assert [event.name for event in events] == ["ai.production.activated"]
-    assert events[0].attributes["provider"] == "yandexgpt"
+    event = events[0]
+    assert event.attributes["provider"] == "yandexgpt"
+    assert event.attributes["operator"] == "operator-1"
+    assert event.attributes["configuration_version"] == "cfg:yandexgpt-prod-v1"
+    assert "api_key" not in event.attributes
+    assert "prompt" not in event.attributes
 
 
 def test_gate_blocks_request_when_configuration_version_does_not_match() -> None:
