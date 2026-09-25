@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-import shema_platform.platform.ai_promotion_gate as gate_module
+from shema_platform.platform import ai_promotion_gate as gate_module
 from shema_platform.platform.ai_promotion_gate import (
     AIPromotionGateError,
     approve_ai_promotion,
