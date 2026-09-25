@@ -1416,17 +1416,25 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P34 — GIGACHAT APPLICATION COMPOSITION / ACTIVATION PROOF — NOT_STARTED
+## P34 — GIGACHAT APPLICATION COMPOSITION / ACTIVATION PROOF — IN_PROGRESS
 
 Purpose:
 - compose the verified GigaChat adapter and activation gate with the existing provider-neutral AI application service;
 - prove canonical Gateway ownership, explicit activation and provider-neutral application semantics without adding HTTP routing.
 
-Initial scope:
-- `GigaChatApplicationComposition`;
-- provider-neutral `AIExecutionService` injection;
-- deterministic composition tests;
-- architecture contract and full seven-job CI.
+Implementation:
+- `src/shema_platform/adapters/ai/gigachat_application_composition.py`;
+- `architecture/gigachat_application_composition_contract.json`;
+- `docs/P34_GIGACHAT_APPLICATION_COMPOSITION.md`;
+- `tests/test_gigachat_application_composition.py`;
+- executable composition-contract proof in `tests/test_architecture_contract.py`.
+
+Boundary:
+- composition injects the existing provider-neutral `AIExecutionService`;
+- canonical AIRun persistence and audit remain inside frozen `AIGateway`;
+- trust resolution remains the existing application boundary;
+- composition construction and service creation do not activate GigaChat;
+- activation and rollback remain explicit.
 
 Scope stop:
 - no new provider;
@@ -1437,4 +1445,8 @@ Scope stop:
 - no database schema/migration;
 - no HTTP/application runtime wiring;
 - no live traffic.
+
+Next:
+- full seven-job CI gate;
+- close P34 only after composition, architecture, security and release checks are green.
 
