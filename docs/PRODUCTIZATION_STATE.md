@@ -1366,12 +1366,12 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P33 — GIGACHAT PROVIDER CONTRACT + BOUNDED ADAPTER — IN_PROGRESS
+## P33 — GIGACHAT PROVIDER CONTRACT + BOUNDED ADAPTER — CLOSED / VERIFIED
 
 Purpose:
-- implement the second explicitly approved cloud AI provider behind the existing provider-neutral AI Gateway;
-- preserve the same fail-closed controls already proven for YandexGPT;
-- avoid any new kernel or Gateway semantics.
+- implement the second explicitly approved cloud AI provider behind the existing provider-neutral AI contracts;
+- preserve the fail-closed controls already proven for YandexGPT;
+- keep the provider outside frozen kernel and canonical business authority.
 
 Implementation:
 - `src/shema_platform/adapters/ai/gigachat.py`;
@@ -1380,37 +1380,61 @@ Implementation:
 - `docs/GIGACHAT_PROVIDER.md`;
 - `tests/test_gigachat_provider.py`;
 - `tests/test_gigachat_activation.py`;
-- executable provider contract check in `tests/test_architecture_contract.py`.
+- executable contract proof in `tests/test_architecture_contract.py`.
 
-Verified current external contract:
-- target API base: `https://api.giga.chat`;
-- OAuth token endpoint: `https://ngw.devices.sberbank.ru:9443/api/v2/oauth`;
-- token lifetime: 30 minutes;
-- chat endpoint: `/v1/chat/completions`;
-- production scopes restricted to B2B/CORP;
-- no freemium/personal scope for production business use.
-
-Adapter controls:
-- runtime-only authorization key and access token;
-- bounded token refresh/cache with safety window;
-- one total deadline across token acquisition + generation;
-- bounded request/response/input/output/cost;
+Verified controls:
+- current target API base `https://api.giga.chat`;
+- OAuth token acquisition with explicit scope, RqUID and runtime-only authorization key;
+- 30-minute token lifetime with bounded refresh safety window;
+- one total execution deadline across token acquisition and generation;
+- HTTPS-only transport;
+- bounded input/response/output/cost;
+- strict model/text/token validation;
 - no automatic retry;
-- strict response/token/model validation;
-- explicit activation and rollback;
-- no application/HTTP wiring.
+- explicit production activation and rollback;
+- production scope restricted to B2B/CORP.
+
+Provider policy:
+- cloud AI allow-list remains YandexGPT and GigaChat;
+- local/self-hosted LLMs require verified free commercial-use rights;
+- no implicit Cloud ↔ Local fallback;
+- OpenAI is not an approved platform provider.
+
+Evidence:
+- CI run #1188 (`36103762148`) passed all seven required jobs on HEAD `41178202ac41b7f060b3a46f2113d7f2d829ca8a`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- No frozen kernel file was changed.
+- No database schema/migration was changed.
+- No application/HTTP wiring was added.
+- No live provider traffic was enabled.
+
+No merge or deployment authorization is implied.
+
+## P34 — GIGACHAT APPLICATION COMPOSITION / ACTIVATION PROOF — NOT_STARTED
+
+Purpose:
+- compose the verified GigaChat adapter and activation gate with the existing provider-neutral AI application service;
+- prove canonical Gateway ownership, explicit activation and provider-neutral application semantics without adding HTTP routing.
+
+Initial scope:
+- `GigaChatApplicationComposition`;
+- provider-neutral `AIExecutionService` injection;
+- deterministic composition tests;
+- architecture contract and full seven-job CI.
 
 Scope stop:
+- no new provider;
 - no OpenAI;
-- no new cloud provider;
 - no local runtime;
 - no Cloud ↔ Local fallback;
 - no frozen kernel change;
 - no database schema/migration;
-- no automatic production activation;
+- no HTTP/application runtime wiring;
 - no live traffic.
-
-Next:
-- full seven-job CI gate;
-- close P33 only after provider/activation/architecture/security/release checks are green.
 
