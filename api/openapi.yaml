@@ -26,6 +26,26 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/SearchResponse' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /v1/ai/run:
+    post:
+      operationId: runAI
+      summary: Execute one bounded AI task through the canonical application boundary
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AIRunRequest' }
+      responses:
+        '200':
+          description: AI execution result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AIRunResponse' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ApplicationUnavailableError' }
   /v1/discovery/evaluate:
     post:
       operationId: evaluateDiscovery
@@ -205,6 +225,10 @@ components:
       description: Validation failure
       content:
         application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } }
+    ApplicationUnavailableError:
+      description: Application services are not configured
+      content:
+        application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } }
     ConflictError:
       description: Idempotency or state conflict
       content:
@@ -222,6 +246,37 @@ components:
       content:
         application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } }
   schemas:
+    AIRunRequest:
+      type: object
+      additionalProperties: false
+      required: [taskType, promptVersion, resourceRef, inputRefs, evidenceRefs, maxTokens, maxCost, maxDurationSeconds]
+      properties:
+        taskType: { type: string, minLength: 1 }
+        promptVersion: { type: string, minLength: 1 }
+        resourceRef: { type: string, minLength: 1 }
+        inputRefs: { type: array, minItems: 1, items: { type: string } }
+        evidenceRefs: { type: array, minItems: 1, items: { type: string } }
+        evidenceRequired: { type: boolean, default: true }
+        maxTokens: { type: integer, minimum: 1, maximum: 16384 }
+        maxCost: { type: number, exclusiveMinimum: 0, maximum: 1000 }
+        maxDurationSeconds: { type: number, exclusiveMinimum: 0, maximum: 30 }
+    AIRunResponse:
+      type: object
+      required: [runId, taskId, providerId, model, modelVersion, promptVersion, inputRefs, evidenceRefs, output, tokens, cost, durationSeconds, correlationId]
+      properties:
+        runId: { type: string }
+        taskId: { type: string }
+        providerId: { type: string }
+        model: { type: string }
+        modelVersion: { type: string }
+        promptVersion: { type: string }
+        inputRefs: { type: array, items: { type: string } }
+        evidenceRefs: { type: array, items: { type: string } }
+        output: { type: string }
+        tokens: { type: integer, minimum: 0 }
+        cost: { type: number, minimum: 0 }
+        durationSeconds: { type: number, minimum: 0 }
+        correlationId: { type: string }
     SearchRequest:
       type: object
       required: [region, industries]
