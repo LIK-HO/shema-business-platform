@@ -5,11 +5,11 @@ from shema_platform.adapters.ai.application_composition import (
     YandexGPTApplicationComposition,
 )
 from shema_platform.adapters.ai.composition import AIProviderCompositionError
-from shema_platform.adapters.ai.production_activation import AIProductionActivationError
 from shema_platform.adapters.ai.contracts import (
     AIProviderFailure,
     AIProviderFailureCode,
 )
+from shema_platform.adapters.ai.production_activation import AIProductionActivationError
 from shema_platform.application.ai_runtime import AIExecutionTrust
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api import create_app
@@ -19,7 +19,6 @@ from shema_platform.foundation.authentication import (
 )
 from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.configuration import ConfigurationSnapshot
-from shema_platform.foundation.errors import QuarantineRequired
 from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
