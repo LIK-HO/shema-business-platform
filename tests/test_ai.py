@@ -11,6 +11,14 @@ from shema_platform.application.ai import (
     AIRun,
     AITask,
 )
+from shema_platform.application.ai_provider import (
+    AIProviderDescriptor,
+    AIProviderKind,
+    AIProviderLimits,
+    AIProviderProvenance,
+    AIProviderReadiness,
+    AIProviderReadinessState,
+)
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import (
     AuthorizationSubject,
@@ -66,18 +74,54 @@ class MemoryAIUnitOfWork:
 class FakeAIProvider(AIProvider):
     provider_id: str = "fake"
     transaction_probe: Callable[[], bool] | None = None
+    readiness_state: AIProviderReadinessState = field(
+        default_factory=lambda: AIProviderReadinessState(AIProviderReadiness.READY)
+    )
+    calls: int = 0
+    last_request: object | None = None
 
-    def run(self, task: AITask, *, input_refs: tuple[str, ...]) -> AIRun:
+    def describe(self) -> AIProviderDescriptor:
+        return AIProviderDescriptor(
+            provider_id=self.provider_id,
+            provider_kind=AIProviderKind.LOCAL,
+            model="fake-model",
+            model_version="1",
+            configuration_version="cfg:v1",
+            capabilities=frozenset({"text_generation"}),
+            limits=AIProviderLimits(
+                max_request_bytes=32_768,
+                max_response_bytes=65_536,
+                max_duration_seconds=1,
+                max_concurrency=1,
+            ),
+            provenance=AIProviderProvenance(
+                source="test://fake-model",
+                license_name="test-license",
+                license_url="https://example.invalid/license",
+                license_checked_at="2026-09-24",
+                artifact_digest="sha256:test",
+                runtime="test-runtime",
+                security_status="test-only",
+                free_commercial_use_verified=True,
+            ),
+        )
+
+    def readiness(self) -> AIProviderReadinessState:
+        return self.readiness_state
+
+    def execute(self, request) -> AIRun:
+        self.calls += 1
+        self.last_request = request
         if self.transaction_probe is not None and self.transaction_probe():
             raise AssertionError("AI provider call occurred inside Unit of Work")
         return AIRun(
             run_id="run-1",
-            task_id=task.task_id,
+            task_id=request.task.task_id,
             provider_id=self.provider_id,
-            model="fake-model",
-            model_version="1",
-            prompt_version=task.prompt_version,
-            input_refs=input_refs,
+            model=request.provider_snapshot.model,
+            model_version=request.provider_snapshot.model_version,
+            prompt_version=request.task.prompt_version,
+            input_refs=request.input_refs,
             evidence_refs=("evidence:1",),
             output="ok",
             tokens=12,
@@ -115,7 +159,7 @@ def context() -> AIExecutionContext:
         resource_trust_level=2,
         evidence_level=2,
         correlation_id="corr-1",
-        configuration_version="cfg:v1.4",
+        configuration_version="cfg:v1",
     )
 
 
@@ -138,7 +182,8 @@ def test_ai_gateway_requires_evidence_for_critical_task() -> None:
 
 
 def test_ai_gateway_validates_provider_result_and_audits_success() -> None:
-    gateway_instance, state = gateway()
+    provider = FakeAIProvider()
+    gateway_instance, state = gateway(provider)
     task = AITask("task-1", "qualification", "prompt:v1", evidence_required=True)
 
     run = gateway_instance.execute(
@@ -152,10 +197,13 @@ def test_ai_gateway_validates_provider_result_and_audits_success() -> None:
     assert run.task_id == task.task_id
     assert run.prompt_version == task.prompt_version
     assert run.tokens == 12
+    assert provider.calls == 1
+    assert provider.last_request.provider_snapshot.configuration_version == "cfg:v1"
     assert len(state.audits.records) == 1
     assert state.runs.records == [run]
     assert state.audits.records[0].action == "ai.run"
     assert state.audits.records[0].outcome == "success"
+    assert state.audits.records[0].configuration_version == "cfg:v1"
 
 
 def test_ai_gateway_provider_call_is_outside_transaction() -> None:
@@ -175,8 +223,8 @@ def test_ai_gateway_provider_call_is_outside_transaction() -> None:
 
 def test_ai_gateway_rejects_missing_evidence_in_provider_result() -> None:
     class MissingEvidenceProvider(FakeAIProvider):
-        def run(self, task: AITask, *, input_refs: tuple[str, ...]) -> AIRun:
-            result = super().run(task, input_refs=input_refs)
+        def execute(self, request) -> AIRun:
+            result = super().execute(request)
             return AIRun(
                 run_id=result.run_id,
                 task_id=result.task_id,
@@ -208,8 +256,8 @@ def test_ai_gateway_rejects_missing_evidence_in_provider_result() -> None:
 
 def test_ai_gateway_rejects_unsupported_evidence_reference() -> None:
     class BadProvider(FakeAIProvider):
-        def run(self, task: AITask, *, input_refs: tuple[str, ...]) -> AIRun:
-            result = super().run(task, input_refs=input_refs)
+        def execute(self, request) -> AIRun:
+            result = super().execute(request)
             return AIRun(
                 run_id=result.run_id,
                 task_id=result.task_id,
@@ -240,10 +288,11 @@ def test_ai_gateway_rejects_unsupported_evidence_reference() -> None:
 
 
 def test_ai_gateway_requires_explicit_permission_before_provider() -> None:
+    provider = FakeAIProvider()
     state = MemoryAIState()
     authorizer = RBACAuthorizer()
     gateway_instance = AIGateway(
-        FakeAIProvider(transaction_probe=lambda: state.active),
+        provider,
         authorizer,
         PolicyEngine(),
         lambda: MemoryAIUnitOfWork(state),
@@ -258,6 +307,7 @@ def test_ai_gateway_requires_explicit_permission_before_provider() -> None:
             budget=budget(),
         )
 
+    assert provider.calls == 0
     assert state.audits.records == []
     assert state.active is False
 
@@ -278,4 +328,26 @@ def test_ai_gateway_enforces_budget() -> None:
             ),
         )
 
+    assert state.audits.records == []
+
+
+def test_ai_gateway_fails_closed_when_provider_is_not_ready() -> None:
+    provider = FakeAIProvider(
+        readiness_state=AIProviderReadinessState(
+            AIProviderReadiness.NOT_READY,
+            "credentials_missing",
+        )
+    )
+    gateway_instance, state = gateway(provider)
+
+    with pytest.raises(Exception, match="not_ready"):
+        gateway_instance.execute(
+            AITask("task-1", "qualification", "prompt:v1"),
+            input_refs=("identity:1",),
+            evidence_refs=("evidence:1",),
+            context=context(),
+            budget=budget(),
+        )
+
+    assert provider.calls == 0
     assert state.audits.records == []
