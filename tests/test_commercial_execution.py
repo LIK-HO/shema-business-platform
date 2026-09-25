@@ -20,6 +20,7 @@ from shema_platform.foundation.authorization import (
 )
 from shema_platform.foundation.errors import (
     AuthorizationError,
+    ExternalEffectUnknown,
     IdempotencyConflict,
     QuarantineRequired,
 )
@@ -99,6 +100,38 @@ class MemoryAudit:
 
 
 @dataclass
+class MemoryQuarantine:
+    records: list[dict[str, object]] = field(default_factory=list)
+
+    def add(
+        self,
+        *,
+        object_type: str,
+        object_ref: str,
+        reason_code: str,
+        payload: dict[str, object],
+    ) -> None:
+        self.records.append(
+            {
+                "object_type": object_type,
+                "object_ref": object_ref,
+                "reason_code": reason_code,
+                "payload": dict(payload),
+            }
+        )
+
+
+@dataclass
+class AmbiguousAdapter(CommunicationAdapter):
+    channel: str = "max"
+    calls: int = 0
+
+    def send(self, request: CommunicationSendRequest) -> CommunicationSendResult:
+        self.calls += 1
+        raise ExternalEffectUnknown("provider outcome cannot be determined")
+
+
+@dataclass
 class MemoryAdapter(CommunicationAdapter):
     channel: str = "max"
     calls: list[CommunicationSendRequest] = field(default_factory=list)
@@ -125,6 +158,7 @@ class MemoryUow:
     idempotency: IdempotencyStore
     outbox: OutboxStore
     audits: MemoryAudit
+    quarantine: MemoryQuarantine
 
     def __enter__(self):
         return self
@@ -144,7 +178,13 @@ def workflow_parts() -> tuple[CommercialActionSendWorkflow, MemoryUow, MemoryAda
             evidence_refs=("evidence:1",),
         ).mark_ready()
     )
-    uow = MemoryUow(actions, IdempotencyStore(), OutboxStore(), MemoryAudit())
+    uow = MemoryUow(
+        actions,
+        IdempotencyStore(),
+        OutboxStore(),
+        MemoryAudit(),
+        MemoryQuarantine(),
+    )
     adapter = MemoryAdapter()
     gateway = CommunicationGateway(adapter)
     authorizer = RBACAuthorizer(
@@ -162,6 +202,57 @@ def workflow_parts() -> tuple[CommercialActionSendWorkflow, MemoryUow, MemoryAda
         PolicyEngine(),
     )
     return workflow, uow, adapter
+
+
+def test_ambiguous_external_outcome_is_quarantined_without_retry() -> None:
+    workflow, uow, _ = workflow_parts()
+    ambiguous = AmbiguousAdapter()
+    workflow = CommercialActionSendWorkflow(
+        lambda: uow,
+        CommunicationGateway(ambiguous),
+        RBACAuthorizer(
+            (
+                AuthorizationSubject(
+                    "operator-1",
+                    frozenset({Permission.COMMERCIAL_ACTION_SEND}),
+                ),
+            )
+        ),
+        PolicyEngine(),
+    )
+
+    with pytest.raises(
+        QuarantineRequired,
+        match="outcome is unknown; action quarantined",
+    ):
+        workflow.execute(
+            actor=Actor("operator-1", trust_level=2),
+            action_id="action-1",
+            body="Здравствуйте",
+            idempotency_key="send-key-ambiguous",
+        )
+
+    action = uow.commercial_actions.get("action-1")
+    assert action is not None
+    assert action.status is CommercialActionStatus.FAILED
+    assert uow.idempotency.get("send-key-ambiguous").result_ref == (
+        "pending:action-1"
+    )
+    assert len(uow.quarantine.records) == 1
+    assert uow.quarantine.records[0]["reason_code"] == "external_effect_unknown"
+    assert len(uow.outbox.pending()) == 1
+    assert len(uow.audits.records) == 1
+    assert ambiguous.calls == 1
+
+    with pytest.raises(QuarantineRequired):
+        workflow.execute(
+            actor=Actor("operator-1", trust_level=2),
+            action_id="action-1",
+            body="Здравствуйте",
+            idempotency_key="send-key-ambiguous",
+        )
+
+    assert ambiguous.calls == 1
 
 
 def test_send_marks_action_sent_and_publishes_outbox() -> None:
