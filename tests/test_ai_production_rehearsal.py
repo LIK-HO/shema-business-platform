@@ -1,4 +1,4 @@
-from pathlib import Path
+import pathlib
 
 import pytest
 
@@ -21,7 +21,7 @@ from shema_platform.platform.ai_promotion_gate import (
 )
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 def yandex_snapshot() -> ConfigurationSnapshot:
