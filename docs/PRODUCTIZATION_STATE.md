@@ -8,7 +8,7 @@
 - Current productization HEAD: live from this branch; never treated as a static manifest fact
 - Core PR: #8 — open, draft, unmerged
 - Productization PR: #40 — open, draft, unmerged
-- Active productization phase: P29 — production YandexGPT route wiring — IN_PROGRESS
+- Active productization phase: P30 — concrete YandexGPT application composition — NOT_STARTED
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -1218,7 +1218,7 @@ Scope stop:
 
 
 
-## P29 — PRODUCTION YANDEXGPT ROUTE WIRING — IN_PROGRESS
+## P29 — PRODUCTION YANDEXGPT ROUTE WIRING — CLOSED / VERIFIED
 
 Purpose:
 - expose a canonical bounded AI execution route through the existing HTTP application boundary;
