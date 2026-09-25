@@ -144,11 +144,3 @@ def test_ai_only_api_application_keeps_uncomposed_capabilities_unavailable() -> 
 
     assert response.status_code == 503
     assert response.json()["code"] == "application_unavailable"
-
-
-def test_quarantine_is_a_supported_server_side_trust_failure() -> None:
-    class QuarantinedTrustResolver:
-        def resolve(self, *, resource_ref: str, evidence_refs: tuple[str, ...]):
-            raise QuarantineRequired("evidence is not usable")
-
-    assert QuarantinedTrustResolver
