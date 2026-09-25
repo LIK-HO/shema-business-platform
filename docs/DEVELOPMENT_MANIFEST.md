@@ -516,6 +516,18 @@ AI Gateway остаётся provider-neutral application boundary. Конкре�
 
 Локальная модель подключается только через тот же provider-neutral AI Gateway. Она не становится canonical truth и не получает прямого права изменять критическое состояние.
 
+### Production activation gate
+
+Для production cloud AI обязательно действует отдельный reversible activation gate:
+- default state — disabled;
+- activation only from an immutable production configuration snapshot;
+- runtime credential is never stored in the snapshot;
+- explicit operator activation is required;
+- readiness, cost and deadline ceilings are checked before provider traffic;
+- configuration version must match the request scope;
+- rollback disables subsequent traffic immediately;
+- activation state is operational metadata only and cannot become canonical business state.
+
 ### Правило выбора
 
 - Cloud AI → только YandexGPT или GigaChat.
