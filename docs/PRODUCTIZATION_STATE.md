@@ -1201,29 +1201,12 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P29 — PRODUCTION YANDEXGPT ROUTE WIRING — NOT_STARTED
-
-Purpose:
-- connect the already verified P27 composition and P28 production gate to the runtime application path;
-- preserve frozen `AIGateway` semantics and explicit operator-controlled activation;
-- keep provider selection, configuration version, deadlines, budgets, readiness and rollback observable at the route boundary.
-
-Scope stop:
-- no new AI provider;
-- no GigaChat implementation in this phase;
-- no local/self-hosted runtime;
-- no cloud/local fallback;
-- no changes to canonical business-state semantics;
-- no automatic production traffic enablement.
-
-
 
 ## P29 — PRODUCTION YANDEXGPT ROUTE WIRING — CLOSED / VERIFIED
 
 Purpose:
-- expose a canonical bounded AI execution route through the existing HTTP application boundary;
-- keep provider choice, model identity, trust levels, credentials and production activation outside client control;
-- preserve frozen AIGateway semantics and P28 activation gating.
+- expose the canonical bounded HTTP boundary for one AI execution;
+- keep provider selection, model identity, trust levels, credentials and production activation outside client control.
 
 Implementation:
 - `src/shema_platform/experience/api.py`
@@ -1231,16 +1214,63 @@ Implementation:
 - `api/openapi.yaml`
 - `architecture/ai_api_route_contract.json`
 - `docs/P29_AI_ROUTE_WIRING.md`
-- route/runtime/API contract tests.
 
-Current boundary:
+Verified boundary:
 - `POST /v1/ai/run` delegates to `APIApplication.run_ai()`;
-- absent application composition remains HTTP 503;
-- no provider is selected by HTTP input;
-- no trust level is accepted from the client;
-- no production activation occurs merely because the route exists;
-- no kernel/application.ai/database semantics were changed.
+- HTTP cannot choose provider/model or assert trust;
+- missing application composition returns HTTP 503;
+- provider activation is not implicit;
+- no frozen kernel, `application.ai`, database schema, GigaChat implementation, local runtime or fallback routing changed.
+
+Evidence:
+- implementation head `f0ca7cf407ce52881e4ffedb562eb52ff1976d95`;
+- CI run #1166 (`36100279023`) passed all seven required jobs.
+
+## P30 — CONCRETE YANDEXGPT APPLICATION COMPOSITION — IN_PROGRESS
+
+Purpose:
+- close the missing application-side composition between the canonical HTTP AI route and the already verified frozen AIGateway + P27 composition + P28 production gate;
+- resolve resource/evidence trust from canonical PostgreSQL state rather than client assertions;
+- keep provider-specific behavior outside frozen kernel semantics.
+
+Implementation boundary:
+- `src/shema_platform/application/ai_runtime.py` — provider-neutral AI application workflow;
+- `src/shema_platform/platform/ai_trust.py` — PostgreSQL truth resolver for resource/evidence trust;
+- `src/shema_platform/adapters/ai/application_composition.py` — explicit YandexGPT composition;
+- `src/shema_platform/experience/ai_application.py` — bounded API application adapter;
+- `architecture/ai_application_composition_contract.json` — machine-readable contract.
+
+Trust rules:
+- identity state is the only source for resource trust;
+- evidence must exist, belong to the requested resource, be active and unexpired;
+- evidence trust is derived from canonical T0..T4 values;
+- missing/invalid evidence fails closed to quarantine;
+- client-supplied trust levels remain prohibited.
+
+Activation:
+- default disabled;
+- explicit operator activation required;
+- configuration version comes from the production gate;
+- rollback remains explicit;
+- no automatic production traffic activation.
+
+Provider policy:
+- cloud AI allow-list remains YandexGPT and GigaChat only;
+- local/self-hosted LLMs require verified free commercial use;
+- no implicit cloud/local fallback;
+- OpenAI is not an approved platform provider;
+- no GigaChat implementation is added by P30;
+- no local runtime is added by P30.
+
+Scope stop:
+- no frozen kernel semantic change;
+- no database schema/migration change;
+- no provider-owned persistence;
+- no automatic activation;
+- no OpenAI;
+- no new cloud provider;
+- no cloud/local fallback.
 
 Next:
-- run the full seven-job CI gate;
-- close P29 only if route, contract and regression checks are green.
+- full seven-job CI gate;
+- close P30 only after code, security boundary, PostgreSQL trust resolution and release checks are green.
