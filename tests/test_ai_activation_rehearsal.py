@@ -2,10 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
-from shema_platform.adapters.ai import gigachat_activation, production_activation
-from shema_platform.adapters.ai import gigachat_activation, production_activation
+from shema_platform.adapters.ai import production_activation
 from shema_platform.adapters.ai.gigachat_activation import GigaChatProductionGate
 from shema_platform.adapters.ai.production_activation import YandexGPTProductionGate
 from shema_platform.foundation.configuration import ConfigurationSnapshot
