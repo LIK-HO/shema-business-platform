@@ -1,10 +1,12 @@
 import os
+from pathlib import Path
+from uuid import uuid4
 
 import psycopg
 import pytest
 
-from shema_platform.platform.ai_trust import PostgresAIExecutionTrustResolver
 from shema_platform.foundation.errors import QuarantineRequired
+from shema_platform.platform.ai_trust import PostgresAIExecutionTrustResolver
 
 pytestmark = pytest.mark.integration
 
@@ -12,12 +14,12 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     pytest.skip("DATABASE_URL is not configured", allow_module_level=True)
 
+ROOT = Path(__file__).resolve().parents[2]
 
-def setup_schema(connection: psycopg.Connection) -> None:
-    root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+
+def apply_migrations(connection: psycopg.Connection) -> None:
     for name in ("0001_foundation.sql", "0002_discovery.sql"):
-        statements = open(os.path.join(root, "db", "migrations", name), encoding="utf-8").read()
-        for statement in statements.split(";"):
+        for statement in (ROOT / "db" / "migrations" / name).read_text().split(";"):
             statement = statement.strip()
             if statement:
                 connection.execute(statement)
@@ -25,17 +27,17 @@ def setup_schema(connection: psycopg.Connection) -> None:
 
 
 def test_postgres_ai_trust_resolver_uses_canonical_identity_and_active_evidence() -> None:
-    with psycopg.connect(DATABASE_URL) as connection:
-        setup_schema(connection)
-        connection.execute("delete from evidence")
-        connection.execute("delete from identity")
+    identity_id = str(uuid4())
+    evidence_id = str(uuid4())
 
+    with psycopg.connect(DATABASE_URL) as connection:
+        apply_migrations(connection)
         connection.execute(
             """
             insert into identity(identity_id, canonical_name, state)
             values (%s, %s, 'verified')
             """,
-            ("00000000-0000-0000-0000-000000000101", "Test identity"),
+            (identity_id, "P30 test identity"),
         )
         connection.execute(
             """
@@ -47,19 +49,16 @@ def test_postgres_ai_trust_resolver_uses_canonical_identity_and_active_evidence(
                 %s, %s, %s, %s, 'T2', 1.0, now(), now(), 'active'
             )
             """,
-            (
-                "00000000-0000-0000-0000-000000000201",
-                "00000000-0000-0000-0000-000000000101",
-                "verified claim",
-                "source:test",
-            ),
+            (evidence_id, identity_id, "verified claim", "source:p30-test"),
         )
         connection.commit()
 
-        resolver = PostgresAIExecutionTrustResolver(lambda: psycopg.connect(DATABASE_URL))
+        resolver = PostgresAIExecutionTrustResolver(
+            lambda: psycopg.connect(DATABASE_URL)
+        )
         trust = resolver.resolve(
-            resource_ref="00000000-0000-0000-0000-000000000101",
-            evidence_refs=("00000000-0000-0000-0000-000000000201",),
+            resource_ref=identity_id,
+            evidence_refs=(evidence_id,),
         )
 
         assert trust.resource_trust_level == 2
@@ -67,22 +66,16 @@ def test_postgres_ai_trust_resolver_uses_canonical_identity_and_active_evidence(
 
         connection.execute(
             "update evidence set lifecycle = 'expired' where evidence_id = %s",
-            ("00000000-0000-0000-0000-000000000201",),
+            (evidence_id,),
         )
         connection.commit()
 
         with pytest.raises(QuarantineRequired, match="not active"):
             resolver.resolve(
-                resource_ref="00000000-0000-0000-0000-000000000101",
-                evidence_refs=("00000000-0000-0000-0000-000000000201",),
+                resource_ref=identity_id,
+                evidence_refs=(evidence_id,),
             )
 
-        connection.execute(
-            "delete from evidence where evidence_id = %s",
-            ("00000000-0000-0000-0000-000000000201",),
-        )
-        connection.execute(
-            "delete from identity where identity_id = %s",
-            ("00000000-0000-0000-0000-000000000101",),
-        )
+        connection.execute("delete from evidence where evidence_id = %s", (evidence_id,))
+        connection.execute("delete from identity where identity_id = %s", (identity_id,))
         connection.commit()
