@@ -1684,30 +1684,58 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P42 — MAX PROVIDER-SIDE EXTERNAL-EFFECT EVIDENCE / LIVE-ADAPTER READINESS.
+## P42 — MAX PROVIDER-SIDE EXTERNAL-EFFECT EVIDENCE / LIVE-ADAPTER READINESS — CLOSED / VERIFIED
 
 Purpose:
-- establish whether the real MAX provider contract supplies enough evidence for crash-safe external-effect handling before any live outbound activation;
-- keep production activation fail-closed if provider-side idempotency/reconciliation semantics remain undocumented or insufficient;
-- separate provider-documentation evidence from adapter implementation.
+- establish the current official MAX provider contract relevant to crash-safe external effects;
+- fail closed when provider-side idempotency/reconciliation semantics are not documented;
+- separate provider evidence from adapter implementation.
 
-Planned evidence:
-- official MAX outbound API contract;
-- authentication and credential handling requirements;
-- message send response identity and error semantics;
-- documented idempotency/retry/reconciliation behavior, if any;
-- provider-side limits and rate behavior relevant to bounded retries;
-- evidence quality assessment tied to the existing `ExternalEffectSafety` model.
+Implementation:
+- `docs/P42_MAX_PROVIDER_EVIDENCE.md`;
+- `architecture/max_provider_evidence_contract.json`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Evidence:
+- CI run #1227 (`36116609681`) passed all seven required jobs on implementation HEAD `3701ec2f9344640e309ca06104bbed9ce1c3a29d`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- Current official MAX documentation confirms `POST /messages`, successful message identity, Authorization header authentication, HTTP 429 behavior and a two-messages-per-second per-destination limit.
+- Current official API/OpenAPI materials reviewed do not document an `Idempotency-Key` or equivalent provider-side deduplication/reconciliation contract for `POST /messages`.
+- Therefore provider-side crash-safe retry is not certified.
+- No live MAX credentials or network traffic were used.
+- No database schema, HTTP contract or frozen kernel was changed.
+
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P43 — MAX AMBIGUOUS-OUTCOME FAIL-CLOSED / RECONCILIATION BOUNDARY.
+
+Purpose:
+- determine whether the existing commercial-action/quarantine machinery can safely handle an ambiguous MAX external outcome without automatic replay;
+- preserve business truth when the provider contract cannot prove idempotent retry;
+- keep the live adapter blocked unless reconciliation is deterministic.
+
+Planned boundary:
+- classify provider timeout / unknown delivery outcome separately from confirmed rejection;
+- transition the commercial action to an uncertain/quarantine state instead of automatically retrying;
+- preserve stable external-effect idempotency key and audit/correlation context;
+- provide a deterministic reconciliation path only when an unambiguous provider message identity is available;
+- prove that ambiguous outcomes never trigger an automatic second external send.
 
 Scope stop:
-- no live MAX credentials;
-- no live MAX network calls;
-- no production activation;
-- no database schema/migration;
-- no frozen kernel semantic change;
-- no automatic adapter retry;
-- no new provider.
+- no live MAX activation;
+- no provider credentials;
+- no new provider;
+- no database schema/migration unless the frozen existing quarantine model demonstrably cannot represent the state;
+- no frozen-kernel semantic change;
+- no automatic MAX retry;
+- no outbound network in tests.
 
-P42 is evidence acquisition and readiness assessment first; implementation remains conditional on sufficient provider-side guarantees.
+P43 is a safety/reconciliation phase, not a live activation phase.

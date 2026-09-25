@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "status": "max_provider_side_external_effect_evidence",
+  "provider": {
+    "id": "max",
+    "outbound_method": "POST /messages",
+    "live_network_used": false,
+    "credentials_used": false
+  },
+  "confirmed_provider_contract": {
+    "send_method_documented": true,
+    "success_response_identity_documented": true,
+    "authorization_contract_documented": true,
+    "http_429_documented": true,
+    "per_destination_rate_limit_documented": true,
+    "message_identity_field": "Message.body.mid"
+  },
+  "external_effect_safety": {
+    "provider_side_idempotency_contract_documented": false,
+    "provider_side_reconciliation_contract_documented": false,
+    "crash_safe_retry_certified": false,
+    "automatic_retry_allowed": false
+  },
+  "evidence_sources": [
+    "https://dev.max.ru/docs-api/methods/POST/messages",
+    "https://dev.max.ru/docs-api/objects/Message",
+    "https://dev.max.ru/docs-api",
+    "https://github.com/max-messenger-bot/max-bot-api-schemas"
+  ],
+  "scope_stop": {
+    "no_live_max_credentials": true,
+    "no_live_max_network": true,
+    "no_new_provider": true,
+    "no_database_schema_change": true,
+    "no_kernel_semantic_change": true,
+    "no_automatic_retry": true,
+    "no_production_activation": true
+  }
+}
