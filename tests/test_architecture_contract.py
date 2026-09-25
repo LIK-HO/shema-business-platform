@@ -436,3 +436,32 @@ def test_ai_promotion_release_gate_contract_is_bounded() -> None:
     assert contract["scope_stop"]["no_automatic_production_activation"] is True
     assert contract["scope_stop"]["no_live_provider_traffic"] is True
     assert contract["scope_stop"]["no_duplicate_recovery_drill"] is True
+
+def test_ai_production_rehearsal_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_production_rehearsal_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["rehearsal"]["starts_from_green_p39_assessment"] is True
+    assert contract["rehearsal"]["operator_approval_required"] is True
+    assert contract["rehearsal"]["approval_activates_provider"] is False
+    assert contract["rehearsal"]["providers"] == [
+        "yandexgpt",
+        "gigachat",
+    ]
+    assert contract["activation"]["explicit_operator_required"] is True
+    assert contract["activation"]["activation_makes_no_external_call"] is True
+    assert contract["activation"]["deterministic_transport_only"] is True
+    assert contract["rollback"]["explicit_operator_required"] is True
+    assert contract["rollback"]["restores_disabled_state"] is True
+    assert contract["rollback"]["blocks_subsequent_provider_invocation"] is True
+    assert contract["rollback"]["records_activation_and_rollback_telemetry"] is True
+    assert contract["scope_stop"]["no_live_provider_traffic"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_activation"] is True
+    assert contract["scope_stop"]["no_cloud_local_fallback"] is True
+    assert contract["scope_stop"]["no_deployment"] is True
+    assert contract["scope_stop"]["no_merge"] is True

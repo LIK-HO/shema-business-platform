@@ -1617,25 +1617,61 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P40 — CONTROLLED AI PRODUCTION ACTIVATION / ROLLBACK REHEARSAL.
+## P40 — CONTROLLED AI PRODUCTION ACTIVATION / ROLLBACK REHEARSAL — CLOSED / VERIFIED
 
 Purpose:
-- prove the final operator-controlled promotion path from a green P39 assessment to an explicit provider activation decision and reversible rollback;
-- exercise both approved provider gates using deterministic transports only;
-- prove that promotion approval does not itself activate traffic;
-- prove rollback blocks subsequent requests and restores the disabled safety state.
+- prove the final operator-controlled promotion path from a green P39 assessment to explicit provider activation and reversible rollback;
+- exercise both approved provider gates with deterministic/no-network transports;
+- prove promotion approval does not activate traffic.
+
+Implementation:
+- `tests/test_ai_production_rehearsal.py`;
+- `architecture/ai_production_rehearsal_contract.json`;
+- `docs/P40_AI_PRODUCTION_REHEARSAL.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Evidence:
+- CI run #1221 (`36115860439`) passed all seven required jobs on HEAD `78b05dce7e5e3a49b20da108c09779bef128ac7b`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- The rehearsal test passed on both Python versions.
+- Green P39 approval leaves both provider gates disabled.
+- Explicit YandexGPT and GigaChat activation performs no external provider network calls.
+- Explicit rollback restores the disabled state.
+- Previously returned gated providers fail closed with `NOT_READY` after rollback.
+- Activation and rollback telemetry is emitted.
+- No live AI provider traffic was used.
+- No frozen kernel, HTTP contract or database schema was changed.
+
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P41 — MAX OUTBOUND RECONCILIATION / IDEMPOTENCY PROOF.
+
+Purpose:
+- resolve the previously blocked MAX external-effect safety gap without changing frozen kernel semantics;
+- prove that repeated delivery, worker crash and retry cannot create an unsafe duplicate external effect;
+- keep MAX as a non-authoritative adapter and preserve canonical communication/order/audit state in the platform.
+
+Bounded proof:
+- deterministic MAX adapter behavior;
+- stable idempotency key per commercial action;
+- same-request replay returns the same external message identity;
+- idempotency-key reuse with a different payload fails closed;
+- external-effect safety assessment becomes evidence-backed for the deterministic adapter;
+- SafeCommunicationAdapter remains the only activation boundary.
 
 Scope stop:
-- deterministic test transports only;
-- no live YandexGPT/GigaChat network calls;
+- no live MAX API traffic;
+- no provider credential integration;
 - no new provider;
-- no HTTP route change;
 - no database schema/migration;
 - no frozen kernel semantic change;
-- no automatic activation;
-- no cloud/local fallback;
-- no deployment or merge.
-
-P40 is a final operational rehearsal, not production enablement.
+- no automatic retry added at adapter level;
+- no production activation.
