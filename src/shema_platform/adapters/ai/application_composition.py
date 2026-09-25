@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 from shema_platform.adapters.ai.composition import (
     AIProviderCompositionError,
-    ScopedAIProvider,
+    execute_scoped_ai,
 )
 from shema_platform.adapters.ai.contracts import (
     AIProviderFailure,
@@ -103,4 +103,5 @@ class YandexGPTApplicationComposition:
             trust_resolver=self._trust_resolver,
             configuration_version_provider=self.configuration_version,
             policy=self._policy,
+            scoped_executor=execute_scoped_ai,
         )
