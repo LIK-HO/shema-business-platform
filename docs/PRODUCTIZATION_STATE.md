@@ -1226,51 +1226,78 @@ Evidence:
 - implementation head `f0ca7cf407ce52881e4ffedb562eb52ff1976d95`;
 - CI run #1166 (`36100279023`) passed all seven required jobs.
 
-## P30 — CONCRETE YANDEXGPT APPLICATION COMPOSITION — IN_PROGRESS
+## P30 — CONCRETE YANDEXGPT APPLICATION COMPOSITION — CLOSED / VERIFIED
 
 Purpose:
-- close the missing application-side composition between the canonical HTTP AI route and the already verified frozen AIGateway + P27 composition + P28 production gate;
+- close the application-side composition between the canonical HTTP AI route and the verified frozen AIGateway + P27 composition + P28 production gate;
 - resolve resource/evidence trust from canonical PostgreSQL state rather than client assertions;
 - keep provider-specific behavior outside frozen kernel semantics.
 
 Implementation boundary:
-- `src/shema_platform/application/ai_runtime.py` — provider-neutral AI application workflow;
-- `src/shema_platform/platform/ai_trust.py` — PostgreSQL truth resolver for resource/evidence trust;
-- `src/shema_platform/adapters/ai/application_composition.py` — explicit YandexGPT composition;
-- `src/shema_platform/experience/ai_application.py` — bounded API application adapter;
-- `architecture/ai_application_composition_contract.json` — machine-readable contract.
+- `src/shema_platform/application/ai_runtime.py`;
+- `src/shema_platform/platform/ai_trust.py`;
+- `src/shema_platform/adapters/ai/application_composition.py`;
+- `src/shema_platform/experience/ai_application.py`;
+- `architecture/ai_application_composition_contract.json`;
+- `docs/P30_AI_APPLICATION_COMPOSITION.md`.
 
-Trust rules:
-- identity state is the only source for resource trust;
-- evidence must exist, belong to the requested resource, be active and unexpired;
-- evidence trust is derived from canonical T0..T4 values;
-- missing/invalid evidence fails closed to quarantine;
-- client-supplied trust levels remain prohibited.
+Security boundary:
+- AI permission is checked before resource/evidence trust lookup;
+- resource trust is derived only from canonical `identity.state`;
+- evidence must exist, belong to the resource, be active and unexpired;
+- evidence trust is derived only from canonical T0..T4 values;
+- client cannot provide actor/resource/evidence trust levels;
+- missing/invalid evidence fails closed to quarantine.
+
+Persistence boundary:
+- canonical AIRun persistence and audit remain owned by frozen `AIGateway`;
+- provider execution remains outside Unit of Work;
+- no database schema or migration changed.
+
+Provider policy:
+- cloud AI allow-list: YandexGPT and GigaChat;
+- local/self-hosted LLMs require verified free commercial-use rights;
+- no implicit cloud/local fallback;
+- OpenAI is not an approved platform provider;
+- P30 adds no GigaChat implementation and no local runtime.
 
 Activation:
 - default disabled;
 - explicit operator activation required;
-- configuration version comes from the production gate;
 - rollback remains explicit;
 - no automatic production traffic activation.
 
-Provider policy:
-- cloud AI allow-list remains YandexGPT and GigaChat only;
-- local/self-hosted LLMs require verified free commercial use;
-- no implicit cloud/local fallback;
-- OpenAI is not an approved platform provider;
-- no GigaChat implementation is added by P30;
-- no local runtime is added by P30.
+Evidence:
+- CI run #1175 (`36101871136`) passed all seven required jobs on HEAD `94654e6fbca6c11cdd7f5b6e6bc6ee777f10638e`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- No frozen kernel file was changed.
 
-Scope stop:
-- no frozen kernel semantic change;
-- no database schema/migration change;
-- no provider-owned persistence;
-- no automatic activation;
+No merge or deployment authorization is implied.
+
+## P31 — EXPLICIT PRODUCTION APPLICATION ASSEMBLY — NOT_STARTED
+
+Purpose:
+- provide one explicit, provider-aware runtime assembly boundary that can compose the already verified YandexGPT application capability into the canonical API without silently activating production traffic.
+
+Initial scope:
+- explicit application factory/composer outside frozen kernel;
+- dependency injection for configuration, telemetry, PostgreSQL UnitOfWork and canonical trust resolver;
+- preserve default-disabled YandexGPT gate;
+- return a bounded `APIApplication` composition only when explicitly requested;
+- no automatic startup activation;
+- no new provider;
+- no GigaChat implementation;
+- no local runtime;
+- no cloud/local fallback;
 - no OpenAI;
-- no new cloud provider;
-- no cloud/local fallback.
+- no database schema change.
 
-Next:
-- full seven-job CI gate;
-- close P30 only after code, security boundary, PostgreSQL trust resolution and release checks are green.
+Stop line:
+- P31 is composition/assembly only; client runtime, deployment and live provider activation remain separate controlled steps.
+
