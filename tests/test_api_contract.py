@@ -15,6 +15,7 @@ def test_canonical_api_contract_exists() -> None:
     assert "version: 1.5.0" in openapi
     assert "enum: [draft, ready, sending, sent, failed, completed, cancelled]" in openapi
     for route in (
+        "/v1/ai/run:",
         "/v1/search:",
         "/v1/discovery/evaluate:",
         "/v1/intelligence/research:",
@@ -29,3 +30,5 @@ def test_canonical_api_contract_exists() -> None:
 
     assert "External effects are never executed by the client" in architecture
     assert "Idempotency-Key" in architecture
+    assert "AI execution" in architecture
+    assert "provider selection remains outside the HTTP request" in architecture
