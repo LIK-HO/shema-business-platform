@@ -305,7 +305,7 @@ def test_assembled_ai_path_persists_run_audit_and_correlation(monkeypatch) -> No
                 "prompt:p32",
                 f"P32 deterministic result:{correlation_id}",
                 12,
-                0.02,
+                "0.02000000",
             )
 
             audit_rows = connection.execute(
