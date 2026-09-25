@@ -6,18 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from shema_platform.platform.ai_promotion_gate import (
-    AIPromotionGateError,
-    approve_ai_promotion,
-    assess_ai_promotion,
-)
+from shema_platform.platform import ai_promotion_gate
 
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_ai_promotion_assessment_is_green_without_activation() -> None:
-    assessment = assess_ai_promotion(ROOT)
+    assessment = ai_promotion_gate.assess_ai_promotion(ROOT)
 
     assert assessment.promotable is True
     assert assessment.kernel_contract_version == "1.4"
@@ -34,9 +30,9 @@ def test_ai_promotion_assessment_is_green_without_activation() -> None:
 
 
 def test_operator_approval_is_explicit_and_does_not_activate_provider() -> None:
-    assessment = assess_ai_promotion(ROOT)
+    assessment = ai_promotion_gate.assess_ai_promotion(ROOT)
 
-    approval = approve_ai_promotion(
+    approval = ai_promotion_gate.approve_ai_promotion(
         assessment,
         approved_by="operator-1",
         reason="P39 release checkpoint accepted for the reviewed source tree",
@@ -49,14 +45,14 @@ def test_operator_approval_is_explicit_and_does_not_activate_provider() -> None:
 
 
 def test_approval_fails_closed_for_non_promotable_assessment() -> None:
-    assessment = assess_ai_promotion(ROOT)
+    assessment = ai_promotion_gate.assess_ai_promotion(ROOT)
     blocked = replace(assessment, automatic_activation=True)
 
     with pytest.raises(
-        AIPromotionGateError,
+        ai_promotion_gate.AIPromotionGateError,
         match="not promotable",
     ):
-        approve_ai_promotion(
+        ai_promotion_gate.approve_ai_promotion(
             blocked,
             approved_by="operator-1",
             reason="must fail",
@@ -65,16 +61,16 @@ def test_approval_fails_closed_for_non_promotable_assessment() -> None:
 
 def test_frozen_ai_kernel_integrity_fails_closed(monkeypatch) -> None:
     monkeypatch.setitem(
-        assess_ai_promotion.__globals__,
+        ai_promotion_gate.assess_ai_promotion.__globals__,
         "FROZEN_AI_KERNEL_GIT_BLOB_SHA",
         "0000000000000000000000000000000000000000",
     )
 
     with pytest.raises(
-        AIPromotionGateError,
+        ai_promotion_gate.AIPromotionGateError,
         match="frozen AI kernel integrity mismatch",
     ):
-        assess_ai_promotion(ROOT)
+        ai_promotion_gate.assess_ai_promotion(ROOT)
 
 
 def test_promotion_gate_contract_has_no_activation_or_credential_path() -> None:
