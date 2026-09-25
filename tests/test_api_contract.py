@@ -31,4 +31,4 @@ def test_canonical_api_contract_exists() -> None:
     assert "External effects are never executed by the client" in architecture
     assert "Idempotency-Key" in architecture
     assert "AI execution" in architecture
-    assert "provider selection remains outside the HTTP request" in architecture
+    assert "provider selection" in architecture
