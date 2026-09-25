@@ -20,7 +20,6 @@ from shema_platform.foundation.authorization import (
     RBACAuthorizer,
 )
 from shema_platform.foundation.policy import PolicyEngine
-from shema_platform.adapters.ai.composition import execute_scoped_ai
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,12 +89,14 @@ class AIExecutionService:
         trust_resolver: AIExecutionTrustResolver,
         configuration_version_provider: Callable[[], str],
         policy: PolicyEngine | None = None,
+        scoped_executor: Callable[..., AIRun] | None = None,
     ) -> None:
         self._provider_factory = provider_factory
         self._unit_of_work_factory = unit_of_work_factory
         self._trust_resolver = trust_resolver
         self._configuration_version_provider = configuration_version_provider
         self._policy = policy or PolicyEngine()
+        self._scoped_executor = scoped_executor
 
     def execute(self, request: AIExecutionRequest) -> AIRun:
         trust = self._trust_resolver.resolve(
@@ -141,7 +142,9 @@ class AIExecutionService:
             correlation_id=request.correlation_id,
             configuration_version=configuration_version,
         )
-        return execute_scoped_ai(
+        if self._scoped_executor is None:
+            raise RuntimeError("AI scoped executor is not configured")
+        return self._scoped_executor(
             gateway,
             task,
             input_refs=request.input_refs,
