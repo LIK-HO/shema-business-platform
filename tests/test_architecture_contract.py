@@ -405,3 +405,34 @@ def test_ai_production_observability_contract_is_bounded() -> None:
     assert contract["scope_stop"]["no_kernel_semantic_change"] is True
     assert contract["scope_stop"]["no_automatic_activation"] is True
     assert contract["scope_stop"]["no_live_provider_traffic"] is True
+
+def test_ai_promotion_release_gate_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_promotion_release_gate_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["frozen_ai_kernel"]["path"] == (
+        "src/shema_platform/application/ai.py"
+    )
+    assert contract["approved_provider_policy"]["allow_list"] == [
+        "yandexgpt",
+        "gigachat",
+    ]
+    assert contract["approved_provider_policy"]["automatic_fallback"] is False
+    assert contract["approved_provider_policy"]["automatic_activation"] is False
+    assert contract["approved_provider_policy"]["client_provider_selection"] is False
+    assert contract["approved_provider_policy"]["live_traffic_in_promotion_evidence"] is False
+    assert contract["runtime_secret_policy"]["yandexgpt_runtime_only"] is True
+    assert contract["runtime_secret_policy"]["gigachat_authorization_key_runtime_only"] is True
+    assert contract["runtime_secret_policy"]["gigachat_token_runtime_only"] is True
+    assert contract["operator_approval"]["required"] is True
+    assert contract["operator_approval"]["persisted"] is False
+    assert contract["operator_approval"]["activates_provider"] is False
+    assert contract["operator_approval"]["contains_credentials"] is False
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_production_activation"] is True
+    assert contract["scope_stop"]["no_live_provider_traffic"] is True
+    assert contract["scope_stop"]["no_duplicate_recovery_drill"] is True
