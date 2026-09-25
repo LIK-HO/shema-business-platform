@@ -26,6 +26,8 @@
 
 Работа с GitHub не должна зависеть от памяти предыдущего диалога. Вход в каждый новый development session выполняется по `docs/GITHUB_WORK_PROTOCOL.md`, `docs/DEVELOPMENT_STATE.md` и `AGENTS.md`; текущий branch/HEAD/PR/CI всегда читаются заново из GitHub.
 
+Post-core development order is governed by `docs/ROADMAP.md`. The roadmap is capability-oriented and does not reopen frozen kernel semantics.
+
 ---
 
 # 2. Формальный статус на 2026-09-23
