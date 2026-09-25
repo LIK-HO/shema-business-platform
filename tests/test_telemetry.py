@@ -31,6 +31,8 @@ def test_telemetry_allowlists_operational_attributes() -> None:
         "status": 200,
         "duration_ms": 18,
         "provider": "max",
+        "configuration_version": "cfg:v1",
+        "operator": "operator-1",
     }
 
 
