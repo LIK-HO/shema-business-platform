@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "status": "bounded_gigachat_application_composition",
+  "frozen_kernel_impact": false,
+  "composition": {
+    "provider": "gigachat",
+    "gateway": "shema_platform.application.ai.AIGateway",
+    "workflow": "shema_platform.application.ai_runtime.AIExecutionService",
+    "scoped_executor": "execute_scoped_ai",
+    "canonical_persistence_owner": "frozen_AIGateway"
+  },
+  "activation": {
+    "default_enabled": false,
+    "explicit_operator": true,
+    "rollback": true,
+    "configuration_version_from_gate": true
+  },
+  "trust": {
+    "resolved_by_existing_application_trust_boundary": true,
+    "client_controls_trust": false
+  },
+  "scope_stop": {
+    "no_kernel_semantic_change": true,
+    "no_database_schema_change": true,
+    "no_http_wiring": true,
+    "no_new_provider": true,
+    "no_openai": true,
+    "no_cloud_local_fallback": true,
+    "no_live_traffic": true
+  }
+}
