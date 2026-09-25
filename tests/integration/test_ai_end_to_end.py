@@ -1,6 +1,5 @@
 import os
 from datetime import UTC, datetime
-from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
@@ -361,7 +360,7 @@ def test_assembled_ai_path_fails_closed_for_expired_evidence(monkeypatch) -> Non
         )
 
         client = TestClient(
-            assembly.create_http_app(authenticator=TestAuthenticator())
+            assembly.create_http_app(authenticator=P32TestAuthenticator())
         )
         response = client.post(
             "/v1/ai/run",
