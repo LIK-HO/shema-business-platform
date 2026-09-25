@@ -7,7 +7,9 @@ from shema_platform.experience.api_models import (
     AIRunResponse,
     CommercialActionCreateRequest,
     CommercialActionResponse,
+    CommercialActionSendRequest,
     CommunicationResult,
+    DiagnosticsResponse,
     DiscoveryRequest,
     DiscoveryResponse,
     EconomicResponse,
@@ -17,8 +19,6 @@ from shema_platform.experience.api_models import (
     ResearchResponse,
     SearchRequest,
     SearchResponse,
-    CommercialActionSendRequest,
-    DiagnosticsResponse,
 )
 
 
