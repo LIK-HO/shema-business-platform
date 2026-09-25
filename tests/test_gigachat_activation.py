@@ -131,7 +131,7 @@ def test_gate_fails_closed_without_runtime_secret() -> None:
 
 def test_activation_and_rollback_telemetry_is_redacted() -> None:
     telemetry = InMemoryTelemetrySink()
-    gate = build()
+    gate = GigaChatProductionGate(telemetry=telemetry)
 
     gate.activate(
         snapshot(),
