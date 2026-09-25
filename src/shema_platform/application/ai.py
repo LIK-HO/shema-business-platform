@@ -4,14 +4,24 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from math import isfinite
-from typing import Protocol
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
+from shema_platform.application.ai_provider import (
+    AIProviderAdapter,
+    AIProviderFailure,
+    AIProviderFailureCode,
+    AIProviderReadiness,
+    AIProviderRequest,
+)
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
 from shema_platform.foundation.errors import PolicyDenied
 from shema_platform.foundation.policy import Decision, PolicyContext, PolicyEngine
+
+if TYPE_CHECKING:
+    from shema_platform.application.ai_provider import AIProvider
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,14 +116,11 @@ class AIRun:
             raise ValueError("AI run usage metrics are invalid")
 
 
-class AIProvider(Protocol):
-    provider_id: str
-
-    def run(self, task: AITask, *, input_refs: tuple[str, ...]) -> AIRun: ...
+AIProvider = AIProviderAdapter
 
 
 class AIGateway:
-    """AI boundary: authorization, policy, evidence, budget and audit precede release of a run."""
+    """AI boundary: authorization, policy, evidence, budget and adapter safety precede persistence."""
 
     def __init__(
         self,
@@ -156,10 +163,37 @@ class AIGateway:
         if decision.decision is not Decision.ALLOW:
             raise PolicyDenied(decision.reason)
 
-        run = self._provider.run(task, input_refs=input_refs)
+        descriptor = self._provider.describe()
+        readiness = self._provider.readiness()
+        if readiness.status is not AIProviderReadiness.READY:
+            raise AIProviderFailure(
+                AIProviderFailureCode.NOT_READY,
+                readiness.reason_code or "provider_not_ready",
+            )
+        if context.configuration_version is not None and (
+            context.configuration_version != descriptor.configuration_version
+        ):
+            raise AIProviderFailure(
+                AIProviderFailureCode.CONFIGURATION_INVALID,
+                "execution context configuration version does not match provider snapshot",
+            )
 
-        if run.provider_id != self._provider.provider_id:
+        request = AIProviderRequest(
+            task=task,
+            input_refs=tuple(input_refs),
+            evidence_refs=tuple(evidence_refs),
+            context=context,
+            budget=budget,
+            provider_snapshot=descriptor,
+        )
+        run = self._provider.execute(request)
+
+        if run.provider_id != descriptor.provider_id:
             raise ValueError("AI provider returned mismatched provider_id")
+        if run.model != descriptor.model:
+            raise ValueError("AI provider returned mismatched model")
+        if run.model_version != descriptor.model_version:
+            raise ValueError("AI provider returned mismatched model_version")
         if run.task_id != task.task_id:
             raise ValueError("AI provider returned mismatched task_id")
         if run.prompt_version != task.prompt_version:
@@ -178,34 +212,38 @@ class AIGateway:
             raise ValueError("AI provider exceeded cost budget")
         if run.duration_seconds > budget.max_duration_seconds:
             raise ValueError("AI provider exceeded duration budget")
+        if run.duration_seconds > descriptor.limits.max_duration_seconds:
+            raise ValueError("AI provider exceeded adapter duration limit")
 
-        # The provider call above is outside the Unit of Work by design.
         with self._unit_of_work_factory() as uow:
             uow.ai_runs.add(run)
             uow.audits.append(
                 AuditRecord(
-                audit_id=str(uuid4()),
-                actor_id=context.actor_id,
-                action="ai.run",
-                resource_type="ai_task",
-                resource_id=context.resource_ref,
-                outcome="success",
-                occurred_at=datetime.now(UTC),
-                metadata={
-                    "task_id": task.task_id,
-                    "provider_id": run.provider_id,
-                    "model": run.model,
-                    "model_version": run.model_version,
-                    "prompt_version": run.prompt_version,
-                    "tokens": run.tokens,
-                    "cost": run.cost,
-                    "duration_seconds": run.duration_seconds,
-                    "input_ref_count": len(run.input_refs),
-                    "evidence_ref_count": len(run.evidence_refs),
-                },
-                correlation_id=context.correlation_id,
-                    configuration_version=context.configuration_version,
+                    audit_id=str(uuid4()),
+                    actor_id=context.actor_id,
+                    action="ai.run",
+                    resource_type="ai_task",
+                    resource_id=context.resource_ref,
+                    outcome="success",
+                    occurred_at=datetime.now(UTC),
+                    metadata={
+                        "task_id": task.task_id,
+                        "provider_id": run.provider_id,
+                        "provider_kind": descriptor.provider_kind.value,
+                        "model": run.model,
+                        "model_version": run.model_version,
+                        "prompt_version": run.prompt_version,
+                        "configuration_version": descriptor.configuration_version,
+                        "capabilities": sorted(descriptor.capabilities),
+                        "security_status": descriptor.provenance.security_status,
+                        "tokens": run.tokens,
+                        "cost": run.cost,
+                        "duration_seconds": run.duration_seconds,
+                        "input_ref_count": len(run.input_refs),
+                        "evidence_ref_count": len(run.evidence_refs),
+                    },
+                    correlation_id=context.correlation_id,
+                    configuration_version=descriptor.configuration_version,
                 )
             )
         return run
-
