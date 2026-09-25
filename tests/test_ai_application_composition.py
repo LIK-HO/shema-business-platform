@@ -5,6 +5,7 @@ from shema_platform.adapters.ai.application_composition import (
     YandexGPTApplicationComposition,
 )
 from shema_platform.adapters.ai.composition import AIProviderCompositionError
+from shema_platform.adapters.ai.production_activation import AIProductionActivationError
 from shema_platform.adapters.ai.contracts import (
     AIProviderFailure,
     AIProviderFailureCode,
@@ -90,7 +91,7 @@ def test_yandex_application_composition_is_disabled_until_explicit_activation() 
 def test_yandex_application_composition_requires_explicit_operator_on_activation() -> None:
     instance = composition()
 
-    with pytest.raises(Exception, match="explicit operator"):
+    with pytest.raises(AIProductionActivationError, match="explicit operator"):
         instance.activate(activated_by="")
 
     assert instance.gate.state.enabled is False
