@@ -1684,7 +1684,7 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P42 — MAX PROVIDER-SIDE EXTERNAL-EFFECT EVIDENCE / LIVE-ADAPTER READINESS — IN_PROGRESS
+## P42 — MAX PROVIDER-SIDE EXTERNAL-EFFECT EVIDENCE / LIVE-ADAPTER READINESS — CLOSED / VERIFIED
 
 Purpose:
 - establish the current official MAX provider contract relevant to crash-safe external effects;
@@ -1696,30 +1696,46 @@ Implementation:
 - `architecture/max_provider_evidence_contract.json`;
 - executable contract proof in `tests/test_architecture_contract.py`.
 
-Confirmed provider evidence:
-- official `POST /messages` outbound method exists;
-- successful response includes a message identity;
-- authentication and HTTP error classes are documented;
-- MAX documents a two-messages-per-second limit per destination and HTTP 429 rate limiting;
-- current official API/OpenAPI materials do not document an `Idempotency-Key` or equivalent provider-side deduplication contract for `POST /messages`.
-
-Safety conclusion:
-- P41 proves platform-side idempotency only;
-- live MAX service-side idempotency/reconciliation remains unproven;
-- no live adapter activation is certified;
-- automatic retry for live MAX remains prohibited.
-
-Scope stop:
-- no live MAX credentials;
-- no live MAX network calls;
-- no new provider;
-- no database schema/migration;
-- no frozen kernel semantic change;
-- no automatic retry;
-- no production activation.
-
 Evidence:
-- implementation and contract tests are complete on the P42 branch;
-- full seven-job CI gate pending.
+- CI run #1227 (`36116609681`) passed all seven required jobs on implementation HEAD `3701ec2f9344640e309ca06104bbed9ce1c3a29d`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- Current official MAX documentation confirms `POST /messages`, successful message identity, Authorization header authentication, HTTP 429 behavior and a two-messages-per-second per-destination limit.
+- Current official API/OpenAPI materials reviewed do not document an `Idempotency-Key` or equivalent provider-side deduplication/reconciliation contract for `POST /messages`.
+- Therefore provider-side crash-safe retry is not certified.
+- No live MAX credentials or network traffic were used.
+- No database schema, HTTP contract or frozen kernel was changed.
 
 No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P43 — MAX AMBIGUOUS-OUTCOME FAIL-CLOSED / RECONCILIATION BOUNDARY.
+
+Purpose:
+- determine whether the existing commercial-action/quarantine machinery can safely handle an ambiguous MAX external outcome without automatic replay;
+- preserve business truth when the provider contract cannot prove idempotent retry;
+- keep the live adapter blocked unless reconciliation is deterministic.
+
+Planned boundary:
+- classify provider timeout / unknown delivery outcome separately from confirmed rejection;
+- transition the commercial action to an uncertain/quarantine state instead of automatically retrying;
+- preserve stable external-effect idempotency key and audit/correlation context;
+- provide a deterministic reconciliation path only when an unambiguous provider message identity is available;
+- prove that ambiguous outcomes never trigger an automatic second external send.
+
+Scope stop:
+- no live MAX activation;
+- no provider credentials;
+- no new provider;
+- no database schema/migration unless the frozen existing quarantine model demonstrably cannot represent the state;
+- no frozen-kernel semantic change;
+- no automatic MAX retry;
+- no outbound network in tests.
+
+P43 is a safety/reconciliation phase, not a live activation phase.
