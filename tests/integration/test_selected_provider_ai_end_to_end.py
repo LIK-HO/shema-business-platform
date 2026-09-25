@@ -417,6 +417,24 @@ def test_yandex_selected_runtime_executes_end_to_end(monkeypatch) -> None:
                 12,
                 Decimal("0.02000000"),
             )
+
+            audit_rows = connection.execute(
+                """
+                select action, outcome, correlation_id, configuration_version
+                from audit_log
+                where correlation_id = %s
+                  and action = 'ai.run'
+                """,
+                (correlation_id,),
+            ).fetchall()
+            assert audit_rows == [
+                (
+                    "ai.run",
+                    "success",
+                    correlation_id,
+                    "p37-yandex-config:v1",
+                )
+            ]
     finally:
         cleanup_truth(identity_id, evidence_id, correlation_id, run_id)
 
@@ -486,6 +504,24 @@ def test_gigachat_selected_runtime_executes_end_to_end(monkeypatch) -> None:
                 12,
                 Decimal("0.02000000"),
             )
+
+            audit_rows = connection.execute(
+                """
+                select action, outcome, correlation_id, configuration_version
+                from audit_log
+                where correlation_id = %s
+                  and action = 'ai.run'
+                """,
+                (correlation_id,),
+            ).fetchall()
+            assert audit_rows == [
+                (
+                    "ai.run",
+                    "success",
+                    correlation_id,
+                    "p37-gigachat-config:v1",
+                )
+            ]
     finally:
         cleanup_truth(identity_id, evidence_id, correlation_id, run_id)
 
