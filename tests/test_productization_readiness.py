@@ -1,15 +1,13 @@
-from pathlib import Path
+import pathlib
 
-from shema_platform.platform.productization_readiness import (
-    assess_v15_productization_readiness,
-)
+from shema_platform.platform import productization_readiness
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 def test_v15_productization_readiness_is_blocked_only_by_provider_side_max_gap() -> None:
-    report = assess_v15_productization_readiness(ROOT)
+    report = productization_readiness.assess_v15_productization_readiness(ROOT)
 
     assert report.status == "blocked"
     assert report.production_ready is False
@@ -36,7 +34,7 @@ def test_v15_productization_readiness_is_blocked_only_by_provider_side_max_gap()
 def test_v15_readiness_does_not_claim_production_when_max_provider_gap_exists(
     monkeypatch,
 ) -> None:
-    import shema_platform.platform.productization_readiness as module
+    module = productization_readiness
 
     original = module._read_json
 
