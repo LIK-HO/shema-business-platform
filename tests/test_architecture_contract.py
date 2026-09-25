@@ -287,3 +287,27 @@ def test_ai_http_route_contract_is_bounded() -> None:
         ]
         is True
     )
+
+def test_gigachat_runtime_assembly_contract_is_bounded() -> None:
+    contract = loads(read("architecture/gigachat_runtime_assembly_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["assembly"]["construction_activates_provider"] is False
+    assert contract["assembly"]["application"] == "AIOnlyAPIApplication"
+    assert contract["activation"]["default_enabled"] is False
+    assert contract["activation"]["explicit_operator"] is True
+    assert contract["activation"]["rollback"] is True
+    assert contract["activation"]["network_calls_during_construction"] is False
+    assert contract["provider_policy"]["cloud_allowlist"] == [
+        "yandexgpt",
+        "gigachat",
+    ]
+    assert contract["provider_policy"]["client_controls_provider"] is False
+    assert contract["provider_policy"]["implicit_cloud_local_fallback"] is False
+    assert contract["provider_policy"]["openai_approved"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_provider_selection_in_request"] is True
+    assert contract["scope_stop"]["no_live_traffic_activation"] is True
