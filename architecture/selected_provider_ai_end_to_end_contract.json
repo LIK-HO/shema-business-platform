@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "status": "selected_provider_end_to_end_proof",
+  "frozen_kernel_impact": false,
+  "path": [
+    "POST /v1/ai/run",
+    "ApprovedAIRuntimeAssembly",
+    "AIOnlyAPIApplication",
+    "AIExecutionService",
+    "frozen AIGateway",
+    "selected approved provider composition",
+    "PostgreSQL ai_run/audit_log"
+  ],
+  "providers": {
+    "yandexgpt": {
+      "transport": "deterministic_test_only",
+      "live_traffic": false
+    },
+    "gigachat": {
+      "transport": "deterministic_test_only",
+      "live_traffic": false
+    }
+  },
+  "proof": {
+    "canonical_http_route": true,
+    "operator_selected_provider": true,
+    "automatic_fallback": false,
+    "explicit_activation": true,
+    "trust_resolved_from_postgresql": true,
+    "airun_persistence": true,
+    "audit_persistence": true,
+    "correlation_propagation": true,
+    "inactive_provider_fails_closed": true,
+    "expired_evidence_fails_closed": true,
+    "unselected_provider_invoked": false
+  },
+  "scope_stop": {
+    "no_new_provider": true,
+    "no_provider_field_in_http": true,
+    "no_kernel_semantic_change": true,
+    "no_database_schema_change": true,
+    "no_automatic_production_activation": true,
+    "no_live_provider_traffic": true
+  }
+}
