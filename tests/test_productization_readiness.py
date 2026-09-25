@@ -3,7 +3,7 @@ import pathlib
 from shema_platform.platform import productization_readiness
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+repo_root() = pathlib.Path(__file__).resolve().parents[1]
 
 
 def test_v15_productization_readiness_is_blocked_only_by_provider_side_max_gap() -> None:
