@@ -1,13 +1,14 @@
-import pathlib
-
 from shema_platform.platform import productization_readiness
 
 
-repo_root() = pathlib.Path(__file__).resolve().parents[1]
+def repo_root():
+    from pathlib import Path
+
+    return Path(__file__).resolve().parents[1]
 
 
 def test_v15_productization_readiness_is_blocked_only_by_provider_side_max_gap() -> None:
-    report = productization_readiness.assess_v15_productization_readiness(ROOT)
+    report = productization_readiness.assess_v15_productization_readiness(repo_root())
 
     assert report.status == "blocked"
     assert report.production_ready is False
