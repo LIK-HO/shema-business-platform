@@ -1650,28 +1650,43 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P41 — MAX OUTBOUND RECONCILIATION / IDEMPOTENCY PROOF.
+## P41 — MAX OUTBOUND RECONCILIATION / IDEMPOTENCY PROOF — IN_PROGRESS
 
 Purpose:
 - resolve the previously blocked MAX external-effect safety gap without changing frozen kernel semantics;
-- prove that repeated delivery, worker crash and retry cannot create an unsafe duplicate external effect;
-- keep MAX as a non-authoritative adapter and preserve canonical communication/order/audit state in the platform.
+- prove deterministic replay/idempotency behavior at the existing CommunicationGateway boundary;
+- keep live MAX activation blocked until provider-specific external evidence exists.
 
-Bounded proof:
-- deterministic MAX adapter behavior;
-- stable idempotency key per commercial action;
-- same-request replay returns the same external message identity;
-- idempotency-key reuse with a different payload fails closed;
-- external-effect safety assessment becomes evidence-backed for the deterministic adapter;
-- SafeCommunicationAdapter remains the only activation boundary.
+Implementation:
+- `tests/test_max_reconciliation.py`;
+- `architecture/max_reconciliation_idempotency_contract.json`;
+- `docs/P41_MAX_RECONCILIATION_IDEMPOTENCY.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Proof boundary:
+- same idempotency key + same request returns the same external message identity;
+- same idempotency key + changed request fails closed;
+- different commercial actions produce distinct external identities;
+- repeated delivery is deterministically deduplicated;
+- unproven external-effect safety is quarantined by `SafeCommunicationAdapter`;
+- all proof uses deterministic in-memory MAX adapter only.
+
+Important limitation:
+- this does not certify live MAX service-side idempotency/reconciliation;
+- no live MAX network or credentials are introduced;
+- production activation remains blocked pending provider-specific external-effect evidence.
 
 Scope stop:
 - no live MAX API traffic;
-- no provider credential integration;
+- no credentials;
 - no new provider;
 - no database schema/migration;
 - no frozen kernel semantic change;
-- no automatic retry added at adapter level;
+- no automatic retry in adapter;
 - no production activation.
+
+Evidence:
+- implementation is complete on the P41 branch;
+- full seven-job CI gate pending.
+
+No merge or deployment authorization is implied.
