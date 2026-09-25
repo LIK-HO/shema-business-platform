@@ -21,6 +21,8 @@ def test_telemetry_allowlists_operational_attributes() -> None:
             "authorization": "Bearer secret-token",
             "body": "sensitive-payload",
             "provider": "max",
+            "configuration_version": "cfg:v1",
+            "operator": "operator-1",
         },
     )
 
