@@ -154,6 +154,24 @@ def test_v1_5_unified_runtime_contract_is_additive() -> None:
     assert kernel["version"] == "1.4"
 
 
+def test_ai_runtime_assembly_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_runtime_assembly_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["assembly"]["construction_activates_provider"] is False
+    assert contract["activation"]["default_enabled"] is False
+    assert contract["activation"]["explicit_operator"] is True
+    assert contract["activation"]["automatic_startup_activation"] is False
+    assert contract["provider_policy"]["cloud_allowlist"] == ["yandexgpt", "gigachat"]
+    assert contract["provider_policy"]["implicit_cloud_local_fallback"] is False
+    assert contract["provider_policy"]["openai_approved"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_live_traffic_activation"] is True
+    assert contract["scope_stop"]["no_openai"] is True
+
+
 def test_ai_application_composition_contract_is_bounded() -> None:
     contract = loads(read("architecture/ai_application_composition_contract.json"))
 

@@ -1280,24 +1280,41 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P31 — EXPLICIT PRODUCTION APPLICATION ASSEMBLY — NOT_STARTED
+## P31 — EXPLICIT PRODUCTION APPLICATION ASSEMBLY — IN_PROGRESS
 
 Purpose:
-- provide one explicit, provider-aware runtime assembly boundary that can compose the already verified YandexGPT application capability into the canonical API without silently activating production traffic.
+- provide one explicit, provider-aware runtime assembly boundary that composes the already verified YandexGPT application capability into the canonical API without silently activating production traffic.
 
-Initial scope:
-- explicit application factory/composer outside frozen kernel;
-- dependency injection for configuration, telemetry, PostgreSQL UnitOfWork and canonical trust resolver;
-- preserve default-disabled YandexGPT gate;
-- return a bounded `APIApplication` composition only when explicitly requested;
-- no automatic startup activation;
+Implementation:
+- `src/shema_platform/experience/runtime_composition.py` — explicit composition root;
+- `architecture/ai_runtime_assembly_contract.json` — machine-readable assembly contract;
+- `docs/P31_EXPLICIT_RUNTIME_APPLICATION_ASSEMBLY.md` — bounded scope and activation rules;
+- `tests/test_runtime_composition.py` — construction/activation safety proof;
+- `tests/test_architecture_contract.py` — executable contract proof.
+
+Boundary:
+- construction injects configuration, telemetry, UnitOfWork and canonical trust resolver;
+- construction returns a typed `APIApplication` composition;
+- creating the runtime assembly does not activate YandexGPT;
+- activation and rollback are explicit methods;
+- `create_app()` remains the canonical HTTP boundary.
+
+Provider policy:
+- cloud AI allow-list remains YandexGPT and GigaChat only;
+- local/self-hosted LLMs remain governed by verified free commercial-use rights;
+- no implicit Cloud ↔ Local fallback;
+- OpenAI is not an approved platform provider.
+
+Scope stop:
+- no frozen kernel change;
+- no database schema/migration change;
 - no new provider;
 - no GigaChat implementation;
 - no local runtime;
-- no cloud/local fallback;
-- no OpenAI;
-- no database schema change.
+- no automatic live traffic activation;
+- no deployment.
 
-Stop line:
-- P31 is composition/assembly only; client runtime, deployment and live provider activation remain separate controlled steps.
+Next:
+- full seven-job CI gate;
+- close P31 only after assembly, architecture, security, recovery and release checks are green.
 
