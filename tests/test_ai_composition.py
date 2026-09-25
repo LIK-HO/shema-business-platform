@@ -208,6 +208,15 @@ def test_scoped_yandex_passes_frozen_gateway_and_audits_without_scope_leak() -> 
     assert events[0].name == "ai.provider.completed"
     assert events[0].correlation_id == "corr-1"
     assert events[0].attributes["provider"] == "yandexgpt"
+    assert events[0].attributes["configuration_version"] == "cfg:v1.5"
+    assert set(events[0].attributes) <= {
+        "component",
+        "operation",
+        "provider",
+        "configuration_version",
+        "duration_ms",
+        "error_code",
+    }
 
     with pytest.raises(AIProviderCompositionError, match="outside a composition scope"):
         current_ai_execution_scope()
@@ -267,7 +276,14 @@ def test_failed_provider_call_resets_scope_and_emits_typed_failure() -> None:
 
     assert exc.value.failure.code is AIProviderFailureCode.AUTHENTICATION
     assert provider.readiness().state is AIProviderReadinessState.UNHEALTHY
-    assert telemetry.all()[0].name == "ai.provider.failed"
+    event = telemetry.all()[0]
+    assert event.name == "ai.provider.failed"
+    assert event.attributes["provider"] == "yandexgpt"
+    assert event.attributes["configuration_version"] == "cfg:v1.5"
+    assert event.attributes["error_code"] == "authentication"
+    assert "prompt" not in event.attributes
+    assert "evidence_refs" not in event.attributes
+    assert "output" not in event.attributes
 
     with pytest.raises(AIProviderCompositionError, match="outside a composition scope"):
         current_ai_execution_scope()
