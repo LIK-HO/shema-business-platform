@@ -9,9 +9,9 @@ from shema_platform.application.ai import (
     AIBudget,
     AIExecutionContext,
     AIGateway,
+    AIProvider,
     AIRun,
     AITask,
-    AIProvider,
 )
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.foundation.authorization import (
