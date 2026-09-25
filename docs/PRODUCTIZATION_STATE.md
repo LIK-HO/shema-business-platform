@@ -1713,7 +1713,7 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P43 — MAX AMBIGUOUS-OUTCOME FAIL-CLOSED / RECONCILIATION BOUNDARY — IN_PROGRESS
+## P43 — MAX AMBIGUOUS-OUTCOME FAIL-CLOSED / RECONCILIATION BOUNDARY — CLOSED / VERIFIED
 
 Purpose:
 - prevent an unknown MAX external outcome from becoming an automatic second outbound effect;
@@ -1730,26 +1730,53 @@ Implementation:
 - `docs/P43_MAX_AMBIGUOUS_OUTCOME_SAFETY.md`;
 - executable contract proof in `tests/test_architecture_contract.py`.
 
-Safety boundary:
-- `ExternalEffectUnknown` represents an ambiguous external effect;
-- the current `CommercialAction` is durably set to `FAILED`;
-- the existing quarantine table receives a non-sensitive record with request hash and stable external-effect key;
-- an outbox event and audit record are committed atomically with the failed business state;
-- the command idempotency reservation remains `pending:<action_id>`;
-- subsequent invocation cannot reclaim the failed action and therefore cannot reach the communication adapter;
-- no provider-side reconciliation semantics are invented.
-
-Scope stop:
-- no live MAX traffic;
-- no provider credentials;
-- no new provider;
-- no automatic retry;
-- no database schema/migration;
-- no frozen kernel semantic change;
-- no HTTP route change.
-
 Evidence:
-- implementation is complete on the P43 branch;
-- full seven-job CI gate pending.
+- CI run #1229 (`36117169982`) passed all seven required jobs on HEAD `9b9d1e2dec3ff0fc2baa03ab2e0484a89b0a6e52`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- Deterministic ambiguous-outcome proof passed:
+  - `ExternalEffectUnknown` is converted into a durable `FAILED` commercial action;
+  - existing `quarantine_record` receives the uncertainty record;
+  - outbox + audit are written with the failed business state;
+  - command idempotency remains `pending:<action_id>`;
+  - the same command after quarantine cannot reach the communication adapter;
+  - the adapter is invoked at most once for the ambiguous command.
+- No database migration was required.
+- No live MAX credentials or network traffic were used.
+- No frozen kernel or HTTP contract was changed.
 
 No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P44 — MAX QUARANTINE RECONCILIATION CONTRACT / READ-ONLY OPERATOR CONTROL.
+
+Purpose:
+- define a safe operator-level procedure for inspecting ambiguous MAX sends and determining what evidence would be sufficient to resolve them;
+- keep reconciliation state-changing operations disabled until provider-side evidence is strong enough;
+- make the uncertainty state operationally visible without creating a second outbound path.
+
+Planned boundary:
+- read-only quarantine lookup by commercial action and stable external-effect key;
+- structured reconciliation evidence model;
+- explicit statuses: unresolved / evidence-found / operator-reviewed;
+- audit-only operator review record;
+- fail-closed default: review never changes `CommercialAction` to `SENT` and never sends a message;
+- no live MAX call in the read-only control;
+- no automatic retry.
+
+Scope stop:
+- no live MAX credentials;
+- no outbound network;
+- no new provider;
+- no database schema/migration unless an existing read model is provably insufficient;
+- no frozen kernel semantic change;
+- no automatic retry;
+- no direct `FAILED → SENT` transition.
+
+P44 is an operator safety/control phase, not a live MAX activation phase.
