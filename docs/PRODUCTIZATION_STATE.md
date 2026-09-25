@@ -1477,23 +1477,42 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P36 — OPERATOR-LEVEL APPROVED AI PROVIDER SELECTION.
+## P36 — OPERATOR-LEVEL APPROVED AI PROVIDER SELECTION — IN_PROGRESS
 
 Purpose:
-- allow the runtime composition root to choose exactly one already-approved cloud AI provider for the assembled application;
+- allow the composition root to choose exactly one already-approved cloud AI provider for the assembled application;
 - keep provider choice outside the HTTP request and outside frozen kernel semantics;
 - forbid automatic fallback, implicit activation and client-controlled provider/model selection.
 
-Planned boundary:
-- YandexGPT and GigaChat only;
-- explicit operator/configuration selection at composition time;
-- selected provider is immutable for the composed application instance;
-- no new provider adapter;
-- no database schema/migration;
-- no HTTP route contract change;
-- no provider traffic during composition.
+Implementation:
+- `src/shema_platform/experience/approved_ai_runtime.py`;
+- `architecture/approved_ai_provider_selection_contract.json`;
+- `docs/P36_APPROVED_AI_PROVIDER_SELECTION.md`;
+- `tests/test_approved_ai_runtime.py`;
+- executable contract proof in `tests/test_architecture_contract.py`.
 
-P36 is a composition-layer step only. Live production activation remains governed by the existing provider-specific gates.
+Boundary:
+- only `yandexgpt` and `gigachat` are accepted;
+- the selected runtime is immutable for the composed application instance;
+- selecting a provider does not activate it or perform provider I/O;
+- absence of the requested provider composition fails closed and never falls back to the other provider;
+- provider-specific production activation gates remain authoritative.
+
+Scope stop:
+- no new provider;
+- no OpenAI;
+- no local runtime;
+- no Cloud ↔ Local fallback;
+- no HTTP route change;
+- no client provider field;
+- no database schema/migration;
+- no frozen kernel change;
+- no automatic production activation;
+- no live provider traffic.
+
+Evidence:
+- implementation is complete on the P36 branch;
+- full seven-job CI gate pending.
+
+No merge or deployment authorization is implied.
 
