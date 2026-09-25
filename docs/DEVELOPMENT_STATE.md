@@ -123,6 +123,21 @@ Prohibited:
 - microservice decomposition without a measured constraint;
 - merge or production deployment without explicit authorization.
 
+## P46 — EXTERNAL PROVIDER BLOCKER HOLD / EVIDENCE REVALIDATION
+
+
+- Status: **IN_PROGRESS — evidence hold**.
+- Branch: `v1.5/p46-max-provider-evidence-hold`.
+- P45 baseline: `e6fcaf719cadbf1bf5c57f2286babcf41128fbfd`.
+- Completed boundary: authoritative revalidation of the current MAX `POST /messages` contract, message retrieval contract and official OpenAPI snapshot, with no live provider traffic.
+- Verified result: send method, returned message identity, message-by-ID retrieval and rate-limit documentation remain present.
+- Unresolved blockers: provider-side idempotency and provider-side reconciliation remain **undocumented/unverified** in the checked authoritative artifacts.
+- Next boundary: run full CI/release checks for the P46 evidence artifacts, then record the verified P46 commit and leave the productization gate blocked until authoritative MAX evidence changes.
+- Prohibited until blocker closure: live MAX outbound activation, automatic live retry, compensating provider/fallback, provider-specific production execution, database migration and frozen-kernel semantic changes.
+- Source contract: `architecture/max_provider_evidence_revalidation_contract.json`.
+- Operator documentation: `docs/P46_MAX_PROVIDER_EVIDENCE_HOLD.md`.
+- Executable evidence: `tests/test_p46_max_provider_evidence_hold.py`.
+
 ## Last verified repository point
 
 - Branch: `v1.5/core-maturity`
