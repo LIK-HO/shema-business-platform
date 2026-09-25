@@ -72,6 +72,34 @@ class ResearchResponse(APIModel):
     evidence: list[EvidenceRef]
 
 
+class AIRunRequest(APIModel):
+    task_type: str = Field(min_length=1, alias="taskType")
+    prompt_version: str = Field(min_length=1, alias="promptVersion")
+    resource_ref: str = Field(min_length=1, alias="resourceRef")
+    input_refs: list[str] = Field(min_length=1, alias="inputRefs")
+    evidence_refs: list[str] = Field(min_length=1, alias="evidenceRefs")
+    evidence_required: bool = Field(default=True, alias="evidenceRequired")
+    max_tokens: int = Field(ge=1, le=16384, alias="maxTokens")
+    max_cost: float = Field(gt=0, le=1000, alias="maxCost")
+    max_duration_seconds: float = Field(gt=0, le=30, alias="maxDurationSeconds")
+
+
+class AIRunResponse(APIModel):
+    run_id: str = Field(alias="runId")
+    task_id: str = Field(alias="taskId")
+    provider_id: str = Field(alias="providerId")
+    model: str
+    model_version: str = Field(alias="modelVersion")
+    prompt_version: str = Field(alias="promptVersion")
+    input_refs: list[str] = Field(alias="inputRefs")
+    evidence_refs: list[str] = Field(alias="evidenceRefs")
+    output: str
+    tokens: int
+    cost: float
+    duration_seconds: float = Field(alias="durationSeconds")
+    correlation_id: str = Field(alias="correlationId")
+
+
 class CommercialActionCreateRequest(APIModel):
     identity_id: str = Field(alias="identityId")
     contact_ref: str = Field(alias="contactRef")
