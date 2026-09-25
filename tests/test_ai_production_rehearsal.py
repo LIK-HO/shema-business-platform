@@ -1,5 +1,3 @@
-import pathlib
-
 import pytest
 
 from shema_platform.adapters.ai.composition import (
@@ -21,7 +19,10 @@ from shema_platform.platform.ai_promotion_gate import (
 )
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+def repo_root():
+    from pathlib import Path
+
+    return Path(__file__).resolve().parents[1]
 
 
 def yandex_snapshot() -> ConfigurationSnapshot:
@@ -94,7 +95,7 @@ def exercise_rolled_back_provider(provider, configuration_version: str) -> None:
 
 
 def test_green_promotion_approval_does_not_activate_either_provider() -> None:
-    assessment = assess_ai_promotion(ROOT)
+    assessment = assess_ai_promotion(repo_root())
     approval = approve_ai_promotion(
         assessment,
         approved_by="p40-operator",
