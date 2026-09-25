@@ -1,11 +1,11 @@
 import pytest
 
 from shema_platform.adapters.ai.composition import AIProviderCompositionError
-from shema_platform.adapters.ai.gigachat_application_composition import (
-    GigaChatApplicationComposition,
-)
 from shema_platform.adapters.ai.gigachat_activation import (
     GigaChatProductionActivationError,
+)
+from shema_platform.adapters.ai.gigachat_application_composition import (
+    GigaChatApplicationComposition,
 )
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
