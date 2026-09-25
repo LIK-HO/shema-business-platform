@@ -117,9 +117,22 @@ def test_ai_application_service_uses_server_trust_and_frozen_gateway() -> None:
     assert result.evidence_refs == ("evidence-1",)
 
 
-def test_ai_application_service_rejects_missing_ai_permission() -> None:
+def test_ai_application_service_rejects_missing_ai_permission_before_trust_lookup() -> None:
+    class ExplodingTrustResolver:
+        def resolve(self, *, resource_ref: str, evidence_refs: tuple[str, ...]):
+            raise AssertionError("trust lookup must follow authorization")
+
+    instance = AIExecutionService(
+        provider_factory=FakeProvider,
+        unit_of_work_factory=MemoryUnitOfWork,
+        trust_resolver=ExplodingTrustResolver(),
+        configuration_version_provider=lambda: "yandexgpt-config:v1",
+        policy=PolicyEngine(),
+        scoped_executor=_execute_scoped,
+    )
+
     with pytest.raises(Exception, match="permission denied"):
-        service().execute(request(permissions=frozenset()))
+        instance.execute(request(permissions=frozenset()))
 
 
 def test_ai_application_request_rejects_duplicate_references() -> None:
