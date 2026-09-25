@@ -99,14 +99,6 @@ class AIExecutionService:
         self._scoped_executor = scoped_executor
 
     def execute(self, request: AIExecutionRequest) -> AIRun:
-        trust = self._trust_resolver.resolve(
-            resource_ref=request.resource_ref,
-            evidence_refs=request.evidence_refs,
-        )
-        configuration_version = self._configuration_version_provider()
-        if not configuration_version.strip():
-            raise RuntimeError("AI provider configuration is not active")
-
         authorizer = RBACAuthorizer(
             (
                 AuthorizationSubject(
@@ -115,6 +107,16 @@ class AIExecutionService:
                 ),
             )
         )
+        authorizer.require(request.actor_id, Permission.AI_RUN)
+
+        trust = self._trust_resolver.resolve(
+            resource_ref=request.resource_ref,
+            evidence_refs=request.evidence_refs,
+        )
+        configuration_version = self._configuration_version_provider()
+        if not configuration_version.strip():
+            raise RuntimeError("AI provider configuration is not active")
+
         gateway = AIGateway(
             self._provider_factory(),
             authorizer,
