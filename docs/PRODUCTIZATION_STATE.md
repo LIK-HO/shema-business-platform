@@ -1579,12 +1579,12 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P39 — AI PRODUCTION SECURITY / RECOVERY / SUPPLY-CHAIN RELEASE GATE — IN_PROGRESS
+## P39 — AI PRODUCTION SECURITY / RECOVERY / SUPPLY-CHAIN RELEASE GATE — CLOSED / VERIFIED
 
 Purpose:
-- close the remaining operational productization gap around AI runtime promotion without changing execution semantics;
-- bind security controls, artifact provenance, recovery evidence and release-contract evidence into one explicit AI promotion checkpoint;
-- separate human approval from runtime activation.
+- close the operational promotion gap around AI without changing execution semantics;
+- bind frozen-kernel integrity, approved-provider policy, runtime-secret handling, recovery, supply-chain and release-contract evidence into one explicit checkpoint;
+- keep human approval separate from runtime activation.
 
 Implementation:
 - `src/shema_platform/platform/ai_promotion_gate.py`;
@@ -1593,30 +1593,49 @@ Implementation:
 - `tests/test_ai_promotion_gate.py`;
 - executable contract proof in `tests/test_architecture_contract.py`.
 
-Verification boundary:
-- frozen AI kernel `src/shema_platform/application/ai.py` is checked against its certified Git blob fingerprint;
-- frozen kernel contract remains v1.4;
-- core maturity remains `1.5-core-maturity` with semantic freeze asserted;
-- only YandexGPT and GigaChat are approved;
-- no automatic fallback or activation is permitted;
-- runtime secrets remain runtime-only;
-- deterministic end-to-end evidence contains no live provider traffic;
-- existing PITR, supply-chain and release-contract evidence are referenced rather than duplicated;
-- existing release contract is validated by the gate;
-- operator approval record is in-memory/ephemeral, contains no credentials and does not activate a provider.
+Evidence:
+- CI run #1212 (`36114454179`) passed all seven required jobs on implementation HEAD `330244807aca4326ca1eaafc9e3cca2133ab25fa`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- Frozen AI kernel integrity was verified against its certified Git blob SHA.
+- Kernel contract remains v1.4; core maturity remains v1.5-core-maturity with semantic freeze asserted.
+- Approved provider allow-list remains exactly YandexGPT + GigaChat.
+- Automatic fallback and automatic production activation are prohibited by contract.
+- Runtime-secret handling is verified from the provider activation contracts.
+- Existing PITR, supply-chain and release-contract controls were reused as authoritative CI evidence rather than duplicated.
+- Operator approval is explicit, ephemeral, credential-free and cannot activate or deploy anything.
+- No frozen kernel file was changed.
+- No database schema/migration was changed.
+- No HTTP route was changed.
+- No new provider or telemetry backend was added.
+- No live provider traffic was used.
+
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P40 — CONTROLLED AI PRODUCTION ACTIVATION / ROLLBACK REHEARSAL.
+
+Purpose:
+- prove the final operator-controlled promotion path from a green P39 assessment to an explicit provider activation decision and reversible rollback;
+- exercise both approved provider gates using deterministic transports only;
+- prove that promotion approval does not itself activate traffic;
+- prove rollback blocks subsequent requests and restores the disabled safety state.
 
 Scope stop:
+- deterministic test transports only;
+- no live YandexGPT/GigaChat network calls;
 - no new provider;
 - no HTTP route change;
 - no database schema/migration;
 - no frozen kernel semantic change;
-- no automatic production activation;
-- no live provider traffic;
-- no new telemetry backend;
-- no duplicate recovery drill.
+- no automatic activation;
+- no cloud/local fallback;
+- no deployment or merge.
 
-Evidence:
-- implementation is complete on the P39 branch;
-- full seven-job CI gate pending.
-
-No merge or deployment authorization is implied.
+P40 is a final operational rehearsal, not production enablement.
