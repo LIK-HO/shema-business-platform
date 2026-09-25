@@ -1477,7 +1477,7 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P36 — OPERATOR-LEVEL APPROVED AI PROVIDER SELECTION — IN_PROGRESS
+## P36 — OPERATOR-LEVEL APPROVED AI PROVIDER SELECTION — CLOSED / VERIFIED
 
 Purpose:
 - allow the composition root to choose exactly one already-approved cloud AI provider for the assembled application;
@@ -1491,28 +1491,46 @@ Implementation:
 - `tests/test_approved_ai_runtime.py`;
 - executable contract proof in `tests/test_architecture_contract.py`.
 
-Boundary:
-- only `yandexgpt` and `gigachat` are accepted;
-- the selected runtime is immutable for the composed application instance;
-- selecting a provider does not activate it or perform provider I/O;
-- absence of the requested provider composition fails closed and never falls back to the other provider;
-- provider-specific production activation gates remain authoritative.
-
-Scope stop:
-- no new provider;
-- no OpenAI;
-- no local runtime;
-- no Cloud ↔ Local fallback;
-- no HTTP route change;
-- no client provider field;
-- no database schema/migration;
-- no frozen kernel change;
-- no automatic production activation;
-- no live provider traffic.
-
 Evidence:
-- implementation is complete on the P36 branch;
-- full seven-job CI gate pending.
+- CI run #1198 (`36112200450`) passed all seven required jobs on implementation HEAD `fd9dbbb6812c62674e1fbc68e845f6f536cbb981`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- No frozen kernel file was changed.
+- No database schema/migration was changed.
+- No HTTP route was changed.
+- No provider network traffic occurs during selection.
+- Unsupported or unavailable selected providers fail closed without fallback.
 
 No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P37 — SELECTED-PROVIDER END-TO-END HTTP PROOF.
+
+Purpose:
+- prove the canonical `POST /v1/ai/run` path through the immutable operator-selected runtime;
+- verify both approved provider compositions use the same provider-neutral application/Gateway semantics;
+- use deterministic non-production provider transports only.
+
+Bounded proof:
+- YandexGPT-selected runtime;
+- GigaChat-selected runtime;
+- canonical trust/evidence resolution;
+- explicit provider activation;
+- canonical AIRun/audit persistence and correlation;
+- fail-closed behavior when selected provider is inactive or trust/evidence is invalid.
+
+Scope stop:
+- no live provider traffic;
+- no new provider;
+- no provider field in HTTP;
+- no automatic fallback;
+- no frozen kernel change;
+- no database schema/migration;
+- no production deployment.
 
