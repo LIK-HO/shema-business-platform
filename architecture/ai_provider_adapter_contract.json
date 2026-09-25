@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "authority": "docs/DEVELOPMENT_MANIFEST.md",
+  "gateway": "shema_platform.application.ai.AIGateway",
+  "adapter_interface": {
+    "name": "shema_platform.application.ai_provider.AIProviderAdapter",
+    "methods": [
+      "describe",
+      "readiness",
+      "execute"
+    ],
+    "provider_kinds": [
+      "cloud",
+      "local"
+    ],
+    "cloud_policy_ref": "architecture/ai_provider_policy.json",
+    "local_free_commercial_use_required": true
+  },
+  "descriptor": {
+    "required_identity": [
+      "provider_id",
+      "provider_kind",
+      "model",
+      "model_version",
+      "configuration_version"
+    ],
+    "required_operational": [
+      "capabilities",
+      "limits"
+    ],
+    "required_provenance": [
+      "source",
+      "security_status"
+    ],
+    "additional_local_provenance": [
+      "license_name",
+      "license_url",
+      "license_checked_at",
+      "artifact_digest",
+      "runtime",
+      "free_commercial_use_verified"
+    ]
+  },
+  "request": {
+    "fields": [
+      "task",
+      "input_refs",
+      "evidence_refs",
+      "context",
+      "budget",
+      "provider_snapshot"
+    ],
+    "provider_snapshot_must_match_descriptor": true
+  },
+  "readiness": {
+    "states": [
+      "ready",
+      "not_ready",
+      "disabled"
+    ],
+    "non_ready_requires_reason": true,
+    "gateway_fails_closed": true
+  },
+  "failure_semantics": {
+    "typed_failure_codes": true,
+    "adapter_owned_retries": false,
+    "implicit_cloud_to_local_fallback": false,
+    "implicit_local_to_cloud_fallback": false,
+    "raw_provider_payload_persistence": false
+  },
+  "security_and_authority": {
+    "credentials_are_runtime_only": true,
+    "adapter_has_no_persistence_port": true,
+    "adapter_has_no_canonical_business_state_authority": true,
+    "authorization_and_policy_remain_in_gateway": true,
+    "audit_contains_configuration_snapshot_without_secrets": true
+  },
+  "response_validation": [
+    "provider_id",
+    "model",
+    "model_version",
+    "task_id",
+    "prompt_version",
+    "input_refs",
+    "evidence_refs",
+    "token_budget",
+    "cost_budget",
+    "duration_budget",
+    "adapter_duration_limit"
+  ],
+  "scope": {
+    "concrete_provider_implementation": false,
+    "automatic_fallback": false,
+    "kernel_semantic_change": false
+  }
+}
