@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from shema_platform.platform import ai_promotion_gate as gate_module
 from shema_platform.platform.ai_promotion_gate import (
     AIPromotionGateError,
     approve_ai_promotion,
@@ -65,8 +64,8 @@ def test_approval_fails_closed_for_non_promotable_assessment() -> None:
 
 
 def test_frozen_ai_kernel_integrity_fails_closed(monkeypatch) -> None:
-    monkeypatch.setattr(
-        gate_module,
+    monkeypatch.setitem(
+        assess_ai_promotion.__globals__,
         "FROZEN_AI_KERNEL_GIT_BLOB_SHA",
         "0000000000000000000000000000000000000000",
     )
