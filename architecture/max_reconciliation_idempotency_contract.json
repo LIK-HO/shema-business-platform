@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "status": "max_deterministic_external_effect_safety_proof",
+  "frozen_kernel_impact": false,
+  "provider": {
+    "id": "max",
+    "live_network": false,
+    "production_credentials": false,
+    "canonical_truth_owner": "platform"
+  },
+  "proof": {
+    "stable_idempotency_key_per_action": true,
+    "same_request_replay_returns_same_external_identity": true,
+    "same_key_different_payload_fails_closed": true,
+    "different_actions_have_distinct_external_identity": true,
+    "repeated_delivery_is_deterministically_deduplicated": true,
+    "unsafe_provider_capability_fails_closed": true
+  },
+  "safety": {
+    "idempotency_evidence_ref": "test:max:deterministic-idempotency:v1",
+    "supports_idempotency": true,
+    "supports_reconciliation": false,
+    "safe_for_retry": true
+  },
+  "scope_stop": {
+    "no_live_max_api": true,
+    "no_credentials": true,
+    "no_new_provider": true,
+    "no_database_schema_change": true,
+    "no_kernel_semantic_change": true,
+    "no_automatic_retry_in_adapter": true,
+    "no_production_activation": true
+  }
+}
