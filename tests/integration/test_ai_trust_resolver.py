@@ -42,11 +42,11 @@ def test_postgres_ai_trust_resolver_uses_canonical_identity_and_active_evidence(
         connection.execute(
             """
             insert into evidence(
-                evidence_id, subject_ref, claim, source_ref, trust_level,
+                evidence_id, subject_ref, claim, source_ref, truth_class, trust_level,
                 confidence, observed_at, captured_at, lifecycle
             )
             values (
-                %s, %s, %s, %s, 'T2', 1.0, now(), now(), 'active'
+                %s, %s, %s, %s, 'evidence', 'T2', 1.0, now(), now(), 'active'
             )
             """,
             (evidence_id, identity_id, "verified claim", "source:p30-test"),
