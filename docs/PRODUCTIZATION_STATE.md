@@ -1684,30 +1684,42 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P42 — MAX PROVIDER-SIDE EXTERNAL-EFFECT EVIDENCE / LIVE-ADAPTER READINESS.
+## P42 — MAX PROVIDER-SIDE EXTERNAL-EFFECT EVIDENCE / LIVE-ADAPTER READINESS — IN_PROGRESS
 
 Purpose:
-- establish whether the real MAX provider contract supplies enough evidence for crash-safe external-effect handling before any live outbound activation;
-- keep production activation fail-closed if provider-side idempotency/reconciliation semantics remain undocumented or insufficient;
-- separate provider-documentation evidence from adapter implementation.
+- establish the current official MAX provider contract relevant to crash-safe external effects;
+- fail closed when provider-side idempotency/reconciliation semantics are not documented;
+- separate provider evidence from adapter implementation.
 
-Planned evidence:
-- official MAX outbound API contract;
-- authentication and credential handling requirements;
-- message send response identity and error semantics;
-- documented idempotency/retry/reconciliation behavior, if any;
-- provider-side limits and rate behavior relevant to bounded retries;
-- evidence quality assessment tied to the existing `ExternalEffectSafety` model.
+Implementation:
+- `docs/P42_MAX_PROVIDER_EVIDENCE.md`;
+- `architecture/max_provider_evidence_contract.json`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Confirmed provider evidence:
+- official `POST /messages` outbound method exists;
+- successful response includes a message identity;
+- authentication and HTTP error classes are documented;
+- MAX documents a two-messages-per-second limit per destination and HTTP 429 rate limiting;
+- current official API/OpenAPI materials do not document an `Idempotency-Key` or equivalent provider-side deduplication contract for `POST /messages`.
+
+Safety conclusion:
+- P41 proves platform-side idempotency only;
+- live MAX service-side idempotency/reconciliation remains unproven;
+- no live adapter activation is certified;
+- automatic retry for live MAX remains prohibited.
 
 Scope stop:
 - no live MAX credentials;
 - no live MAX network calls;
-- no production activation;
+- no new provider;
 - no database schema/migration;
 - no frozen kernel semantic change;
-- no automatic adapter retry;
-- no new provider.
+- no automatic retry;
+- no production activation.
 
-P42 is evidence acquisition and readiness assessment first; implementation remains conditional on sufficient provider-side guarantees.
+Evidence:
+- implementation and contract tests are complete on the P42 branch;
+- full seven-job CI gate pending.
+
+No merge or deployment authorization is implied.
