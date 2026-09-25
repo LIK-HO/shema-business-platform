@@ -52,5 +52,5 @@ def test_v15_readiness_does_not_claim_production_when_max_provider_gap_exists(
 
     monkeypatch.setattr(module, "_read_json", fake_read_json)
 
-    report = module.assess_v15_productization_readiness(ROOT)
+    report = module.assess_v15_productization_readiness(repo_root())
     assert report.production_ready is True
