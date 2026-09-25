@@ -311,3 +311,30 @@ def test_gigachat_runtime_assembly_contract_is_bounded() -> None:
     assert contract["scope_stop"]["no_http_route_change"] is True
     assert contract["scope_stop"]["no_provider_selection_in_request"] is True
     assert contract["scope_stop"]["no_live_traffic_activation"] is True
+
+def test_approved_ai_provider_selection_contract_is_bounded() -> None:
+    contract = loads(read("architecture/approved_ai_provider_selection_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["selection"]["layer"] == "composition_root"
+    assert contract["selection"]["allowed_providers"] == [
+        "yandexgpt",
+        "gigachat",
+    ]
+    assert contract["selection"]["immutable_for_composed_instance"] is True
+    assert contract["selection"]["client_controls_provider"] is False
+    assert contract["selection"]["http_request_controls_provider"] is False
+    assert contract["selection"]["selection_has_provider_fallback"] is False
+    assert contract["activation"]["automatic_activation"] is False
+    assert contract["activation"]["network_calls_during_selection"] is False
+    assert contract["activation"]["provider_specific_activation_gates_remain_authoritative"] is True
+    assert contract["provider_policy"]["openai_approved"] is False
+    assert contract["provider_policy"]["local_runtime_added"] is False
+    assert contract["provider_policy"]["cloud_local_fallback"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_client_provider_field"] is True
+    assert contract["scope_stop"]["no_live_provider_traffic"] is True
