@@ -1,0 +1,231 @@
+from __future__ import annotations
+
+import hashlib
+import json
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from pathlib import Path
+
+from shema_platform.platform.release import ReleaseContractError, validate_release_tree
+
+
+class AIPromotionGateError(RuntimeError):
+    """AI promotion cannot be certified from the current source tree."""
+
+
+FROZEN_AI_KERNEL_PATH = "src/shema_platform/application/ai.py"
+FROZEN_AI_KERNEL_GIT_BLOB_SHA = "3595d451e441594919b7de6d5084eed3ecc8e99a"
+
+REQUIRED_APPROVED_PROVIDERS = ("yandexgpt", "gigachat")
+REQUIRED_EVIDENCE = {
+    "recovery": "scripts/postgres_pitr_drill.sh",
+    "supply_chain": ".github/workflows/ci.yml",
+    "release_contract": "src/shema_platform/platform/release.py",
+    "security_activation_yandexgpt": (
+        "architecture/ai_production_activation_contract.json"
+    ),
+    "security_provider_gigachat": "architecture/gigachat_provider_contract.json",
+    "selection_policy": "architecture/approved_ai_provider_selection_contract.json",
+    "end_to_end_proof": "architecture/selected_provider_ai_end_to_end_contract.json",
+    "observability": "architecture/ai_production_observability_contract.json",
+}
+
+
+@dataclass(frozen=True, slots=True)
+class AIPromotionAssessment:
+    kernel_contract_version: str
+    core_maturity_contract_version: str
+    frozen_ai_kernel_integrity: bool
+    approved_providers: tuple[str, ...]
+    automatic_fallback: bool
+    automatic_activation: bool
+    live_traffic_in_evidence: bool
+    runtime_secret_handling_verified: bool
+    recovery_evidence_ref: str
+    supply_chain_evidence_ref: str
+    release_contract_validated: bool
+    evidence_refs: tuple[str, ...]
+
+    @property
+    def promotable(self) -> bool:
+        return (
+            self.kernel_contract_version == "1.4"
+            and self.core_maturity_contract_version == "1.5-core-maturity"
+            and self.frozen_ai_kernel_integrity
+            and self.approved_providers == REQUIRED_APPROVED_PROVIDERS
+            and not self.automatic_fallback
+            and not self.automatic_activation
+            and not self.live_traffic_in_evidence
+            and self.runtime_secret_handling_verified
+            and self.release_contract_validated
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class AIPromotionApprovalRecord:
+    approved_by: str
+    reason: str
+    approved_at: datetime
+    assessment_kernel_contract_version: str
+    assessment_evidence_refs: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if not self.approved_by.strip():
+            raise ValueError("approved_by is required")
+        if not self.reason.strip():
+            raise ValueError("approval reason is required")
+        if self.approved_at.tzinfo is None:
+            raise ValueError("approved_at must be timezone-aware")
+
+
+def _read_json(root: Path, relative_path: str) -> dict[str, object]:
+    path = root / relative_path
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise AIPromotionGateError(f"invalid promotion evidence: {relative_path}") from exc
+
+
+def _git_blob_sha(content: bytes) -> str:
+    header = f"blob {len(content)}\0".encode("ascii")
+    return hashlib.sha1(header + content).hexdigest()
+
+
+def _assert_file(root: Path, relative_path: str) -> None:
+    if not (root / relative_path).is_file():
+        raise AIPromotionGateError(f"required evidence is missing: {relative_path}")
+
+
+def _verify_frozen_ai_kernel(root: Path) -> None:
+    path = root / FROZEN_AI_KERNEL_PATH
+    _assert_file(root, FROZEN_AI_KERNEL_PATH)
+    actual = _git_blob_sha(path.read_bytes())
+    if actual != FROZEN_AI_KERNEL_GIT_BLOB_SHA:
+        raise AIPromotionGateError(
+            "frozen AI kernel integrity mismatch: "
+            f"expected {FROZEN_AI_KERNEL_GIT_BLOB_SHA}, got {actual}"
+        )
+
+
+def _verify_runtime_secret_policy(root: Path) -> None:
+    yandex = _read_json(
+        root,
+        "architecture/ai_production_activation_contract.json",
+    )
+    gigachat = _read_json(
+        root,
+        "architecture/gigachat_provider_contract.json",
+    )
+
+    if yandex.get("default_state") != "disabled":
+        raise AIPromotionGateError("YandexGPT production activation is not default-disabled")
+    activation = yandex.get("activation", {})
+    if activation.get("operator_activation_required") is not True:
+        raise AIPromotionGateError("YandexGPT lacks explicit operator activation")
+    if activation.get("runtime_secret") != "YANDEXGPT_API_KEY":
+        raise AIPromotionGateError("YandexGPT runtime secret contract mismatch")
+
+    provider = gigachat.get("provider", {})
+    if provider.get("auth_key_runtime_only") is not True:
+        raise AIPromotionGateError("GigaChat authorization key is not runtime-only")
+    if provider.get("token_runtime_only") is not True:
+        raise AIPromotionGateError("GigaChat OAuth token is not runtime-only")
+
+    if gigachat.get("activation", {}).get("default_enabled") is not False:
+        raise AIPromotionGateError("GigaChat production activation is not default-disabled")
+
+
+def assess_ai_promotion(root: Path) -> AIPromotionAssessment:
+    root = root.resolve()
+    for relative_path in REQUIRED_EVIDENCE.values():
+        _assert_file(root, relative_path)
+
+    _verify_frozen_ai_kernel(root)
+    _verify_runtime_secret_policy(root)
+
+    kernel_contract = _read_json(root, "architecture/contract.json")
+    maturity_contract = _read_json(root, "architecture/core_maturity_contract.json")
+    selection_contract = _read_json(
+        root,
+        "architecture/approved_ai_provider_selection_contract.json",
+    )
+    e2e_contract = _read_json(
+        root,
+        "architecture/selected_provider_ai_end_to_end_contract.json",
+    )
+    observability_contract = _read_json(
+        root,
+        "architecture/ai_production_observability_contract.json",
+    )
+
+    if kernel_contract.get("version") != "1.4":
+        raise AIPromotionGateError("frozen kernel contract is not version 1.4")
+    if maturity_contract.get("version") != "1.5-core-maturity":
+        raise AIPromotionGateError("core maturity contract version mismatch")
+    if maturity_contract.get("core_semantic_freeze_after_certification") is not True:
+        raise AIPromotionGateError("core semantic freeze is not asserted")
+
+    allowed = tuple(selection_contract.get("selection", {}).get("allowed_providers", ()))
+    if allowed != REQUIRED_APPROVED_PROVIDERS:
+        raise AIPromotionGateError("approved provider allow-list changed")
+    if selection_contract.get("selection", {}).get("selection_has_provider_fallback") is not False:
+        raise AIPromotionGateError("provider selection fallback is enabled")
+    if selection_contract.get("activation", {}).get("automatic_activation") is not False:
+        raise AIPromotionGateError("automatic provider activation is enabled")
+
+    if e2e_contract.get("providers", {}).get("yandexgpt", {}).get("live_traffic") is not False:
+        raise AIPromotionGateError("YandexGPT evidence permits live traffic")
+    if e2e_contract.get("providers", {}).get("gigachat", {}).get("live_traffic") is not False:
+        raise AIPromotionGateError("GigaChat evidence permits live traffic")
+
+    if observability_contract.get("required_properties", {}).get("redacted") is not True:
+        raise AIPromotionGateError("observability redaction is not certified")
+
+    try:
+        validate_release_tree(root)
+    except ReleaseContractError as exc:
+        raise AIPromotionGateError(
+            f"release contract validation failed: {exc}"
+        ) from exc
+
+    refs = tuple(REQUIRED_EVIDENCE.values())
+    return AIPromotionAssessment(
+        kernel_contract_version=str(kernel_contract["version"]),
+        core_maturity_contract_version=str(maturity_contract["version"]),
+        frozen_ai_kernel_integrity=True,
+        approved_providers=allowed,
+        automatic_fallback=bool(
+            selection_contract["selection"].get("selection_has_provider_fallback")
+        ),
+        automatic_activation=bool(
+            selection_contract["activation"].get("automatic_activation")
+        ),
+        live_traffic_in_evidence=any(
+            provider.get("live_traffic", True)
+            for provider in e2e_contract.get("providers", {}).values()
+        ),
+        runtime_secret_handling_verified=True,
+        recovery_evidence_ref=REQUIRED_EVIDENCE["recovery"],
+        supply_chain_evidence_ref=REQUIRED_EVIDENCE["supply_chain"],
+        release_contract_validated=True,
+        evidence_refs=refs,
+    )
+
+
+def approve_ai_promotion(
+    assessment: AIPromotionAssessment,
+    *,
+    approved_by: str,
+    reason: str,
+    approved_at: datetime | None = None,
+) -> AIPromotionApprovalRecord:
+    if not assessment.promotable:
+        raise AIPromotionGateError("AI promotion assessment is not promotable")
+
+    return AIPromotionApprovalRecord(
+        approved_by=approved_by,
+        reason=reason,
+        approved_at=approved_at or datetime.now(UTC),
+        assessment_kernel_contract_version=assessment.kernel_contract_version,
+        assessment_evidence_refs=assessment.evidence_refs,
+    )
