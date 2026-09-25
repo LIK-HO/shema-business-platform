@@ -18,5 +18,9 @@ class IdempotencyConflict(DomainError):
     """An idempotency key was reused for a different request."""
 
 
+class ExternalEffectUnknown(DomainError):
+    """The outcome of an external effect is unknown and must not be replayed automatically."""
+
+
 class QuarantineRequired(DomainError):
     """The subject is too uncertain for a critical operation."""
