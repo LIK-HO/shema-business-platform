@@ -169,5 +169,13 @@ def test_ai_http_route_contract_is_bounded() -> None:
         "production_activation_state",
         "provider_credentials",
     ]
-    assert route["composition_boundary"]["frozen_AIGateway_semantics_unchanged"] is True
-    assert route["production_behavior"]["production_provider_activation_still_requires_P28_gate"] is True
+    assert (
+        route["composition_boundary"]["frozen_AIGateway_semantics_unchanged"]
+        is True
+    )
+    assert (
+        route["production_behavior"][
+            "production_provider_activation_still_requires_P28_gate"
+        ]
+        is True
+    )
