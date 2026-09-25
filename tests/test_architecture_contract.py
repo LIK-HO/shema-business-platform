@@ -154,6 +154,34 @@ def test_v1_5_unified_runtime_contract_is_additive() -> None:
     assert kernel["version"] == "1.4"
 
 
+def test_gigachat_provider_contract_is_bounded() -> None:
+    contract = loads(read("architecture/gigachat_provider_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["provider"]["id"] == "gigachat"
+    assert contract["provider"]["base_url"] == "https://api.giga.chat/v1"
+    assert contract["provider"]["token_ttl_minutes"] == 30
+    assert contract["provider"]["auth_key_runtime_only"] is True
+    assert contract["provider"]["token_runtime_only"] is True
+    assert contract["bounded_controls"]["no_automatic_retry"] is True
+    assert contract["production_scope"]["allowed_scopes"] == [
+        "GIGACHAT_API_B2B",
+        "GIGACHAT_API_CORP",
+    ]
+    assert contract["activation"]["default_enabled"] is False
+    assert contract["activation"]["explicit_operator"] is True
+    assert contract["provider_policy"]["cloud_allowlist"] == [
+        "yandexgpt",
+        "gigachat",
+    ]
+    assert contract["provider_policy"]["implicit_cloud_local_fallback"] is False
+    assert contract["provider_policy"]["openai_approved"] is False
+    assert contract["scope_stop"]["no_application_wiring"] is True
+    assert contract["scope_stop"]["no_live_traffic"] is True
+    assert contract["scope_stop"]["no_openai"] is True
+
+
 def test_ai_end_to_end_contract_is_bounded() -> None:
     contract = loads(read("architecture/ai_end_to_end_contract.json"))
 
