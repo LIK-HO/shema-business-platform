@@ -1508,22 +1508,27 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P37 — SELECTED-PROVIDER END-TO-END HTTP PROOF.
+## P37 — SELECTED-PROVIDER END-TO-END HTTP PROOF — IN_PROGRESS
 
 Purpose:
 - prove the canonical `POST /v1/ai/run` path through the immutable operator-selected runtime;
 - verify both approved provider compositions use the same provider-neutral application/Gateway semantics;
 - use deterministic non-production provider transports only.
 
-Bounded proof:
+Implementation:
+- `tests/integration/test_selected_provider_ai_end_to_end.py`;
+- `architecture/selected_provider_ai_end_to_end_contract.json`;
+- `docs/P37_SELECTED_PROVIDER_AI_END_TO_END_PROOF.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Boundary:
 - YandexGPT-selected runtime;
 - GigaChat-selected runtime;
 - canonical trust/evidence resolution;
 - explicit provider activation;
 - canonical AIRun/audit persistence and correlation;
-- fail-closed behavior when selected provider is inactive or trust/evidence is invalid.
+- fail-closed behavior when selected provider is inactive or trust/evidence is invalid;
+- unselected provider is not invoked.
 
 Scope stop:
 - no live provider traffic;
@@ -1534,3 +1539,8 @@ Scope stop:
 - no database schema/migration;
 - no production deployment.
 
+Evidence:
+- implementation is complete on the P37 branch;
+- full seven-job CI gate pending.
+
+No merge or deployment authorization is implied.
