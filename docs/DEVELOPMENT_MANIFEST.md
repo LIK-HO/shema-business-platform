@@ -322,6 +322,267 @@ Microservices не являются самостоятельной целью.
 
 ---
 
+# 5B. Система поиска и разведки клиентов — обязательная post-core capability
+
+Поиск и разведка клиентов являются отдельным зрелым системным контуром поверх frozen kernel. Их задача — не просто находить записи, а превращать внешние сигналы в проверяемый, обновляемый и безопасный pipeline:
+
+**SEARCH → IDENTITY RESOLUTION → INTELLIGENCE → EVIDENCE → QUALIFICATION → MONITORING → COMMERCIAL ACTION → RESULT → LEARNING**
+
+Этот контур не заменяет frozen kernel и не создаёт второй источник canonical truth.
+
+## 5B.1. Search Orchestration
+
+Система должна:
+- строить повторяемый search plan из цели, географии, отрасли, типов клиентов и критериев;
+- запускать несколько источников через provider-neutral adapters;
+- поддерживать waterfall/fallback на уровне источников только при доказанной безопасной семантике;
+- ограничивать число запросов, время, объём результатов и внешние затраты;
+- сохранять search context, query/version и дату проверки;
+- повторять поиск детерминированно и сравнивать результаты между запусками.
+
+## 5B.2. Source Registry and Source Governance
+
+Каждый источник должен иметь:
+- identity;
+- тип и назначение;
+- capability;
+- access/auth model;
+- rate/resource limits;
+- trust/reliability class;
+- freshness characteristics;
+- provenance requirements;
+- legal/operational usage constraints;
+- health/readiness;
+- last verified state.
+
+Источник никогда не считается authoritative только потому, что он технически доступен.
+
+## 5B.3. Discovery and Entity Resolution
+
+Результаты поиска проходят:
+
+**RAW → CANDIDATE → IDENTIFIED → VERIFIED → ACTIVE / INACTIVE / UNKNOWN**
+
+Должны быть:
+- deterministic deduplication;
+- primary identity key where legally/operationally valid;
+- MATCH / MERGE / KEEP_SEPARATE / QUARANTINE / MANUAL_REVIEW;
+- conflict detection;
+- prevention of source identifiers becoming canonical identifiers.
+
+Для российского B2B контура ИНН остаётся основным cross-source deduplication key, но не используется как безусловная истина при conflicting/missing evidence.
+
+## 5B.4. Client Profile / Opportunity Profile
+
+Для каждого кандидата система должна уметь собирать единый operational profile:
+- identity;
+- geography;
+- industry/category;
+- organization scale indicators;
+- relevant activities;
+- public business contacts;
+- service-fit signals;
+- current need/opportunity signals;
+- evidence;
+- risk/reputation signals;
+- freshness;
+- qualification state;
+- recommended next safe action.
+
+Необходимая информация должна материализоваться один раз и использоваться всеми client surfaces.
+
+## 5B.5. Intelligence / Research Modes
+
+Research должен иметь уровни глубины, а не одно неограниченное «исследование»:
+
+**R1 — базовая проверка → R2 — расширенная проверка → R3 — глубокая разведка → R4 — специальное исследование.**
+
+Для каждого режима определяются:
+- допустимые источники;
+- обязательные evidence;
+- бюджет;
+- maximum elapsed time;
+- expected output;
+- stopping conditions;
+- escalation condition.
+
+Research provider waterfall должен быть управляемым и повторяемым.
+
+## 5B.6. Evidence and Provenance
+
+Каждое materially relevant external claim должно иметь:
+- source reference;
+- observed_at;
+- captured_at;
+- source/provider identity;
+- truth class;
+- trust level;
+- confidence;
+- lifecycle;
+- expiry where applicable.
+
+Система должна уметь ответить:
+**«Откуда мы это узнали, когда проверяли и почему считаем это достаточно надёжным?»**
+
+## 5B.7. Freshness / Revalidation / Evidence Decay
+
+Разведка не является вечной.
+
+Нужны:
+- freshness policy by source/type;
+- evidence expiry;
+- revalidation scheduling;
+- stale/expired indicators;
+- change detection;
+- suppression of outdated conclusions;
+- refresh priority based on operational importance.
+
+Истекшее evidence не должно молча выглядеть как актуальная истина.
+
+## 5B.8. Qualification Engine
+
+Квалификация должна быть rule/evidence-driven.
+
+Минимум:
+- identity verified;
+- service fit;
+- geography fit;
+- operational fit;
+- contactability;
+- economic fit;
+- evidence sufficiency;
+- risk/reputation status;
+- freshness.
+
+Нельзя автоматически переводить кандидата в готового клиента только по совпадению поискового запроса.
+
+## 5B.9. Opportunity / Need Detection
+
+Система должна уметь обнаруживать:
+- новые компании;
+- изменения профиля;
+- новые публичные контакты;
+- новые business signals;
+- события, указывающие на потенциальную потребность;
+- исчезновение/изменение старых сигналов.
+
+Каждый trigger должен иметь source/evidence и дату наблюдения.
+
+## 5B.10. Monitoring
+
+Для важных клиентов/кандидатов нужен controlled monitoring:
+- profile changes;
+- ownership/status changes where publicly observable;
+- contact changes;
+- operational signals;
+- relevant public events;
+- evidence expiry;
+- provider/source health.
+
+Monitoring должен быть:
+- bounded;
+- deduplicated;
+- correlation-aware;
+- cost/time controlled;
+- non-authoritative until evidence is materialized.
+
+## 5B.11. Reputation / Risk / Counterparty Safety
+
+Разведка должна иметь отдельный защитный контур:
+- reputation signals;
+- legal/public risk signals;
+- conflicting identities;
+- suspicious source contradictions;
+- quarantine;
+- manual review;
+- risk evidence lineage.
+
+Risk/reputation findings не должны автоматически становиться юридическими выводами; система хранит evidence и attributed findings.
+
+## 5B.12. Contact Discovery
+
+Для business contacts:
+- source provenance;
+- contact type;
+- freshness;
+- verification state;
+- deduplication;
+- confidence;
+- no silent replacement of existing verified contact data.
+
+Контакт не считается подтверждённым только потому, что найден в одном источнике.
+
+## 5B.13. Search Result Quality
+
+Система должна измерять:
+- duplicate rate;
+- identity resolution rate;
+- evidence coverage;
+- stale-data rate;
+- qualification yield;
+- false-positive rate where measurable;
+- source contribution;
+- search cost/time;
+- useful-result rate.
+
+Эти показатели нужны для улучшения search strategy, а не для декоративной аналитики.
+
+## 5B.14. Search Learning Loop
+
+Результат downstream работы должен возвращаться в поиск:
+
+**SEARCH → QUALIFICATION → ACTION → ORDER/RESULT → ECONOMICS → LEARNING → SEARCH**
+
+Система должна учиться на:
+- accepted/rejected candidates;
+- reasons for rejection;
+- response/contactability;
+- actual commercial outcome;
+- revenue/margin;
+- provider/source quality;
+- search cost.
+
+Learning не должен изменять canonical truth без явного, проверяемого application rule.
+
+## 5B.15. Legal / Operational Boundaries
+
+Разведка ограничивается:
+- доступными законными источниками;
+- допустимыми способами доступа;
+- documented provider contracts;
+- privacy/security rules;
+- rate and anti-abuse limits;
+- source terms where applicable.
+
+Автоматизация не должна превращаться в обход ограничений источника или несанкционированный доступ.
+
+## 5B.16. Operator Workflow
+
+Оператор должен видеть не поток сырого поиска, а:
+
+**Найдено → Проверяется → Подтверждено → Требует разведки → Квалифицировано → Есть потребность → Готово к действию → Наблюдение**
+
+Технические источники, confidence, secondary evidence и diagnostics остаются в техническом/интеллектуальном слое и не перегружают основной рабочий интерфейс.
+
+## 5B.17. Search System Completion Boundary
+
+Система поиска и разведки считается зрелой только когда есть:
+- multi-source orchestration;
+- identity resolution;
+- evidence/provenance;
+- freshness/revalidation;
+- qualification;
+- contact discovery;
+- opportunity detection;
+- monitoring;
+- reputation/risk boundary;
+- measurable search quality;
+- learning loop;
+- operator workflow;
+- failure/recovery behavior;
+- cost/time budgets;
+- complete end-to-end evidence for critical search flows.
+
 # 5A. Системный product/experience layer — обязательная post-core граница
 
 После frozen kernel зрелость системы определяется не только внутренними сервисами. Пользовательские и эксплуатационные поверхности становятся самостоятельными bounded layers, которые обязаны сохранять семантику frozen core и не создавать альтернативный источник истины.
@@ -1107,6 +1368,25 @@ Least privilege → fail closed → isolate → encrypt → audit → test → r
 Simple core first → standard patterns → measured scaling → extracted services only when justified
 
 ---
+
+# 13B. Definition of Done — Mature Search / Intelligence System
+
+- [ ] Multi-source search orchestration is implemented behind provider-neutral boundaries.
+- [ ] Search plans are versioned/reproducible and bounded by time/resource budgets.
+- [ ] Identity resolution and deterministic deduplication are executable.
+- [ ] Evidence/provenance is persisted for material external claims.
+- [ ] Freshness/expiry/revalidation is enforced.
+- [ ] Qualification is evidence/rule-driven and conservative.
+- [ ] Public business contact discovery is provenance-aware and deduplicated.
+- [ ] Opportunity/need detection has evidence and timestamps.
+- [ ] Monitoring can detect relevant changes without creating duplicate noise.
+- [ ] Reputation/risk intelligence has quarantine/manual-review boundaries.
+- [ ] Search quality and source performance are measurable.
+- [ ] Downstream outcomes feed the Search Learning Loop.
+- [ ] Critical search/research paths have failure, retry, budget and recovery tests.
+- [ ] No source/provider becomes canonical business truth.
+- [ ] No search feature creates a second identity or evidence authority.
+- [ ] The operator can move from discovery to safe commercial action without manually reconstructing intelligence context.
 
 # 13A. Definition of Done — Mature Personal System Surface
 
