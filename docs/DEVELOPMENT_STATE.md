@@ -136,6 +136,8 @@ Prohibited:
 - GitHub CI run #1240 (`36119337828`) was observed on P46 HEAD `640135fe53f9d3e76840d1437c3c15db10213bf6` and failed only in both quality jobs on Ruff `I001` import ordering in `tests/test_p46_max_provider_evidence_hold.py`.
 - Because quality failed, compile/unit/integration/backup-recovery/release-contract stages were skipped or cancelled; P46 therefore remains **IN_PROGRESS**, not CLOSED/VERIFIED.
 - Safe next action: correct the test-file import ordering, rerun the complete P46 CI gate, and record the resulting verified commit; keep the productization gate blocked until authoritative MAX evidence changes.
+- Manifest boundary updated: the mature personal-system scope now explicitly includes the Experience/Client layer and the Search/Client Intelligence system as post-core capabilities; frozen v1.4/v1.5 core semantics are unchanged.
+- Search/Intelligence completion is now governed by a dedicated manifest boundary covering multi-source search orchestration, identity resolution, evidence/provenance, freshness/revalidation, qualification, contact discovery, opportunity/need detection, monitoring, reputation/risk, measurable search quality and the downstream learning loop.
 - Prohibited until blocker closure: live MAX outbound activation, automatic live retry, compensating provider/fallback, provider-specific production execution, database migration and frozen-kernel semantic changes.
 - Source contract: `architecture/max_provider_evidence_revalidation_contract.json`.
 - Operator documentation: `docs/P46_MAX_PROVIDER_EVIDENCE_HOLD.md`.
