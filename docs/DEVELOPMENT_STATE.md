@@ -132,7 +132,9 @@ Prohibited:
 - Completed boundary: authoritative revalidation of the current MAX `POST /messages` contract, message retrieval contract and official OpenAPI snapshot, with no live provider traffic.
 - Verified result: send method, returned message identity, message-by-ID retrieval and rate-limit documentation remain present.
 - Unresolved blockers: provider-side idempotency and provider-side reconciliation remain **undocumented/unverified** in the checked authoritative artifacts.
-- Next boundary: run full CI/release checks for the P46 evidence artifacts, then record the verified P46 commit and leave the productization gate blocked until authoritative MAX evidence changes.
+- Verification completed: isolated P46 test suite reconstructed from the committed branch passed **1 test / 1 passed**; Python compilation passed; the new test file has no lines over the repository's 100-character Ruff limit.
+- Full GitHub CI was not observed for the P46 PR at this checkpoint, so P46 remains **IN_PROGRESS**, not CLOSED/VERIFIED at repository-CI level.
+- Next boundary: obtain the repository CI evidence for P46, then record the CI-verified commit; leave the productization gate blocked until authoritative MAX evidence changes.
 - Prohibited until blocker closure: live MAX outbound activation, automatic live retry, compensating provider/fallback, provider-specific production execution, database migration and frozen-kernel semantic changes.
 - Source contract: `architecture/max_provider_evidence_revalidation_contract.json`.
 - Operator documentation: `docs/P46_MAX_PROVIDER_EVIDENCE_HOLD.md`.
