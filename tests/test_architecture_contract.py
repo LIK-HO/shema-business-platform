@@ -154,6 +154,30 @@ def test_v1_5_unified_runtime_contract_is_additive() -> None:
     assert kernel["version"] == "1.4"
 
 
+def test_gigachat_application_composition_contract_is_bounded() -> None:
+    contract = loads(
+        read("architecture/gigachat_application_composition_contract.json")
+    )
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["composition"]["provider"] == "gigachat"
+    assert contract["composition"]["gateway"] == (
+        "shema_platform.application.ai.AIGateway"
+    )
+    assert contract["composition"]["workflow"] == (
+        "shema_platform.application.ai_runtime.AIExecutionService"
+    )
+    assert contract["activation"]["default_enabled"] is False
+    assert contract["activation"]["explicit_operator"] is True
+    assert contract["activation"]["rollback"] is True
+    assert contract["trust"]["client_controls_trust"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_http_wiring"] is True
+    assert contract["scope_stop"]["no_openai"] is True
+    assert contract["scope_stop"]["no_cloud_local_fallback"] is True
+
+
 def test_gigachat_provider_contract_is_bounded() -> None:
     contract = loads(read("architecture/gigachat_provider_contract.json"))
 
