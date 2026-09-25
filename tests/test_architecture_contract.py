@@ -465,3 +465,29 @@ def test_ai_production_rehearsal_contract_is_bounded() -> None:
     assert contract["scope_stop"]["no_cloud_local_fallback"] is True
     assert contract["scope_stop"]["no_deployment"] is True
     assert contract["scope_stop"]["no_merge"] is True
+
+def test_max_reconciliation_idempotency_contract_is_bounded() -> None:
+    contract = loads(read("architecture/max_reconciliation_idempotency_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["provider"]["id"] == "max"
+    assert contract["provider"]["live_network"] is False
+    assert contract["provider"]["production_credentials"] is False
+    assert contract["provider"]["canonical_truth_owner"] == "platform"
+    assert contract["proof"]["stable_idempotency_key_per_action"] is True
+    assert contract["proof"]["same_request_replay_returns_same_external_identity"] is True
+    assert contract["proof"]["same_key_different_payload_fails_closed"] is True
+    assert contract["proof"]["different_actions_have_distinct_external_identity"] is True
+    assert contract["proof"]["repeated_delivery_is_deterministically_deduplicated"] is True
+    assert contract["proof"]["unsafe_provider_capability_fails_closed"] is True
+    assert contract["safety"]["supports_idempotency"] is True
+    assert contract["safety"]["supports_reconciliation"] is False
+    assert contract["safety"]["safe_for_retry"] is True
+    assert contract["scope_stop"]["no_live_max_api"] is True
+    assert contract["scope_stop"]["no_credentials"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_retry_in_adapter"] is True
+    assert contract["scope_stop"]["no_production_activation"] is True
