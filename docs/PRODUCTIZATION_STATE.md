@@ -1318,33 +1318,77 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P32 — END-TO-END AI EXECUTION PROOF — IN_PROGRESS
+## P32 — END-TO-END AI EXECUTION PROOF — CLOSED / VERIFIED
 
 Purpose:
-- prove the complete assembled application path from canonical HTTP/APIApplication through frozen AIGateway, P27 composition and P28 gate using deterministic non-production transport;
+- prove the complete assembled AI path from canonical HTTP/APIApplication through frozen AIGateway, P27 composition and P28 gate using deterministic non-production transport;
 - prove canonical AIRun persistence, audit, correlation and fail-closed behavior.
 
 Implementation:
 - `tests/integration/test_ai_end_to_end.py`;
 - `architecture/ai_end_to_end_contract.json`;
-- `docs/P32_AI_END_TO_END_PROOF.md`.
+- `docs/P32_AI_END_TO_END_PROOF.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
 
-Boundary:
-- deterministic transport is test-only and implements the existing YandexGPT provider contract;
-- no production provider was added;
-- no live YandexGPT network dependency is introduced in CI;
-- provider activation remains explicit;
-- canonical PostgreSQL remains the source of trust and persistence.
+Verified path:
+- canonical HTTP `POST /v1/ai/run`;
+- provider-neutral application service;
+- frozen AIGateway;
+- P27 scoped composition;
+- P28 production activation gate;
+- deterministic test transport implementing the existing YandexGPT provider contract;
+- PostgreSQL AIRun and audit persistence.
+
+Verified failures:
+- authorization precedes trust lookup;
+- expired evidence fails closed with HTTP 423;
+- provider is not invoked when evidence is unusable;
+- activation remains explicit;
+- no live provider network is used in CI.
+
+Provider policy:
+- cloud AI allow-list remains YandexGPT and GigaChat;
+- local/self-hosted LLMs require verified free commercial-use rights;
+- no implicit Cloud ↔ Local fallback;
+- OpenAI is not an approved platform provider.
+
+Evidence:
+- CI run #1185 (`36103181749`) passed all seven required jobs on HEAD `18edd595704102cbf55df2b19d7367fb34e67ca2`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- No frozen kernel file was changed.
+- No database schema/migration was changed.
+
+No merge or deployment authorization is implied.
+
+## P33 — GIGACHAT PROVIDER CONTRACT + BOUNDED ADAPTER — NOT_STARTED
+
+Purpose:
+- implement the second explicitly approved cloud AI provider behind the existing provider-neutral AI Gateway;
+- preserve the same fail-closed controls already proven for YandexGPT;
+- avoid any new kernel or Gateway semantics.
+
+Planned scope:
+- current official GigaChat API contract verification;
+- provider adapter behind existing AI provider contracts;
+- runtime-only credentials;
+- bounded timeout/size/token/cost controls;
+- explicit readiness and activation;
+- provider-result validation and provenance;
+- deterministic adapter tests and full seven-job CI.
 
 Scope stop:
-- no frozen kernel semantic change;
-- no database schema/migration change;
-- no live traffic;
 - no OpenAI;
-- no GigaChat implementation;
+- no new cloud provider;
 - no local runtime;
-- no cloud/local fallback.
+- no Cloud ↔ Local fallback;
+- no frozen kernel change;
+- no database schema/migration;
+- no automatic production activation;
+- no live traffic by this phase.
 
-Next:
-- run the full seven-job CI gate;
-- close P32 only if the end-to-end proof and all release gates are green.
