@@ -4,11 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from shema_platform.foundation.configuration import ConfigurationSnapshot
-from shema_platform.foundation.telemetry import InMemoryTelemetrySink
+from shema_platform.adapters.ai import gigachat_activation, production_activation
 from shema_platform.adapters.ai import gigachat_activation, production_activation
 from shema_platform.adapters.ai.gigachat_activation import GigaChatProductionGate
 from shema_platform.adapters.ai.production_activation import YandexGPTProductionGate
+from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 from shema_platform.platform.ai_promotion_gate import (
     approve_ai_promotion,
     assess_ai_promotion,
