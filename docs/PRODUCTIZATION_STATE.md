@@ -1446,10 +1446,10 @@ Evidence:
 Next:
 - P35 — explicit GigaChat runtime assembly.
 
-## P35 — GIGACHAT RUNTIME ASSEMBLY — IN_PROGRESS
+## P35 — GIGACHAT RUNTIME ASSEMBLY — CLOSED / VERIFIED
 
 Purpose:
-- add the explicit runtime composition root for the already verified GigaChat application composition;
+- add the explicit runtime composition root for the verified GigaChat application composition;
 - keep activation and rollback operator-controlled;
 - preserve the canonical `create_app()` HTTP boundary without adding request-level provider selection.
 
@@ -1460,26 +1460,40 @@ Implementation:
 - `tests/test_gigachat_runtime_composition.py`;
 - executable contract proof in `tests/test_architecture_contract.py`.
 
-Boundary:
-- runtime construction must not activate GigaChat or perform provider network I/O;
-- the runtime delegates to the existing P34 composition and frozen `AIGateway`;
-- activation and rollback remain explicit;
-- provider selection is not exposed through the HTTP request.
-
-Scope stop:
-- no new provider;
-- no OpenAI;
-- no local runtime;
-- no Cloud ↔ Local fallback;
-- no frozen kernel change;
-- no database schema/migration;
-- no HTTP route change;
-- no automatic production activation;
-- no live provider traffic.
-
 Evidence:
-- CI run #1194 (`36111764539`) caught one Ruff import-order defect in the new runtime module; the defect is formatting-only and has been corrected on the branch.
-- Awaiting the post-fix seven-job CI gate before P35 can close.
+- CI run #1196 (`36111871070`) passed all seven required jobs on HEAD `3838716374f72a0de2b5e62cde3700d631032a93`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- CI #1194 caught one Ruff import-order defect; it was corrected without semantic change.
+- No frozen kernel file was changed.
+- No database schema/migration was changed.
+- No HTTP route was changed.
+- No live provider traffic was enabled.
 
 No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P36 — OPERATOR-LEVEL APPROVED AI PROVIDER SELECTION.
+
+Purpose:
+- allow the runtime composition root to choose exactly one already-approved cloud AI provider for the assembled application;
+- keep provider choice outside the HTTP request and outside frozen kernel semantics;
+- forbid automatic fallback, implicit activation and client-controlled provider/model selection.
+
+Planned boundary:
+- YandexGPT and GigaChat only;
+- explicit operator/configuration selection at composition time;
+- selected provider is immutable for the composed application instance;
+- no new provider adapter;
+- no database schema/migration;
+- no HTTP route contract change;
+- no provider traffic during composition.
+
+P36 is a composition-layer step only. Live production activation remains governed by the existing provider-specific gates.
 
