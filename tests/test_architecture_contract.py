@@ -152,3 +152,30 @@ def test_v1_5_unified_runtime_contract_is_additive() -> None:
     assert runtime["recovery"]["outbox_reclaim"] is True
     assert runtime["recovery"]["commercial_send_reclaim"] is True
     assert kernel["version"] == "1.4"
+
+
+def test_ai_http_route_contract_is_bounded() -> None:
+    route = loads(read("architecture/ai_api_route_contract.json"))
+
+    assert route["version"] == "1.0"
+    assert route["route"]["path"] == "/v1/ai/run"
+    assert route["route"]["client_cannot_control"] == [
+        "provider_id",
+        "model",
+        "model_version",
+        "actor_trust_level",
+        "resource_trust_level",
+        "evidence_level",
+        "production_activation_state",
+        "provider_credentials",
+    ]
+    assert (
+        route["composition_boundary"]["frozen_AIGateway_semantics_unchanged"]
+        is True
+    )
+    assert (
+        route["production_behavior"][
+            "production_provider_activation_still_requires_P28_gate"
+        ]
+        is True
+    )
