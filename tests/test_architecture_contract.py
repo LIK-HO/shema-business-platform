@@ -367,3 +367,41 @@ def test_selected_provider_ai_end_to_end_contract_is_bounded() -> None:
     assert contract["scope_stop"]["no_database_schema_change"] is True
     assert contract["scope_stop"]["no_automatic_production_activation"] is True
     assert contract["scope_stop"]["no_live_provider_traffic"] is True
+
+def test_ai_production_observability_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_production_observability_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["events"] == {
+        "activation": "ai.production.activated",
+        "rollback": "ai.production.rolled_back",
+        "provider_success": "ai.provider.completed",
+        "provider_failure": "ai.provider.failed",
+    }
+    assert "configuration_version" in contract["safe_operational_attributes"]
+    assert "operator" in contract["safe_operational_attributes"]
+    assert contract["required_properties"]["correlation_id"] is True
+    assert contract["required_properties"]["provider_identified"] is True
+    assert contract["required_properties"]["configuration_version_for_provider_events"] is True
+    assert contract["required_properties"]["operator_for_activation_and_rollback"] is True
+    assert contract["required_properties"]["redacted"] is True
+    assert contract["required_properties"]["telemetry_non_authoritative"] is True
+    assert contract["required_properties"]["telemetry_failure_does_not_break_execution"] is True
+    prohibited = set(contract["prohibited_data"])
+    assert {
+        "credentials",
+        "authorization_headers",
+        "prompts",
+        "input_refs",
+        "evidence_refs",
+        "provider_outputs",
+        "model_inputs",
+    } <= prohibited
+    assert contract["scope_stop"]["no_new_telemetry_backend"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_activation"] is True
+    assert contract["scope_stop"]["no_live_provider_traffic"] is True
