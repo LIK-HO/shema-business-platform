@@ -1752,31 +1752,43 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P44 — MAX QUARANTINE RECONCILIATION CONTRACT / READ-ONLY OPERATOR CONTROL.
+## P44 — MAX QUARANTINE RECONCILIATION CONTRACT / READ-ONLY OPERATOR CONTROL — IN_PROGRESS
 
 Purpose:
-- define a safe operator-level procedure for inspecting ambiguous MAX sends and determining what evidence would be sufficient to resolve them;
-- keep reconciliation state-changing operations disabled until provider-side evidence is strong enough;
-- make the uncertainty state operationally visible without creating a second outbound path.
+- define a safe operator-level read path for ambiguous MAX sends;
+- expose existing quarantine evidence without mutating business state;
+- keep reconciliation and outbound retry disabled.
 
-Planned boundary:
-- read-only quarantine lookup by commercial action and stable external-effect key;
-- structured reconciliation evidence model;
-- explicit statuses: unresolved / evidence-found / operator-reviewed;
-- audit-only operator review record;
-- fail-closed default: review never changes `CommercialAction` to `SENT` and never sends a message;
-- no live MAX call in the read-only control;
-- no automatic retry.
+Implementation:
+- `src/shema_platform/platform/quarantine_read.py`;
+- `tests/test_quarantine_read.py`;
+- `architecture/quarantine_read_model_contract.json`;
+- `docs/P44_QUARANTINE_READ_MODEL.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Boundary:
+- lookup unresolved quarantine records by object/action and optional reason;
+- bounded listing of unresolved records;
+- return only the existing reconciliation payload;
+- SELECT-only storage access;
+- no new permission;
+- reader is not a public HTTP route;
+- no commercial-action mutation;
+- no `FAILED → SENT` transition;
+- no MAX call;
+- no automatic resend.
 
 Scope stop:
 - no live MAX credentials;
 - no outbound network;
 - no new provider;
-- no database schema/migration unless an existing read model is provably insufficient;
+- no database migration;
 - no frozen kernel semantic change;
 - no automatic retry;
-- no direct `FAILED → SENT` transition.
+- no HTTP route change.
 
-P44 is an operator safety/control phase, not a live MAX activation phase.
+Evidence:
+- implementation is complete on the P44 branch;
+- full seven-job CI gate pending.
+
+No merge or deployment authorization is implied.
