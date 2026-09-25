@@ -1617,25 +1617,42 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P40 — CONTROLLED AI PRODUCTION ACTIVATION / ROLLBACK REHEARSAL.
+## P40 — CONTROLLED AI PRODUCTION ACTIVATION / ROLLBACK REHEARSAL — IN_PROGRESS
 
 Purpose:
-- prove the final operator-controlled promotion path from a green P39 assessment to an explicit provider activation decision and reversible rollback;
-- exercise both approved provider gates using deterministic transports only;
-- prove that promotion approval does not itself activate traffic;
-- prove rollback blocks subsequent requests and restores the disabled safety state.
+- prove the final operator-controlled promotion path from a green P39 assessment to explicit provider activation and reversible rollback;
+- exercise both approved provider gates with deterministic/no-network transports;
+- prove promotion approval does not activate traffic.
+
+Implementation:
+- `tests/test_ai_production_rehearsal.py`;
+- `architecture/ai_production_rehearsal_contract.json`;
+- `docs/P40_AI_PRODUCTION_REHEARSAL.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Verified rehearsal boundary:
+- starts from green P39 assessment;
+- explicit operator approval is required;
+- approval itself leaves both providers disabled;
+- YandexGPT activation creates its gated provider without external provider traffic;
+- GigaChat activation uses deterministic request/token transports and must make zero network calls;
+- explicit rollback returns each gate to disabled;
+- a previously returned gated provider fails closed with `NOT_READY` after rollback;
+- activation/rollback telemetry is emitted.
 
 Scope stop:
-- deterministic test transports only;
-- no live YandexGPT/GigaChat network calls;
+- no live provider traffic;
 - no new provider;
 - no HTTP route change;
 - no database schema/migration;
 - no frozen kernel semantic change;
 - no automatic activation;
-- no cloud/local fallback;
-- no deployment or merge.
+- no Cloud ↔ Local fallback;
+- no deployment;
+- no merge.
 
-P40 is a final operational rehearsal, not production enablement.
+Evidence:
+- implementation is complete on the P40 branch;
+- full seven-job CI gate pending.
+
+No merge or deployment authorization is implied.
