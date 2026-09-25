@@ -8,10 +8,10 @@ from shema_platform.adapters.ai.contracts import (
     AIProviderRequest,
 )
 from shema_platform.adapters.ai.gigachat import (
+    PRODUCTION_SCOPES,
     GigaChatConfiguration,
     GigaChatExecutionError,
     GigaChatProvider,
-    PRODUCTION_SCOPES,
 )
 from shema_platform.application.ai import AIBudget, AIExecutionContext, AITask
 
