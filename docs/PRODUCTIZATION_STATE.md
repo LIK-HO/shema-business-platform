@@ -3,12 +3,12 @@
 ## Current verified context
 
 - Repository: `LIK-HO/shema-business-platform`
-- Productization branch: v1.5/productization-ai-composition
+- Productization branch: v1.5/production-ai-activation-gate
 - Frozen core baseline: a3eec47ea68882631ebf24b3998b431f2dc83600
 - Current productization HEAD: live from this branch; never treated as a static manifest fact
 - Core PR: #8 — open, draft, unmerged
-- Productization PR: #38 — open, draft, unmerged
-- Active productization phase: P28 — production AI activation gate — NOT_STARTED
+- Productization PR: #39 — open, draft, unmerged
+- Active productization phase: P29 — production YandexGPT route wiring — NOT_STARTED
 - v1.4 kernel semantics: frozen
 - v1.5 core maturity: certified
 
@@ -1155,7 +1155,7 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P28 — PRODUCTION AI ACTIVATION GATE — NOT_STARTED
+## P28 — PRODUCTION AI ACTIVATION GATE — CLOSED / VERIFIED
 
 Purpose:
 - introduce an explicit, reversible production activation contract for the already verified YandexGPT composition;
@@ -1163,9 +1163,56 @@ Purpose:
 - preserve default-disabled / fail-closed behavior;
 - keep activation outside frozen kernel semantics.
 
+Implementation:
+- `src/shema_platform/adapters/ai/production_activation.py`
+- `tests/test_ai_production_activation.py`
+- `architecture/ai_production_activation_contract.json`
+- `docs/AI_PRODUCTION_ACTIVATION.md`
+
+Boundary:
+- default state is disabled;
+- production activation requires production environment, feature flag, explicit operator, runtime-only YandexGPT credential, complete immutable configuration snapshot, readiness and telemetry;
+- every gated request must match the active configuration version and stay within production cost/deadline ceilings;
+- rollback disables subsequent traffic and records operator/reason without touching canonical business state;
+- process restart returns the gate to disabled;
+- frozen `src/shema_platform/application/ai.py` was not changed;
+- no production HTTP route was auto-wired by P28.
+
 Non-goals:
 - no new provider;
 - no local model runtime;
 - no automatic cloud/local fallback;
 - no implicit production enablement;
+- no database schema or migration change;
 - no merge or deployment authorization.
+
+Evidence:
+- CI run #1162 (`36099815816`) passed all seven required jobs:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- Verified P28 head: `1d53f56f879d2f4574534b122c79978475636000`.
+- No frozen kernel file was changed.
+- Production traffic remains disabled until a separate bounded route-wiring phase.
+
+No merge or deployment authorization is implied.
+
+## P29 — PRODUCTION YANDEXGPT ROUTE WIRING — NOT_STARTED
+
+Purpose:
+- connect the already verified P27 composition and P28 production gate to the runtime application path;
+- preserve frozen `AIGateway` semantics and explicit operator-controlled activation;
+- keep provider selection, configuration version, deadlines, budgets, readiness and rollback observable at the route boundary.
+
+Scope stop:
+- no new AI provider;
+- no GigaChat implementation in this phase;
+- no local/self-hosted runtime;
+- no cloud/local fallback;
+- no changes to canonical business-state semantics;
+- no automatic production traffic enablement.
+
