@@ -15,9 +15,9 @@ from shema_platform.adapters.ai.contracts import (
     AIProviderReadinessState,
 )
 from shema_platform.adapters.ai.gigachat import (
+    PRODUCTION_SCOPES,
     GigaChatConfiguration,
     GigaChatProvider,
-    PRODUCTION_SCOPES,
 )
 from shema_platform.application.ai import AIRun, AITask
 from shema_platform.foundation.configuration import ConfigurationSnapshot
