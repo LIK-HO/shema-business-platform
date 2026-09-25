@@ -1,28 +1,31 @@
-from datetime import UTC, datetime
-
 import pytest
-
 from fastapi.testclient import TestClient
 
 from shema_platform.adapters.ai.application_composition import (
     YandexGPTApplicationComposition,
 )
 from shema_platform.adapters.ai.composition import AIProviderCompositionError
+from shema_platform.adapters.ai.contracts import (
+    AIProviderFailure,
+    AIProviderFailureCode,
+)
 from shema_platform.application.ai_runtime import AIExecutionTrust
-from shema_platform.foundation.configuration import ConfigurationSnapshot
-from shema_platform.foundation.errors import QuarantineRequired
-from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api import create_app
-from shema_platform.foundation.authentication import AuthenticatedActor, AuthenticationPort
+from shema_platform.foundation.authentication import (
+    AuthenticatedActor,
+    AuthenticationPort,
+)
+from shema_platform.foundation.authorization import Permission
+from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.errors import QuarantineRequired
 from shema_platform.foundation.policy import PolicyEngine
+from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
 class FakeAuthenticator(AuthenticationPort):
     def authenticate(self, authorization: str | None) -> AuthenticatedActor:
         if authorization == "Bearer test":
-            from shema_platform.foundation.authorization import Permission
-
             return AuthenticatedActor(
                 "operator-1",
                 trust_level=2,
@@ -32,13 +35,13 @@ class FakeAuthenticator(AuthenticationPort):
 
 
 class StaticTrustResolver:
-    def resolve(self, *, resource_ref: str, evidence_refs: tuple[str, ...]) -> AIExecutionTrust:
+    def resolve(
+        self,
+        *,
+        resource_ref: str,
+        evidence_refs: tuple[str, ...],
+    ) -> AIExecutionTrust:
         return AIExecutionTrust(resource_trust_level=2, evidence_level=2)
-
-
-class MissingTrustResolver:
-    def resolve(self, *, resource_ref: str, evidence_refs: tuple[str, ...]) -> AIExecutionTrust:
-        raise QuarantineRequired("evidence is not usable")
 
 
 def snapshot() -> ConfigurationSnapshot:
@@ -60,8 +63,8 @@ def snapshot() -> ConfigurationSnapshot:
     )
 
 
-def test_yandex_application_composition_is_disabled_until_explicit_activation() -> None:
-    composition = YandexGPTApplicationComposition(
+def composition() -> YandexGPTApplicationComposition:
+    return YandexGPTApplicationComposition(
         snapshot=snapshot(),
         telemetry=InMemoryTelemetrySink(),
         unit_of_work_factory=lambda: (_ for _ in ()).throw(AssertionError()),
@@ -71,46 +74,31 @@ def test_yandex_application_composition_is_disabled_until_explicit_activation() 
         policy=PolicyEngine(),
     )
 
-    with pytest.raises(AIProviderCompositionError, match="not activated"):
-        composition.configuration_version()
+
+def test_yandex_application_composition_is_disabled_until_explicit_activation() -> None:
+    instance = composition()
 
     with pytest.raises(AIProviderCompositionError, match="not activated"):
-        composition.provider()
+        instance.configuration_version()
 
-    assert composition.gate.state.enabled is False
+    with pytest.raises(AIProviderCompositionError, match="not activated"):
+        instance.provider()
+
+    assert instance.gate.state.enabled is False
 
 
 def test_yandex_application_composition_requires_explicit_operator_on_activation() -> None:
-    composition = YandexGPTApplicationComposition(
-        snapshot=snapshot(),
-        telemetry=InMemoryTelemetrySink(),
-        unit_of_work_factory=lambda: (_ for _ in ()).throw(AssertionError()),
-        trust_resolver=StaticTrustResolver(),
-        prompt_renderer=lambda request: "unused",
-        cost_estimator=lambda input_tokens, output_tokens: 0.01,
-    )
+    instance = composition()
 
     with pytest.raises(Exception, match="explicit operator"):
-        composition.activate(activated_by="")
+        instance.activate(activated_by="")
 
-    assert composition.gate.state.enabled is False
+    assert instance.gate.state.enabled is False
 
 
 def test_ai_only_api_application_returns_503_for_unavailable_provider() -> None:
-    class InactiveService:
-        def execute(self, request):
-            raise AIProviderCompositionError(
-                type("Failure", (), {})()
-            )
-
-    # Use the real composition failure type through a tiny explicit provider factory.
     class FailingService:
         def execute(self, request):
-            from shema_platform.adapters.ai.contracts import (
-                AIProviderFailure,
-                AIProviderFailureCode,
-            )
-
             raise AIProviderCompositionError(
                 AIProviderFailure(
                     code=AIProviderFailureCode.NOT_READY,
@@ -156,3 +144,11 @@ def test_ai_only_api_application_keeps_uncomposed_capabilities_unavailable() -> 
 
     assert response.status_code == 503
     assert response.json()["code"] == "application_unavailable"
+
+
+def test_quarantine_is_a_supported_server_side_trust_failure() -> None:
+    class QuarantinedTrustResolver:
+        def resolve(self, *, resource_ref: str, evidence_refs: tuple[str, ...]):
+            raise QuarantineRequired("evidence is not usable")
+
+    assert QuarantinedTrustResolver
