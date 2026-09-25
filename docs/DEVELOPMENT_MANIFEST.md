@@ -1,13 +1,12 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen  
-**Current branch:** v1.5/core-maturity  
-**Base:** v1.5-runtime  
-**Current HEAD:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.  
-**Current PR:** #8 — Core Maturity / Migration Safety / Recovery  
-**Kernel baseline:** v1.4 frozen  
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 MAX Evidence Hold
+**Active development boundary:** P46 — MAX provider evidence revalidation
+**Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
+**Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
+**System target:** personal, scalable, reliable, durable and mature system; not a SaaS breadth target.
 
 ---
 
@@ -322,6 +321,257 @@ Microservices не являются самостоятельной целью.
 Цель — контролируемость последствий отказа.
 
 ---
+
+# 5A. Системный product/experience layer — обязательная post-core граница
+
+После frozen kernel зрелость системы определяется не только внутренними сервисами. Пользовательские и эксплуатационные поверхности становятся самостоятельными bounded layers, которые обязаны сохранять семантику frozen core и не создавать альтернативный источник истины.
+
+## 5A.1. UI / UX System
+
+UI должен быть единой операционной системой для владельца:
+- единая information architecture;
+- единый design system и component library;
+- единые состояния loading / success / empty / degraded / error / offline / pending;
+- ясное различие canonical data, evidence, recommendation, action и uncertainty;
+- минимум лишних технических решений для оператора;
+- keyboard-first для desktop;
+- touch-first для mobile;
+- responsive layout;
+- быстрый доступ к critical workflows;
+- глобальный search / command center;
+- безопасные destructive/irreversible actions с явным подтверждением;
+- сохранение контекста после ошибок и reconnect.
+
+UI никогда не владеет бизнес-правилами. Он представляет состояние, полученное через canonical API.
+
+## 5A.2. Web application
+
+Web — основной универсальный client surface.
+
+Обязательно:
+- canonical API only;
+- typed API contracts;
+- route/deep-link semantics;
+- secure session handling;
+- resilient loading and reconnect behavior;
+- pagination/filtering/search for large datasets;
+- keyboard navigation;
+- accessibility target не ниже WCAG 2.2 AA для user-facing Web/PWA surfaces;
+- visual regression coverage для critical screens;
+- end-to-end coverage критических пользовательских потоков;
+- browser compatibility policy;
+- deterministic error handling.
+
+## 5A.3. PWA
+
+PWA является installable/resilient Web surface, а не отдельной бизнес-системой.
+
+Обязательно:
+- installability;
+- service worker/update lifecycle;
+- offline-aware read access для безопасно кэшируемых данных;
+- explicit online/offline state;
+- reconnect and resynchronization;
+- bounded local cache;
+- cache invalidation/versioning;
+- background synchronization только для безопасных operations;
+- no local cache as canonical truth;
+- user-visible pending/sync state;
+- safe handling of stale data;
+- controlled client update and rollback strategy.
+
+Offline mode не должен создавать вторую canonical transaction authority. Локальные данные — cache/read model; canonical write semantics остаются на сервере.
+
+## 5A.4. Android application
+
+Android — самостоятельный client surface, использующий тот же canonical API и domain semantics.
+
+Обязательно:
+- state-driven UI;
+- clear separation UI / data / domain concerns;
+- local persistence only as cache/read model or bounded offline queue;
+- reconnect and sync semantics;
+- lifecycle-safe background work;
+- secure credential/session storage;
+- notification/deep-link handling;
+- app update and rollback strategy;
+- crash diagnostics;
+- permission minimization;
+- network and battery aware execution;
+- end-to-end coverage критических workflows.
+
+## 5A.5. Offline-aware multi-device continuity
+
+Система должна нормально переживать:
+- потерю сети;
+- смену устройства;
+- временную недоступность API;
+- повторное открытие приложения;
+- одновременное использование Web/PWA/Android.
+
+Правило:
+**local state may accelerate or buffer the experience, but cannot silently override canonical server state.**
+
+Для queued mutations обязательны:
+- client operation id;
+- idempotency;
+- explicit pending state;
+- retry only when operation is safe;
+- conflict detection;
+- server-authoritative reconciliation;
+- durable error state when reconciliation is impossible.
+
+## 5A.6. Client security / device trust
+
+Помимо server IAM нужен client security boundary:
+- secure token/session storage;
+- no secrets in local storage where unsafe;
+- session expiry/revocation propagation;
+- device/session visibility;
+- optional local application lock;
+- safe handling of screenshots/logs where platform allows;
+- minimal permissions;
+- secure deep links;
+- TLS/security validation according to platform capabilities;
+- mobile/web security verification mapped to the selected security baseline.
+
+## 5A.7. Notifications / background execution
+
+Управляемые notifications должны быть:
+- bounded;
+- deduplicated;
+- correlated;
+- user-relevant;
+- revocable;
+- non-authoritative.
+
+Background work не должен незаметно создавать critical business effects. Любой critical external effect обязан проходить canonical server workflow.
+
+## 5A.8. Client observability
+
+Для Web/PWA/Android должны быть различимы:
+- application error;
+- network error;
+- auth/session failure;
+- stale cache;
+- synchronization failure;
+- API/business rejection;
+- external dependency failure.
+
+Client telemetry:
+- correlation-aware;
+- redacted;
+- non-authoritative;
+- privacy-minimized;
+- versioned by app/build version.
+
+Должна существовать связка:
+**client event → correlation id → canonical API request → server workflow → audit/telemetry.**
+
+## 5A.9. Client quality gates
+
+Критические client flows должны иметь:
+- unit tests where logic exists;
+- API contract tests;
+- integration tests;
+- E2E tests;
+- offline/reconnect tests;
+- failure-path tests;
+- accessibility tests;
+- visual regression for critical screens;
+- supported-browser/device matrix;
+- performance smoke tests;
+- release candidate validation.
+
+## 5A.10. Safe client update lifecycle
+
+Каждый client surface должен поддерживать:
+- immutable/versioned build;
+- explicit compatibility window with canonical API;
+- staged rollout where appropriate;
+- rollback to previous known-good build;
+- migration of local caches/storage;
+- prevention of incompatible client/server combinations;
+- crash/release telemetry sufficient to stop a bad rollout.
+
+## 5A.11. Operator / System Control Plane
+
+Нужен отдельный operational surface для владельца системы:
+- health/readiness;
+- active provider status;
+- jobs/outbox state;
+- quarantine inspection;
+- failed operations;
+- audit inspection;
+- migration status;
+- backup/recovery status;
+- SLO/error-budget state;
+- release/configuration version;
+- AI provider activation status;
+- integration diagnostics.
+
+Этот surface наблюдает и управляет только теми действиями, для которых существует соответствующий безопасный server-side contract. UI не получает прямого доступа к PostgreSQL.
+
+## 5A.12. Data portability / continuity
+
+Система должна иметь bounded portability:
+- deterministic export;
+- verified import where required;
+- schema/version metadata;
+- provenance preservation;
+- checksum/integrity validation;
+- backup-independent export for critical business data;
+- restore verification;
+- explicit ownership of imported external data.
+
+Миграция в другой storage/provider/UI не должна разрушать canonical identity, evidence lineage, audit history или economics lineage.
+
+## 5A.13. Integration ecosystem
+
+Каждая внешняя интеграция должна иметь:
+- adapter boundary;
+- capability declaration;
+- credentials/configuration boundary;
+- timeout/resource budget;
+- retry policy;
+- idempotency/reconciliation contract where external effects exist;
+- provenance where external data enters Evidence;
+- health/readiness;
+- observability;
+- contract tests;
+- fail-closed behavior when required guarantees are absent.
+
+Provider availability alone никогда не является основанием для production activation.
+
+## 5A.14. Personal-system usability doctrine
+
+Система оптимизируется прежде всего для одного владельца/оператора:
+- минимальное число экранов для critical tasks;
+- минимальное число ручных переходов;
+- technical complexity hidden inside platform;
+- clear operator state;
+- safe defaults;
+- reversible actions where possible;
+- explicit irreversible boundaries;
+- no duplicated source-of-truth fields across clients.
+
+Масштабируемость достигается архитектурой, а не усложнением повседневного интерфейса.
+
+## 5A.15. Experience-layer completion boundary
+
+Experience layer не считается завершённым по факту наличия Web/PWA/Android.
+
+Завершение требует:
+- visual/interaction system;
+- canonical API integration;
+- offline/reconnect semantics;
+- client security;
+- E2E verification;
+- accessibility;
+- observability;
+- safe update/rollback;
+- multi-device continuity;
+- operational control surface.
 
 # 6. Семь gates зрелости
 
@@ -858,6 +1108,27 @@ Simple core first → standard patterns → measured scaling → extracted servi
 
 ---
 
+# 13A. Definition of Done — Mature Personal System Surface
+
+The frozen core remains complete independently of the following product-surface work. The system as a whole becomes mature only when the required experience and operational surfaces are also verified.
+
+- [ ] Unified UI/design system exists and critical operator flows are simplified.
+- [ ] Canonical Web client is implemented against canonical API only.
+- [ ] PWA install/update/offline-aware/reconnect semantics are verified.
+- [ ] Android client uses the same canonical API/domain semantics.
+- [ ] Offline-aware multi-device continuity is deterministic and server-authoritative.
+- [ ] Client security/session/device controls are verified.
+- [ ] Web/PWA/Android critical workflows have E2E coverage.
+- [ ] Critical UI screens have accessibility and visual-regression coverage.
+- [ ] Client telemetry is correlation-aware, redacted and non-authoritative.
+- [ ] Client releases have compatibility, staged rollout and rollback strategy.
+- [ ] Operator/System Control Plane exposes bounded diagnostics and recovery state.
+- [ ] Data export/import/portability preserves identity, evidence, audit and economics lineage.
+- [ ] External integrations have explicit capability, safety, health and contract evidence.
+- [ ] Real production SLO/capacity evidence is collected before making scale claims.
+- [ ] No client or integration creates a second system of record.
+- [ ] No experience-layer feature reopens frozen core semantics without the documented exception process.
+
 # 13. Definition of Done — Mature Core
 
 - [ ] v1.4 kernel contract remains frozen and green.
@@ -905,6 +1176,31 @@ Core изменяется только по доказанному invariant def
 Любое исключение требует architecture decision, regression tests, migration plan, rollback plan и impact analysis.
 
 ---
+
+## Experience / Client doctrine
+
+**One system, multiple surfaces.**
+
+Web, PWA and Android are different experience surfaces over one canonical API/domain system.
+
+They must share:
+- canonical identifiers;
+- business semantics;
+- authorization outcomes;
+- error taxonomy;
+- correlation lineage;
+- idempotency semantics;
+- evidence/status presentation rules.
+
+They may differ in:
+- interaction model;
+- local caching;
+- offline capabilities;
+- navigation;
+- notification mechanisms;
+- device-specific optimizations.
+
+They must never diverge in canonical business truth.
 
 ## Universal development doctrine
 
