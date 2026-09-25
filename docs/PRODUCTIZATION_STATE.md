@@ -1785,21 +1785,26 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P45 — PRODUCTION PROMOTION / EXTERNAL-COMMUNICATION READINESS AUDIT.
+## P45 — v1.5 PRODUCTIZATION READINESS AUDIT — IN_PROGRESS
 
 Purpose:
-- consolidate the verified evidence from AI promotion and MAX external-effect safety into one release-readiness assessment;
-- identify any remaining gates that prevent treating v1.5 productization as production-capable;
-- avoid adding functionality unless an actual readiness gap is demonstrated.
+- consolidate the verified evidence from AI promotion and MAX external-effect safety into one readiness assessment;
+- explicitly identify remaining production blockers;
+- avoid adding functionality unless a demonstrated readiness gap requires it.
 
-Planned assessment:
-- frozen-kernel integrity and release contract;
-- AI: P39/P40 evidence and explicit activation/rollback;
-- MAX: P41/P42/P43/P44 evidence and current provider-side idempotency gap;
-- IAM, observability, recovery and supply-chain gates;
-- explicit list of blockers vs verified controls.
+Implementation:
+- `src/shema_platform/platform/productization_readiness.py`;
+- `tests/test_productization_readiness.py`;
+- `architecture/productization_readiness_contract.json`;
+- `docs/P45_PRODUCTIZATION_READINESS.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Expected assessment:
+- AI/core/release controls pass from existing certified contracts;
+- MAX platform-side external-effect safety passes;
+- MAX provider-side idempotency is currently not certified;
+- MAX provider-side reconciliation is currently not certified;
+- therefore the aggregate readiness status remains `blocked`.
 
 Scope stop:
 - no new provider;
@@ -1810,4 +1815,8 @@ Scope stop:
 - no live external traffic;
 - no merge/deploy.
 
-P45 is an evidence/audit phase first. Implementation is conditional on a demonstrated production-readiness gap.
+Evidence:
+- implementation is complete on the P45 branch;
+- full seven-job CI gate pending.
+
+No merge or deployment authorization is implied.
