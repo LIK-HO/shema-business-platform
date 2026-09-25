@@ -238,6 +238,11 @@ def test_rollback_is_reversible_and_blocks_future_traffic() -> None:
         "ai.production.activated",
         "ai.production.rolled_back",
     ]
+    assert events[0].attributes["operator"] == "operator-1"
+    assert events[0].attributes["configuration_version"] == "cfg:yandexgpt-prod-v1"
+    assert events[1].attributes["operator"] == "operator-2"
+    assert events[1].attributes["configuration_version"] == "cfg:yandexgpt-prod-v1"
+    assert events[1].attributes["error_code"] == "production_activation_rolled_back"
 
 
 def test_rollback_requires_operator_and_reason() -> None:
