@@ -1537,7 +1537,7 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P38 — AI PRODUCTION OBSERVABILITY CONTRACT — IN_PROGRESS
+## P38 — AI PRODUCTION OBSERVABILITY CONTRACT — CLOSED / VERIFIED
 
 Purpose:
 - formalize the existing AI telemetry boundary as an operational contract;
@@ -1557,32 +1557,53 @@ Implementation:
 - `docs/P38_AI_PRODUCTION_OBSERVABILITY.md`;
 - executable contract proof in `tests/test_architecture_contract.py`.
 
-Boundary:
-- provider execution events expose provider and configuration version;
-- production activation/rollback events expose provider, explicit operator and configuration version;
-- correlation ID remains mandatory;
-- all attributes pass through the existing redaction allowlist and bounded string handling;
-- telemetry remains non-authoritative and backend failures cannot break execution.
+Evidence:
+- CI run #1203 (`36113091237`) passed all seven required jobs on implementation HEAD `69febe2ccc515168643b21330a3cddc18aeacfd6`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- First P38 run #1202 exposed only a test-fixture mistake: the new GigaChat redaction test inspected a different in-memory sink than the gate used; source behavior was not implicated.
+- After correcting the test binding, the full seven-job gate passed.
+- Provider execution telemetry now records only bounded operational metadata; activation/rollback additionally records explicit operator and configuration version.
+- Sensitive telemetry fields are executable-test prohibited.
+- Telemetry remains non-authoritative and backend failures cannot break execution.
+- No frozen kernel file was changed.
+- No database schema/migration was changed.
+- No HTTP route was changed.
+- No new telemetry backend was added.
+- No live provider traffic was enabled.
 
-Prohibited telemetry data:
-- credentials;
-- authorization headers;
-- prompts;
-- input/evidence references;
-- provider outputs;
-- model inputs.
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P39 — AI PRODUCTION SECURITY / RECOVERY / SUPPLY-CHAIN RELEASE GATE.
+
+Purpose:
+- close the remaining operational productization gap around AI runtime promotion without changing execution semantics;
+- bind security controls, artifact provenance, recovery evidence and release-contract evidence into one explicit AI promotion checkpoint;
+- make production activation impossible to treat as complete merely because provider execution works.
+
+Planned evidence boundary:
+- frozen-kernel integrity check;
+- approved-provider allow-list and no-fallback contract check;
+- runtime-secret handling check;
+- deterministic recovery/PITR evidence reference;
+- dependency/supply-chain evidence reference;
+- release-contract consistency check;
+- explicit operator approval record, without automatic production activation.
 
 Scope stop:
-- no new telemetry backend;
 - no new provider;
 - no HTTP route change;
 - no database schema/migration;
 - no frozen kernel semantic change;
-- no automatic activation;
-- no live provider traffic.
-
-Evidence:
-- implementation and focused tests are complete on the P38 branch;
-- full seven-job CI gate pending.
+- no automatic production activation;
+- no live provider traffic;
+- no new telemetry backend.
 
 No merge or deployment authorization is implied.
