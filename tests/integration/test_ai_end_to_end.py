@@ -1,5 +1,6 @@
 import os
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
@@ -38,7 +39,7 @@ if not DATABASE_URL:
 ROOT = Path(__file__).resolve().parents[2]
 
 
-class TestAuthenticator(AuthenticationPort):
+class P32TestAuthenticator(AuthenticationPort):
     def authenticate(self, authorization: str | None) -> AuthenticatedActor:
         if authorization == "Bearer p32-token":
             return AuthenticatedActor(
@@ -259,7 +260,7 @@ def test_assembled_ai_path_persists_run_audit_and_correlation(monkeypatch) -> No
 
         client = TestClient(
             assembly.create_http_app(
-                authenticator=TestAuthenticator(),
+                authenticator=P32TestAuthenticator(),
                 telemetry=telemetry,
             )
         )
