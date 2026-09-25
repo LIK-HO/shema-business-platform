@@ -1318,21 +1318,33 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P32 — END-TO-END AI EXECUTION PROOF — NOT_STARTED
+## P32 — END-TO-END AI EXECUTION PROOF — IN_PROGRESS
 
 Purpose:
-- prove the complete assembled application path from canonical HTTP/APIApplication through the frozen AIGateway, P27 composition and P28 gate using a deterministic, non-production transport;
-- prove canonical AIRun persistence, audit, correlation and fail-closed behavior under the assembled runtime.
+- prove the complete assembled application path from canonical HTTP/APIApplication through frozen AIGateway, P27 composition and P28 gate using deterministic non-production transport;
+- prove canonical AIRun persistence, audit, correlation and fail-closed behavior.
 
-Planned boundary:
-- test-only deterministic provider transport using existing provider contracts;
-- no new production provider;
-- no OpenAI;
-- no live YandexGPT network dependency in CI;
-- no automatic production activation;
+Implementation:
+- `tests/integration/test_ai_end_to_end.py`;
+- `architecture/ai_end_to_end_contract.json`;
+- `docs/P32_AI_END_TO_END_PROOF.md`.
+
+Boundary:
+- deterministic transport is test-only and implements the existing YandexGPT provider contract;
+- no production provider was added;
+- no live YandexGPT network dependency is introduced in CI;
+- provider activation remains explicit;
+- canonical PostgreSQL remains the source of trust and persistence.
+
+Scope stop:
+- no frozen kernel semantic change;
 - no database schema/migration change;
-- no changes to frozen `application.ai`.
+- no live traffic;
+- no OpenAI;
+- no GigaChat implementation;
+- no local runtime;
+- no cloud/local fallback.
 
-Stop line:
-- P32 is evidence of end-to-end composition correctness, not authorization for live production traffic.
-
+Next:
+- run the full seven-job CI gate;
+- close P32 only if the end-to-end proof and all release gates are green.
