@@ -1,0 +1,53 @@
+{
+  "version": "1.0",
+  "status": "bounded_ai_http_route",
+  "frozen_kernel_impact": false,
+  "route": {
+    "method": "POST",
+    "path": "/v1/ai/run",
+    "authentication": "existing_API_authentication_middleware",
+    "authorization": "application_boundary",
+    "correlation_id": "existing_X-Correlation-Id_boundary",
+    "client_controls": [
+      "task_type",
+      "prompt_version",
+      "resource_ref",
+      "input_refs",
+      "evidence_refs",
+      "evidence_required",
+      "max_tokens",
+      "max_cost",
+      "max_duration_seconds"
+    ],
+    "client_cannot_control": [
+      "provider_id",
+      "model",
+      "model_version",
+      "actor_trust_level",
+      "resource_trust_level",
+      "evidence_level",
+      "production_activation_state",
+      "provider_credentials"
+    ]
+  },
+  "composition_boundary": {
+    "application_ai_remains_authoritative": true,
+    "frozen_AIGateway_semantics_unchanged": true,
+    "HTTP_layer_does_not_select_provider": true,
+    "HTTP_layer_does_not_persist_AI_runs": true,
+    "HTTP_layer_does_not_materialize_provider_payloads": true
+  },
+  "production_behavior": {
+    "route_is_exposed_by_canonical_api": true,
+    "production_provider_activation_still_requires_P28_gate": true,
+    "missing_application_composition_returns_503": true,
+    "no_implicit_provider_activation": true
+  },
+  "scope_stop": {
+    "no_new_provider": true,
+    "no_local_runtime": true,
+    "no_cloud_local_fallback": true,
+    "no_kernel_change": true,
+    "no_database_schema_change": true
+  }
+}
