@@ -1650,7 +1650,7 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P41 — MAX OUTBOUND RECONCILIATION / IDEMPOTENCY PROOF — IN_PROGRESS
+## P41 — MAX OUTBOUND RECONCILIATION / IDEMPOTENCY PROOF — CLOSED / VERIFIED
 
 Purpose:
 - resolve the previously blocked MAX external-effect safety gap without changing frozen kernel semantics;
@@ -1663,30 +1663,51 @@ Implementation:
 - `docs/P41_MAX_RECONCILIATION_IDEMPOTENCY.md`;
 - executable contract proof in `tests/test_architecture_contract.py`.
 
-Proof boundary:
-- same idempotency key + same request returns the same external message identity;
-- same idempotency key + changed request fails closed;
-- different commercial actions produce distinct external identities;
-- repeated delivery is deterministically deduplicated;
-- unproven external-effect safety is quarantined by `SafeCommunicationAdapter`;
-- all proof uses deterministic in-memory MAX adapter only.
-
-Important limitation:
-- this does not certify live MAX service-side idempotency/reconciliation;
-- no live MAX network or credentials are introduced;
-- production activation remains blocked pending provider-specific external-effect evidence.
-
-Scope stop:
-- no live MAX API traffic;
-- no credentials;
-- no new provider;
-- no database schema/migration;
-- no frozen kernel semantic change;
-- no automatic retry in adapter;
-- no production activation.
-
 Evidence:
-- implementation is complete on the P41 branch;
-- full seven-job CI gate pending.
+- CI run #1224 (`36116250345`) passed all seven required jobs on HEAD `3bd148a9c25dbaf8d935fbbe1bce83fcfdea21c2`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- Deterministic MAX replay/idempotency tests passed:
+  - same key + same request returns the same external identity;
+  - same key + changed request fails closed;
+  - repeated delivery is deduplicated;
+  - different actions receive distinct external identities;
+  - uncertified external-effect safety is quarantined.
+- This proof is platform-side only and does not certify live MAX service-side idempotency/reconciliation.
+- No live MAX traffic or credentials were used.
+- No frozen kernel, HTTP contract or database schema was changed.
 
 No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P42 — MAX PROVIDER-SIDE EXTERNAL-EFFECT EVIDENCE / LIVE-ADAPTER READINESS.
+
+Purpose:
+- establish whether the real MAX provider contract supplies enough evidence for crash-safe external-effect handling before any live outbound activation;
+- keep production activation fail-closed if provider-side idempotency/reconciliation semantics remain undocumented or insufficient;
+- separate provider-documentation evidence from adapter implementation.
+
+Planned evidence:
+- official MAX outbound API contract;
+- authentication and credential handling requirements;
+- message send response identity and error semantics;
+- documented idempotency/retry/reconciliation behavior, if any;
+- provider-side limits and rate behavior relevant to bounded retries;
+- evidence quality assessment tied to the existing `ExternalEffectSafety` model.
+
+Scope stop:
+- no live MAX credentials;
+- no live MAX network calls;
+- no production activation;
+- no database schema/migration;
+- no frozen kernel semantic change;
+- no automatic adapter retry;
+- no new provider.
+
+P42 is evidence acquisition and readiness assessment first; implementation remains conditional on sufficient provider-side guarantees.
