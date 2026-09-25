@@ -1,1 +1,387 @@
-import os\nfrom datetime import UTC, datetime\nfrom pathlib import Path\nfrom uuid import uuid4\n\nimport psycopg\nimport pytest\nfrom fastapi.testclient import TestClient\n\nfrom shema_platform.adapters.ai import production_activation\nfrom shema_platform.adapters.ai.contracts import (\n    AIModelProvenance,\n    AIProviderActivation,\n    AIProviderDescriptor,\n    AIProviderKind,\n    AIProviderReadiness,\n    AIProviderReadinessState,\n    AIProviderRequest,\n    AIProviderResourceLimits,\n    AIProviderResponse,\n)\nfrom shema_platform.application.ai import AIRun\nfrom shema_platform.experience.runtime_composition import compose_yandexgpt_runtime\nfrom shema_platform.foundation.authentication import AuthenticatedActor, AuthenticationPort\nfrom shema_platform.foundation.authorization import Permission\nfrom shema_platform.foundation.configuration import ConfigurationSnapshot\nfrom shema_platform.foundation.telemetry import InMemoryTelemetrySink\nfrom shema_platform.platform.ai_trust import PostgresAIExecutionTrustResolver\nfrom shema_platform.platform.migrations import MigrationPlan, MigrationRunner\nfrom shema_platform.platform.postgres import PostgresUnitOfWork\n\npytestmark = pytest.mark.integration\n\nDATABASE_URL = os.getenv("DATABASE_URL")\nif not DATABASE_URL:\n    pytest.skip("DATABASE_URL is not configured", allow_module_level=True)\n\nROOT = Path(__file__).resolve().parents[2]\n\n\nclass TestAuthenticator(AuthenticationPort):\n    def authenticate(self, authorization: str | None) -> AuthenticatedActor:\n        if authorization == "Bearer p32-token":\n            return AuthenticatedActor(\n                "p32-operator",\n                trust_level=2,\n                permissions=frozenset({Permission.AI_RUN}),\n            )\n        raise RuntimeError("unexpected authentication")\n\n\nclass DeterministicYandexGPTProvider:\n    provider_id = "yandexgpt"\n    constructions = 0\n    invocations = 0\n\n    def __init__(self, configuration, *, prompt_renderer, cost_estimator) -> None:\n        type(self).constructions += 1\n        self._configuration = configuration\n        self._prompt_renderer = prompt_renderer\n        self._descriptor = AIProviderDescriptor(\n            provider_id=self.provider_id,\n            kind=AIProviderKind.CLOUD,\n            model_id=configuration.model_uri,\n            model_version="latest",\n            configuration_version=configuration.configuration_version,\n            capabilities=frozenset({"text_generation", "chat_completion"}),\n            resource_limits=AIProviderResourceLimits(\n                max_duration_seconds=configuration.timeout_seconds,\n                max_response_bytes=configuration.max_response_bytes,\n                max_input_chars=configuration.max_input_chars,\n                max_output_tokens=configuration.max_output_tokens,\n                max_calls=1,\n                max_cost=configuration.max_cost,\n            ),\n            provenance=AIModelProvenance(\n                source_ref="https://yandex.cloud/en/docs/overview/api",\n                license_name="Yandex Cloud service terms",\n                license_url="https://yandex.com/legal/cloud_termsofuse/en/",\n                license_checked_at=None,\n                artifact_digest=None,\n                runtime="P32 deterministic transport",\n                security_status="test-only",\n                free_commercial_use_verified=False,\n            ),\n        )\n        self._activation = AIProviderActivation(\n            enabled=True,\n            activation_version=configuration.activation_version,\n            explicit=True,\n            reason="P32 deterministic test transport",\n        )\n\n    def descriptor(self) -> AIProviderDescriptor:\n        return self._descriptor\n\n    def activation(self) -> AIProviderActivation:\n        return self._activation\n\n    def readiness(self) -> AIProviderReadiness:\n        return AIProviderReadiness(\n            provider_id=self.provider_id,\n            state=AIProviderReadinessState.READY,\n            checked_at=datetime.now(UTC),\n        )\n\n    def invoke(self, request: AIProviderRequest) -> AIProviderResponse:\n        type(self).invocations += 1\n        assert self._prompt_renderer(request) == "P32 deterministic prompt"\n\n        run = AIRun(\n            run_id=str(uuid4()),\n            task_id=request.task.task_id,\n            provider_id=self.provider_id,\n            model=self._descriptor.model_id,\n            model_version=self._descriptor.model_version,\n            prompt_version=request.task.prompt_version,\n            input_refs=request.input_refs,\n            evidence_refs=request.evidence_refs,\n            output=f"P32 deterministic result:{request.context.correlation_id}",\n            tokens=12,\n            cost=0.02,\n            duration_seconds=0.01,\n        )\n        return AIProviderResponse(\n            run=run,\n            configuration_version=self._configuration.configuration_version,\n            provenance_ref=f"p32:test:{run.run_id}",\n            provider_request_id="p32-provider-request",\n            observed_at=datetime.now(UTC),\n        )\n\n\ndef apply_migrations() -> None:\n    plan = MigrationPlan.from_directory(ROOT / "db/migrations")\n    MigrationRunner(\n        lambda: psycopg.connect(DATABASE_URL),\n        plan,\n    ).apply()\n\n\ndef snapshot() -> ConfigurationSnapshot:\n    return ConfigurationSnapshot(\n        version="p32-runtime:v1",\n        environment="production",\n        values={\n            "ai.yandexgpt.model_uri": "gpt://p32/yandexgpt/latest",\n            "ai.yandexgpt.base_url": "https://ai.example.test/v1",\n            "ai.yandexgpt.timeout_seconds": 10,\n            "ai.yandexgpt.max_response_bytes": 1_048_576,\n            "ai.yandexgpt.max_input_chars": 32_768,\n            "ai.yandexgpt.max_output_tokens": 100,\n            "ai.yandexgpt.max_cost": 1,\n            "ai.yandexgpt.configuration_version": "p32-yandexgpt-config:v1",\n            "ai.yandexgpt.activation_version": "p32-yandexgpt-activation:v1",\n        },\n        feature_flags={"ai.yandexgpt.production.enabled": True},\n    )\n\n\ndef insert_truth(identity_id: str, evidence_id: str) -> None:\n    with psycopg.connect(DATABASE_URL) as connection:\n        connection.execute(\n            """\n            insert into identity(identity_id, canonical_name, state)\n            values (%s, %s, 'verified')\n            """,\n            (identity_id, "P32 integration identity"),\n        )\n        connection.execute(\n            """\n            insert into evidence(\n                evidence_id, subject_ref, claim, source_ref, truth_class,\n                trust_level, confidence, provenance, observed_at,\n                captured_at, expires_at, lifecycle\n            )\n            values (\n                %s, %s, %s, %s, 'evidence',\n                'T2', 1.0, '{}'::jsonb, now(), now(), null, 'active'\n            )\n            """,\n            (evidence_id, identity_id, "P32 verified evidence", "source:p32"),\n        )\n        connection.commit()\n\n\ndef cleanup_truth(\n    identity_id: str,\n    evidence_id: str,\n    correlation_id: str,\n    run_id: str | None,\n) -> None:\n    with psycopg.connect(DATABASE_URL) as connection:\n        connection.execute(\n            "delete from audit_log where correlation_id = %s",\n            (correlation_id,),\n        )\n        if run_id is not None:\n            connection.execute(\n                "delete from ai_run where run_id = %s",\n                (run_id,),\n            )\n        connection.execute(\n            "delete from evidence where evidence_id = %s",\n            (evidence_id,),\n        )\n        connection.execute(\n            "delete from identity where identity_id = %s",\n            (identity_id,),\n        )\n        connection.commit()\n\n\ndef build_assembly(telemetry: InMemoryTelemetrySink):\n    return compose_yandexgpt_runtime(\n        snapshot=snapshot(),\n        telemetry=telemetry,\n        unit_of_work_factory=lambda: PostgresUnitOfWork(\n            lambda: psycopg.connect(DATABASE_URL)\n        ),\n        trust_resolver=PostgresAIExecutionTrustResolver(\n            lambda: psycopg.connect(DATABASE_URL)\n        ),\n        prompt_renderer=lambda request: "P32 deterministic prompt",\n        cost_estimator=lambda input_tokens, output_tokens: 0.02,\n    )\n\n\ndef test_assembled_ai_path_persists_run_audit_and_correlation(monkeypatch) -> None:\n    apply_migrations()\n    identity_id = str(uuid4())\n    evidence_id = str(uuid4())\n    correlation_id = f"p32:{uuid4()}"\n    run_id = None\n\n    DeterministicYandexGPTProvider.constructions = 0\n    DeterministicYandexGPTProvider.invocations = 0\n    monkeypatch.setattr(\n        production_activation,\n        "YandexGPTProvider",\n        DeterministicYandexGPTProvider,\n    )\n\n    insert_truth(identity_id, evidence_id)\n    try:\n        telemetry = InMemoryTelemetrySink()\n        assembly = build_assembly(telemetry)\n\n        assert assembly.ai.gate.state.enabled is False\n        assert DeterministicYandexGPTProvider.constructions == 0\n\n        assembly.activate_yandexgpt(\n            activated_by="p32-operator",\n            api_key="test-secret-not-sent",\n        )\n\n        assert assembly.ai.gate.state.enabled is True\n        assert DeterministicYandexGPTProvider.constructions == 1\n\n        client = TestClient(\n            assembly.create_http_app(\n                authenticator=TestAuthenticator(),\n                telemetry=telemetry,\n            )\n        )\n        response = client.post(\n            "/v1/ai/run",\n            headers={\n                "Authorization": "Bearer p32-token",\n                "X-Correlation-Id": correlation_id,\n            },\n            json={\n                "taskType": "qualification",\n                "promptVersion": "prompt:p32",\n                "resourceRef": identity_id,\n                "inputRefs": [identity_id],\n                "evidenceRefs": [evidence_id],\n                "maxTokens": 100,\n                "maxCost": 0.50,\n                "maxDurationSeconds": 5,\n            },\n        )\n\n        assert response.status_code == 200\n        body = response.json()\n        run_id = body["runId"]\n        assert body["providerId"] == "yandexgpt"\n        assert body["output"] == f"P32 deterministic result:{correlation_id}"\n        assert body["correlationId"] == correlation_id\n        assert DeterministicYandexGPTProvider.invocations == 1\n        assert response.headers["X-Correlation-Id"] == correlation_id\n\n        with psycopg.connect(DATABASE_URL) as connection:\n            ai_row = connection.execute(\n                """\n                select provider_id, model, prompt_version, output, tokens, cost\n                from ai_run\n                where run_id = %s\n                """,\n                (run_id,),\n            ).fetchone()\n            assert ai_row == (\n                "yandexgpt",\n                "gpt://p32/yandexgpt/latest",\n                "prompt:p32",\n                f"P32 deterministic result:{correlation_id}",\n                12,\n                0.02,\n            )\n\n            audit_rows = connection.execute(\n                """\n                select action, outcome, correlation_id, configuration_version\n                from audit_log\n                where correlation_id = %s\n                  and action = 'ai.run'\n                """,\n                (correlation_id,),\n            ).fetchall()\n            assert audit_rows == [\n                (\n                    "ai.run",\n                    "success",\n                    correlation_id,\n                    "p32-yandexgpt-config:v1",\n                )\n            ]\n    finally:\n        cleanup_truth(identity_id, evidence_id, correlation_id, run_id)\n\n\ndef test_assembled_ai_path_fails_closed_for_expired_evidence(monkeypatch) -> None:\n    apply_migrations()\n    identity_id = str(uuid4())\n    evidence_id = str(uuid4())\n    correlation_id = f"p32-expired:{uuid4()}"\n\n    DeterministicYandexGPTProvider.constructions = 0\n    DeterministicYandexGPTProvider.invocations = 0\n    monkeypatch.setattr(\n        production_activation,\n        "YandexGPTProvider",\n        DeterministicYandexGPTProvider,\n    )\n\n    insert_truth(identity_id, evidence_id)\n    with psycopg.connect(DATABASE_URL) as connection:\n        connection.execute(\n            "update evidence set expires_at = now() - interval '1 second' "\n            "where evidence_id = %s",\n            (evidence_id,),\n        )\n        connection.commit()\n\n    try:\n        assembly = build_assembly(InMemoryTelemetrySink())\n        assembly.activate_yandexgpt(\n            activated_by="p32-operator",\n            api_key="test-secret-not-sent",\n        )\n\n        client = TestClient(\n            assembly.create_http_app(authenticator=TestAuthenticator())\n        )\n        response = client.post(\n            "/v1/ai/run",\n            headers={\n                "Authorization": "Bearer p32-token",\n                "X-Correlation-Id": correlation_id,\n            },\n            json={\n                "taskType": "qualification",\n                "promptVersion": "prompt:p32",\n                "resourceRef": identity_id,\n                "inputRefs": [identity_id],\n                "evidenceRefs": [evidence_id],\n                "maxTokens": 100,\n                "maxCost": 0.50,\n                "maxDurationSeconds": 5,\n            },\n        )\n\n        assert response.status_code == 423\n        assert response.json()["code"] == "review_required"\n        assert DeterministicYandexGPTProvider.invocations == 0\n    finally:\n        cleanup_truth(identity_id, evidence_id, correlation_id, None)\n
+import os
+from datetime import UTC, datetime
+from pathlib import Path
+from uuid import uuid4
+
+import psycopg
+import pytest
+from fastapi.testclient import TestClient
+
+from shema_platform.adapters.ai import production_activation
+from shema_platform.adapters.ai.contracts import (
+    AIModelProvenance,
+    AIProviderActivation,
+    AIProviderDescriptor,
+    AIProviderKind,
+    AIProviderReadiness,
+    AIProviderReadinessState,
+    AIProviderRequest,
+    AIProviderResourceLimits,
+    AIProviderResponse,
+)
+from shema_platform.application.ai import AIRun
+from shema_platform.experience.runtime_composition import compose_yandexgpt_runtime
+from shema_platform.foundation.authentication import AuthenticatedActor, AuthenticationPort
+from shema_platform.foundation.authorization import Permission
+from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.telemetry import InMemoryTelemetrySink
+from shema_platform.platform.ai_trust import PostgresAIExecutionTrustResolver
+from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
+from shema_platform.platform.postgres import PostgresUnitOfWork
+
+pytestmark = pytest.mark.integration
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    pytest.skip("DATABASE_URL is not configured", allow_module_level=True)
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+class TestAuthenticator(AuthenticationPort):
+    def authenticate(self, authorization: str | None) -> AuthenticatedActor:
+        if authorization == "Bearer p32-token":
+            return AuthenticatedActor(
+                "p32-operator",
+                trust_level=2,
+                permissions=frozenset({Permission.AI_RUN}),
+            )
+        raise RuntimeError("unexpected authentication")
+
+
+class DeterministicYandexGPTProvider:
+    provider_id = "yandexgpt"
+    constructions = 0
+    invocations = 0
+
+    def __init__(self, configuration, *, prompt_renderer, cost_estimator) -> None:
+        type(self).constructions += 1
+        self._configuration = configuration
+        self._prompt_renderer = prompt_renderer
+        self._descriptor = AIProviderDescriptor(
+            provider_id=self.provider_id,
+            kind=AIProviderKind.CLOUD,
+            model_id=configuration.model_uri,
+            model_version="latest",
+            configuration_version=configuration.configuration_version,
+            capabilities=frozenset({"text_generation", "chat_completion"}),
+            resource_limits=AIProviderResourceLimits(
+                max_duration_seconds=configuration.timeout_seconds,
+                max_response_bytes=configuration.max_response_bytes,
+                max_input_chars=configuration.max_input_chars,
+                max_output_tokens=configuration.max_output_tokens,
+                max_calls=1,
+                max_cost=configuration.max_cost,
+            ),
+            provenance=AIModelProvenance(
+                source_ref="https://yandex.cloud/en/docs/overview/api",
+                license_name="Yandex Cloud service terms",
+                license_url="https://yandex.com/legal/cloud_termsofuse/en/",
+                license_checked_at=None,
+                artifact_digest=None,
+                runtime="P32 deterministic transport",
+                security_status="test-only",
+                free_commercial_use_verified=False,
+            ),
+        )
+        self._activation = AIProviderActivation(
+            enabled=True,
+            activation_version=configuration.activation_version,
+            explicit=True,
+            reason="P32 deterministic test transport",
+        )
+
+    def descriptor(self) -> AIProviderDescriptor:
+        return self._descriptor
+
+    def activation(self) -> AIProviderActivation:
+        return self._activation
+
+    def readiness(self) -> AIProviderReadiness:
+        return AIProviderReadiness(
+            provider_id=self.provider_id,
+            state=AIProviderReadinessState.READY,
+            checked_at=datetime.now(UTC),
+        )
+
+    def invoke(self, request: AIProviderRequest) -> AIProviderResponse:
+        type(self).invocations += 1
+        assert self._prompt_renderer(request) == "P32 deterministic prompt"
+
+        run = AIRun(
+            run_id=str(uuid4()),
+            task_id=request.task.task_id,
+            provider_id=self.provider_id,
+            model=self._descriptor.model_id,
+            model_version=self._descriptor.model_version,
+            prompt_version=request.task.prompt_version,
+            input_refs=request.input_refs,
+            evidence_refs=request.evidence_refs,
+            output=f"P32 deterministic result:{request.context.correlation_id}",
+            tokens=12,
+            cost=0.02,
+            duration_seconds=0.01,
+        )
+        return AIProviderResponse(
+            run=run,
+            configuration_version=self._configuration.configuration_version,
+            provenance_ref=f"p32:test:{run.run_id}",
+            provider_request_id="p32-provider-request",
+            observed_at=datetime.now(UTC),
+        )
+
+
+def apply_migrations() -> None:
+    plan = MigrationPlan.from_directory(ROOT / "db/migrations")
+    MigrationRunner(
+        lambda: psycopg.connect(DATABASE_URL),
+        plan,
+    ).apply()
+
+
+def snapshot() -> ConfigurationSnapshot:
+    return ConfigurationSnapshot(
+        version="p32-runtime:v1",
+        environment="production",
+        values={
+            "ai.yandexgpt.model_uri": "gpt://p32/yandexgpt/latest",
+            "ai.yandexgpt.base_url": "https://ai.example.test/v1",
+            "ai.yandexgpt.timeout_seconds": 10,
+            "ai.yandexgpt.max_response_bytes": 1_048_576,
+            "ai.yandexgpt.max_input_chars": 32_768,
+            "ai.yandexgpt.max_output_tokens": 100,
+            "ai.yandexgpt.max_cost": 1,
+            "ai.yandexgpt.configuration_version": "p32-yandexgpt-config:v1",
+            "ai.yandexgpt.activation_version": "p32-yandexgpt-activation:v1",
+        },
+        feature_flags={"ai.yandexgpt.production.enabled": True},
+    )
+
+
+def insert_truth(identity_id: str, evidence_id: str) -> None:
+    with psycopg.connect(DATABASE_URL) as connection:
+        connection.execute(
+            """
+            insert into identity(identity_id, canonical_name, state)
+            values (%s, %s, 'verified')
+            """,
+            (identity_id, "P32 integration identity"),
+        )
+        connection.execute(
+            """
+            insert into evidence(
+                evidence_id, subject_ref, claim, source_ref, truth_class,
+                trust_level, confidence, provenance, observed_at,
+                captured_at, expires_at, lifecycle
+            )
+            values (
+                %s, %s, %s, %s, 'evidence',
+                'T2', 1.0, '{}'::jsonb, now(), now(), null, 'active'
+            )
+            """,
+            (evidence_id, identity_id, "P32 verified evidence", "source:p32"),
+        )
+        connection.commit()
+
+
+def cleanup_truth(
+    identity_id: str,
+    evidence_id: str,
+    correlation_id: str,
+    run_id: str | None,
+) -> None:
+    with psycopg.connect(DATABASE_URL) as connection:
+        connection.execute(
+            "delete from audit_log where correlation_id = %s",
+            (correlation_id,),
+        )
+        if run_id is not None:
+            connection.execute(
+                "delete from ai_run where run_id = %s",
+                (run_id,),
+            )
+        connection.execute(
+            "delete from evidence where evidence_id = %s",
+            (evidence_id,),
+        )
+        connection.execute(
+            "delete from identity where identity_id = %s",
+            (identity_id,),
+        )
+        connection.commit()
+
+
+def build_assembly(telemetry: InMemoryTelemetrySink):
+    return compose_yandexgpt_runtime(
+        snapshot=snapshot(),
+        telemetry=telemetry,
+        unit_of_work_factory=lambda: PostgresUnitOfWork(
+            lambda: psycopg.connect(DATABASE_URL)
+        ),
+        trust_resolver=PostgresAIExecutionTrustResolver(
+            lambda: psycopg.connect(DATABASE_URL)
+        ),
+        prompt_renderer=lambda request: "P32 deterministic prompt",
+        cost_estimator=lambda input_tokens, output_tokens: 0.02,
+    )
+
+
+def test_assembled_ai_path_persists_run_audit_and_correlation(monkeypatch) -> None:
+    apply_migrations()
+    identity_id = str(uuid4())
+    evidence_id = str(uuid4())
+    correlation_id = f"p32:{uuid4()}"
+    run_id = None
+
+    DeterministicYandexGPTProvider.constructions = 0
+    DeterministicYandexGPTProvider.invocations = 0
+    monkeypatch.setattr(
+        production_activation,
+        "YandexGPTProvider",
+        DeterministicYandexGPTProvider,
+    )
+
+    insert_truth(identity_id, evidence_id)
+    try:
+        telemetry = InMemoryTelemetrySink()
+        assembly = build_assembly(telemetry)
+
+        assert assembly.ai.gate.state.enabled is False
+        assert DeterministicYandexGPTProvider.constructions == 0
+
+        assembly.activate_yandexgpt(
+            activated_by="p32-operator",
+            api_key="test-secret-not-sent",
+        )
+
+        assert assembly.ai.gate.state.enabled is True
+        assert DeterministicYandexGPTProvider.constructions == 1
+
+        client = TestClient(
+            assembly.create_http_app(
+                authenticator=TestAuthenticator(),
+                telemetry=telemetry,
+            )
+        )
+        response = client.post(
+            "/v1/ai/run",
+            headers={
+                "Authorization": "Bearer p32-token",
+                "X-Correlation-Id": correlation_id,
+            },
+            json={
+                "taskType": "qualification",
+                "promptVersion": "prompt:p32",
+                "resourceRef": identity_id,
+                "inputRefs": [identity_id],
+                "evidenceRefs": [evidence_id],
+                "maxTokens": 100,
+                "maxCost": 0.50,
+                "maxDurationSeconds": 5,
+            },
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        run_id = body["runId"]
+        assert body["providerId"] == "yandexgpt"
+        assert body["output"] == f"P32 deterministic result:{correlation_id}"
+        assert body["correlationId"] == correlation_id
+        assert DeterministicYandexGPTProvider.invocations == 1
+        assert response.headers["X-Correlation-Id"] == correlation_id
+
+        with psycopg.connect(DATABASE_URL) as connection:
+            ai_row = connection.execute(
+                """
+                select provider_id, model, prompt_version, output, tokens, cost
+                from ai_run
+                where run_id = %s
+                """,
+                (run_id,),
+            ).fetchone()
+            assert ai_row == (
+                "yandexgpt",
+                "gpt://p32/yandexgpt/latest",
+                "prompt:p32",
+                f"P32 deterministic result:{correlation_id}",
+                12,
+                0.02,
+            )
+
+            audit_rows = connection.execute(
+                """
+                select action, outcome, correlation_id, configuration_version
+                from audit_log
+                where correlation_id = %s
+                  and action = 'ai.run'
+                """,
+                (correlation_id,),
+            ).fetchall()
+            assert audit_rows == [
+                (
+                    "ai.run",
+                    "success",
+                    correlation_id,
+                    "p32-yandexgpt-config:v1",
+                )
+            ]
+    finally:
+        cleanup_truth(identity_id, evidence_id, correlation_id, run_id)
+
+
+def test_assembled_ai_path_fails_closed_for_expired_evidence(monkeypatch) -> None:
+    apply_migrations()
+    identity_id = str(uuid4())
+    evidence_id = str(uuid4())
+    correlation_id = f"p32-expired:{uuid4()}"
+
+    DeterministicYandexGPTProvider.constructions = 0
+    DeterministicYandexGPTProvider.invocations = 0
+    monkeypatch.setattr(
+        production_activation,
+        "YandexGPTProvider",
+        DeterministicYandexGPTProvider,
+    )
+
+    insert_truth(identity_id, evidence_id)
+    with psycopg.connect(DATABASE_URL) as connection:
+        connection.execute(
+            "update evidence set expires_at = now() - interval '1 second' "
+            "where evidence_id = %s",
+            (evidence_id,),
+        )
+        connection.commit()
+
+    try:
+        assembly = build_assembly(InMemoryTelemetrySink())
+        assembly.activate_yandexgpt(
+            activated_by="p32-operator",
+            api_key="test-secret-not-sent",
+        )
+
+        client = TestClient(
+            assembly.create_http_app(authenticator=TestAuthenticator())
+        )
+        response = client.post(
+            "/v1/ai/run",
+            headers={
+                "Authorization": "Bearer p32-token",
+                "X-Correlation-Id": correlation_id,
+            },
+            json={
+                "taskType": "qualification",
+                "promptVersion": "prompt:p32",
+                "resourceRef": identity_id,
+                "inputRefs": [identity_id],
+                "evidenceRefs": [evidence_id],
+                "maxTokens": 100,
+                "maxCost": 0.50,
+                "maxDurationSeconds": 5,
+            },
+        )
+
+        assert response.status_code == 423
+        assert response.json()["code"] == "review_required"
+        assert DeterministicYandexGPTProvider.invocations == 0
+    finally:
+        cleanup_truth(identity_id, evidence_id, correlation_id, None)
