@@ -1280,41 +1280,59 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P31 — EXPLICIT PRODUCTION APPLICATION ASSEMBLY — IN_PROGRESS
+## P31 — EXPLICIT PRODUCTION APPLICATION ASSEMBLY — CLOSED / VERIFIED
 
 Purpose:
 - provide one explicit, provider-aware runtime assembly boundary that composes the already verified YandexGPT application capability into the canonical API without silently activating production traffic.
 
 Implementation:
-- `src/shema_platform/experience/runtime_composition.py` — explicit composition root;
-- `architecture/ai_runtime_assembly_contract.json` — machine-readable assembly contract;
-- `docs/P31_EXPLICIT_RUNTIME_APPLICATION_ASSEMBLY.md` — bounded scope and activation rules;
-- `tests/test_runtime_composition.py` — construction/activation safety proof;
-- `tests/test_architecture_contract.py` — executable contract proof.
+- `src/shema_platform/experience/runtime_composition.py`;
+- `architecture/ai_runtime_assembly_contract.json`;
+- `docs/P31_EXPLICIT_RUNTIME_APPLICATION_ASSEMBLY.md`;
+- `tests/test_runtime_composition.py`;
+- executable contract proof in `tests/test_architecture_contract.py`.
 
-Boundary:
+Verified boundary:
 - construction injects configuration, telemetry, UnitOfWork and canonical trust resolver;
 - construction returns a typed `APIApplication` composition;
-- creating the runtime assembly does not activate YandexGPT;
-- activation and rollback are explicit methods;
+- creating the assembly does not activate YandexGPT;
+- activation and rollback are explicit;
 - `create_app()` remains the canonical HTTP boundary.
 
 Provider policy:
 - cloud AI allow-list remains YandexGPT and GigaChat only;
-- local/self-hosted LLMs remain governed by verified free commercial-use rights;
+- local/self-hosted LLMs require verified free commercial-use rights;
 - no implicit Cloud ↔ Local fallback;
 - OpenAI is not an approved platform provider.
 
-Scope stop:
-- no frozen kernel change;
-- no database schema/migration change;
-- no new provider;
-- no GigaChat implementation;
-- no local runtime;
-- no automatic live traffic activation;
-- no deployment.
+Evidence:
+- CI run #1177 (`36102121741`) passed all seven required jobs on HEAD `e8e07dde3ec4a37008891526c295778cc8f584a9`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- No frozen kernel file was changed.
 
-Next:
-- full seven-job CI gate;
-- close P31 only after assembly, architecture, security, recovery and release checks are green.
+No merge or deployment authorization is implied.
+
+## P32 — END-TO-END AI EXECUTION PROOF — NOT_STARTED
+
+Purpose:
+- prove the complete assembled application path from canonical HTTP/APIApplication through the frozen AIGateway, P27 composition and P28 gate using a deterministic, non-production transport;
+- prove canonical AIRun persistence, audit, correlation and fail-closed behavior under the assembled runtime.
+
+Planned boundary:
+- test-only deterministic provider transport using existing provider contracts;
+- no new production provider;
+- no OpenAI;
+- no live YandexGPT network dependency in CI;
+- no automatic production activation;
+- no database schema/migration change;
+- no changes to frozen `application.ai`.
+
+Stop line:
+- P32 is evidence of end-to-end composition correctness, not authorization for live production traffic.
 
