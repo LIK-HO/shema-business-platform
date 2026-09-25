@@ -4,6 +4,9 @@ from shema_platform.adapters.ai.composition import AIProviderCompositionError
 from shema_platform.adapters.ai.gigachat_application_composition import (
     GigaChatApplicationComposition,
 )
+from shema_platform.adapters.ai.gigachat_activation import (
+    GigaChatProductionActivationError,
+)
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
@@ -94,7 +97,10 @@ def test_activation_is_explicit_and_does_not_make_network_calls() -> None:
 def test_activation_requires_explicit_operator() -> None:
     composition = build()
 
-    with pytest.raises(Exception, match="explicit operator"):
+    with pytest.raises(
+        GigaChatProductionActivationError,
+        match="explicit operator",
+    ):
         composition.activate(
             activated_by="",
             authorization_key="runtime-secret",
