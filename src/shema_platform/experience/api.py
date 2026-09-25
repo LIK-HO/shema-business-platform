@@ -11,13 +11,13 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.experience.api_models import (
+    AIRunRequest,
+    AIRunResponse,
     CommercialActionCreateRequest,
     CommercialActionResponse,
     CommercialActionSendRequest,
     CommunicationResult,
     DiagnosticsResponse,
-    AIRunRequest,
-    AIRunResponse,
     DiscoveryRequest,
     DiscoveryResponse,
     EconomicResponse,
