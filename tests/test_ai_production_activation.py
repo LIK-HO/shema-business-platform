@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-
 import pytest
 
 from shema_platform.adapters.ai.production_activation import (
