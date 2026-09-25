@@ -1,16 +1,16 @@
 import pytest
 
+from shema_platform.adapters.communication.max import MaxMockAdapter
+from shema_platform.adapters.communication.safety import (
+    ExternalEffectSafety,
+    SafeCommunicationAdapter,
+)
 from shema_platform.application.communication import CommunicationGateway
 from shema_platform.domain.commercial_action import (
     CommercialAction,
     CommercialActionStatus,
 )
 from shema_platform.foundation.errors import QuarantineRequired
-from shema_platform.adapters.communication.max import MaxMockAdapter
-from shema_platform.adapters.communication.safety import (
-    ExternalEffectSafety,
-    SafeCommunicationAdapter,
-)
 
 
 def ready_action() -> CommercialAction:
