@@ -8,8 +8,8 @@ from shema_platform.adapters.ai.gigachat_application_composition import (
 )
 from shema_platform.application.ai_runtime import AIExecutionTrustResolver
 from shema_platform.application.ports import UnitOfWork
-from shema_platform.experience.api import APIApplication, create_app
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
+from shema_platform.experience.api import APIApplication, create_app
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.foundation.telemetry import TelemetrySink
