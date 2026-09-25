@@ -1366,21 +1366,39 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## P33 — GIGACHAT PROVIDER CONTRACT + BOUNDED ADAPTER — NOT_STARTED
+## P33 — GIGACHAT PROVIDER CONTRACT + BOUNDED ADAPTER — IN_PROGRESS
 
 Purpose:
 - implement the second explicitly approved cloud AI provider behind the existing provider-neutral AI Gateway;
 - preserve the same fail-closed controls already proven for YandexGPT;
 - avoid any new kernel or Gateway semantics.
 
-Planned scope:
-- current official GigaChat API contract verification;
-- provider adapter behind existing AI provider contracts;
-- runtime-only credentials;
-- bounded timeout/size/token/cost controls;
-- explicit readiness and activation;
-- provider-result validation and provenance;
-- deterministic adapter tests and full seven-job CI.
+Implementation:
+- `src/shema_platform/adapters/ai/gigachat.py`;
+- `src/shema_platform/adapters/ai/gigachat_activation.py`;
+- `architecture/gigachat_provider_contract.json`;
+- `docs/GIGACHAT_PROVIDER.md`;
+- `tests/test_gigachat_provider.py`;
+- `tests/test_gigachat_activation.py`;
+- executable provider contract check in `tests/test_architecture_contract.py`.
+
+Verified current external contract:
+- target API base: `https://api.giga.chat`;
+- OAuth token endpoint: `https://ngw.devices.sberbank.ru:9443/api/v2/oauth`;
+- token lifetime: 30 minutes;
+- chat endpoint: `/v1/chat/completions`;
+- production scopes restricted to B2B/CORP;
+- no freemium/personal scope for production business use.
+
+Adapter controls:
+- runtime-only authorization key and access token;
+- bounded token refresh/cache with safety window;
+- one total deadline across token acquisition + generation;
+- bounded request/response/input/output/cost;
+- no automatic retry;
+- strict response/token/model validation;
+- explicit activation and rollback;
+- no application/HTTP wiring.
 
 Scope stop:
 - no OpenAI;
@@ -1390,5 +1408,9 @@ Scope stop:
 - no frozen kernel change;
 - no database schema/migration;
 - no automatic production activation;
-- no live traffic by this phase.
+- no live traffic.
+
+Next:
+- full seven-job CI gate;
+- close P33 only after provider/activation/architecture/security/release checks are green.
 
