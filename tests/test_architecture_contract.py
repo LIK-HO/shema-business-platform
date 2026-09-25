@@ -506,8 +506,18 @@ def test_max_provider_evidence_contract_is_bounded() -> None:
     assert contract["confirmed_provider_contract"]["http_429_documented"] is True
     assert contract["confirmed_provider_contract"]["per_destination_rate_limit_documented"] is True
     assert contract["confirmed_provider_contract"]["message_identity_field"] == "Message.body.mid"
-    assert contract["external_effect_safety"]["provider_side_idempotency_contract_documented"] is False
-    assert contract["external_effect_safety"]["provider_side_reconciliation_contract_documented"] is False
+    assert (
+        contract["external_effect_safety"][
+            "provider_side_idempotency_contract_documented"
+        ]
+        is False
+    )
+    assert (
+        contract["external_effect_safety"][
+            "provider_side_reconciliation_contract_documented"
+        ]
+        is False
+    )
     assert contract["external_effect_safety"]["crash_safe_retry_certified"] is False
     assert contract["external_effect_safety"]["automatic_retry_allowed"] is False
     assert contract["scope_stop"]["no_live_max_credentials"] is True
