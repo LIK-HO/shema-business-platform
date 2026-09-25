@@ -6,8 +6,8 @@ from datetime import UTC, datetime
 
 from shema_platform.adapters.ai.composition import (
     AIProviderCompositionError,
-    ScopedAIProvider,
     current_ai_execution_scope,
+    ScopedAIProvider,
 )
 from shema_platform.adapters.ai.contracts import (
     AIProviderFailure,
