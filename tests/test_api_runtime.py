@@ -55,6 +55,26 @@ class PermissionedAuthenticator(AuthenticationPort):
 
 
 class FakeApplication(APIApplication):
+    def run_ai(self, request: AIRunRequest, context: RequestContext) -> AIRunResponse:
+        assert context.actor_id == "operator-1"
+        assert context.trust_level == 2
+        assert request.resource_ref == "identity-1"
+        return AIRunResponse(
+            runId="run-1",
+            taskId="task-1",
+            providerId="yandexgpt",
+            model="yandexgpt",
+            modelVersion="latest",
+            promptVersion=request.prompt_version,
+            inputRefs=request.input_refs,
+            evidenceRefs=request.evidence_refs,
+            output="bounded output",
+            tokens=15,
+            cost=0.01,
+            durationSeconds=0.2,
+            correlationId=context.correlation_id,
+        )
+
     def search(self, request: SearchRequest, context: RequestContext) -> SearchResponse:
         assert context.actor_id == "operator-1"
         assert context.trust_level == 2
@@ -256,6 +276,70 @@ def test_runtime_api_maps_missing_application_to_503() -> None:
     ).get(
         "/v1/diagnostics",
         headers={"Authorization": "Bearer test-token"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "application_unavailable"
+
+
+def test_runtime_api_wires_ai_run_through_application_boundary() -> None:
+    response = client(FakeApplication()).post(
+        "/v1/ai/run",
+        headers={"Authorization": "Bearer test-token", "X-Correlation-Id": "corr-ai"},
+        json={
+            "taskType": "qualification",
+            "promptVersion": "prompt:v1",
+            "resourceRef": "identity-1",
+            "inputRefs": ["identity-1"],
+            "evidenceRefs": ["evidence-1"],
+            "maxTokens": 100,
+            "maxCost": 0.10,
+            "maxDurationSeconds": 1,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["providerId"] == "yandexgpt"
+    assert response.json()["correlationId"] == "corr-ai"
+
+
+def test_runtime_api_does_not_accept_client_controlled_ai_trust_levels() -> None:
+    response = client(FakeApplication()).post(
+        "/v1/ai/run",
+        headers={"Authorization": "Bearer test-token"},
+        json={
+            "taskType": "qualification",
+            "promptVersion": "prompt:v1",
+            "resourceRef": "identity-1",
+            "inputRefs": ["identity-1"],
+            "evidenceRefs": ["evidence-1"],
+            "evidenceLevel": 2,
+            "resourceTrustLevel": 2,
+            "maxTokens": 100,
+            "maxCost": 0.10,
+            "maxDurationSeconds": 1,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_runtime_api_ai_route_uses_existing_application_unavailable_boundary() -> None:
+    response = TestClient(
+        create_app(None, FakeAuthenticator())
+    ).post(
+        "/v1/ai/run",
+        headers={"Authorization": "Bearer test-token"},
+        json={
+            "taskType": "qualification",
+            "promptVersion": "prompt:v1",
+            "resourceRef": "identity-1",
+            "inputRefs": ["identity-1"],
+            "evidenceRefs": ["evidence-1"],
+            "maxTokens": 100,
+            "maxCost": 0.10,
+            "maxDurationSeconds": 1,
+        },
     )
 
     assert response.status_code == 503
