@@ -491,3 +491,29 @@ def test_max_reconciliation_idempotency_contract_is_bounded() -> None:
     assert contract["scope_stop"]["no_kernel_semantic_change"] is True
     assert contract["scope_stop"]["no_automatic_retry_in_adapter"] is True
     assert contract["scope_stop"]["no_production_activation"] is True
+
+def test_max_provider_evidence_contract_is_bounded() -> None:
+    contract = loads(read("architecture/max_provider_evidence_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["provider"]["id"] == "max"
+    assert contract["provider"]["outbound_method"] == "POST /messages"
+    assert contract["provider"]["live_network_used"] is False
+    assert contract["provider"]["credentials_used"] is False
+    assert contract["confirmed_provider_contract"]["send_method_documented"] is True
+    assert contract["confirmed_provider_contract"]["success_response_identity_documented"] is True
+    assert contract["confirmed_provider_contract"]["authorization_contract_documented"] is True
+    assert contract["confirmed_provider_contract"]["http_429_documented"] is True
+    assert contract["confirmed_provider_contract"]["per_destination_rate_limit_documented"] is True
+    assert contract["confirmed_provider_contract"]["message_identity_field"] == "Message.body.mid"
+    assert contract["external_effect_safety"]["provider_side_idempotency_contract_documented"] is False
+    assert contract["external_effect_safety"]["provider_side_reconciliation_contract_documented"] is False
+    assert contract["external_effect_safety"]["crash_safe_retry_certified"] is False
+    assert contract["external_effect_safety"]["automatic_retry_allowed"] is False
+    assert contract["scope_stop"]["no_live_max_credentials"] is True
+    assert contract["scope_stop"]["no_live_max_network"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_retry"] is True
+    assert contract["scope_stop"]["no_production_activation"] is True
