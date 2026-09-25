@@ -1579,23 +1579,31 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P39 — AI PRODUCTION SECURITY / RECOVERY / SUPPLY-CHAIN RELEASE GATE.
+## P39 — AI PRODUCTION SECURITY / RECOVERY / SUPPLY-CHAIN RELEASE GATE — IN_PROGRESS
 
 Purpose:
 - close the remaining operational productization gap around AI runtime promotion without changing execution semantics;
 - bind security controls, artifact provenance, recovery evidence and release-contract evidence into one explicit AI promotion checkpoint;
-- make production activation impossible to treat as complete merely because provider execution works.
+- separate human approval from runtime activation.
 
-Planned evidence boundary:
-- frozen-kernel integrity check;
-- approved-provider allow-list and no-fallback contract check;
-- runtime-secret handling check;
-- deterministic recovery/PITR evidence reference;
-- dependency/supply-chain evidence reference;
-- release-contract consistency check;
-- explicit operator approval record, without automatic production activation.
+Implementation:
+- `src/shema_platform/platform/ai_promotion_gate.py`;
+- `architecture/ai_promotion_release_gate_contract.json`;
+- `docs/P39_AI_PROMOTION_RELEASE_GATE.md`;
+- `tests/test_ai_promotion_gate.py`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Verification boundary:
+- frozen AI kernel `src/shema_platform/application/ai.py` is checked against its certified Git blob fingerprint;
+- frozen kernel contract remains v1.4;
+- core maturity remains `1.5-core-maturity` with semantic freeze asserted;
+- only YandexGPT and GigaChat are approved;
+- no automatic fallback or activation is permitted;
+- runtime secrets remain runtime-only;
+- deterministic end-to-end evidence contains no live provider traffic;
+- existing PITR, supply-chain and release-contract evidence are referenced rather than duplicated;
+- existing release contract is validated by the gate;
+- operator approval record is in-memory/ephemeral, contains no credentials and does not activate a provider.
 
 Scope stop:
 - no new provider;
@@ -1604,6 +1612,11 @@ Scope stop:
 - no frozen kernel semantic change;
 - no automatic production activation;
 - no live provider traffic;
-- no new telemetry backend.
+- no new telemetry backend;
+- no duplicate recovery drill.
+
+Evidence:
+- implementation is complete on the P39 branch;
+- full seven-job CI gate pending.
 
 No merge or deployment authorization is implied.
