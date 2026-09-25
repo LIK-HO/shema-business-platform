@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from shema_platform.platform import ai_promotion_gate
+import shema_platform.platform.ai_promotion_gate as ai_promotion_gate
 
 
 ROOT = Path(__file__).resolve().parents[1]
