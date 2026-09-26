@@ -2,7 +2,7 @@
 ## Current development-session synchronization — 2026-09-26
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-- HEAD: `abd9dac8b67d68ae0b50dabec0c8d3c42104d5ea`
+- HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
 - PR: #56 — open, draft, mergeable.
 - Current boundary: P46 MAX provider evidence hold.
 - Strategy review: completed and committed; this step changed documentation/roadmap/state only.
