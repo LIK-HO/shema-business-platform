@@ -40,6 +40,43 @@ References:
 - FollowTheMoney statements/provenance: https://followthemoney.tech/docs/statements/
 - GitHub deployment environments/protection: https://docs.github.com/en/actions/concepts/workflows-and-actions/deployment-environments
 
+## 3A. Balanced product strategy — personal-first
+
+The roadmap deliberately optimizes for a **single owner/operator** first.
+
+The target is not feature breadth. The target is a coherent personal system in which:
+- operator cognitive load stays low;
+- search remains open and inspectable;
+- internal complexity protects truth/recovery rather than decorating the product;
+- future team mode is possible without being paid for prematurely.
+
+Therefore:
+- Web is the first universal client surface;
+- PWA is justified by real mobile/network needs;
+- Android is justified only where native capabilities provide material value;
+- team/RBAC/tenancy is deferred until a real constraint or operating requirement exists;
+- legal/configuration coverage grows from real transaction patterns rather than attempting to model the whole legal universe;
+- intelligence sources are added by measured contribution, not by provider count;
+- every feature is evaluated by operator-time saved, decision quality improved, risk reduced, or recoverability gained.
+
+### Product shape
+
+The product is one system with four planes:
+
+**Canonical Truth** → identity, business entities, orders, economics, history.
+
+**Intelligence & Evidence** → search, resolution, claims, provenance, freshness, qualification.
+
+**Execution & Reliability** → jobs, outbox, idempotency, reconciliation, audit, recovery, observability.
+
+**Experience & Control** → Web/PWA/Android, search center, dossiers, evidence, actions, system control plane.
+
+The planes share one canonical API/domain boundary. None may create an alternate business truth.
+
+### Complexity admission rule
+
+A new subsystem is admitted only if it has a concrete problem, bounded scope, failure/recovery semantics, measurable value, and a removal/rollback path. Architecture is not expanded merely because a mature product elsewhere has a corresponding subsystem.
+
 ## 3. Non-negotiable development rules
 
 ### 3.1 Frozen core
@@ -95,7 +132,7 @@ Close P46 cleanly before starting new implementation.
 ## 5. Phase 1 — Intelligence Quality Foundation
 
 ### Objective
-Build the smallest but highest-quality external intelligence engine.
+Build the smallest but highest-quality external intelligence engine, starting with a real operator-visible vertical slice rather than a backend-only intelligence subsystem.
 
 ### First vertical slice
 Manual counterparty check:
@@ -105,6 +142,7 @@ INN/OGRN/OGRNIP → authoritative source lookup → identity resolution → evid
 ### Required capabilities
 - source registry;
 - search plan/version;
+- search relevance benchmark;
 - candidate discovery;
 - deterministic identifier handling;
 - identity resolution;
@@ -142,6 +180,8 @@ Measure:
 A deterministic research result can be explained claim-by-claim:
 who, what, source, date, confidence, contradiction and reason for final state.
 
+The first operator slice can search/check a counterparty, inspect the compact result, expand evidence, and see when the result is incomplete because a source was not searched, unavailable or budget-limited.
+
 ## 6. Phase 2 — Mature Search and Research
 
 ### Objective
@@ -150,6 +190,9 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 ### Work
 - multi-source search orchestration;
 - search/source budgets;
+- direct operator search without mandatory ranking gates;
+- reversible/explainable ranking;
+- explicit search completeness state;
 - R1/R2/R3/R4 modes;
 - selective deep research triggers;
 - source waterfall;
@@ -228,7 +271,7 @@ For each supported configuration the system can explain why every document is in
 ## 9. Phase 5 — Web Operator System
 
 ### Objective
-Create the primary human operating surface over the proven intelligence and action workflows.
+Create the primary human operating surface over proven workflows and consolidate the vertical slices into one coherent operator system. This is not the first appearance of UI; earlier phases already include minimal operator surfaces for validation.
 
 ### Work
 Build only the workflows already proven in Phases 1–4:
@@ -256,7 +299,7 @@ Build only the workflows already proven in Phases 1–4:
 - visual regression for critical screens.
 
 ### Exit criteria
-The complete operator path works in one Web surface without bypassing server contracts.
+The complete operator path works in one Web surface without bypassing server contracts, while direct search, evidence drill-down, technical diagnostics and safe operator overrides remain available without forcing the operator through a hidden ranking/qualification pipeline.
 
 ## 10. Phase 6 — PWA
 
@@ -395,12 +438,26 @@ Scale only where actual use creates a measured constraint.
 ### Trigger
 A real bottleneck or isolation/security requirement must exist before introducing structural complexity.
 
+## 15A. Operator freedom and complexity guardrails
+
+These are permanent roadmap rules, not optional UX preferences:
+
+- ranking prioritizes but does not silently erase eligible candidates;
+- every material exclusion has an inspectable reason;
+- `NOT_SEARCHED` is never presented as `NOT_FOUND`;
+- source-unavailable and budget-limited research remain visible;
+- no universal opaque score substitutes for evidence;
+- UI complexity must not increase unless operator value is demonstrated;
+- mature-system patterns are adopted by principle, not copied wholesale by subsystem count.
+
 ## 16. What must NOT happen
 
 - no v1.6/v1.7 kernel expansion for UI convenience;
 - no parallel Web/PWA/Android business-rule implementations;
 - no giant intelligence graph before useful bounded workflows exist;
-- no mass source integration before the intelligence benchmark exists;
+- no mass source integration before both identity and search-relevance benchmarks exist;
+- no mandatory qualification/ranking gate that prevents direct operator search;
+- no enterprise/team-mode complexity before an actual operating constraint exists;
 - no AI truth authority;
 - no provider activation because an API endpoint exists;
 - no automatic retries without external-effect safety evidence;
@@ -438,5 +495,14 @@ The mature Shema system should allow the owner to move through one coherent loop
 while the platform guarantees:
 
 **canonical truth → evidence → safe execution → audit → recovery → explainability → controlled evolution**
+
+The product should feel like one durable personal instrument, not a collection of enterprise subsystems:
+- direct search remains possible;
+- evidence is one level deeper;
+- technical controls are available but not imposed;
+- uncertainty is explicit;
+- external actions are guarded;
+- history remains reconstructable;
+- new capability is added only when it earns its complexity.
 
 The system should remain simple for the operator even as its internal reliability and intelligence mechanisms become sophisticated.

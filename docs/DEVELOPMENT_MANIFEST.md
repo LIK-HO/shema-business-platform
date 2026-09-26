@@ -6,7 +6,8 @@
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
-**System target:** personal, scalable, reliable, durable and mature system; not a SaaS breadth target.
+**System target:** personal-first, scalable when justified, reliable, durable and mature system; not a SaaS breadth target.
+**Strategy revalidation:** 2026-09-26 — post-core strategy rechecked against mature systems; balance rules below are binding for subsequent product development.
 
 ---
 
@@ -27,6 +28,52 @@
 Работа с GitHub не должна зависеть от памяти предыдущего диалога. Вход в каждый новый development session выполняется по `docs/GITHUB_WORK_PROTOCOL.md`, `docs/DEVELOPMENT_STATE.md` и `AGENTS.md`; текущий branch/HEAD/PR/CI всегда читаются заново из GitHub.
 
 Post-core development order is governed by `docs/ROADMAP.md`. The roadmap is capability-oriented and does not reopen frozen kernel semantics.
+## 1A. Цельный образ продукта и баланс стратегии
+
+Shema — это **личная операционная система владельца**, а не урезанная корпоративная CRM/ERP и не SaaS-продукт, который должен догонять коммерческие платформы по числу функций.
+
+Её назначение — дать одному оператору цельный, надёжный путь:
+
+**Намерение → Поиск → Разрешение сущности → Проверка → Понимание → Квалификация → Подготовка контакта → Подготовка документов → Действие → Результат → Обучение системы**
+
+При этом внутри система выполняет гораздо больше работы:
+
+**identity → evidence → freshness → provenance → policy → durable execution → audit → recovery → observability**
+
+### Основной продуктовый баланс
+
+1. **Снаружи — простота. Внутри — защищённая сложность.** Сложность допускается только там, где она защищает истину, безопасность, восстановление, качество исследования или внешний эффект.
+2. **Качество решения важнее количества найденных данных.** Система должна уменьшать шум, но не лишать оператора доступа к допустимым кандидатам.
+3. **Алгоритм помогает, но не скрывает.** Ranking, deduplication, suggestions и research triggers могут помогать; они не должны бесшумно превращаться в право системы решать вместо оператора.
+4. **Операторский путь важнее архитектурной красоты.** Любая новая capability должна либо заметно повышать качество решения, либо сокращать операторское время/ошибки, либо защищать критический риск. Само наличие технологии преимуществом не является.
+5. **Personal-first означает не anti-scale, а deferred-scale.** Архитектура допускает будущую нагрузку/командный режим, но текущий UX, deployment model и процессы не должны платить сложностью за гипотетический масштаб.
+6. **Модульность предпочтительнее распределённости.** Modular monolith, PostgreSQL и provider-neutral boundaries остаются базой. Service extraction, отдельные очереди, специализированные хранилища и team-mode появляются только по измеренной причине.
+7. **Не строить функции ради полноты продукта.** PWA, Android, расширенный graph, дополнительные AI providers, CRM-интеграции и командные функции — условные capabilities; они включаются только при доказанной полезности.
+8. **Каждый важный автоматизм должен иметь понятный отказ.** Оператор должен понимать, что система знает, чего не знает, что не проверяла и почему действие ограничено.
+
+### Три уровня взаимодействия с системой
+
+**WORK** — основной операторский слой: найти, открыть, понять, выбрать, выполнить.
+
+**EVIDENCE** — раскрытие основания: источники, даты, freshness, contradictions, match explanation, provenance.
+
+**TECHNICAL / CONTROL** — эксплуатационный слой: jobs, leases, retries, provider state, correlation, audit, policy/configuration, release/recovery.
+
+Эти уровни являются progressive disclosure, а не тремя разными системами.
+
+### Критерий допуска новой capability
+
+Перед разработкой capability должны быть даны ответы:
+
+- какую конкретную проблему владельца она решает;
+- какая canonical truth или evidence ей необходима;
+- какой operator-time/risk/quality gain ожидается;
+- можно ли реализовать её поверх текущих contracts без нового source of truth;
+- можно ли удалить/отключить её без разрушения истории;
+- какой failure/recovery path у неё есть;
+- почему её сложность оправдана именно для текущего масштаба.
+
+Если ответы неубедительны, capability откладывается, упрощается или исключается.
 
 ---
 
@@ -299,14 +346,16 @@ Microservices не являются самостоятельной целью.
 
 Оператор должен видеть понятные состояния и минимальное число технических решений.
 
-Система сама поглощает:
+Система сама поглощает внутреннюю сложность там, где это безопасно:
 - recovery;
 - deduplication;
 - retry;
-- evidence;
+- evidence/provenance;
 - auditing;
 - leases;
-- provider failover.
+- provider health/failure state.
+
+При этом provider failover не выполняется молча. Переключение внешнего провайдера допускается только при доказанной capability/safety/reconciliation semantics; для неоднозначного внешнего эффекта система останавливается в состоянии, пригодном для reconciliation.
 
 ---
 
@@ -374,6 +423,38 @@ Microservices не являются самостоятельной целью.
 
 Для российского B2B контура ИНН остаётся основным cross-source deduplication key, но не используется как безусловная истина при conflicting/missing evidence.
 
+### 5B.3A. Независимые оси состояния
+
+Identity, Evidence, Qualification и Action — разные семантические оси и не должны быть сведены в один длинный lifecycle.
+
+**Identity:** `CANDIDATE → IDENTIFIED → VERIFIED / CONFLICTING`
+
+**Evidence:** `NOT_SEARCHED → OBSERVED → VERIFIED / CORROBORATED → STALE / EXPIRED / CONFLICTING`
+
+**Qualification:** `UNKNOWN → CONDITIONAL → QUALIFIED / UNSUITABLE / NEEDS_RESEARCH`
+
+**Action:** `NOT_READY → READY → IN_PROGRESS → COMPLETED / BLOCKED`
+
+Один объект может быть:
+- VERIFIED по identity, но CONDITIONAL по qualification;
+- QUALIFIED, но NOT_READY к external action;
+- иметь сильную identity, но STALE evidence;
+- иметь потенциальную потребность, отмеченную только как INFERRED/HYPOTHESIS.
+
+Не допускается автоматическое продвижение между этими осями только потому, что соседняя ось достигла более высокого состояния.
+
+### 5B.3B. Явное различие «не найдено», «не проверено» и «источник недоступен»
+
+Минимально различаются:
+
+- `NOT_SEARCHED` — соответствующая проверка ещё не выполнялась;
+- `SEARCHED_NOT_FOUND` — проверка выполнена, допустимых результатов не найдено;
+- `SOURCE_UNAVAILABLE` — источник/провайдер не был доступен или не дал пригодного результата;
+- `EXPIRED` — ранее полученное evidence больше не считается актуальным;
+- `CONFLICTING` — есть несовместимые material claims.
+
+`NOT_FOUND` не является универсальным контейнером для этих случаев.
+
 ## 5B.4. Client Profile / Opportunity Profile
 
 Для каждого кандидата система должна уметь собирать единый operational profile:
@@ -418,10 +499,13 @@ Research provider waterfall должен быть управляемым и по
 - captured_at;
 - source/provider identity;
 - truth class;
-- trust level;
-- confidence;
+- source reliability;
+- claim confidence;
+- evidence completeness where applicable;
 - lifecycle;
-- expiry where applicable.
+- freshness/expiry where applicable.
+
+`source reliability`, `entity-match confidence`, `claim confidence`, `freshness`, `corroboration` и `contradiction severity` не сворачиваются в один opaque score.
 
 Система должна уметь ответить:
 **«Откуда мы это узнали, когда проверяли и почему считаем это достаточно надёжным?»**
@@ -518,14 +602,16 @@ Risk/reputation findings не должны автоматически стано
 
 Система должна измерять:
 - duplicate rate;
-- identity resolution rate;
+- identity resolution precision/recall where measurable;
+- search precision@K / recall@K on a maintained benchmark where ground truth exists;
 - evidence coverage;
 - stale-data rate;
 - qualification yield;
-- false-positive rate where measurable;
+- false-positive / false-negative rate where measurable;
 - source contribution;
 - search cost/time;
-- useful-result rate.
+- useful-first-result rate;
+- operator correction rate.
 
 Эти показатели нужны для улучшения search strategy, а не для декоративной аналитики.
 
@@ -590,6 +676,16 @@ Learning не должен изменять canonical truth без явного,
 После frozen kernel зрелость системы определяется не только внутренними сервисами. Пользовательские и эксплуатационные поверхности становятся самостоятельными bounded layers, которые обязаны сохранять семантику frozen core и не создавать альтернативный источник истины.
 
 ## 5A.1. UI / UX System
+
+UI должен быть единой операционной системой для владельца.
+
+Его default view — WORK; EVIDENCE и TECHNICAL/CONTROL раскрываются progressive disclosure.
+
+Ключевая information hierarchy:
+1. что происходит;
+2. что это значит для текущей задачи;
+3. почему система так считает;
+4. что оператор может сделать дальше.
 
 UI должен быть единой операционной системой для владельца:
 - единая information architecture;
@@ -820,6 +916,7 @@ Provider availability alone никогда не является основан�
 
 Масштабируемость достигается архитектурой, а не усложнением повседневного интерфейса.
 
+Web является обязательным первым универсальным surface. PWA рассматривается как способ улучшить доступность/устойчивость работы при реальной потребности. Android строится только там, где native-возможности дают измеримое преимущество. Ни один client surface не является обязательным исключительно ради галочки зрелости.
 ## 5A.15. Experience-layer completion boundary
 
 Experience layer не считается завершённым по факту наличия Web/PWA/Android.
@@ -835,6 +932,43 @@ Experience layer не считается завершённым по факту 
 - safe update/rollback;
 - multi-device continuity;
 - operational control surface.
+
+## 5B.18. Свобода поиска и ограничение алгоритмического отбора
+
+Search UX должен оставлять оператору возможность работать напрямую, а не проходить обязательную цепочку автоматических классификаторов.
+
+Оператор должен иметь возможность начать работу как минимум из:
+- свободного поискового запроса;
+- точного INN/OGRN/OGRNIP;
+- названия/домена/контакта;
+- сохранённого search plan;
+- конкретного сигнала/события.
+
+Ranking может менять порядок показа, но не должен молча уничтожать доступ к допустимому кандидату.
+
+Для algorithmic filtering обязательны:
+- понятная причина исключения;
+- возможность показать кандидатов, отброшенных ranking/filter stage;
+- возможность ослабить соответствующий фильтр в рамках безопасных границ;
+- указание, какие источники и проверки фактически были выполнены;
+- отображение budget/source-unavailable состояния, если полнота поиска ограничена.
+
+Система не должна заставлять оператора доверять «лучшим 10» вместо предоставления объяснимого набора кандидатов.
+
+### 5B.19. Search / Research completeness
+
+Каждый существенный search/research result должен, где применимо, показывать:
+
+- сколько кандидатов найдено;
+- сколько разрешено identity;
+- сколько требуют manual review;
+- какие источники проверены;
+- какие источники не проверены;
+- какие были недоступны;
+- был ли исчерпан budget;
+- какая версия search plan/algorithm использовалась.
+
+Это делает результат воспроизводимым и предотвращает ошибочное толкование ограниченного поиска как полного отсутствия данных.
 
 # 5C. Контур подготовки первого контакта
 
@@ -1017,6 +1151,46 @@ truth → identity → evidence → freshness → interpretation → operator us
 Подробный алгоритм закреплён в:
 docs/EXTERNAL_INTELLIGENCE_AND_CONTACT_SYSTEM.md.
 
+# 5G. Границы сложности и non-goals
+
+Для personal-first системы зрелость не измеряется количеством функций, сервисов, источников или экранов.
+
+### Не является целью
+
+- конкурировать с Salesforce/SAP/Palantir по breadth;
+- иметь универсальный graph для всех сущностей;
+- покрыть все виды юридических конфигураций до появления реальной потребности;
+- поддерживать десятки AI providers;
+- иметь полноценный team/tenant/RBAC слой заранее;
+- строить offline-first transaction engine без доказанной необходимости;
+- превращать intelligence в mini-CRM;
+- скрывать raw candidates за единым opaque ranking;
+- создавать microservices без измеренной причины;
+- добавлять dashboard'ы, которые не помогают оператору принять решение или восстановить систему.
+
+### Является целью
+
+- единая truth/evidence/execution model;
+- минимальный operator path;
+- высокая объяснимость;
+- контролируемая автоматизация;
+- воспроизводимый research;
+- безопасные внешние эффекты;
+- проверяемая recovery;
+- заменяемые providers;
+- долговечная история;
+- постепенное расширение без повторного создания ядра.
+
+### Правило «достаточной зрелости»
+
+Функция считается зрелой не тогда, когда в ней присутствуют все мыслимые возможности, а когда:
+- основной путь корректен;
+- отрицательные и неопределённые пути определены;
+- оператор понимает состояние;
+- система сохраняет canonical truth;
+- failure/recovery проверены;
+- эксплуатационная стоимость оправдана текущим использованием;
+- расширение не требует скрытого усложнения соседних контуров.
 # 6. Семь gates зрелости
 
 ## Gate 1 — Correctness
@@ -1242,7 +1416,7 @@ AI Gateway остаётся provider-neutral application boundary. Конкре�
 
 ---
 
-# 8. Что ещё необходимо до Core Maturity Certification
+# 8. Историческая запись Core Maturity Certification (B1–B10)
 
 ## B1 — GREEN CI — CLOSED / VERIFIED
 Полный green подтверждён CI run #970.
@@ -1580,6 +1754,10 @@ Simple core first → standard patterns → measured scaling → extracted servi
 - [ ] Monitoring can detect relevant changes without creating duplicate noise.
 - [ ] Reputation/risk intelligence has quarantine/manual-review boundaries.
 - [ ] Search quality and source performance are measurable.
+- [ ] A maintained search relevance benchmark exists in addition to identity/entity-resolution gold data.
+- [ ] Ranking is reversible/explainable and does not silently hide eligible candidates.
+- [ ] `NOT_SEARCHED`, `SEARCHED_NOT_FOUND`, `SOURCE_UNAVAILABLE`, `EXPIRED` and `CONFLICTING` are distinguishable.
+- [ ] Search completeness/budget state is visible where relevant.
 - [ ] Downstream outcomes feed the Search Learning Loop.
 - [ ] Critical search/research paths have failure, retry, budget and recovery tests.
 - [ ] No source/provider becomes canonical business truth.
@@ -1591,6 +1769,8 @@ Simple core first → standard patterns → measured scaling → extracted servi
 The frozen core remains complete independently of the following product-surface work. The system as a whole becomes mature only when the required experience and operational surfaces are also verified.
 
 - [ ] Unified UI/design system exists and critical operator flows are simplified.
+- [ ] WORK / EVIDENCE / TECHNICAL-CONTROL progressive disclosure is implemented.
+- [ ] Direct operator search remains available without mandatory ranking/qualification gates.
 - [ ] Canonical Web client is implemented against canonical API only.
 - [ ] PWA install/update/offline-aware/reconnect semantics are verified.
 - [ ] Android client uses the same canonical API/domain semantics.
