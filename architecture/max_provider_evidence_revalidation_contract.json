@@ -1,0 +1,78 @@
+{
+  "version": "1.0",
+  "status": "max_provider_external_effect_evidence_hold",
+  "checked_at_utc": "2026-09-25T09:32:00Z",
+  "provider": {
+    "id": "max",
+    "outbound_method": "POST /messages",
+    "canonical_api_host_in_current_docs": "platform-api2.max.ru",
+    "live_network_used": false,
+    "credentials_used": false
+  },
+  "revalidation_method": {
+    "type": "authoritative_document_inspection",
+    "runtime_probe": false,
+    "provider_contract_assumed": false,
+    "negative_evidence_is_limited_to_checked_artifacts": true
+  },
+  "sources": [
+    {
+      "url": "https://dev.max.ru/docs-api/methods/POST/messages",
+      "role": "official_send_method_contract",
+      "checked": true
+    },
+    {
+      "url": "https://dev.max.ru/docs-api/methods/GET/messages",
+      "role": "official_message_retrieval_contract",
+      "checked": true
+    },
+    {
+      "url": "https://dev.max.ru/docs-api/methods/GET/messages/-messageId-",
+      "role": "official_message_by_id_contract",
+      "checked": true
+    },
+    {
+      "url": "https://dev.max.ru/docs-api",
+      "role": "official_api_overview",
+      "checked": true
+    },
+    {
+      "url": "https://github.com/max-messenger-bot/max-bot-api-schemas/blob/main/schema_2026_07_01.json",
+      "role": "official_openapi_schema_snapshot",
+      "checked": true
+    }
+  ],
+  "findings": {
+    "send_method_documented": true,
+    "success_message_identity_documented": true,
+    "message_get_by_id_documented": true,
+    "per_destination_rate_limit_documented": true,
+    "idempotency_key_header_documented": false,
+    "client_supplied_idempotency_parameter_documented": false,
+    "provider_side_deduplication_semantics_documented": false,
+    "provider_side_reconciliation_by_client_operation_key_documented": false,
+    "reconciliation_by_known_message_id_available": true
+  },
+  "decision": {
+    "provider_side_idempotency_verified": false,
+    "provider_side_reconciliation_verified": false,
+    "max_live_outbound_activation_allowed": false,
+    "automatic_live_retry_allowed": false,
+    "readiness_status_remains": "blocked"
+  },
+  "blockers": [
+    "MAX provider-side idempotency contract is not documented/certified",
+    "MAX provider-side reconciliation contract is not documented/certified"
+  ],
+  "scope_stop": {
+    "no_provider_code_change": true,
+    "no_new_execution_path": true,
+    "no_database_migration": true,
+    "no_frozen_kernel_semantic_change": true,
+    "no_automatic_retry": true,
+    "no_live_max_network": true,
+    "no_production_activation": true,
+    "no_compensating_provider": true,
+    "no_cloud_local_fallback": true
+  }
+}

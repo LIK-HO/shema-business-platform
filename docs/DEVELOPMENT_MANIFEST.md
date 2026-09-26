@@ -1,13 +1,13 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen  
-**Current branch:** v1.5/core-maturity  
-**Base:** v1.5-runtime  
-**Current HEAD:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.  
-**Current PR:** #8 — Core Maturity / Migration Safety / Recovery  
-**Kernel baseline:** v1.4 frozen  
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 MAX Evidence Hold
+**Active development boundary:** P46 — MAX provider evidence revalidation
+**Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
+**Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
+**System target:** personal-first, scalable when justified, reliable, durable and mature system; not a SaaS breadth target.
+**Strategy revalidation:** 2026-09-26 — post-core strategy rechecked against mature systems; balance rules below are binding for subsequent product development.
 
 ---
 
@@ -26,6 +26,54 @@
 После прохождения финальной сертификации зрелости семантика ядра считается frozen. Новые возможности реализуются поверх неё через application workflows, adapters, integrations и experience/product layers.
 
 Работа с GitHub не должна зависеть от памяти предыдущего диалога. Вход в каждый новый development session выполняется по `docs/GITHUB_WORK_PROTOCOL.md`, `docs/DEVELOPMENT_STATE.md` и `AGENTS.md`; текущий branch/HEAD/PR/CI всегда читаются заново из GitHub.
+
+Post-core development order is governed by `docs/ROADMAP.md`. The roadmap is capability-oriented and does not reopen frozen kernel semantics.
+## 1A. Цельный образ продукта и баланс стратегии
+
+Shema — это **личная операционная система владельца**, а не урезанная корпоративная CRM/ERP и не SaaS-продукт, который должен догонять коммерческие платформы по числу функций.
+
+Её назначение — дать одному оператору цельный, надёжный путь:
+
+**Намерение → Поиск → Разрешение сущности → Проверка → Понимание → Квалификация → Подготовка контакта → Подготовка документов → Действие → Результат → Обучение системы**
+
+При этом внутри система выполняет гораздо больше работы:
+
+**identity → evidence → freshness → provenance → policy → durable execution → audit → recovery → observability**
+
+### Основной продуктовый баланс
+
+1. **Снаружи — простота. Внутри — защищённая сложность.** Сложность допускается только там, где она защищает истину, безопасность, восстановление, качество исследования или внешний эффект.
+2. **Качество решения важнее количества найденных данных.** Система должна уменьшать шум, но не лишать оператора доступа к допустимым кандидатам.
+3. **Алгоритм помогает, но не скрывает.** Ranking, deduplication, suggestions и research triggers могут помогать; они не должны бесшумно превращаться в право системы решать вместо оператора.
+4. **Операторский путь важнее архитектурной красоты.** Любая новая capability должна либо заметно повышать качество решения, либо сокращать операторское время/ошибки, либо защищать критический риск. Само наличие технологии преимуществом не является.
+5. **Personal-first означает не anti-scale, а deferred-scale.** Архитектура допускает будущую нагрузку/командный режим, но текущий UX, deployment model и процессы не должны платить сложностью за гипотетический масштаб.
+6. **Модульность предпочтительнее распределённости.** Modular monolith, PostgreSQL и provider-neutral boundaries остаются базой. Service extraction, отдельные очереди, специализированные хранилища и team-mode появляются только по измеренной причине.
+7. **Не строить функции ради полноты продукта.** PWA, Android, расширенный graph, дополнительные AI providers, CRM-интеграции и командные функции — условные capabilities; они включаются только при доказанной полезности.
+8. **Каждый важный автоматизм должен иметь понятный отказ.** Оператор должен понимать, что система знает, чего не знает, что не проверяла и почему действие ограничено.
+
+### Три уровня взаимодействия с системой
+
+**WORK** — основной операторский слой: найти, открыть, понять, выбрать, выполнить.
+
+**EVIDENCE** — раскрытие основания: источники, даты, freshness, contradictions, match explanation, provenance.
+
+**TECHNICAL / CONTROL** — эксплуатационный слой: jobs, leases, retries, provider state, correlation, audit, policy/configuration, release/recovery.
+
+Эти уровни являются progressive disclosure, а не тремя разными системами.
+
+### Критерий допуска новой capability
+
+Перед разработкой capability должны быть даны ответы:
+
+- какую конкретную проблему владельца она решает;
+- какая canonical truth или evidence ей необходима;
+- какой operator-time/risk/quality gain ожидается;
+- можно ли реализовать её поверх текущих contracts без нового source of truth;
+- можно ли удалить/отключить её без разрушения истории;
+- какой failure/recovery path у неё есть;
+- почему её сложность оправдана именно для текущего масштаба.
+
+Если ответы неубедительны, capability откладывается, упрощается или исключается.
 
 ---
 
@@ -298,14 +346,16 @@ Microservices не являются самостоятельной целью.
 
 Оператор должен видеть понятные состояния и минимальное число технических решений.
 
-Система сама поглощает:
+Система сама поглощает внутреннюю сложность там, где это безопасно:
 - recovery;
 - deduplication;
 - retry;
-- evidence;
+- evidence/provenance;
 - auditing;
 - leases;
-- provider failover.
+- provider health/failure state.
+
+При этом provider failover не выполняется молча. Переключение внешнего провайдера допускается только при доказанной capability/safety/reconciliation semantics; для неоднозначного внешнего эффекта система останавливается в состоянии, пригодном для reconciliation.
 
 ---
 
@@ -323,6 +373,824 @@ Microservices не являются самостоятельной целью.
 
 ---
 
+# 5B. Система поиска и разведки клиентов — обязательная post-core capability
+
+Поиск и разведка клиентов являются отдельным зрелым системным контуром поверх frozen kernel. Их задача — не просто находить записи, а превращать внешние сигналы в проверяемый, обновляемый и безопасный pipeline:
+
+**SEARCH → IDENTITY RESOLUTION → INTELLIGENCE → EVIDENCE → QUALIFICATION → MONITORING → COMMERCIAL ACTION → RESULT → LEARNING**
+
+Этот контур не заменяет frozen kernel и не создаёт второй источник canonical truth.
+
+## 5B.1. Search Orchestration
+
+Система должна:
+- строить повторяемый search plan из цели, географии, отрасли, типов клиентов и критериев;
+- запускать несколько источников через provider-neutral adapters;
+- поддерживать waterfall/fallback на уровне источников только при доказанной безопасной семантике;
+- ограничивать число запросов, время, объём результатов и внешние затраты;
+- сохранять search context, query/version и дату проверки;
+- повторять поиск детерминированно и сравнивать результаты между запусками.
+
+## 5B.2. Source Registry and Source Governance
+
+Каждый источник должен иметь:
+- identity;
+- тип и назначение;
+- capability;
+- access/auth model;
+- rate/resource limits;
+- trust/reliability class;
+- freshness characteristics;
+- provenance requirements;
+- legal/operational usage constraints;
+- health/readiness;
+- last verified state.
+
+Источник никогда не считается authoritative только потому, что он технически доступен.
+
+## 5B.3. Discovery and Entity Resolution
+
+Результаты поиска проходят:
+
+**RAW → CANDIDATE → IDENTIFIED → VERIFIED → ACTIVE / INACTIVE / UNKNOWN**
+
+Должны быть:
+- deterministic deduplication;
+- primary identity key where legally/operationally valid;
+- MATCH / MERGE / KEEP_SEPARATE / QUARANTINE / MANUAL_REVIEW;
+- conflict detection;
+- prevention of source identifiers becoming canonical identifiers.
+
+Для российского B2B контура ИНН остаётся основным cross-source deduplication key, но не используется как безусловная истина при conflicting/missing evidence.
+
+### 5B.3A. Независимые оси состояния
+
+Identity, Evidence, Qualification и Action — разные семантические оси и не должны быть сведены в один длинный lifecycle.
+
+**Identity:** `CANDIDATE → IDENTIFIED → VERIFIED / CONFLICTING`
+
+**Evidence:** `NOT_SEARCHED → OBSERVED → VERIFIED / CORROBORATED → STALE / EXPIRED / CONFLICTING`
+
+**Qualification:** `UNKNOWN → CONDITIONAL → QUALIFIED / UNSUITABLE / NEEDS_RESEARCH`
+
+**Action:** `NOT_READY → READY → IN_PROGRESS → COMPLETED / BLOCKED`
+
+Один объект может быть:
+- VERIFIED по identity, но CONDITIONAL по qualification;
+- QUALIFIED, но NOT_READY к external action;
+- иметь сильную identity, но STALE evidence;
+- иметь потенциальную потребность, отмеченную только как INFERRED/HYPOTHESIS.
+
+Не допускается автоматическое продвижение между этими осями только потому, что соседняя ось достигла более высокого состояния.
+
+### 5B.3B. Явное различие «не найдено», «не проверено» и «источник недоступен»
+
+Минимально различаются:
+
+- `NOT_SEARCHED` — соответствующая проверка ещё не выполнялась;
+- `SEARCHED_NOT_FOUND` — проверка выполнена, допустимых результатов не найдено;
+- `SOURCE_UNAVAILABLE` — источник/провайдер не был доступен или не дал пригодного результата;
+- `EXPIRED` — ранее полученное evidence больше не считается актуальным;
+- `CONFLICTING` — есть несовместимые material claims.
+
+`NOT_FOUND` не является универсальным контейнером для этих случаев.
+
+## 5B.4. Client Profile / Opportunity Profile
+
+Для каждого кандидата система должна уметь собирать единый operational profile:
+- identity;
+- geography;
+- industry/category;
+- organization scale indicators;
+- relevant activities;
+- public business contacts;
+- service-fit signals;
+- current need/opportunity signals;
+- evidence;
+- risk/reputation signals;
+- freshness;
+- qualification state;
+- recommended next safe action.
+
+Необходимая информация должна материализоваться один раз и использоваться всеми client surfaces.
+
+## 5B.5. Intelligence / Research Modes
+
+Research должен иметь уровни глубины, а не одно неограниченное «исследование»:
+
+**R1 — базовая проверка → R2 — расширенная проверка → R3 — глубокая разведка → R4 — специальное исследование.**
+
+Для каждого режима определяются:
+- допустимые источники;
+- обязательные evidence;
+- бюджет;
+- maximum elapsed time;
+- expected output;
+- stopping conditions;
+- escalation condition.
+
+Research provider waterfall должен быть управляемым и повторяемым.
+
+## 5B.6. Evidence and Provenance
+
+Каждое materially relevant external claim должно иметь:
+- source reference;
+- observed_at;
+- captured_at;
+- source/provider identity;
+- truth class;
+- source reliability;
+- claim confidence;
+- evidence completeness where applicable;
+- lifecycle;
+- freshness/expiry where applicable.
+
+`source reliability`, `entity-match confidence`, `claim confidence`, `freshness`, `corroboration` и `contradiction severity` не сворачиваются в один opaque score.
+
+Система должна уметь ответить:
+**«Откуда мы это узнали, когда проверяли и почему считаем это достаточно надёжным?»**
+
+## 5B.7. Freshness / Revalidation / Evidence Decay
+
+Разведка не является вечной.
+
+Нужны:
+- freshness policy by source/type;
+- evidence expiry;
+- revalidation scheduling;
+- stale/expired indicators;
+- change detection;
+- suppression of outdated conclusions;
+- refresh priority based on operational importance.
+
+Истекшее evidence не должно молча выглядеть как актуальная истина.
+
+## 5B.8. Qualification Engine
+
+Квалификация должна быть rule/evidence-driven.
+
+Минимум:
+- identity verified;
+- service fit;
+- geography fit;
+- operational fit;
+- contactability;
+- economic fit;
+- evidence sufficiency;
+- risk/reputation status;
+- freshness.
+
+Нельзя автоматически переводить кандидата в готового клиента только по совпадению поискового запроса.
+
+## 5B.9. Opportunity / Need Detection
+
+Система должна уметь обнаруживать:
+- новые компании;
+- изменения профиля;
+- новые публичные контакты;
+- новые business signals;
+- события, указывающие на потенциальную потребность;
+- исчезновение/изменение старых сигналов.
+
+Каждый trigger должен иметь source/evidence и дату наблюдения.
+
+## 5B.10. Monitoring
+
+Для важных клиентов/кандидатов нужен controlled monitoring:
+- profile changes;
+- ownership/status changes where publicly observable;
+- contact changes;
+- operational signals;
+- relevant public events;
+- evidence expiry;
+- provider/source health.
+
+Monitoring должен быть:
+- bounded;
+- deduplicated;
+- correlation-aware;
+- cost/time controlled;
+- non-authoritative until evidence is materialized.
+
+## 5B.11. Reputation / Risk / Counterparty Safety
+
+Разведка должна иметь отдельный защитный контур:
+- reputation signals;
+- legal/public risk signals;
+- conflicting identities;
+- suspicious source contradictions;
+- quarantine;
+- manual review;
+- risk evidence lineage.
+
+Risk/reputation findings не должны автоматически становиться юридическими выводами; система хранит evidence и attributed findings.
+
+## 5B.12. Contact Discovery
+
+Для business contacts:
+- source provenance;
+- contact type;
+- freshness;
+- verification state;
+- deduplication;
+- confidence;
+- no silent replacement of existing verified contact data.
+
+Контакт не считается подтверждённым только потому, что найден в одном источнике.
+
+## 5B.13. Search Result Quality
+
+Система должна измерять:
+- duplicate rate;
+- identity resolution precision/recall where measurable;
+- search precision@K / recall@K on a maintained benchmark where ground truth exists;
+- evidence coverage;
+- stale-data rate;
+- qualification yield;
+- false-positive / false-negative rate where measurable;
+- source contribution;
+- search cost/time;
+- useful-first-result rate;
+- operator correction rate.
+
+Эти показатели нужны для улучшения search strategy, а не для декоративной аналитики.
+
+## 5B.14. Search Learning Loop
+
+Результат downstream работы должен возвращаться в поиск:
+
+**SEARCH → QUALIFICATION → ACTION → ORDER/RESULT → ECONOMICS → LEARNING → SEARCH**
+
+Система должна учиться на:
+- accepted/rejected candidates;
+- reasons for rejection;
+- response/contactability;
+- actual commercial outcome;
+- revenue/margin;
+- provider/source quality;
+- search cost.
+
+Learning не должен изменять canonical truth без явного, проверяемого application rule.
+
+## 5B.15. Legal / Operational Boundaries
+
+Разведка ограничивается:
+- доступными законными источниками;
+- допустимыми способами доступа;
+- documented provider contracts;
+- privacy/security rules;
+- rate and anti-abuse limits;
+- source terms where applicable.
+
+Автоматизация не должна превращаться в обход ограничений источника или несанкционированный доступ.
+
+## 5B.16. Operator Workflow
+
+Оператор должен видеть не поток сырого поиска, а:
+
+**Найдено → Проверяется → Подтверждено → Требует разведки → Квалифицировано → Есть потребность → Готово к действию → Наблюдение**
+
+Технические источники, confidence, secondary evidence и diagnostics остаются в техническом/интеллектуальном слое и не перегружают основной рабочий интерфейс.
+
+## 5B.17. Search System Completion Boundary
+
+Система поиска и разведки считается зрелой только когда есть:
+- multi-source orchestration;
+- identity resolution;
+- evidence/provenance;
+- freshness/revalidation;
+- qualification;
+- contact discovery;
+- opportunity detection;
+- monitoring;
+- reputation/risk boundary;
+- measurable search quality;
+- learning loop;
+- operator workflow;
+- failure/recovery behavior;
+- cost/time budgets;
+- complete end-to-end evidence for critical search flows.
+
+# 5A. Системный product/experience layer — обязательная post-core граница
+
+После frozen kernel зрелость системы определяется не только внутренними сервисами. Пользовательские и эксплуатационные поверхности становятся самостоятельными bounded layers, которые обязаны сохранять семантику frozen core и не создавать альтернативный источник истины.
+
+## 5A.1. UI / UX System
+
+UI должен быть единой операционной системой для владельца.
+
+Его default view — WORK; EVIDENCE и TECHNICAL/CONTROL раскрываются progressive disclosure.
+
+Ключевая information hierarchy:
+1. что происходит;
+2. что это значит для текущей задачи;
+3. почему система так считает;
+4. что оператор может сделать дальше.
+
+UI должен быть единой операционной системой для владельца:
+- единая information architecture;
+- единый design system и component library;
+- единые состояния loading / success / empty / degraded / error / offline / pending;
+- ясное различие canonical data, evidence, recommendation, action и uncertainty;
+- минимум лишних технических решений для оператора;
+- keyboard-first для desktop;
+- touch-first для mobile;
+- responsive layout;
+- быстрый доступ к critical workflows;
+- глобальный search / command center;
+- безопасные destructive/irreversible actions с явным подтверждением;
+- сохранение контекста после ошибок и reconnect.
+
+UI никогда не владеет бизнес-правилами. Он представляет состояние, полученное через canonical API.
+
+## 5A.2. Web application
+
+Web — основной универсальный client surface.
+
+Обязательно:
+- canonical API only;
+- typed API contracts;
+- route/deep-link semantics;
+- secure session handling;
+- resilient loading and reconnect behavior;
+- pagination/filtering/search for large datasets;
+- keyboard navigation;
+- accessibility target не ниже WCAG 2.2 AA для user-facing Web/PWA surfaces;
+- visual regression coverage для critical screens;
+- end-to-end coverage критических пользовательских потоков;
+- browser compatibility policy;
+- deterministic error handling.
+
+## 5A.3. PWA
+
+PWA является installable/resilient Web surface, а не отдельной бизнес-системой.
+
+Обязательно:
+- installability;
+- service worker/update lifecycle;
+- offline-aware read access для безопасно кэшируемых данных;
+- explicit online/offline state;
+- reconnect and resynchronization;
+- bounded local cache;
+- cache invalidation/versioning;
+- background synchronization только для безопасных operations;
+- no local cache as canonical truth;
+- user-visible pending/sync state;
+- safe handling of stale data;
+- controlled client update and rollback strategy.
+
+Offline mode не должен создавать вторую canonical transaction authority. Локальные данные — cache/read model; canonical write semantics остаются на сервере.
+
+## 5A.4. Android application
+
+Android — самостоятельный client surface, использующий тот же canonical API и domain semantics.
+
+Обязательно:
+- state-driven UI;
+- clear separation UI / data / domain concerns;
+- local persistence only as cache/read model or bounded offline queue;
+- reconnect and sync semantics;
+- lifecycle-safe background work;
+- secure credential/session storage;
+- notification/deep-link handling;
+- app update and rollback strategy;
+- crash diagnostics;
+- permission minimization;
+- network and battery aware execution;
+- end-to-end coverage критических workflows.
+
+## 5A.5. Offline-aware multi-device continuity
+
+Система должна нормально переживать:
+- потерю сети;
+- смену устройства;
+- временную недоступность API;
+- повторное открытие приложения;
+- одновременное использование Web/PWA/Android.
+
+Правило:
+**local state may accelerate or buffer the experience, but cannot silently override canonical server state.**
+
+Для queued mutations обязательны:
+- client operation id;
+- idempotency;
+- explicit pending state;
+- retry only when operation is safe;
+- conflict detection;
+- server-authoritative reconciliation;
+- durable error state when reconciliation is impossible.
+
+## 5A.6. Client security / device trust
+
+Помимо server IAM нужен client security boundary:
+- secure token/session storage;
+- no secrets in local storage where unsafe;
+- session expiry/revocation propagation;
+- device/session visibility;
+- optional local application lock;
+- safe handling of screenshots/logs where platform allows;
+- minimal permissions;
+- secure deep links;
+- TLS/security validation according to platform capabilities;
+- mobile/web security verification mapped to the selected security baseline.
+
+## 5A.7. Notifications / background execution
+
+Управляемые notifications должны быть:
+- bounded;
+- deduplicated;
+- correlated;
+- user-relevant;
+- revocable;
+- non-authoritative.
+
+Background work не должен незаметно создавать critical business effects. Любой critical external effect обязан проходить canonical server workflow.
+
+## 5A.8. Client observability
+
+Для Web/PWA/Android должны быть различимы:
+- application error;
+- network error;
+- auth/session failure;
+- stale cache;
+- synchronization failure;
+- API/business rejection;
+- external dependency failure.
+
+Client telemetry:
+- correlation-aware;
+- redacted;
+- non-authoritative;
+- privacy-minimized;
+- versioned by app/build version.
+
+Должна существовать связка:
+**client event → correlation id → canonical API request → server workflow → audit/telemetry.**
+
+## 5A.9. Client quality gates
+
+Критические client flows должны иметь:
+- unit tests where logic exists;
+- API contract tests;
+- integration tests;
+- E2E tests;
+- offline/reconnect tests;
+- failure-path tests;
+- accessibility tests;
+- visual regression for critical screens;
+- supported-browser/device matrix;
+- performance smoke tests;
+- release candidate validation.
+
+## 5A.10. Safe client update lifecycle
+
+Каждый client surface должен поддерживать:
+- immutable/versioned build;
+- explicit compatibility window with canonical API;
+- staged rollout where appropriate;
+- rollback to previous known-good build;
+- migration of local caches/storage;
+- prevention of incompatible client/server combinations;
+- crash/release telemetry sufficient to stop a bad rollout.
+
+## 5A.11. Operator / System Control Plane
+
+Нужен отдельный operational surface для владельца системы:
+- health/readiness;
+- active provider status;
+- jobs/outbox state;
+- quarantine inspection;
+- failed operations;
+- audit inspection;
+- migration status;
+- backup/recovery status;
+- SLO/error-budget state;
+- release/configuration version;
+- AI provider activation status;
+- integration diagnostics.
+
+Этот surface наблюдает и управляет только теми действиями, для которых существует соответствующий безопасный server-side contract. UI не получает прямого доступа к PostgreSQL.
+
+## 5A.12. Data portability / continuity
+
+Система должна иметь bounded portability:
+- deterministic export;
+- verified import where required;
+- schema/version metadata;
+- provenance preservation;
+- checksum/integrity validation;
+- backup-independent export for critical business data;
+- restore verification;
+- explicit ownership of imported external data.
+
+Миграция в другой storage/provider/UI не должна разрушать canonical identity, evidence lineage, audit history или economics lineage.
+
+## 5A.13. Integration ecosystem
+
+Каждая внешняя интеграция должна иметь:
+- adapter boundary;
+- capability declaration;
+- credentials/configuration boundary;
+- timeout/resource budget;
+- retry policy;
+- idempotency/reconciliation contract where external effects exist;
+- provenance where external data enters Evidence;
+- health/readiness;
+- observability;
+- contract tests;
+- fail-closed behavior when required guarantees are absent.
+
+Provider availability alone никогда не является основанием для production activation.
+
+## 5A.14. Personal-system usability doctrine
+
+Система оптимизируется прежде всего для одного владельца/оператора:
+- минимальное число экранов для critical tasks;
+- минимальное число ручных переходов;
+- technical complexity hidden inside platform;
+- clear operator state;
+- safe defaults;
+- reversible actions where possible;
+- explicit irreversible boundaries;
+- no duplicated source-of-truth fields across clients.
+
+Масштабируемость достигается архитектурой, а не усложнением повседневного интерфейса.
+
+Web является обязательным первым универсальным surface. PWA рассматривается как способ улучшить доступность/устойчивость работы при реальной потребности. Android строится только там, где native-возможности дают измеримое преимущество. Ни один client surface не является обязательным исключительно ради галочки зрелости.
+## 5A.15. Experience-layer completion boundary
+
+Experience layer не считается завершённым по факту наличия Web/PWA/Android.
+
+Завершение требует:
+- visual/interaction system;
+- canonical API integration;
+- offline/reconnect semantics;
+- client security;
+- E2E verification;
+- accessibility;
+- observability;
+- safe update/rollback;
+- multi-device continuity;
+- operational control surface.
+
+## 5B.18. Свобода поиска и ограничение алгоритмического отбора
+
+Search UX должен оставлять оператору возможность работать напрямую, а не проходить обязательную цепочку автоматических классификаторов.
+
+Оператор должен иметь возможность начать работу как минимум из:
+- свободного поискового запроса;
+- точного INN/OGRN/OGRNIP;
+- названия/домена/контакта;
+- сохранённого search plan;
+- конкретного сигнала/события.
+
+Ranking может менять порядок показа, но не должен молча уничтожать доступ к допустимому кандидату.
+
+Для algorithmic filtering обязательны:
+- понятная причина исключения;
+- возможность показать кандидатов, отброшенных ranking/filter stage;
+- возможность ослабить соответствующий фильтр в рамках безопасных границ;
+- указание, какие источники и проверки фактически были выполнены;
+- отображение budget/source-unavailable состояния, если полнота поиска ограничена.
+
+Система не должна заставлять оператора доверять «лучшим 10» вместо предоставления объяснимого набора кандидатов.
+
+### 5B.19. Search / Research completeness
+
+Каждый существенный search/research result должен, где применимо, показывать:
+
+- сколько кандидатов найдено;
+- сколько разрешено identity;
+- сколько требуют manual review;
+- какие источники проверены;
+- какие источники не проверены;
+- какие были недоступны;
+- был ли исчерпан budget;
+- какая версия search plan/algorithm использовалась.
+
+Это делает результат воспроизводимым и предотвращает ошибочное толкование ограниченного поиска как полного отсутствия данных.
+
+# 5C. Контур подготовки первого контакта
+
+Search/Intelligence не заканчивается квалификацией.
+
+Для каждого подходящего клиента система должна уметь перейти из verified intelligence в безопасно подготовленное первое обращение:
+
+DOSSIER → ЛПР/ROLE HYPOTHESIS → CONTACT CONTEXT → VALUE HYPOTHESIS → SCRIPT → OBJECTION BRANCHES → NEXT STEP
+
+Обязательно:
+- определение роли/ЛПР только по доступным и допустимым данным;
+- evidence-backed reason for contact;
+- персонализация только на основании проверенных фактов;
+- отдельное поле для inference/hypothesis;
+- запрет выдуманных фактов о клиенте, ЛПР, его потребности или предыдущих отношениях;
+- сценарии для gatekeeper / wrong person / interested / not now / price request / document request;
+- фиксация dossier snapshot и evidence version, на основании которых сформирован скрипт;
+- рекомендации следующего шага без автоматического критического действия без server-side authorization.
+
+## 5C.1. Сценарий обращения
+
+Минимальная структура:
+- контекст;
+- причина релевантности;
+- конкретное подтверждённое наблюдение;
+- гипотеза потребности;
+- короткий диагностический вопрос;
+- предложение ценности;
+- следующий шаг.
+
+Система должна уметь показать оператору также:
+- что нельзя утверждать;
+- какие факты требуют повторной проверки;
+- какие вопросы лучше задать вместо предположения.
+
+# 5D. Конструктор документов и юридическая конфигурация
+
+Система должна иметь отдельный Document & Legal Configuration layer, не являющийся частью frozen domain kernel.
+
+Его задача:
+тип контрагентов → налоговый/правовой режим → тип работ/услуг → схема расчёта → требования к оформлению → предлагаемый комплект документов → версия шаблонов → legal/evidence status
+
+## 5D.1. Матрица конфигураций
+
+Минимально поддерживаются конфигурации:
+- ООО → ООО;
+- ООО → ИП;
+- ООО → ИП на НПД;
+- ООО → физлицо — плательщик НПД, где такая модель допустима;
+- ИП → ООО;
+- ИП → ИП;
+- ИП → ИП на НПД;
+- ИП → физлицо — плательщик НПД;
+- и обратные направления, если конкретная сделка юридически допустима.
+
+Конфигурация должна также учитывать:
+- применяемый налоговый режим;
+- НДС/не НДС, когда применимо;
+- вид работ/услуг;
+- оплату;
+- приёмку;
+- ЭДО/электронную подпись;
+- особенности конкретной сделки;
+- дату и версию действующих правил.
+
+Система не должна зашивать налоговые ставки или правовые последствия как вечные constants.
+
+## 5D.2. Document Pack Builder
+
+Для каждой конфигурации система предлагает:
+- обязательные документы;
+- условно обязательные;
+- рекомендуемые;
+- дополнительные;
+- неприменимые.
+
+Типы могут включать:
+- коммерческое предложение;
+- сопроводительное письмо;
+- договор;
+- заявка/заказ;
+- спецификация;
+- ТЗ;
+- акт;
+- счёт/иные расчётные документы, когда применимо;
+- УПД/иные первичные документы, когда применимо;
+- NPD-status verification;
+- NPD receipt/check control;
+- отчёт/фотофиксацию/подтверждение результата, если это часть сделки.
+
+ФНС указывает, что при работе с плательщиком НПД статус можно проверять по ИНН на официальном сервисе, а чек НПД является ключевым подтверждающим документом расходов; акт может дополнять чек, но не заменяет его.
+
+## 5D.3. Template governance
+
+Каждый шаблон должен иметь:
+- template_id;
+- version;
+- effective_from;
+- configuration applicability;
+- legal source references;
+- last legal review;
+- generation snapshot;
+- checksum;
+- change reason.
+
+Документогенерация должна быть детерминированной и аудируемой.
+
+## 5D.4. Legal safety
+
+Система:
+- не делает автономных юридических выводов при отсутствии достаточного основания;
+- показывает применённые правила и источники;
+- переводит неоднозначные конфигурации в LEGAL_REVIEW_REQUIRED;
+- не подменяет профессиональную юридическую консультацию;
+- не генерирует фиктивные реквизиты, обязательства или факты.
+
+Юридическая конфигурация должна учитывать действующее российское регулирование по ГК РФ, первичным учётным документам, электронной подписи, НПД и персональным данным; соответствующие источники должны быть версионированы в системе.
+
+# 5E. Ручная проверка контрагента
+
+Нужна отдельная operator-first команда:
+
+Проверить по ИНН / ОГРН / ОГРНИП
+
+Она должна использовать тот же Search/Intelligence/Evidence pipeline, а не отдельную упрощённую логику.
+
+Результат должен включать:
+- canonical identity;
+- регистрационные сведения;
+- статус;
+- ключевые доступные официальные сведения;
+- рисковые сигналы;
+- evidence;
+- freshness;
+- contradictions;
+- источники;
+- history/revalidation;
+- recommended next step;
+- downloadable verification report.
+
+Для российских юрлиц и ИП стартовым authoritative layer должен быть официальный контур ФНС. Сервис «Прозрачный бизнес» поддерживает поиск по ИНН/ОГРН/названию для организаций и ИНН/ОГРНИП/ФИО для ИП и объединяет государственные сведения; ФНС отдельно подчёркивает необходимость комплексной оценки, а не вывода по одному индикатору.
+
+Для НПД должна поддерживаться датированная проверка статуса через официальный сервис ФНС по ИНН.
+
+Ручная проверка не создаёт отдельную truth authority: результат материализуется в тот же Evidence/Identity boundary.
+
+# 5F. Приоритет качества внешнего контура
+
+При конфликте целей внешний контур применяет порядок:
+
+truth → identity → evidence → freshness → interpretation → operator usability → speed/cost
+
+Это означает:
+- нельзя жертвовать идентификацией ради количества найденных кандидатов;
+- нельзя жертвовать provenance ради удобного summary;
+- нельзя скрывать conflict ради «чистого» профиля;
+- нельзя расширять R3/R4 на весь массив без необходимости;
+- нельзя делать один непрозрачный score заменой доказательств.
+
+Зрелые открытые системы показывают этот принцип различными средствами: Aleph использует cross-referencing и investigation workspaces; OpenSanctions разделяет candidate retrieval и matching и учитывает identifiers/contradicting attributes; Sayari разделяет identity resolution и possibly-same-as; OpenCTI отдельно моделирует reliability источника и confidence информации; FollowTheMoney хранит provenance на уровне statements.
+
+## 5F.1. Баланс качества и сложности
+
+Не строить:
+- универсальный граф всех сущностей;
+- бесконечный scoring engine;
+- десятки одинаковых provider-specific правил;
+- автоматическую «истину» из AI summary;
+- отдельный mini-CRM внутри intelligence layer.
+
+Строить:
+- сильные common primitives;
+- provider-neutral evidence contracts;
+- bounded research modes;
+- explainable resolution;
+- selective deep research;
+- compact operator view;
+- reusable document/configuration engine.
+
+Подробный алгоритм закреплён в:
+docs/EXTERNAL_INTELLIGENCE_AND_CONTACT_SYSTEM.md.
+
+# 5G. Границы сложности и non-goals
+
+Для personal-first системы зрелость не измеряется количеством функций, сервисов, источников или экранов.
+
+### Не является целью
+
+- конкурировать с Salesforce/SAP/Palantir по breadth;
+- иметь универсальный graph для всех сущностей;
+- покрыть все виды юридических конфигураций до появления реальной потребности;
+- поддерживать десятки AI providers;
+- иметь полноценный team/tenant/RBAC слой заранее;
+- строить offline-first transaction engine без доказанной необходимости;
+- превращать intelligence в mini-CRM;
+- скрывать raw candidates за единым opaque ranking;
+- создавать microservices без измеренной причины;
+- добавлять dashboard'ы, которые не помогают оператору принять решение или восстановить систему.
+
+### Является целью
+
+- единая truth/evidence/execution model;
+- минимальный operator path;
+- высокая объяснимость;
+- контролируемая автоматизация;
+- воспроизводимый research;
+- безопасные внешние эффекты;
+- проверяемая recovery;
+- заменяемые providers;
+- долговечная история;
+- постепенное расширение без повторного создания ядра.
+
+### Правило «достаточной зрелости»
+
+Функция считается зрелой не тогда, когда в ней присутствуют все мыслимые возможности, а когда:
+- основной путь корректен;
+- отрицательные и неопределённые пути определены;
+- оператор понимает состояние;
+- система сохраняет canonical truth;
+- failure/recovery проверены;
+- эксплуатационная стоимость оправдана текущим использованием;
+- расширение не требует скрытого усложнения соседних контуров.
 # 6. Семь gates зрелости
 
 ## Gate 1 — Correctness
@@ -548,7 +1416,7 @@ AI Gateway остаётся provider-neutral application boundary. Конкре�
 
 ---
 
-# 8. Что ещё необходимо до Core Maturity Certification
+# 8. Историческая запись Core Maturity Certification (B1–B10)
 
 ## B1 — GREEN CI — CLOSED / VERIFIED
 Полный green подтверждён CI run #970.
@@ -561,11 +1429,11 @@ AI Gateway остаётся provider-neutral application boundary. Конкре�
 - core maturity.
 
 ## B3 — Migration adoption
-Для существующих v1.4 databases нужен контролируемый путь:
+Для существующих v1.4 databases принят контролируемый путь:
 
 existing schema → verified baseline → migration ledger → 0009+
 
-без разрушения данных. B3 — текущая активная сертификационная граница.
+без разрушения данных. B3 закрыт и сохранён здесь как историческая certification evidence.
 
 ## B4 — Crash-after-external-effect integration proof — CLOSED / VERIFIED
 CI run #999 подтвердил recovery после внешнего эффекта для real commercial send path.
@@ -858,6 +1726,67 @@ Simple core first → standard patterns → measured scaling → extracted servi
 
 ---
 
+# 13C. Definition of Done — Contact Preparation / Legal Documents / Counterparty Check
+
+- [ ] Contact preparation is evidence-grounded and snapshot-versioned.
+- [ ] LPR/role hypotheses are distinguishable from verified facts.
+- [ ] First-contact scripts contain controlled branches and explicit non-claims.
+- [ ] Document Pack Builder selects documents from a configuration matrix.
+- [ ] Legal templates are versioned, source-linked and effective-date aware.
+- [ ] Ambiguous legal configurations fail closed to LEGAL_REVIEW_REQUIRED.
+- [ ] Manual INN/OGRN/OGRNIP checks use the same Identity/Evidence pipeline.
+- [ ] NPD status verification is available by INN and date.
+- [ ] Required NPD cheque/check controls are represented in relevant document packs.
+- [ ] Generated documents, evidence snapshots and configuration versions are auditable.
+- [ ] No document template or AI output silently creates legal authority.
+- [ ] The operator can move from verified intelligence to a prepared contact and document set without reconstructing the dossier manually.
+
+# 13B. Definition of Done — Mature Search / Intelligence System
+
+- [ ] Multi-source search orchestration is implemented behind provider-neutral boundaries.
+- [ ] Search plans are versioned/reproducible and bounded by time/resource budgets.
+- [ ] Identity resolution and deterministic deduplication are executable.
+- [ ] Evidence/provenance is persisted for material external claims.
+- [ ] Freshness/expiry/revalidation is enforced.
+- [ ] Qualification is evidence/rule-driven and conservative.
+- [ ] Public business contact discovery is provenance-aware and deduplicated.
+- [ ] Opportunity/need detection has evidence and timestamps.
+- [ ] Monitoring can detect relevant changes without creating duplicate noise.
+- [ ] Reputation/risk intelligence has quarantine/manual-review boundaries.
+- [ ] Search quality and source performance are measurable.
+- [ ] A maintained search relevance benchmark exists in addition to identity/entity-resolution gold data.
+- [ ] Ranking is reversible/explainable and does not silently hide eligible candidates.
+- [ ] `NOT_SEARCHED`, `SEARCHED_NOT_FOUND`, `SOURCE_UNAVAILABLE`, `EXPIRED` and `CONFLICTING` are distinguishable.
+- [ ] Search completeness/budget state is visible where relevant.
+- [ ] Downstream outcomes feed the Search Learning Loop.
+- [ ] Critical search/research paths have failure, retry, budget and recovery tests.
+- [ ] No source/provider becomes canonical business truth.
+- [ ] No search feature creates a second identity or evidence authority.
+- [ ] The operator can move from discovery to safe commercial action without manually reconstructing intelligence context.
+
+# 13A. Definition of Done — Mature Personal System Surface
+
+The frozen core remains complete independently of the following product-surface work. The system as a whole becomes mature only when the required experience and operational surfaces are also verified.
+
+- [ ] Unified UI/design system exists and critical operator flows are simplified.
+- [ ] WORK / EVIDENCE / TECHNICAL-CONTROL progressive disclosure is implemented.
+- [ ] Direct operator search remains available without mandatory ranking/qualification gates.
+- [ ] Canonical Web client is implemented against canonical API only.
+- [ ] PWA install/update/offline-aware/reconnect semantics are verified.
+- [ ] Android client uses the same canonical API/domain semantics.
+- [ ] Offline-aware multi-device continuity is deterministic and server-authoritative.
+- [ ] Client security/session/device controls are verified.
+- [ ] Web/PWA/Android critical workflows have E2E coverage.
+- [ ] Critical UI screens have accessibility and visual-regression coverage.
+- [ ] Client telemetry is correlation-aware, redacted and non-authoritative.
+- [ ] Client releases have compatibility, staged rollout and rollback strategy.
+- [ ] Operator/System Control Plane exposes bounded diagnostics and recovery state.
+- [ ] Data export/import/portability preserves identity, evidence, audit and economics lineage.
+- [ ] External integrations have explicit capability, safety, health and contract evidence.
+- [ ] Real production SLO/capacity evidence is collected before making scale claims.
+- [ ] No client or integration creates a second system of record.
+- [ ] No experience-layer feature reopens frozen core semantics without the documented exception process.
+
 # 13. Definition of Done — Mature Core
 
 - [ ] v1.4 kernel contract remains frozen and green.
@@ -905,6 +1834,31 @@ Core изменяется только по доказанному invariant def
 Любое исключение требует architecture decision, regression tests, migration plan, rollback plan и impact analysis.
 
 ---
+
+## Experience / Client doctrine
+
+**One system, multiple surfaces.**
+
+Web, PWA and Android are different experience surfaces over one canonical API/domain system.
+
+They must share:
+- canonical identifiers;
+- business semantics;
+- authorization outcomes;
+- error taxonomy;
+- correlation lineage;
+- idempotency semantics;
+- evidence/status presentation rules.
+
+They may differ in:
+- interaction model;
+- local caching;
+- offline capabilities;
+- navigation;
+- notification mechanisms;
+- device-specific optimizations.
+
+They must never diverge in canonical business truth.
 
 ## Universal development doctrine
 

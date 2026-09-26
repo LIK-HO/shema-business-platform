@@ -1,14 +1,26 @@
 # Development State Ledger
+## Current development-session synchronization — 2026-09-26
 
-## Current verified context
+- Branch: `v1.5/p46-max-provider-evidence-hold`
+- HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
+- PR: #56 — open, draft, mergeable.
+- Current boundary: P46 MAX provider evidence hold.
+- Strategy review: completed and committed; this step changed documentation/roadmap/state only.
+- Frozen kernel: unchanged.
+- No production code, database schema, API semantics or MAX activation is introduced by the strategy refinement.
+- P46 CI status remains governed by the earlier quality failure in CI #1240; this documentation step does not reinterpret that failure as verified.
+
+
+## Historical core-certification baseline
 
 - Repository: `LIK-HO/shema-business-platform`
-- Branch: `v1.5/core-maturity`
+- Branch at core certification: `v1.5/core-maturity`
 - Base: `v1.5-runtime`
 - PR: #8
 - Kernel: v1.4 frozen
 - Runtime: v1.5.0
 - Development stage: **v1.5 Core Maturity Certified / Kernel Frozen**
+- This subsection is historical certification evidence; current P46 state is defined above.
 
 ## Completed certification sub-elements
 
@@ -122,6 +134,30 @@ Prohibited:
 - new system-of-record dependencies;
 - microservice decomposition without a measured constraint;
 - merge or production deployment without explicit authorization.
+
+## P46 — EXTERNAL PROVIDER BLOCKER HOLD / EVIDENCE REVALIDATION
+
+
+- Status: **IN_PROGRESS — evidence hold**.
+- Branch: `v1.5/p46-max-provider-evidence-hold`.
+- P45 baseline: `e6fcaf719cadbf1bf5c57f2286babcf41128fbfd`.
+- Completed boundary: authoritative revalidation of the current MAX `POST /messages` contract, message retrieval contract and official OpenAPI snapshot, with no live provider traffic.
+- Verified result: send method, returned message identity, message-by-ID retrieval and rate-limit documentation remain present.
+- Unresolved blockers: provider-side idempotency and provider-side reconciliation remain **undocumented/unverified** in the checked authoritative artifacts.
+- Verification completed: isolated P46 test suite reconstructed from the committed branch passed **1 test / 1 passed**; Python compilation passed; the new test file has no lines over the repository's 100-character Ruff limit.
+- GitHub CI run #1240 (`36119337828`) was observed on P46 HEAD `640135fe53f9d3e76840d1437c3c15db10213bf6` and failed only in both quality jobs on Ruff `I001` import ordering in `tests/test_p46_max_provider_evidence_hold.py`.
+- Because quality failed, compile/unit/integration/backup-recovery/release-contract stages were skipped or cancelled; P46 therefore remains **IN_PROGRESS**, not CLOSED/VERIFIED.
+- Safe next action: correct the test-file import ordering, rerun the complete P46 CI gate, and record the resulting verified commit; keep the productization gate blocked until authoritative MAX evidence changes.
+- Manifest boundary updated: the mature personal-system scope now explicitly includes the Experience/Client layer and the Search/Client Intelligence system as post-core capabilities; frozen v1.4/v1.5 core semantics are unchanged.
+- Extended manifest boundary now includes contact preparation, evidence-grounded first-contact scripts, configuration-driven Russian legal/document packs, manual INN/OGRN/OGRNIP counterparty verification through the same Identity/Evidence pipeline, and an explicit external-contour quality doctrine.
+- Detailed algorithm is recorded in `docs/EXTERNAL_INTELLIGENCE_AND_CONTACT_SYSTEM.md`; no production code, database schema or frozen kernel semantics were changed.
+- Post-core development strategy is formalized in `docs/ROADMAP.md` and was revalidated on 2026-09-26 against mature-system patterns. The strategy remains P46 closure → intelligence quality benchmark/manual counterparty verification → search/research maturity → contact preparation → legal/document engine → Web consolidation → PWA → Android → production operations → provider/MAX activation → learning loop → measured scalability/team mode, with personal-first complexity controls.
+- The roadmap explicitly requires a complete verification gate after each substantive phase and prohibits parallel feature sprawl, unmeasured scale claims, second systems of record, hidden algorithmic filtering and core expansion for convenience.
+- Search/Intelligence completion is now governed by a dedicated manifest boundary covering multi-source search orchestration, identity resolution, evidence/provenance, freshness/revalidation, qualification, contact discovery, opportunity/need detection, monitoring, reputation/risk, measurable search quality and the downstream learning loop.
+- Prohibited until blocker closure: live MAX outbound activation, automatic live retry, compensating provider/fallback, provider-specific production execution, database migration and frozen-kernel semantic changes.
+- Source contract: `architecture/max_provider_evidence_revalidation_contract.json`.
+- Operator documentation: `docs/P46_MAX_PROVIDER_EVIDENCE_HOLD.md`.
+- Executable evidence: `tests/test_p46_max_provider_evidence_hold.py`.
 
 ## Last verified repository point
 
