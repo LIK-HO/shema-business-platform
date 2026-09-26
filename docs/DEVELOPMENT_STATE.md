@@ -2,24 +2,25 @@
 ## Current development-session synchronization — 2026-09-26
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-- HEAD: `075e01971f6f6ff94d97694335d343f20d0f4fdc`
+- HEAD: `034b4b2a569e0d65f1930b2ffa877457df41b5df`
 - PR: #56 — open, draft, mergeable.
 - Current boundary: P46 MAX provider evidence hold.
-- Strategy review: completed; only documentation/roadmap/state synchronization is being changed by this strategy step.
+- Strategy review: completed and committed; this step changed documentation/roadmap/state only.
 - Frozen kernel: unchanged.
 - No production code, database schema, API semantics or MAX activation is introduced by the strategy refinement.
 - P46 CI status remains governed by the earlier quality failure in CI #1240; this documentation step does not reinterpret that failure as verified.
 
 
-## Current verified context
+## Historical core-certification baseline
 
 - Repository: `LIK-HO/shema-business-platform`
-- Branch: `v1.5/core-maturity`
+- Branch at core certification: `v1.5/core-maturity`
 - Base: `v1.5-runtime`
 - PR: #8
 - Kernel: v1.4 frozen
 - Runtime: v1.5.0
 - Development stage: **v1.5 Core Maturity Certified / Kernel Frozen**
+- This subsection is historical certification evidence; current P46 state is defined above.
 
 ## Completed certification sub-elements
 

@@ -1429,11 +1429,11 @@ AI Gateway остаётся provider-neutral application boundary. Конкре�
 - core maturity.
 
 ## B3 — Migration adoption
-Для существующих v1.4 databases нужен контролируемый путь:
+Для существующих v1.4 databases принят контролируемый путь:
 
 existing schema → verified baseline → migration ledger → 0009+
 
-без разрушения данных. B3 — текущая активная сертификационная граница.
+без разрушения данных. B3 закрыт и сохранён здесь как историческая certification evidence.
 
 ## B4 — Crash-after-external-effect integration proof — CLOSED / VERIFIED
 CI run #999 подтвердил recovery после внешнего эффекта для real commercial send path.
