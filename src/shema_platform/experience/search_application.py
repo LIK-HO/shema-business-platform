@@ -65,6 +65,7 @@ class SearchOnlyAPIApplication:
                     region=hit.region,
                     industries=sorted(hit.industries),
                     sourceRef=hit.source_ref,
+                    sourceRefs=list(hit.source_refs),
                     taxId=hit.tax_id,
                     registrationId=hit.registration_id,
                     contactRefs=list(hit.contact_refs),
