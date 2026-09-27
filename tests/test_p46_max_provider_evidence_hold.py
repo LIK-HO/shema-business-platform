@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-
 BLOCKERS = {
     "MAX provider-side idempotency contract is not documented/certified",
     "MAX provider-side reconciliation contract is not documented/certified",
