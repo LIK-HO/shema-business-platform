@@ -263,7 +263,7 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - **Next boundary:** Phase 2-H — controlled provider execution with DaData as the parallel alternative; FNS remains a separately gated evidence hold.
 
 ### Phase 2-H — Controlled Provider Execution Boundary (DaData parallel alternative)
-- **Status:** DEFINED / IMPLEMENTATION BOUNDARY OPEN; live activation remains OFF.
+- **Status:** IMPLEMENTATION SUB-BOUNDARIES VERIFIED; live activation remains OFF.
 - **Purpose:** introduce the first provider-specific execution path without weakening the provider-neutral search contracts or frozen kernel.
 - **Primary alternative:** `dadata_organization_api` using the documented DaData organization-by-INN/OGRN API.
 - **Parallel hold:** `fns_transparent_business` remains independently governed and BLOCKED for automation.
