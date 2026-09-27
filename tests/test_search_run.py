@@ -150,6 +150,110 @@ def test_deduplication_keeps_first_source_without_global_score() -> None:
         ),
     )
     assert [item.candidate_ref for item in result.hits] == ["first"]
+    assert result.hits[0].source_refs == ("source:first", "source:second")
+
+
+
+def test_registration_id_is_a_deterministic_cross_source_merge_key() -> None:
+    first = FakeProvider(
+        hits=(
+            SearchHit(
+                "first",
+                "Company first",
+                "Moscow",
+                frozenset({"logistics"}),
+                "source:first",
+                registration_id="1027700000000",
+            ),
+        )
+    )
+    second = FakeProvider(
+        hits=(
+            SearchHit(
+                "second",
+                "Company second",
+                "Moscow",
+                frozenset({"logistics"}),
+                "source:second",
+                registration_id="1027700000000",
+                contact_refs=("contact-2",),
+            ),
+        )
+    )
+    result = SearchRunService().execute(
+        criteria(),
+        (
+            SearchSource("source:first", first),
+            SearchSource("source:second", second),
+        ),
+    )
+
+    assert len(result.hits) == 1
+    assert result.hits[0].source_refs == ("source:first", "source:second")
+    assert result.hits[0].registration_id == "1027700000000"
+    assert result.hits[0].contact_refs == ("contact-2",)
+
+
+def test_same_candidate_ref_from_different_sources_is_not_cross_source_identity() -> None:
+    first = FakeProvider(hits=(hit("same-ref", source_ref="source:first"),))
+    second = FakeProvider(hits=(hit("same-ref", source_ref="source:second"),))
+
+    result = SearchRunService().execute(
+        criteria(),
+        (
+            SearchSource("source:first", first),
+            SearchSource("source:second", second),
+        ),
+    )
+
+    assert [item.candidate_ref for item in result.hits] == ["same-ref", "same-ref"]
+    assert [item.source_refs for item in result.hits] == [
+        ("source:first",),
+        ("source:second",),
+    ]
+
+
+def test_conflicting_strong_identifiers_are_not_merged() -> None:
+    first = FakeProvider(
+        hits=(
+            SearchHit(
+                "first",
+                "Company first",
+                "Moscow",
+                frozenset({"logistics"}),
+                "source:first",
+                tax_id="7700000000",
+                registration_id="1027700000000",
+            ),
+        )
+    )
+    second = FakeProvider(
+        hits=(
+            SearchHit(
+                "second",
+                "Company second",
+                "Moscow",
+                frozenset({"logistics"}),
+                "source:second",
+                tax_id="7700000000",
+                registration_id="1027700000999",
+            ),
+        )
+    )
+
+    result = SearchRunService().execute(
+        criteria(),
+        (
+            SearchSource("source:first", first),
+            SearchSource("source:second", second),
+        ),
+    )
+
+    assert len(result.hits) == 2
+    assert [item.source_refs for item in result.hits] == [
+        ("source:first",),
+        ("source:second",),
+    ]
 
 
 def test_explicit_operator_selection_level_can_filter_results() -> None:
