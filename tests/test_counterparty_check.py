@@ -172,6 +172,11 @@ def test_counterparty_identifier_is_structurally_validated(identifier_type, iden
         )
 
 
+def test_counterparty_observation_requires_authoritative_source():
+    with pytest.raises(ValueError, match="authoritative source"):
+        observation(source_reliability=SourceReliability.PRIMARY)
+
+
 def test_counterparty_observation_requires_official_source_and_expiry():
     with pytest.raises(ValueError, match="official nalog.ru"):
         observation(source_ref="https://example.com/check")
