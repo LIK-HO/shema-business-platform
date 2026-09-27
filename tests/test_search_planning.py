@@ -111,5 +111,5 @@ def test_registry_rejects_provider_entry_with_network_automation() -> None:
 def test_registry_requires_reliability_to_stay_separate_from_claim_confidence() -> None:
     payload = contract()
     payload["policy"]["source_reliability_separate_from_claim_confidence"] = False
-    with pytest.raises(ValueError, match="separate claim confidence"):
+    with pytest.raises(ValueError, match="separate reliability from claim confidence"):
         search_planning.SearchSourceRegistry.from_contract(payload)
