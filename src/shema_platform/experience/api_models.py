@@ -139,6 +139,30 @@ class CounterpartyProviderRollbackRequest(APIModel):
     operator_authorized: bool = Field(alias="operatorAuthorized")
 
 
+class CounterpartyProviderLookupRequest(APIModel):
+    identifier_type: Literal["INN", "OGRN", "OGRNIP"] = Field(alias="identifierType")
+    identifier: str = Field(min_length=1, max_length=32)
+    claim_confidence: float = Field(ge=0, le=1, alias="claimConfidence")
+    expires_at: datetime = Field(alias="expiresAt")
+    observed_at: datetime | None = Field(default=None, alias="observedAt")
+
+
+class CounterpartyProviderLookupResponse(APIModel):
+    provider_id: str = Field(alias="providerId")
+    source_ref: str = Field(alias="sourceRef")
+    canonical_name: str = Field(alias="canonicalName")
+    tax_id: str | None = Field(default=None, alias="taxId")
+    registration_id: str | None = Field(default=None, alias="registrationId")
+    legal_status: str | None = Field(default=None, alias="legalStatus")
+    observed_at_ms: int | None = Field(default=None, alias="observedAtMs")
+    evidence_ids: list[str] = Field(alias="evidenceIds")
+    subject_ref: str = Field(alias="subjectRef")
+    identity_ref: str | None = Field(default=None, alias="identityRef")
+    contradictions: list[CounterpartyContradictionResponse]
+    quarantined: bool
+    correlation_id: str = Field(alias="correlationId")
+
+
 class CounterpartyProviderActivationResponse(APIModel):
     provider_id: str = Field(alias="providerId")
     enabled: bool

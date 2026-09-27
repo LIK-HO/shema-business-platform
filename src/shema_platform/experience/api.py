@@ -18,9 +18,17 @@ from shema_platform.application.counterparty_check import (
     CounterpartyObservation,
     SourceReliability,
 )
+from shema_platform.application.counterparty_lookup import (
+    CounterpartyLookupIdentifierType,
+    CounterpartyLookupProviderError,
+    CounterpartyLookupQuery,
+)
 from shema_platform.application.counterparty_provider_activation import (
     CounterpartyProviderActivationCommand,
     CounterpartyProviderActivationService,
+)
+from shema_platform.application.counterparty_provider_runtime_lookup import (
+    CounterpartyProviderRuntimeLookupService,
 )
 from shema_platform.experience.api_models import (
     AIRunRequest,
@@ -34,6 +42,8 @@ from shema_platform.experience.api_models import (
     CounterpartyContradictionResponse,
     CounterpartyProviderActivationRequest,
     CounterpartyProviderActivationResponse,
+    CounterpartyProviderLookupRequest,
+    CounterpartyProviderLookupResponse,
     CounterpartyProviderRollbackRequest,
     DiagnosticsResponse,
     DiscoveryRequest,
@@ -263,6 +273,7 @@ def create_app(
     provider_health: ProviderHealthRegistry | None = None,
     counterparty_checker: CounterpartyCheckService | None = None,
     counterparty_provider_activation: CounterpartyProviderActivationService | None = None,
+    counterparty_provider_lookup: CounterpartyProviderRuntimeLookupService | None = None,
 ) -> FastAPI:
     runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
@@ -286,6 +297,7 @@ def create_app(
     app.state.provider_health = provider_health or ProviderHealthRegistry()
     app.state.counterparty_checker = counterparty_checker
     app.state.counterparty_provider_activation = counterparty_provider_activation
+    app.state.counterparty_provider_lookup = counterparty_provider_lookup
     default_telemetry: TelemetrySink = (
         StructuredLoggingTelemetrySink()
         if runtime_security.environment == "production"
@@ -365,6 +377,20 @@ def create_app(
             status_code=423,
             code="review_required",
             message=str(exc),
+        )
+
+    @app.exception_handler(CounterpartyLookupProviderError)
+    async def counterparty_provider_lookup_error(
+        request: Request,
+        exc: CounterpartyLookupProviderError,
+    ) -> JSONResponse:
+        status_code = 404 if exc.code == "NOT_FOUND" else 429 if exc.code == "PROVIDER_RATE_LIMIT" else 502
+        return _error(
+            request,
+            status_code=status_code,
+            code=exc.code.lower(),
+            message=str(exc),
+            details={"retryable": exc.retryable},
         )
 
     @app.exception_handler(DaDataActivationError)
@@ -554,6 +580,60 @@ def create_app(
             activationVersion=result.activation_version,
             rollbackBy=result.rollback_by,
             rollbackReason=result.rollback_reason,
+        )
+
+    @router.post(
+        "/intelligence/providers/{providerId}/lookup",
+        response_model=CounterpartyProviderLookupResponse,
+    )
+    async def lookup_counterparty_provider(
+        request: Request,
+        payload: CounterpartyProviderLookupRequest,
+        provider_id: str = Path(alias="providerId"),
+    ) -> CounterpartyProviderLookupResponse:
+        service: CounterpartyProviderRuntimeLookupService | None = (
+            request.app.state.counterparty_provider_lookup
+        )
+        if service is None:
+            raise ApplicationUnavailable(
+                "counterparty provider lookup capability is not composed"
+            )
+        context = _context(request, None)
+        result = service.execute(
+            CounterpartyLookupQuery(
+                identifier_type=CounterpartyLookupIdentifierType(payload.identifier_type),
+                identifier=payload.identifier,
+            ),
+            actor_id=context.actor_id,
+            permissions=context.permissions,
+            claim_confidence=payload.claim_confidence,
+            expires_at=payload.expires_at,
+            observed_at=payload.observed_at,
+            correlation_id=context.correlation_id,
+        )
+        if result.provider_record.provider_id != provider_id:
+            raise ValueError("counterparty provider identity mismatch")
+        return CounterpartyProviderLookupResponse(
+            providerId=result.provider_record.provider_id,
+            sourceRef=result.provider_record.source_ref,
+            canonicalName=result.provider_record.canonical_name,
+            taxId=result.provider_record.tax_id,
+            registrationId=result.provider_record.registration_id,
+            legalStatus=result.provider_record.legal_status,
+            observedAtMs=result.provider_record.observed_at_ms,
+            evidenceIds=list(result.evidence_result.evidence_ids),
+            subjectRef=result.evidence_result.subject_ref,
+            identityRef=result.evidence_result.identity_ref,
+            contradictions=[
+                CounterpartyContradictionResponse(
+                    field=field,
+                    existingValue=existing,
+                    observedValue=observed,
+                )
+                for field, existing, observed in result.evidence_result.contradictions
+            ],
+            quarantined=result.evidence_result.quarantined,
+            correlationId=context.correlation_id,
         )
 
     @router.post(

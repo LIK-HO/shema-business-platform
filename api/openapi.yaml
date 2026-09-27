@@ -126,6 +126,32 @@ paths:
         '409': { $ref: '#/components/responses/ConflictError' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '503': { $ref: '#/components/responses/ApplicationUnavailableError' }
+  /v1/intelligence/providers/{providerId}/lookup:
+    post:
+      operationId: lookupCounterpartyProvider
+      summary: Execute one explicitly activated counterparty provider lookup and ingest its evidence
+      parameters:
+        - $ref: '#/components/parameters/ProviderId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CounterpartyProviderLookupRequest' }
+      responses:
+        '200':
+          description: Counterparty provider observation and Evidence intake result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CounterpartyProviderLookupResponse' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimitError' }
+        '502': { $ref: '#/components/responses/BadGatewayError' }
+        '503': { $ref: '#/components/responses/ApplicationUnavailableError' }
   /v1/intelligence/providers/{providerId}/rollback:
     post:
       operationId: rollbackCounterpartyProvider
@@ -433,6 +459,35 @@ components:
         sourceRef: { type: string }
         trustLevel: { type: string }
         confidence: { type: number, minimum: 0, maximum: 1 }
+    CounterpartyProviderLookupRequest:
+      type: object
+      additionalProperties: false
+      required: [identifierType, identifier, claimConfidence, expiresAt]
+      properties:
+        identifierType: { type: string, enum: [INN, OGRN, OGRNIP] }
+        identifier: { type: string, minLength: 1, maxLength: 32 }
+        claimConfidence: { type: number, minimum: 0, maximum: 1 }
+        expiresAt: { type: string, format: date-time }
+        observedAt: { type: string, format: date-time }
+    CounterpartyProviderLookupResponse:
+      type: object
+      required: [providerId, sourceRef, canonicalName, evidenceIds, subjectRef, contradictions, quarantined, correlationId]
+      properties:
+        providerId: { type: string }
+        sourceRef: { type: string, format: uri, pattern: '^https://' }
+        canonicalName: { type: string }
+        taxId: { type: [string, 'null'] }
+        registrationId: { type: [string, 'null'] }
+        legalStatus: { type: [string, 'null'] }
+        observedAtMs: { type: [integer, 'null'] }
+        evidenceIds: { type: array, items: { type: string } }
+        subjectRef: { type: string }
+        identityRef: { type: [string, 'null'] }
+        contradictions:
+          type: array
+          items: { $ref: '#/components/schemas/CounterpartyContradictionResponse' }
+        quarantined: { type: boolean }
+        correlationId: { type: string }
     CounterpartyProviderActivationRequest:
       type: object
       additionalProperties: false

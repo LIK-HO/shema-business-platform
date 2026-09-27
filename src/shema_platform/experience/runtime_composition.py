@@ -16,6 +16,12 @@ from shema_platform.application.counterparty_lookup import CounterpartyLookupPro
 from shema_platform.application.counterparty_provider_activation import (
     CounterpartyProviderActivationService,
 )
+from shema_platform.application.counterparty_provider_evidence import (
+    CounterpartyProviderEvidenceService,
+)
+from shema_platform.application.counterparty_provider_runtime_lookup import (
+    CounterpartyProviderRuntimeLookupService,
+)
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api import APIApplication, create_app
@@ -82,9 +88,10 @@ class YandexGPTRuntimeAssembly:
 
 @dataclass(frozen=True, slots=True)
 class CounterpartyProviderRuntimeAssembly:
-    """Explicit counterparty-provider control-plane composition; traffic stays gated."""
+    """Explicit counterparty-provider runtime composition; traffic stays gated."""
 
     activation: CounterpartyProviderActivationService
+    lookup: CounterpartyProviderRuntimeLookupService | None = None
 
     def create_http_app(
         self,
@@ -100,6 +107,7 @@ class CounterpartyProviderRuntimeAssembly:
             enable_docs=enable_docs,
             telemetry=telemetry,
             counterparty_provider_activation=self.activation,
+            counterparty_provider_lookup=self.lookup,
         )
 
     def provider(self):
@@ -137,6 +145,10 @@ def compose_counterparty_provider_runtime(
     readiness: DaDataActivationReadiness,
     telemetry: TelemetrySink,
     provider_factory: Callable[[DaDataConfiguration], CounterpartyLookupProvider] | None = None,
+    unit_of_work_factory: Callable[[], UnitOfWork] | None = None,
+    max_attempts: int = 3,
+    backoff_seconds: float = 0.25,
+    sleeper: Callable[[float], None] | None = None,
 ) -> CounterpartyProviderRuntimeAssembly:
     """Compose the control-plane without activating or connecting to DaData."""
     gate = DaDataControlledActivationGate(
@@ -148,4 +160,17 @@ def compose_counterparty_provider_runtime(
         configuration=configuration,
         readiness=readiness,
     )
-    return CounterpartyProviderRuntimeAssembly(activation=activation)
+    lookup = None
+    if unit_of_work_factory is not None:
+        lookup = CounterpartyProviderRuntimeLookupService(
+            provider_id="dadata_organization_api",
+            provider_resolver=gate.provider,
+            evidence_service=CounterpartyProviderEvidenceService(unit_of_work_factory),
+            max_attempts=max_attempts,
+            backoff_seconds=backoff_seconds,
+            sleeper=sleeper,
+        )
+    return CounterpartyProviderRuntimeAssembly(
+        activation=activation,
+        lookup=lookup,
+    )
