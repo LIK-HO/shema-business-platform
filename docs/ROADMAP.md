@@ -276,6 +276,7 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - **No changes to:** v1.4 semantics, DB schema, canonical identity semantics or frozen kernel.
 
 ### Work
+- Phase 2-H provider-specific execution for DaData behind the generic SearchProvider boundary;
 - multi-source search orchestration;
 - search/source budgets;
 - direct operator search without mandatory ranking gates;
