@@ -12,15 +12,15 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from shema_platform.adapters.ai.composition import AIProviderCompositionError
 from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.adapters.intelligence.dadata_activation import DaDataActivationError
-from shema_platform.application.counterparty_provider_activation import (
-    CounterpartyProviderActivationRequest,
-    CounterpartyProviderActivationService,
-)
 from shema_platform.application.counterparty_check import (
     CounterpartyCheckService,
     CounterpartyIdentifierType,
     CounterpartyObservation,
     SourceReliability,
+)
+from shema_platform.application.counterparty_provider_activation import (
+    CounterpartyProviderActivationRequest as CounterpartyProviderActivationCommand,
+    CounterpartyProviderActivationService,
 )
 from shema_platform.experience.api_models import (
     AIRunRequest,
@@ -32,8 +32,8 @@ from shema_platform.experience.api_models import (
     CounterpartyCheckRequest,
     CounterpartyCheckResponse,
     CounterpartyContradictionResponse,
-    CounterpartyProviderActivationRequest as CounterpartyProviderActivationRequestModel,
-    CounterpartyProviderActivationResponse as CounterpartyProviderActivationResponseModel,
+    CounterpartyProviderActivationRequest,
+    CounterpartyProviderActivationResponse,
     CounterpartyProviderRollbackRequest,
     DiagnosticsResponse,
     DiscoveryRequest,
@@ -537,7 +537,7 @@ def create_app(
             )
         context = _context(request, None)
         result = service.activate(
-            CounterpartyProviderActivationRequest(
+            CounterpartyProviderActivationCommand(
                 provider_id=provider_id,
                 actor_id=context.actor_id,
                 reason=payload.reason,
