@@ -1,0 +1,81 @@
+{
+  "version": "1.0",
+  "status": "strategic_contract_ready_not_runtime_enabled",
+  "purpose": "Provider-neutral common procurement monitoring without a provider-specific system of record.",
+  "frozen_kernel_impact": false,
+  "model": {
+    "canonical_port": "ProcurementSourceAdapter",
+    "registry": "ProcurementSourceRegistry",
+    "orchestration": "ProcurementMonitor",
+    "provider_state": "deployment_and_runtime_configuration",
+    "observation_owner": "Shema_intelligence_evidence_boundary",
+    "business_transaction_owner_after_handoff": "Bitrix24"
+  },
+  "source_classes": {
+    "official_origin": {
+      "role": "authoritative_public_procurement_observation",
+      "example": "gosplan_eis_v2"
+    },
+    "aggregator": {
+      "role": "coverage_enrichment_and_consolidation",
+      "first_candidate": "tenderguru_api",
+      "activation_rule": "only_after_measured_coverage_gap"
+    },
+    "specialized": {
+      "role": "optional_domain_specific_enrichment",
+      "activation_rule": "separate bounded evidence and cost gate"
+    }
+  },
+  "provider_neutral_capabilities": [
+    "search",
+    "future_plan_search",
+    "active_procedure_search",
+    "contract_history",
+    "document_reference",
+    "organization_reference",
+    "risk_or_change_event",
+    "watch",
+    "change_detection"
+  ],
+  "mandatory_observation_fields": [
+    "provider_id",
+    "source_ref",
+    "external_id",
+    "observed_at",
+    "provenance",
+    "source_class",
+    "observation_type",
+    "customer_reference",
+    "title",
+    "stage",
+    "publication_or_change_time"
+  ],
+  "rules": {
+    "provider_neutral_contract_first": true,
+    "provider_specific_fields_stay_in_adapter_or_extension_payload": true,
+    "source_provenance_is_preserved": true,
+    "provider_outputs_are_not_canonical_identity": true,
+    "no_implicit_provider_fallback": true,
+    "no_html_scraping_fallback": true,
+    "no_tender_submission": true,
+    "no_global_provider_score": true,
+    "deduplicate_by_provider_and_external_identity_before_cross_source_resolution": true,
+    "cross_source_resolution_uses_existing_identity_evidence_rules": true,
+    "provider_capability_absence_is_explicit": true
+  },
+  "activation": {
+    "disabled_by_default": true,
+    "separate_evidence_gate_per_provider": true,
+    "bounded_cost_budget": true,
+    "bounded_request_budget": true,
+    "readiness_probe_required": true,
+    "rollback_without_kernel_change": true
+  },
+  "scope_stop": {
+    "no_new_database_authority": true,
+    "no_domain_semantics_for_specific_provider": true,
+    "no_microservice_extraction": true,
+    "no_automatic_qualification": true,
+    "no_automatic_tender_participation": true
+  }
+}
