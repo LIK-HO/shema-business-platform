@@ -2,7 +2,7 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold
-**Active development boundary:** Phase 2-E — Search Adapter Compliance Boundary (selected; implementation not started)
+**Active development boundary:** Phase 2-F — First Approved Source Adapter Readiness (selected; implementation not started)
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -78,7 +78,11 @@ Shema — это **личная операционная система влад
 - Verified HEAD: `7637871b3cac379fdff056aed90ddc73aacf760f`.
 - Full CI #1336 (`36309294705`) passed all seven release-gate jobs.
 - Phase 2-D proves the verified search capability crosses the real runtime HTTP composition boundary through provider-neutral injection while the existing AI/provider activation lifecycle remains unchanged.
-- **Next selected boundary:** Phase 2-E — Search Adapter Compliance Boundary; provider-specific network execution remains disabled.
+- **Phase 2-E closure:** Search Adapter Compliance Boundary is CLOSED / VERIFIED.
+- Verified HEAD: `abca1b26e32498105b4ea855474aab387091218c`.
+- Full CI #1340 (`36310957082`) passed all seven release-gate jobs.
+- Phase 2-E establishes registry-to-adapter compliance validation for source identity, metadata, lawful access and network-disabled state; no provider traffic is enabled.
+- **Next selected boundary:** Phase 2-F — First Approved Source Adapter Readiness. The first source remains unselected; no live provider traffic is permitted until adapter-specific evidence, access controls and rollback/kill-switch conditions are contracted.
 
 ### Критерий допуска новой capability
 

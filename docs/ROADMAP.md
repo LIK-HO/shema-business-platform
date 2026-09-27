@@ -208,7 +208,8 @@ The first operator slice can search/check a counterparty, inspect the compact re
 - Phase 2-B — Source-Registry-Backed Search Planning: **CLOSED / VERIFIED** by CI #1324 (`36308069460`) on `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
 - Phase 2-C — Registry-Backed Operator Search Composition: **CLOSED / VERIFIED** by CI #1330 (`36308647549`) on `16c08111e025bd267787eaa5de36c4dd53f70609`.
 - Phase 2-D — Generic Runtime Composition: **CLOSED / VERIFIED** by CI #1336 (`36309294705`) on `7637871b3cac379fdff056aed90ddc73aacf760f`.
-- Next active sub-boundary: **Phase 2-E — Search Adapter Compliance Boundary**, provider-neutral and network-disabled.
+- Phase 2-E — Search Adapter Compliance Boundary: **CLOSED / VERIFIED** by CI #1340 (`36310957082`) on `abca1b26e32498105b4ea855474aab387091218c`.
+- Next active sub-boundary: **Phase 2-F — First Approved Source Adapter Readiness**; provider selection and live network execution remain blocked pending a bounded adapter-specific contract.
 
 ### Objective
 Scale from deterministic checks to repeatable customer discovery and deep intelligence.
@@ -239,11 +240,16 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - No provider-specific runtime semantics or network activation were introduced.
 
 ### Phase 2-E — Search Adapter Compliance Boundary
+- **Status:** CLOSED / VERIFIED by CI #1340 (`36310957082`).
+- The boundary validates stable source identity, source class/reliability/access metadata, lawful-access confirmation, explicit network-disabled state and callable adapter behavior before a source can be bound to canonical SearchSource.
+- No provider traffic, persistence authority, ranking or qualification semantics were introduced.
+
+### Phase 2-F — First Approved Source Adapter Readiness
 - **Status:** READY / implementation not started.
-- Define the smallest reusable compliance contract for a search adapter to enter a registry-backed search plan.
-- Validate stable source identity, declared source class/reliability/access metadata, explicit network-automation state, bounded error mapping and provenance preservation.
-- Keep adapter execution provider-neutral and network-disabled; no live provider call is part of this substage.
-- Exit evidence: declarative contract, deterministic negative-path tests, no new persistence authority, and full seven-job CI gate.
+- Select exactly one registry-declared source for the first controlled adapter implementation only after provider-specific evidence and lawful-access conditions are explicit.
+- Contract provider-specific adapter inputs/outputs, source provenance, bounded rate/time/candidate limits, error mapping, observability, rollback/kill-switch and network-disabled default.
+- Do not activate live traffic, automatic retries, fallback providers, new persistence or kernel semantics in the readiness stage.
+- Exit evidence: one adapter-specific contract plus deterministic fixture tests proving all required failure states before any live execution authorization.
 
 ### Work
 - multi-source search orchestration;
