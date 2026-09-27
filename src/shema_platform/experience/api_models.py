@@ -29,6 +29,7 @@ class SearchHitResponse(APIModel):
     region: str
     industries: list[str]
     source_ref: str = Field(alias="sourceRef")
+    source_refs: list[str] = Field(default_factory=list, alias="sourceRefs")
     tax_id: str | None = Field(default=None, alias="taxId")
     registration_id: str | None = Field(default=None, alias="registrationId")
     contact_refs: list[str] = Field(default_factory=list, alias="contactRefs")
