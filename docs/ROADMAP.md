@@ -493,11 +493,11 @@ Temporary network loss does not corrupt canonical state or create duplicate effe
 ## 11. Phase 7 — Production Web/PWA Consolidation
 
 ### Objective
-Finish the primary operator experience on Web and PWA. Native Android is explicitly removed from the approved roadmap.
+Finish the primary operator experience on Web and PWA. Android is explicitly removed from the approved roadmap.
 
 ### Rules
 - Web and PWA use the same canonical API/domain semantics;
-- no Android-specific business layer is created;
+- no additional native client business layer is created;
 - mobile-specific requirements must be proven within PWA before another surface is considered;
 - offline/read-cache and idempotent pending mutations remain bounded and server-authoritative.
 
@@ -643,7 +643,7 @@ These are permanent roadmap rules, not optional UX preferences:
 ## 16. What must NOT happen
 
 - no v1.6/v1.7 kernel expansion for UI convenience;
-- no parallel Web/PWA/Android business-rule implementations;
+- no parallel client business-rule implementations;
 - no giant intelligence graph before useful bounded workflows exist;
 - no mass source integration before both identity and search-relevance benchmarks exist;
 - no mandatory qualification/ranking gate that prevents direct operator search;
