@@ -2,14 +2,14 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from shema_platform.application.procurement import (
-    ProcurementProviderError,
     ProcurementCollection,
     ProcurementLaw,
+    ProcurementMonitor,
     ProcurementOpportunity,
+    ProcurementProviderError,
     ProcurementQuery,
     ProcurementSearchResult,
     ProcurementWatchState,
-    ProcurementMonitor,
 )
 
 
