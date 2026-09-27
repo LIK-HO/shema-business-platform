@@ -63,6 +63,7 @@ class ProcurementOpportunity:
     source_ref: str
     external_id: str
     law: ProcurementLaw
+    collection: ProcurementCollection
     title: str
     customer_name: str | None
     customer_tax_id: str | None
@@ -91,6 +92,7 @@ class ProcurementOpportunity:
         payload = "|".join(
             (
                 self.external_id,
+                self.collection.value,
                 self.title,
                 self.customer_name or "",
                 self.customer_tax_id or "",
@@ -158,7 +160,7 @@ class ProcurementWatchState:
     def with_page(self, result: ProcurementSearchResult) -> ProcurementWatchState:
         updated = dict(self.fingerprints)
         for item in result.items:
-            updated[item.external_id] = item.fingerprint
+            updated[f"{item.provider_id}:{item.external_id}"] = item.fingerprint
         return ProcurementWatchState(
             fingerprints=updated,
             cursor=str(result.next_skip),
@@ -191,7 +193,7 @@ class ProcurementMonitor:
         new_items: list[ProcurementOpportunity] = []
         changed_items: list[ProcurementOpportunity] = []
         for item in result.items:
-            previous = state.fingerprints.get(item.external_id)
+            previous = state.fingerprints.get(f"{item.provider_id}:{item.external_id}")
             if previous is None:
                 new_items.append(item)
             elif previous != item.fingerprint:
