@@ -109,7 +109,7 @@ Shema — это **личная операционная система влад
 
 ### Product decisions added 2026-09-28
 
-- **Repeat customer orders:** mandatory Phase 3A between Contact Preparation and Legal/Document Engine. The chosen pattern is a reusable Repeat Order Rule attached to the canonical customer; each recurrence creates a fresh **repeat-order preparation/handoff snapshot**, not a live transaction ledger inside Shema. Historical business orders remain immutable outside this preparation layer; current price/document configuration is revalidated before the handoff package is produced. Reference patterns: Bitrix24 recurring deals, HubSpot/Pipedrive recurring products/subscriptions, SAP scheduling agreements/contracts, Salesforce orders/contracts, ServiceNow contract renewal.
+- **Repeat business:** mandatory Phase 3A is now **Repeat Business Preparation**, not a second order engine. Shema detects repeat demand, revalidates evidence/configuration and creates a fresh preparation/handoff snapshot. Live recurring/repeat deals are owned by the mature business plane after handoff. Reference patterns: Bitrix24 recurring deals, Salesforce orders and SAP scheduling agreements.
 - **Tender/procurement intelligence:** mandatory Phase 2-I inside Mature Search/Research, before Contact Preparation. Initial provider boundary: ГосПлан API v2 over ЕИС data because current documentation exposes plans, purchases, procedures and contracts through REST and explicitly describes monitoring/search use cases. Production access is API-key/tariff governed; test access is available without key but rate limited.
 - **Documents:** Phase 4 includes a complete configurable document registry rather than a small template set: contract, service/work order, specification, commercial offer, invoice/payment request, act, UПД/equivalent tax document where applicable, addendum/change order, reconciliation, confidentiality/authority/termination forms and procurement packs.
 - **Interface:** adopted mature workspace pattern — summary/highlights + details + related records + activity/history; work lists with filters/sorts and quick actions; contextual/split inspection; progressive disclosure; personal view preferences; responsive/accessibility baseline; server-authoritative business state.
@@ -121,6 +121,18 @@ Recurring work: https://helpdesk.bitrix24.com/open/25850555/ ; https://knowledge
 Interface/workspace: https://help.salesforce.com/s/articleView?id=sf.lightning_page_components.htm&language=en_US&type=5 ; https://learn.microsoft.com/en-us/power-apps/user/use-model-driven-apps ; https://learn.microsoft.com/en-us/power-automate/business-process-flows-overview ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/a630d57fc5004c6383e7a81efee7a8bb/f7b3e498c30a4f9aad381062cc9d8b09.html
 Multi-operator: https://learn.microsoft.com/en-us/power-platform/admin/how-record-access-determined ; https://learn.microsoft.com/en-us/power-platform/admin/security-roles-privileges
 Procurement API: https://gosplan.info/docs/guides/purchases/ ; https://gosplan.info/docs/getting-started/quickstart-curl/
+### Adversarial boundary corrections added 2026-09-28
+
+- The business-plane handoff is an explicit capability contract, not a verbal process. See `architecture/business_plane_boundary_contract.json`.
+- `PREPARED → OUTBOX_RESERVED → SENT_UNKNOWN → ACKNOWLEDGED` is the minimum safe handoff lifecycle; lost acknowledgements require reconciliation before replay.
+- A single live business field has one owner. Shema and Bitrix24 never perform unconstrained bidirectional writes to the same live field.
+- Repeat Business Preparation must not reimplement Bitrix recurring-deal execution.
+- Document work in Shema is configuration/preparation, not the final legal execution/signing/store of business documents.
+- Customer-facing communication after handoff belongs to the business plane. MAX from Shema is not a substitute second communication history; any future direct customer-channel activation requires an explicit reconciliation/ownership contract.
+- Monium is operational observability only; long-lived audit and business history remain PostgreSQL-owned.
+- Procurement monitoring must distinguish page offsets from a true durable cursor/watermark. Production incremental monitoring requires a stable ordering plus a watermark or overlap-window strategy and durable checkpointing.
+- YandexGPT cost ceilings are explicit configuration, never an implicit zero default.
+
 ### Strategic product-boundary correction added 2026-09-28
 
 - **Core role:** Shema is the intelligence, evidence and decision-support system. New development must not turn it into a second CRM/ERP/accounting/personnel platform.
