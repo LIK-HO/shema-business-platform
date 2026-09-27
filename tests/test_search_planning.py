@@ -80,7 +80,9 @@ def test_registry_requires_at_least_one_source_for_a_plan() -> None:
 
 
 def test_registry_keeps_search_budget_separate_from_source_reliability() -> None:
-    planner = search_planning.RegistryBackedSearchPlanner(search_planning.SearchSourceRegistry.from_contract(contract()))
+    planner = search_planning.RegistryBackedSearchPlanner(
+        search_planning.SearchSourceRegistry.from_contract(contract())
+    )
     plan = planner.plan(
         criteria(),
         ("fns_transparent_business",),
