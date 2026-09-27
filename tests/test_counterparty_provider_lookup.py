@@ -15,7 +15,6 @@ from shema_platform.application.counterparty_provider_lookup import (
     CounterpartyProviderLookupService,
 )
 from shema_platform.domain.identity import Identity, IdentityState
-
 from tests.test_counterparty_provider_evidence import UOW, Identities
 
 
