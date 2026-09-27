@@ -224,7 +224,7 @@ class GosplanProcurementProvider:
         return ProcurementSearchResult(
             items=items,
             has_more=len(items) == query.limit,
-            next_skip=query.skip + len(items),
+            next_page_offset=query.skip + len(items),
             observed_at=datetime.now(UTC),
         )
 
