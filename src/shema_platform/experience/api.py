@@ -521,13 +521,13 @@ def create_app(
 
     @router.post(
         "/intelligence/providers/{providerId}/activation",
-        response_model=CounterpartyProviderActivationResponseModel,
+        response_model=CounterpartyProviderActivationResponse,
     )
     async def activate_counterparty_provider(
         request: Request,
-        payload: CounterpartyProviderActivationRequestModel,
+        payload: CounterpartyProviderActivationRequest,
         provider_id: str = Path(alias="providerId"),
-    ) -> CounterpartyProviderActivationResponseModel:
+    ) -> CounterpartyProviderActivationResponse:
         service: CounterpartyProviderActivationService | None = (
             request.app.state.counterparty_provider_activation
         )
@@ -547,7 +547,7 @@ def create_app(
             ),
             permissions=context.permissions,
         )
-        return CounterpartyProviderActivationResponseModel(
+        return CounterpartyProviderActivationResponse(
             providerId=result.provider_id,
             enabled=result.enabled,
             activatedBy=result.activated_by,
@@ -558,13 +558,13 @@ def create_app(
 
     @router.post(
         "/intelligence/providers/{providerId}/rollback",
-        response_model=CounterpartyProviderActivationResponseModel,
+        response_model=CounterpartyProviderActivationResponse,
     )
     async def rollback_counterparty_provider(
         request: Request,
         payload: CounterpartyProviderRollbackRequest,
         provider_id: str = Path(alias="providerId"),
-    ) -> CounterpartyProviderActivationResponseModel:
+    ) -> CounterpartyProviderActivationResponse:
         service: CounterpartyProviderActivationService | None = (
             request.app.state.counterparty_provider_activation
         )
@@ -581,7 +581,7 @@ def create_app(
             correlation_id=context.correlation_id,
             permissions=context.permissions,
         )
-        return CounterpartyProviderActivationResponseModel(
+        return CounterpartyProviderActivationResponse(
             providerId=result.provider_id,
             enabled=result.enabled,
             activatedBy=result.activated_by,
