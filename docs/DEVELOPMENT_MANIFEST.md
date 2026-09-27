@@ -2,7 +2,7 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold
-**Active development boundary:** Phase 1 — Intelligence Quality Foundation (ready; implementation not started)
+**Active development boundary:** Phase 1-A — Manual authoritative counterparty evidence check (implementation complete; verification pending)
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
