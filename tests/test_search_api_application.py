@@ -71,6 +71,7 @@ def test_search_only_api_application_returns_completeness_and_source_provenance(
     assert body["sourceAttempts"][0]["sourceId"] == "fns_transparent_business"
     assert body["sourceAttempts"][0]["reliability"] == "authoritative"
     assert body["results"][0]["candidateRef"] == "candidate-1"
+    assert body["results"][0]["sourceRefs"] == ["fns_transparent_business"]
     assert response.headers["X-Correlation-Id"] == "corr-search"
 
 
