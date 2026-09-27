@@ -17,6 +17,8 @@ def test_business_plane_contract_prevents_dual_ownership() -> None:
     assert payload["domain_ownership"]["shema"]
     assert "transaction_price" in payload["domain_ownership"]["forbidden_dual_ownership"]
     assert "business_economics" in payload["domain_ownership"]["forbidden_dual_ownership"]
+    assert "customer_outbound_communication_execution" in payload["domain_ownership"]["forbidden_dual_ownership"]
+    assert payload["communication"]["max_direct_customer_outbound_from_shema"] == "disabled_by_default"
 
 
 def test_handoff_is_idempotent_and_reconciliation_safe() -> None:
