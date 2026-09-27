@@ -132,7 +132,7 @@ Close P46 cleanly before starting new implementation.
 ### Phase 0 result
 **CLOSED / VERIFIED.** P46 is complete as an evidence-revalidation boundary. MAX readiness remains blocked until authoritative provider-side idempotency and provider-side reconciliation evidence becomes available. No implementation workaround, fallback provider or kernel change is permitted.
 
-**Next selected boundary:** Phase 1 — Intelligence Quality Foundation. Phase 1-A is now in implementation/verification.
+**Next selected boundary:** Phase 1-B — Intelligence benchmark and source registry. Phase 1-A is CLOSED / VERIFIED.
 
 ## 5. Phase 1 — Intelligence Quality Foundation
 
@@ -145,7 +145,7 @@ Manual counterparty check:
 INN/OGRN/OGRNIP → authoritative source lookup → identity resolution → evidence → contradiction/freshness → compact operator brief.
 
 ### Phase 1-A — Manual authoritative counterparty evidence check
-- **Status:** implementation complete; full verification pending.
+- **Status:** CLOSED / VERIFIED by CI #1297 (`36284386157`).
 - Entry point: an operator supplies an observation obtained from an authoritative FNS source.
 - The bounded application capability validates INN/OGRN/OGRNIP structure and official source provenance, resolves existing identity data by tax identifier when available, persists Evidence with freshness/provenance/confidence, quarantines contradictions and emits an append-only audit record.
 - Canonical API adapter exposes the same result and compact operator brief without introducing a second system of record.
@@ -166,6 +166,12 @@ INN/OGRN/OGRNIP → authoritative source lookup → identity resolution → evid
 - contradiction handling;
 - evidence classification;
 - lawful-access boundary.
+
+### Phase 1-B — Intelligence benchmark and source registry
+- **Status:** selected; implementation not started.
+- Establish the permanent benchmark corpus and source registry before adding broader automated source orchestration.
+- Preserve the existing separation of candidate discovery, identity resolution, evidence provenance, source reliability, claim confidence and freshness.
+- No source volume expansion, ranking gate or automatic qualification is admitted until benchmark ground truth and operator-correction metrics exist.
 
 ### Intelligence benchmark
 Create a permanent test corpus with:
