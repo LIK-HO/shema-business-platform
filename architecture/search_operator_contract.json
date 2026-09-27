@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "status": "phase_2c_pilot",
+  "depends_on": [
+    "architecture/search_run_contract.json",
+    "architecture/search_plan_registry_contract.json",
+    "architecture/intelligence_source_registry_contract.json"
+  ],
+  "network_execution_enabled": false,
+  "ranking_authority": false,
+  "api_edge_is_backward_compatible": true,
+  "required_outputs": [
+    "canonical_candidates",
+    "search_completeness",
+    "plan_version",
+    "source_attempts_with_provenance"
+  ],
+  "non_goals": [
+    "provider_network_activation",
+    "automatic_ranking",
+    "automatic_qualification",
+    "new_persistence_authority",
+    "kernel_semantic_change",
+    "MAX_activation"
+  ]
+}

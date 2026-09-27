@@ -18,6 +18,9 @@ class SearchRequest(APIModel):
         default="candidate",
         alias="selectionLevel",
     )
+    source_ids: list[str] = Field(default_factory=list, alias="sourceIds", max_length=50)
+    max_sources: int = Field(default=8, ge=1, le=50, alias="maxSources")
+    max_candidates: int = Field(default=500, ge=1, le=5000, alias="maxCandidates")
 
 
 class SearchHitResponse(APIModel):
@@ -34,9 +37,36 @@ class SearchHitResponse(APIModel):
     )
 
 
+class SearchSourceAttemptResponse(APIModel):
+    source_id: str = Field(alias="sourceId")
+    source_class: str = Field(alias="sourceClass")
+    reliability: str
+    access_mode: str = Field(alias="accessMode")
+    status: Literal[
+        "SEARCHED",
+        "SEARCHED_NOT_FOUND",
+        "SOURCE_UNAVAILABLE",
+        "BUDGET_LIMITED",
+    ]
+    candidate_count: int = Field(default=0, alias="candidateCount")
+    error_code: str | None = Field(default=None, alias="errorCode")
+
+
 class SearchResponse(APIModel):
     results: list[SearchHitResponse]
     correlation_id: str = Field(alias="correlationId")
+    completeness: Literal[
+        "NOT_SEARCHED",
+        "SEARCHED_NOT_FOUND",
+        "SOURCE_UNAVAILABLE",
+        "BUDGET_LIMITED",
+        "COMPLETE",
+    ] = "NOT_SEARCHED"
+    plan_version: str = Field(default="search-plan:v1", alias="planVersion")
+    source_attempts: list[SearchSourceAttemptResponse] = Field(
+        default_factory=list,
+        alias="sourceAttempts",
+    )
 
 
 class DiscoveryRequest(APIModel):
