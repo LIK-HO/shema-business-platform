@@ -2,13 +2,13 @@
 ## Current development-session synchronization — 2026-09-27
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-- HEAD before activation-operation synchronization commit: `23bce565ee7fa326dc35008317c4ea409e200982`.
+- HEAD: `758690225996c1c2cca95cbbd3b1c56638d69db8`.
 - PR: #56 — open, draft, mergeable.
 - Phase 2-H lookup→retry→evidence composition and synchronized documentation are CLOSED / VERIFIED by full CI #1383 (`36315401510`) with all seven release-gate jobs GREEN.
 - Phase 2-H controlled activation operation: **CLOSED / VERIFIED by CI #1392 (`36316219807`) on `de99fd3e30514c140464947099a03fa9399809f9`.**
 - Phase 2-H runtime activation rehearsal: **CLOSED / VERIFIED by CI #1397 (`36316599417`) on `c47c9b7368abd5de8488390d47f212884f5eb3cc`.**
 - Phase 2-H provider lookup → Evidence runtime vertical slice: **CLOSED / VERIFIED by CI #1402 (`36317002134`) on `88dab9aa995c70217af0b616d59039f62450bb26`.**
-- Current active boundary: **Phase 2-H Runtime Negative Provider Outcomes & Recovery — implementation not yet started; live activation OFF.**
+- Phase 2-H Runtime Negative Provider Outcomes & Recovery: **CLOSED / VERIFIED by full CI #1404 (`36317178100`) on `758690225996c1c2cca95cbbd3b1c56638d69db8`; live activation remains OFF.**
 - Phase 2-G FNS evidence hold remains independently BLOCKED for automation.
 - Implemented activation artifacts: `src/shema_platform/adapters/intelligence/dadata_activation.py`, `src/shema_platform/application/counterparty_provider_activation.py`, `architecture/dadata_activation_operation_contract.json`, `tests/test_counterparty_provider_activation.py`, plus API models/routes and canonical OpenAPI updates.
 - Activation invariant: construction and startup do not activate DaData; the provider binding starts disabled and can only be enabled through the explicit control-plane operation.
@@ -19,9 +19,16 @@
 - Evidence invariant: DaData remains `trusted_secondary`; provider observations remain Evidence input and cannot promote canonical Identity.
 - Network invariant: no live DaData traffic, no automatic activation, no fallback provider, no CI provider traffic and no credentials in source control.
 - Final gate for controlled activation operation: full seven-job CI #1392 (`36316219807`) — all seven jobs GREEN.
-- Safe next action: exercise deterministic negative provider outcomes through the runtime, prove HTTP error mapping and bounded retry behavior, verify contradiction quarantine in secondary evidence, and prove rollback/retry recovery without live DaData.
-- Prohibited until separate explicit authorization: live DaData execution, provider credentials in repository, automatic fallback, FNS automation, MAX activation, DB schema change and frozen-kernel semantic change.
+- Verified negative/recovery evidence: deterministic runtime tests cover not-found, rate-limit retry/saturation, provider 5xx, transport recovery, secondary contradiction quarantine, no-fallback behavior, bounded retry delays and no partial Evidence/Identity mutation on terminal provider errors. Full seven-job CI #1404 (`36317178100`) passed GREEN.
+- Stage exit invariant: no live DaData execution, provider credentials in repository, automatic fallback, FNS automation, MAX activation, DB schema change or frozen-kernel semantic change. No new active implementation boundary is opened by this closure.
 
+
+## Stage closure evidence — 2026-09-27
+
+- Negative/recovery test file: `tests/test_counterparty_provider_runtime_negative.py`.
+- Exit document: `docs/RUNTIME_NEGATIVE_PROVIDER_OUTCOMES_2026_09_27.md`.
+- Full seven-job release gate: CI #1404 (`36317178100`) — all seven jobs GREEN.
+- Runtime boundary remains disabled by default; live DaData traffic did not occur.
 
 ## Historical core-certification baseline
 
