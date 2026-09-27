@@ -105,6 +105,7 @@ class GosplanFieldMap:
     published_at: tuple[str, ...] = ("publishedAt", "published_at", "publicationDate")
     deadline_at: tuple[str, ...] = ("deadlineAt", "deadline_at", "deadlineDate")
     stage: tuple[str, ...] = ("stage", "status")
+    updated_at: tuple[str, ...] = ("updatedAt", "updated_at", "lastModified", "last_modified")
     source_url: tuple[str, ...] = ("url", "purchaseUrl", "link")
 
 
@@ -261,6 +262,7 @@ class GosplanProcurementProvider:
             published_at=parse_datetime(self._first_value(raw, self._field_map.published_at)),
             deadline_at=parse_datetime(self._first_value(raw, self._field_map.deadline_at)),
             stage=self._string_value(raw, self._field_map.stage),
+            updated_at=parse_datetime(self._first_value(raw, self._field_map.updated_at)),
             source_url=self._string_value(raw, self._field_map.source_url),
         )
 
