@@ -83,6 +83,7 @@ class LookupAuthenticator(AuthenticationPort):
                     {
                         Permission.INTELLIGENCE_PROVIDER_ACTIVATE,
                         Permission.INTELLIGENCE_PROVIDER_LOOKUP,
+                        Permission.INTELLIGENCE_PROVIDER_ROLLBACK,
                     }
                 ),
             )
