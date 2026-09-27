@@ -9,7 +9,7 @@ from shema_platform.application.search_planning import (
     SearchSourceRegistry,
 )
 from shema_platform.application.search_run import SearchRunService
-from shema_platform.domain.search import SearchHit
+from shema_platform.domain.search import SearchHit, SelectionLevel
 from shema_platform.experience.api import create_app
 from shema_platform.experience.search_application import SearchOnlyAPIApplication
 from shema_platform.foundation.authentication import AuthenticatedActor, AuthenticationPort
@@ -31,7 +31,7 @@ class FakeProvider:
                 frozenset(criteria.industries),
                 "fns_transparent_business",
                 "7700000000",
-                selection_level="candidate",
+                selection_level=SelectionLevel.CANDIDATE,
             ),
         )
 
