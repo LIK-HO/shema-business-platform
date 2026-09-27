@@ -4,7 +4,12 @@
 - Branch: `v1.5/p46-max-provider-evidence-hold`
 - HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
 - PR: #56 — open, draft, mergeable.
-- Current boundary: Phase 2 — Mature Search and Research — READY / implementation not started.
+- Current boundary: Phase 2 — Mature Search and Research — IN_PROGRESS / Phase 2-A Search Run Integrity Boundary.
+- Phase 2-A implementation: bounded search-run orchestration, explicit completeness states, source/candidate budgets, deterministic source order, canonical candidate normalization and benchmark search-quality metrics.
+- Phase 2-A implementation commits: cfb48dd9dbccee426403834f1e153ac4440ed11b (initial slice) and a94573ad8c5ab83b6f44ceb5281b9f7c9d045182 (test-contract correction).
+- Phase 2-A verification is NOT YET CLOSED: CI #1314 (36304156523) on prior implementation HEAD reached supply-chain success and Python 3.13 lint/compile success but its unit-test job failed on a test fixture passing a string instead of the canonical SelectionLevel enum; the fixture was corrected in a94573ad.
+- Current verification CI #1315 (36304202088) targets the corrected HEAD but remains pending while the previous run #1314 retains an in-progress Python 3.12 job in GitHub Actions.
+- No database schema, network automation, ranking authority, automatic qualification, canonical identity semantic change, MAX activation or frozen-kernel change was introduced in Phase 2-A.
 - P46 MAX provider evidence hold: CLOSED / VERIFIED.
 - Phase 1-A implementation is bounded to application service, canonical API adapter, OpenAPI contract and tests; no external provider automation is enabled.
 - Frozen kernel: unchanged.
@@ -18,7 +23,7 @@
 - Phase 1-B implementation complete: source registry contract, ten-case synthetic benchmark corpus, pure resolution/quality metric evaluator, operator documentation and negative-path tests.
 - Phase 1-B verification complete: CI run #1307 (`36302695693`) on `6172bb4dfd2fda1d75a766368bf669ce1e57ed39`; all seven required jobs passed.
 - Phase 1-B exit: no database schema, network automation, canonical identity semantic change or frozen-kernel change.
-- Safest next action: define the Phase 2 search/research integrity boundary, then implement only its smallest vertical slice.
+- Safest next action: complete the current Phase 2-A verification gate; only after a full green CI should the boundary be CLOSED / VERIFIED and the next Phase 2 sub-boundary selected.
 - Historical Phase 1-B guardrail: mass source integration, hidden ranking gates, automatic qualification/promotion, new source-of-truth tables, kernel semantic changes, provider activation and MAX changes were prohibited until the benchmark boundary was closed.
 - Current Phase 2 guardrail: do not broaden into mass source orchestration or ranking authority before the smallest search/research vertical slice is contracted and measured.
 - Prior P46 full CI verification remains run #1265 (`36283673042`) on commit `b4c404404b7d0cf9317caf765723a3bc2003cd46`; all seven required jobs passed.
