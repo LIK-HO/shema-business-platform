@@ -65,7 +65,7 @@ def page(*items):
     )
 
 
-def test_first_poll_returns_new_items_and_stores_cursor():
+def test_first_poll_returns_new_items_and_stores_page_offset():
     provider = FakeProvider([page(opportunity())])
     monitor = ProcurementMonitor(provider, max_attempts=1)
 
