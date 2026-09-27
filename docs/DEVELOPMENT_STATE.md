@@ -3,18 +3,31 @@
 
 - Branch: `v1.5/p47-product-expansion`.
 - HEAD: resolved live from GitHub; this ledger does not store a static commit pointer.
-- PR: not yet opened; this branch is the bounded Phase 2-I implementation line.
-- Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED by CI #1404 and final synchronization CI #1412; live DaData remains OFF.
-- Active boundary: **Phase 2-I — Procurement Intelligence & Tender Monitoring API**.
-- Implemented in this boundary: provider-neutral procurement query/result contracts; GosPlan API v2 adapter boundary; bounded timeout/response/retry policy; future-plan/purchase collections; cursor-based watch state; new-vs-changed fingerprint detection; provider/source contracts; deterministic fixtures and contract tests.
-- GosPlan live traffic: OFF by configuration. No credentials in Git. No CI network traffic. No automatic tender submission or participation.
-- Procurement observations are not canonical Identity and do not create a second system of record. Identity linking is constrained to existing evidence/identity rules.
-- Tender monitoring integration path: procurement observation → evidence/identity → qualification → contact preparation → commercial action → order → document pack → result/learning.
-- Repeat customer order engine is recorded as **Phase 3A**, between Contact Preparation and Legal/Document Configuration; it is not implemented in this active boundary.
-- Web + PWA are the only approved client surfaces; Android has been removed from the roadmap.
-- Multi-operator collaboration is a permanent architectural requirement in the manifest; runtime ownership/concurrency UX is deferred to the operator-system boundary and does not open a second active capability now.
-- Required next verification: full seven-job release-gate CI for the Phase 2-I branch. Any failure is fixed only inside this procurement boundary.
-- Prohibited in this boundary: frozen-kernel semantic changes, DB schema changes without an explicitly closed dependency boundary, FNS automation, MAX activation, fallback providers, tender submission automation, unrelated repeat-order/UI implementation.
+- PR: #58 — open, draft, mergeable state subject to current CI; head resolved live.
+- Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED; live DaData remains OFF.
+- Active implementation sub-boundary: **Phase 2-I procurement foundation** — CLOSED / VERIFIED by full CI #1417 (`36351981305`) on the verified branch head before this documentation synchronization.
+- Verified implementation: provider-neutral procurement contracts; ГосПлан API v2 adapter boundary; 44-FZ/223-FZ purchase/plan collections; bounded timeout/response/retry/error mapping; cursor-based watch state; new/changed fingerprint detection; deterministic adapter, contract and monitoring tests.
+- Procurement provider execution remains disabled by default; no production credentials in Git; no live CI provider traffic; no tender submission/participation automation; no scraping fallback.
+- Procurement observation remains external evidence input and does not create canonical Identity or a second system of record.
+- Product flow is fixed as: procurement observation → identity/evidence → qualification → contact preparation → commercial action → order → document pack → result/learning.
+- Repeat Customer Order Engine is fixed in Phase 3A between Contact Preparation and Legal/Document Configuration; runtime implementation is not part of the closed procurement foundation boundary.
+- Documents are fixed in Phase 4 as a complete configurable registry for contracts, work orders/specifications, offers, invoices/payment requests, acts, tax documents where applicable, addenda/change orders, reconciliation, confidentiality/authority/termination and procurement packs.
+- Web + PWA are the only approved experience surfaces; Android is removed from the target roadmap.
+- Multi-operator collaboration is a permanent architecture requirement: explicit actor, ownership/assignment/team queues, server-side authorization, audited handoff, revision/concurrency protection and explicit conflict resolution.
+- Remaining Phase 2-I work is not implicitly opened: production activation, durable server-side monitoring state/scheduling, canonical API/runtime exposure, Evidence/Identity intake composition and operational monitoring require a separately selected bounded sub-boundary.
+- Prohibited until that boundary is explicitly opened: frozen-kernel semantics, unrelated UI/repeat-order implementation, FNS automation, MAX activation, provider fallback, tender submission automation and unbounded crawling.
+
+## Stage verification — 2026-09-28
+
+- Full seven-job release gate: CI #1417 (`36351981305`) — GREEN.
+- Quality 3.12: success.
+- Quality 3.13: success.
+- Supply-chain: success.
+- Integration 3.12: success.
+- Integration 3.13: success.
+- Backup/recovery: success.
+- Release-contract: success.
+
 ## Historical core-certification baseline
 
 - Repository: `LIK-HO/shema-business-platform`
