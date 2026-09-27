@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "status": "phase_2f_readiness",
+  "purpose": "Provider-neutral readiness gate before any first-source adapter activation.",
+  "network_execution_enabled": false,
+  "automatic_activation": false,
+  "automatic_retry": false,
+  "fallback_provider": false,
+  "required_evidence": [
+    "registry_source",
+    "authoritative_provider_contract",
+    "lawful_access_evidence",
+    "adapter_descriptor",
+    "rate_limit_evidence",
+    "timeout_policy",
+    "error_mapping",
+    "provenance_mapping",
+    "kill_switch",
+    "rollback_plan",
+    "deterministic_fixture_tests",
+    "observability_contract"
+  ],
+  "readiness_states": [
+    "NOT_READY",
+    "EVIDENCE_REQUIRED",
+    "READY_FOR_CONTROLLED_ACTIVATION",
+    "BLOCKED"
+  ],
+  "activation_prerequisite": "explicit_operator_authorization_after_all_required_evidence",
+  "non_goals": [
+    "provider_selection_without_evidence",
+    "live_network_activation",
+    "automatic_retry_or_fallback",
+    "new_persistence_authority",
+    "ranking_authority",
+    "automatic_qualification",
+    "kernel_semantic_change",
+    "MAX_activation"
+  ]
+}

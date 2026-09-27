@@ -4,7 +4,7 @@
 - Branch: `v1.5/p46-max-provider-evidence-hold`
 - HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
 - PR: #56 — open, draft, mergeable.
-- Current boundary: Phase 2-F — First Approved Source Adapter Readiness — READY / implementation not started.
+- Current boundary: Phase 2-F — First Approved Source Adapter Readiness — IN_PROGRESS.
 - Phase 2-A implementation: bounded search-run orchestration, explicit completeness states, source/candidate budgets, deterministic source order, canonical candidate normalization and benchmark search-quality metrics.
 - Phase 2-A implementation commits: cfb48dd9dbccee426403834f1e153ac4440ed11b (initial slice) and a94573ad8c5ab83b6f44ceb5281b9f7c9d045182 (test-contract correction).
 - Phase 2-A verification: CLOSED / VERIFIED by full CI #1316 (36304414654) on HEAD af813ff79802aa358eafcb68586d3bf0b105aa7d; supply-chain, quality 3.12/3.13, integration 3.12/3.13, backup-recovery and release-contract all passed.
