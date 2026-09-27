@@ -4,7 +4,7 @@
 - Branch: `v1.5/p46-max-provider-evidence-hold`
 - HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
 - PR: #56 — open, draft, mergeable.
-- Current boundary: Phase 1-B — Intelligence benchmark and source registry — READY / implementation not started.
+- Current boundary: Phase 1-B — Intelligence benchmark and source registry — IN_PROGRESS.
 - P46 MAX provider evidence hold: CLOSED / VERIFIED.
 - Phase 1-A implementation is bounded to application service, canonical API adapter, OpenAPI contract and tests; no external provider automation is enabled.
 - Frozen kernel: unchanged.
@@ -13,7 +13,10 @@
 - Verification CI: run #1297 (`36284386157`) — all seven required jobs passed.
 - Phase 1-A completed sub-boundaries: authoritative-source validation, INN/OGRN/OGRNIP observation contract, identity resolution by tax ID when available, traceable evidence, freshness, contradiction quarantine, append-only audit, compact operator brief, API/OpenAPI boundary.
 - Phase 1-A exit: full CI/release verification passed; frozen kernel unchanged; no database migration or external FNS network execution introduced.
-- Safest next action: implement the permanent benchmark corpus and source registry, then run the full gate before selecting broader research automation.
+- Completed sub-boundary for Phase 1-B: entry synchronization and integrity boundary defined.
+- Active sub-boundary: define the machine-readable source registry, permanent synthetic benchmark corpus and pure metric evaluator; no network lookup or persistence migration.
+- Unfinished: implementation, negative-path tests, full CI/release verification and closure record.
+- Safest next action: implement the bounded benchmark/source-registry contracts and evaluator, then run the full gate.
 - Prohibited in Phase 1-B until benchmark evidence exists: mass source integration, hidden ranking gates, automatic qualification/promotion, new source-of-truth tables, kernel semantic changes, provider activation or MAX changes.
 - Prior P46 full CI verification remains run #1265 (`36283673042`) on commit `b4c404404b7d0cf9317caf765723a3bc2003cd46`; all seven required jobs passed.
 
