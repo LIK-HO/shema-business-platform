@@ -1,36 +1,20 @@
 # Development State Ledger
-## Current development-session synchronization — 2026-09-27
+## Current development-session synchronization — 2026-09-28
 
-- Branch: `v1.5/p46-max-provider-evidence-hold`
+- Branch: `v1.5/p47-product-expansion`.
 - HEAD: resolved live from GitHub; this ledger does not store a static commit pointer.
-- PR: #56 — open, draft, mergeable.
-- Phase 2-H lookup→retry→evidence composition and synchronized documentation are CLOSED / VERIFIED by full CI #1383 (`36315401510`) with all seven release-gate jobs GREEN.
-- Phase 2-H controlled activation operation: **CLOSED / VERIFIED by CI #1392 (`36316219807`) on `de99fd3e30514c140464947099a03fa9399809f9`.**
-- Phase 2-H runtime activation rehearsal: **CLOSED / VERIFIED by CI #1397 (`36316599417`) on `c47c9b7368abd5de8488390d47f212884f5eb3cc`.**
-- Phase 2-H provider lookup → Evidence runtime vertical slice: **CLOSED / VERIFIED by CI #1402 (`36317002134`) on `88dab9aa995c70217af0b616d59039f62450bb26`.**
-- Phase 2-H Runtime Negative Provider Outcomes & Recovery: **CLOSED / VERIFIED by full CI #1404 (`36317178100`) on `758690225996c1c2cca95cbbd3b1c56638d69db8`; live activation remains OFF.**
-- Phase 2-G FNS evidence hold remains independently BLOCKED for automation.
-- Implemented activation artifacts: `src/shema_platform/adapters/intelligence/dadata_activation.py`, `src/shema_platform/application/counterparty_provider_activation.py`, `architecture/dadata_activation_operation_contract.json`, `tests/test_counterparty_provider_activation.py`, plus API models/routes and canonical OpenAPI updates.
-- Activation invariant: construction and startup do not activate DaData; the provider binding starts disabled and can only be enabled through the explicit control-plane operation.
-- Authorization invariant: provider activation and rollback require dedicated permissions and explicit operator confirmation.
-- Credential invariant: activation state, API DTOs, telemetry and operation contracts contain no provider secret.
-- Identity invariant: `providerId` is supplied only by the route path, not duplicated in the request body.
-- Rollback invariant: the kill-switch disables the binding, preserves safe historical activation metadata and makes no database schema change.
-- Evidence invariant: DaData remains `trusted_secondary`; provider observations remain Evidence input and cannot promote canonical Identity.
-- Network invariant: no live DaData traffic, no automatic activation, no fallback provider, no CI provider traffic and no credentials in source control.
-- Final gate for controlled activation operation: full seven-job CI #1392 (`36316219807`) — all seven jobs GREEN.
-- Verified negative/recovery evidence: deterministic runtime tests cover not-found, rate-limit retry/saturation, provider 5xx, transport recovery, secondary contradiction quarantine, no-fallback behavior, bounded retry delays and no partial Evidence/Identity mutation on terminal provider errors. Full seven-job CI #1404 (`36317178100`) passed GREEN.
-- Stage exit invariant: no live DaData execution, provider credentials in repository, automatic fallback, FNS automation, MAX activation, DB schema change or frozen-kernel semantic change. No new active implementation boundary is opened by this closure.
-
-
-## Stage closure evidence — 2026-09-27
-
-- Negative/recovery test file: `tests/test_counterparty_provider_runtime_negative.py`.
-- Exit document: `docs/RUNTIME_NEGATIVE_PROVIDER_OUTCOMES_2026_09_27.md`.
-- Full seven-job release gate for the negative/recovery implementation: CI #1404 (`36317178100`) — all seven jobs GREEN.
-- Final post-closure regression gate: CI #1408 (`36320629569`) on `6779e38578e35a5e8081ce8894b404c2fdfbe3de` — all seven jobs GREEN.
-- Runtime boundary remains disabled by default; live DaData traffic did not occur.
-
+- PR: not yet opened; this branch is the bounded Phase 2-I implementation line.
+- Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED by CI #1404 and final synchronization CI #1412; live DaData remains OFF.
+- Active boundary: **Phase 2-I — Procurement Intelligence & Tender Monitoring API**.
+- Implemented in this boundary: provider-neutral procurement query/result contracts; GosPlan API v2 adapter boundary; bounded timeout/response/retry policy; future-plan/purchase collections; cursor-based watch state; new-vs-changed fingerprint detection; provider/source contracts; deterministic fixtures and contract tests.
+- GosPlan live traffic: OFF by configuration. No credentials in Git. No CI network traffic. No automatic tender submission or participation.
+- Procurement observations are not canonical Identity and do not create a second system of record. Identity linking is constrained to existing evidence/identity rules.
+- Tender monitoring integration path: procurement observation → evidence/identity → qualification → contact preparation → commercial action → order → document pack → result/learning.
+- Repeat customer order engine is recorded as **Phase 3A**, between Contact Preparation and Legal/Document Configuration; it is not implemented in this active boundary.
+- Web + PWA are the only approved client surfaces; Android has been removed from the roadmap.
+- Multi-operator collaboration is a permanent architectural requirement in the manifest; runtime ownership/concurrency UX is deferred to the operator-system boundary and does not open a second active capability now.
+- Required next verification: full seven-job release-gate CI for the Phase 2-I branch. Any failure is fixed only inside this procurement boundary.
+- Prohibited in this boundary: frozen-kernel semantic changes, DB schema changes without an explicitly closed dependency boundary, FNS automation, MAX activation, fallback providers, tender submission automation, unrelated repeat-order/UI implementation.
 ## Historical core-certification baseline
 
 - Repository: `LIK-HO/shema-business-platform`
