@@ -5,12 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from shema_platform.application.search_planning import (
-    RegistryBackedSearchPlanner,
-    SearchSourceRegistry,
-)
-from shema_platform.application.search_run import SearchBudget
-from shema_platform.domain.search import SearchCriteria
+import shema_platform.application.search_planning as search_planning
+import shema_platform.application.search_run as search_run
+import shema_platform.domain.search as domain_search
 
 
 ROOT = Path(__file__).parents[1]
@@ -22,8 +19,8 @@ def contract() -> dict:
     ).read_text(encoding="utf-8"))
 
 
-def criteria() -> SearchCriteria:
-    return SearchCriteria(
+def criteria() -> domain_search.SearchCriteria:
+    return domain_search.SearchCriteria(
         region="Moscow",
         industries=frozenset({"logistics"}),
         limit=50,
@@ -31,7 +28,7 @@ def criteria() -> SearchCriteria:
 
 
 def test_registry_planner_accepts_declared_sources_only() -> None:
-    planner = RegistryBackedSearchPlanner(SearchSourceRegistry.from_contract(contract()))
+    planner = search_planning.RegistryBackedSearchPlanner(search_planning.SearchSourceRegistry.from_contract(contract()))
     plan = planner.plan(
         criteria(),
         ("fns_transparent_business", "primary_company_site"),
@@ -81,7 +78,7 @@ def test_registry_keeps_search_budget_separate_from_source_reliability() -> None
     plan = planner.plan(
         criteria(),
         ("fns_transparent_business",),
-        budget=SearchBudget(max_sources=1, max_candidates=25),
+        budget=search_run.SearchBudget(max_sources=1, max_candidates=25),
     )
 
     assert plan.budget.max_sources == 1
