@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from collections.abc import Callable
 from time import sleep
 from typing import Protocol
 
@@ -15,7 +15,7 @@ class CounterpartyLookupProviderError(RuntimeError):
 
 
 class CounterpartyLookupProvider(Protocol):
-    def lookup(self, query: "CounterpartyLookupQuery") -> "CounterpartyProviderRecord": ...
+    def lookup(self, query: CounterpartyLookupQuery) -> CounterpartyProviderRecord: ...
 
 
 class CounterpartyLookupIdentifierType(StrEnum):
