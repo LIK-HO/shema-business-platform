@@ -1054,7 +1054,7 @@ Ranking может менять порядок показа, но не долж�
 The required chain is:
 **plan/notice → procurement observation → identity/evidence → qualification → contact reason → commercial action → order → document pack → result/learning.**
 
-The system must distinguish planned procurement, published notice, active procedure, completed procedure and cancellation/change events. Monitoring is cursor-based and deduplicated. Provider identifiers remain provider references, not canonical business IDs. No tender submission automation is part of this boundary. The next procurement runtime boundary is a provider-neutral ProcurementSourceRegistry with per-source capability declarations. ГосПлан remains the official-origin baseline; TenderGuru is the first commercial aggregation candidate only after a measured coverage gap. No single commercial ETP is a strategic dependency.
+The system must distinguish planned procurement, published notice, active procedure, completed procedure and cancellation/change events. Monitoring uses bounded page-offset polling in the current foundation; production incremental monitoring requires stable ordering plus watermark/overlap-window semantics and durable checkpointing. Provider identifiers remain provider references, not canonical business IDs. No tender submission automation is part of this boundary. The next procurement runtime boundary is a provider-neutral ProcurementSourceRegistry with per-source capability declarations. ГосПлан remains the official-origin baseline; TenderGuru is the first commercial aggregation candidate only after a measured coverage gap. No single commercial ETP is a strategic dependency.
 
 # 5C. Контур подготовки первого контакта
 
@@ -1090,15 +1090,16 @@ DOSSIER → ЛПР/ROLE HYPOTHESIS → CONTACT CONTEXT → VALUE HYPOTHESIS → 
 - какие факты требуют повторной проверки;
 - какие вопросы лучше задать вместо предположения.
 
-# 5C-A. Repeat Customer Order Engine
+// SUPERSEDED — Repeat Business Preparation is the current post-core pattern.
+# 5C-A. Repeat Business Preparation
 
-A repeat order is represented by a reusable rule/template attached to an existing canonical customer, not by copying a historical order.
+Repeat business is represented by a reusable preparation rule attached to an existing canonical customer. It produces a fresh preparation/handoff snapshot, not a live transaction ledger.
 
 Required semantics:
-- recurrence pattern, next due date/window, owner/assignee and pause/end controls;
+- recurrence signal, preparation window, owner/assignee and pause/end controls;
 - lineage to the previous order and original commercial configuration;
-- fresh draft order snapshot per repetition;
-- explicit review before order confirmation;
+- fresh preparation/handoff snapshot per repetition;
+- explicit review before business-plane handoff;
 - changed/expired price and document configuration surfaced as deltas;
 - no duplicate next-order creation when an open repeat instance exists;
 - one-time skip, pause/resume, fixed-count and end-date controls;
