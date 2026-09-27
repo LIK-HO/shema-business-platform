@@ -48,7 +48,7 @@ Shema — это **личная операционная система влад
 4. **Операторский путь важнее архитектурной красоты.** Любая новая capability должна либо заметно повышать качество решения, либо сокращать операторское время/ошибки, либо защищать критический риск. Само наличие технологии преимуществом не является.
 5. **Personal-first означает не anti-scale, а deferred-scale.** Архитектура допускает будущую нагрузку/командный режим, но текущий UX, deployment model и процессы не должны платить сложностью за гипотетический масштаб.
 6. **Модульность предпочтительнее распределённости.** Modular monolith, PostgreSQL и provider-neutral boundaries остаются базой. Service extraction, отдельные очереди, специализированные хранилища и team-mode появляются только по измеренной причине.
-7. **Не строить функции ради полноты продукта.** PWA, Android, расширенный graph, дополнительные AI providers, CRM-интеграции и командные функции — условные capabilities; они включаются только при доказанной полезности.
+7. **Не строить функции ради полноты продукта.** PWA, расширенный graph, дополнительные AI providers, CRM-интеграции и командные функции — условные capabilities; новый client surface допускается только по отдельному доказательству полезности.
 8. **Каждый важный автоматизм должен иметь понятный отказ.** Оператор должен понимать, что система знает, чего не знает, что не проверяла и почему действие ограничено.
 
 ### Три уровня взаимодействия с системой
@@ -117,7 +117,7 @@ Shema — это **личная операционная система влад
 - **Clients:** Web + PWA are sufficient and remain the only approved experience surfaces. Android is removed from the roadmap.
 
 ### Research basis
-Recurring work: https://helpdesk.bitrix24.com/open/25850555/ ; https://knowledge.hubspot.com/payments/manage-subscriptions-for-recurring-payments ; https://support.pipedrive.com/en/article/recurring-products ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/a630d57fc5004c6383e7a81efee7a8bb/f7b3e498c30a4f89c30a4f9aad381062cc9d8b09.html ; https://help.salesforce.com/s/articleView?id=sf.order_overview.htm&language=en_US&type=5
+Recurring work: https://helpdesk.bitrix24.com/open/25850555/ ; https://knowledge.hubspot.com/payments/manage-subscriptions-for-recurring-payments ; https://support.pipedrive.com/en/article/recurring-products ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/22eca60c150344f89bcee6255485f8c7.html ; https://help.salesforce.com/s/articleView?id=sf.order_overview.htm&language=en_US&type=5
 Interface/workspace: https://help.salesforce.com/s/articleView?id=sf.lightning_page_components.htm&language=en_US&type=5 ; https://learn.microsoft.com/en-us/power-apps/user/use-model-driven-apps ; https://learn.microsoft.com/en-us/power-automate/business-process-flows-overview ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/a630d57fc5004c6383e7a81efee7a8bb/f7b3e498c30a4f9aad381062cc9d8b09.html ; https://www.b2b-center.ru/plus/
 Multi-operator: https://learn.microsoft.com/en-us/power-platform/admin/how-record-access-determined ; https://learn.microsoft.com/en-us/power-platform/admin/security-roles-privileges
 Procurement API: https://gosplan.info/docs/guides/purchases/ ; https://gosplan.info/docs/getting-started/quickstart-curl/ ; https://www.b2b-center.ru/plus/
@@ -1843,10 +1843,9 @@ The frozen core remains complete independently of the following product-surface 
 - [ ] Direct operator search remains available without mandatory ranking/qualification gates.
 - [ ] Canonical Web client is implemented against canonical API only.
 - [ ] PWA install/update/offline-aware/reconnect semantics are verified.
-- [ ] Android client uses the same canonical API/domain semantics.
 - [ ] Offline-aware multi-device continuity is deterministic and server-authoritative.
 - [ ] Client security/session/device controls are verified.
-- [ ] Web/PWA/Android critical workflows have E2E coverage.
+- [ ] Web/PWA critical workflows have E2E coverage.
 - [ ] Critical UI screens have accessibility and visual-regression coverage.
 - [ ] Client telemetry is correlation-aware, redacted and non-authoritative.
 - [ ] Client releases have compatibility, staged rollout and rollback strategy.
@@ -1893,7 +1892,7 @@ The frozen core remains complete independently of the following product-surface 
 - MAX transport;
 - intelligence providers;
 - payments/settlement;
-- Web/PWA/Android;
+- Web/PWA;
 - team mode;
 - CRM integrations;
 - product/reporting features;
@@ -1928,7 +1927,7 @@ Core изменяется только по доказанному invariant def
 
 **One system, multiple surfaces.**
 
-Web, PWA and Android are different experience surfaces over one canonical API/domain system.
+Web and PWA are the experience surfaces over one canonical API/domain system.
 
 They must share:
 - canonical identifiers;
