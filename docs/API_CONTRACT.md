@@ -21,12 +21,20 @@ All clients share the same command/query semantics, authorization and policy gat
 | POST /v1/search | Canonical company search |
 | POST /v1/discovery/evaluate | Identity resolution and qualification evaluation |
 | POST /v1/intelligence/research | R1-R4 policy-routed research into traceable Evidence |
+| POST /v1/intelligence/counterparty-check | Manual authoritative counterparty check by INN/OGRN/OGRNIP; records traceable evidence and exposes conflicts/freshness |
 | POST /v1/commercial-actions | Create gated commercial action |
 | POST /v1/commercial-actions/{actionId}/send | Send READY action through its adapter |
 | POST /v1/orders | Create order only from SENT or COMPLETED action |
 | GET /v1/orders/{orderId} | Read canonical order state |
 | GET /v1/economics/{entityRef} | Read economic lineage |
 | GET /v1/diagnostics | Read operator-safe diagnostics |
+
+## Counterparty check boundary
+
+- The endpoint accepts a manual observation obtained from an authoritative FNS source; it does not perform provider network traffic.
+- The observation is resolved against existing canonical identity data when a tax identifier is available, then persisted as traceable Evidence with source provenance, claim confidence and freshness.
+- Contradictions are returned explicitly and also enter quarantine; they never silently promote or overwrite canonical identity state.
+- Repeating a check creates a new observation record; the check is not an external-effect operation and does not require an `Idempotency-Key`.
 
 ## Mutation invariant
 
