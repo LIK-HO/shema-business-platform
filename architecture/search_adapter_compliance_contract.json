@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "status": "phase_2e_pilot",
+  "purpose": "Bounded compliance contract between registry-declared search sources and injected search adapters.",
+  "network_execution_enabled": false,
+  "ranking_authority": false,
+  "qualification_authority": false,
+  "required_descriptor_fields": [
+    "source_id",
+    "source_class",
+    "reliability",
+    "access_mode",
+    "network_execution_enabled",
+    "lawful_access_confirmed"
+  ],
+  "required_checks": [
+    "registry_source_id_matches_descriptor",
+    "registry_metadata_matches_descriptor",
+    "registry_network_automation_disabled",
+    "descriptor_network_execution_disabled",
+    "lawful_access_confirmed_when_required",
+    "adapter_exposes_callable_search",
+    "source_ref_is_registry_source_id"
+  ],
+  "non_goals": [
+    "live_provider_execution",
+    "automatic_network_lookup",
+    "reliability_based_ranking",
+    "global_scoring",
+    "automatic_qualification",
+    "new_persistence_authority",
+    "kernel_semantic_change",
+    "MAX_activation"
+  ]
+}
