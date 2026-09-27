@@ -17,6 +17,18 @@
 - Remaining Phase 2-I work is not implicitly opened: production activation, durable server-side monitoring state/scheduling, canonical API/runtime exposure, Evidence/Identity intake composition and operational monitoring require a separately selected bounded sub-boundary.
 - Prohibited until that boundary is explicitly opened: frozen-kernel semantics, unrelated UI/repeat-order implementation, FNS automation, MAX activation, provider fallback, tender submission automation and unbounded crawling.
 
+## Strategic boundary synchronization — 2026-09-28
+
+- B2B-Center is removed as a named strategic procurement provider.
+- Procurement is now governed by a provider-neutral ProcurementSourceRegistry strategy. ГосПлан remains the official-origin baseline; TenderGuru is the first commercial aggregation candidate only after a measured coverage gap.
+- A new Yandex Cloud deployment strategy is recorded: Serverless Containers + API Gateway + narrow Cloud Functions/Timers + Lockbox + Container Registry + Object Storage + Monium, with Managed PostgreSQL remaining the canonical production database.
+- Bitrix24 is established as the future mature business control plane for live transactions, pricing, calculations/economics, communications, assignments and process automation. Shema supplies verified context and later receives minimal outcome signals for learning.
+- New Shema development must not expand into a second CRM, accounting, finance or personnel system. Existing frozen Order/Economics semantics remain only for compatibility, lineage and learning.
+- Existing YandexGPT and MAX provider boundaries remain in force. YandexGPT is the bounded AI processing path; MAX live outbound remains fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
+- This synchronization is documentation/contract/test scope only. No procurement production runtime, Bitrix24 runtime, MAX activation or new persistence authority has been opened.
+- New strategy contracts: architecture/procurement_source_registry_contract.json and architecture/platform_growth_strategy_contract.json.
+- New executable guard: tests/test_platform_growth_strategy_contract.py.
+
 ## Stage verification — 2026-09-28
 
 - Full seven-job release gate: CI #1417 (`36351981305`) — GREEN.
