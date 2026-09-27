@@ -18,7 +18,9 @@ def test_gosplan_contract_keeps_live_execution_disabled_and_source_observation_s
 
 def test_monitoring_contract_is_cursor_based_and_deduplicated():
     payload = load("procurement_monitoring_contract.json")
-    assert payload["requirements"]["cursor_based"] is True
+    assert payload["requirements"]["cursor_based"] is False
+    assert payload["requirements"]["page_offset_polling"] is True
+    assert payload["requirements"]["watermark_or_overlap_window_required_for_production_incremental_watch"] is True
     assert payload["requirements"]["idempotent_polling"] is True
     assert payload["requirements"]["deduplicate_by_provider_id_and_external_id"] is True
     assert payload["safety"]["no_automatic_tender_submission"] is True
