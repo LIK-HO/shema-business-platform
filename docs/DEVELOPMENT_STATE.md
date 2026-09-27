@@ -15,8 +15,9 @@
 - Phase 1-A exit: full CI/release verification passed; frozen kernel unchanged; no database migration or external FNS network execution introduced.
 - Completed sub-boundary for Phase 1-B: entry synchronization and integrity boundary defined.
 - Active sub-boundary: define the machine-readable source registry, permanent synthetic benchmark corpus and pure metric evaluator; no network lookup or persistence migration.
-- Unfinished: implementation, negative-path tests, full CI/release verification and closure record.
-- Safest next action: implement the bounded benchmark/source-registry contracts and evaluator, then run the full gate.
+- Implementation complete: source registry contract, ten-case synthetic benchmark corpus, pure resolution/quality metric evaluator, operator documentation and negative-path tests.
+- Verification pending: full CI/release gate and final state synchronization.
+- Safest next action: run the full gate on the implementation HEAD and close Phase 1-B only if every required check passes.
 - Prohibited in Phase 1-B until benchmark evidence exists: mass source integration, hidden ranking gates, automatic qualification/promotion, new source-of-truth tables, kernel semantic changes, provider activation or MAX changes.
 - Prior P46 full CI verification remains run #1265 (`36283673042`) on commit `b4c404404b7d0cf9317caf765723a3bc2003cd46`; all seven required jobs passed.
 
