@@ -87,7 +87,7 @@ Shema — это **личная операционная система влад
 - Authoritative evidence record: `architecture/fns_transparent_business_evidence_2026_09_27.json`.
 - Deterministic fixtures: `tests/test_fns_transparent_business_contract.py`.
 - Lawful-use evidence is established for the FNS open-data context, including the requirement for lawful use and source attribution. This still does not establish a provider-specific automation API, rate-limit, timeout or machine-error contract.
-- **Phase 2-G overall remains IN PROGRESS / activation BLOCKED.** The repository does not infer missing provider automation facts.
+- **Phase 2-G overall remains CLOSED for its evidence boundary / activation BLOCKED.** The repository does not infer missing provider automation facts. Its FNS automation hold continues independently from the new Phase 2-H DaData execution boundary.
 - No live provider traffic, automatic retry/fallback, new persistence authority, ranking authority, automatic qualification, MAX activation or frozen-kernel change is authorized by this boundary.
 - Phase 2-H is now explicitly defined as the controlled provider-execution boundary for a documented API provider. `dadata_organization_api` is selected as the parallel alternative track because its official API documentation establishes the endpoint, authentication, daily quota model, request-rate/connection limits and machine-readable HTTP error classes. This selection does not grant live activation.
 - `fns_transparent_business` remains independently tracked as an evidence-hold alternative and stays BLOCKED for automated activation until its own provider-specific automation contract is authoritatively established.
