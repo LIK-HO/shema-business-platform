@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, fields
 from datetime import UTC, datetime
-from typing import Callable
 
 from shema_platform.adapters.intelligence.dadata import (
     DaDataConfiguration,
