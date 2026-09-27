@@ -326,7 +326,7 @@ TENDER SOURCE → PROCUREMENT OBSERVATION → IDENTITY/EVIDENCE → QUALIFICATIO
 - procurement data is an external observation, never canonical identity;
 - customer identifiers may resolve to an existing Identity, but a tender observation cannot create or promote canonical identity by itself;
 - future procurement plans, published notices, active procedures and completed procedures remain distinguishable;
-- monitoring is cursor-based, idempotent and bounded; repeated polling cannot create duplicate business signals;
+- monitoring is page-offset based in the current foundation, with provider/external-ID deduplication and bounded fingerprint change detection; production incremental monitoring must add stable ordering plus a watermark/overlap-window checkpoint;
 - source freshness, provider availability, rate limits and API lag remain visible;
 - provider credentials remain deployment configuration only;
 - no HTML scraping is introduced as a substitute for an unavailable API contract;
@@ -336,11 +336,11 @@ TENDER SOURCE → PROCUREMENT OBSERVATION → IDENTITY/EVIDENCE → QUALIFICATIO
 ### Integration with other capabilities
 - procurement signals can provide an evidence-backed reason for contact;
 - a procurement watch can attach to an existing client/candidate without creating a duplicate company;
-- a completed order originating from a procurement opportunity may seed the Repeat Customer Order Engine;
+- a completed business outcome originating from a procurement opportunity may seed the Repeat Business Preparation rule;
 - procurement-specific document requirements flow through the same Legal/Document Configuration Engine.
 
 ### Current verified boundary exit
-The provider-neutral contract, deterministic GosPlan adapter boundary, bounded error/retry handling, cursor/fingerprint monitoring logic and deterministic tests are verified by full CI #1417. Live activation remains OFF.
+The provider-neutral contract, deterministic GosPlan adapter boundary, bounded error/retry handling, page-offset/fingerprint monitoring foundation and deterministic tests are verified by full CI #1417; durable incremental monitoring remains a separate boundary. Live activation remains OFF.
 
 ### Remaining Phase 2-I work
 - authenticated production provider activation;
