@@ -72,6 +72,7 @@ class ProcurementOpportunity:
     published_at: datetime | None
     deadline_at: datetime | None
     stage: str | None
+    updated_at: datetime | None = None
     source_url: str | None = None
 
     def __post_init__(self) -> None:
@@ -101,6 +102,8 @@ class ProcurementOpportunity:
                 self.published_at.isoformat() if self.published_at else "",
                 self.deadline_at.isoformat() if self.deadline_at else "",
                 self.stage or "",
+                self.updated_at.isoformat() if self.updated_at else "",
+                self.source_url or "",
             )
         )
         return sha256(payload.encode("utf-8")).hexdigest()
