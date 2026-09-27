@@ -18,7 +18,7 @@ from shema_platform.foundation.errors import AuthorizationError
 
 
 @dataclass(frozen=True, slots=True)
-class CounterpartyProviderActivationRequest:
+class CounterpartyProviderActivationCommand:
     provider_id: str
     actor_id: str
     reason: str
@@ -65,7 +65,7 @@ class CounterpartyProviderActivationService:
 
     def activate(
         self,
-        request: CounterpartyProviderActivationRequest,
+        request: CounterpartyProviderActivationCommand,
         *,
         permissions: frozenset[Permission],
     ) -> CounterpartyProviderActivationResponse:

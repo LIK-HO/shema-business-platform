@@ -19,7 +19,7 @@ from shema_platform.application.counterparty_check import (
     SourceReliability,
 )
 from shema_platform.application.counterparty_provider_activation import (
-    CounterpartyProviderActivationRequest as CounterpartyProviderActivationCommand,
+    CounterpartyProviderActivationCommand,
     CounterpartyProviderActivationService,
 )
 from shema_platform.experience.api_models import (

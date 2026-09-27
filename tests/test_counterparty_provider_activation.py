@@ -18,7 +18,7 @@ from shema_platform.application.counterparty_lookup import (
     CounterpartyProviderRecord,
 )
 from shema_platform.application.counterparty_provider_activation import (
-    CounterpartyProviderActivationRequest,
+    CounterpartyProviderActivationCommand,
     CounterpartyProviderActivationService,
 )
 from shema_platform.foundation.authorization import Permission
@@ -78,8 +78,8 @@ def gate_and_service():
     return telemetry, gate, service
 
 
-def request(*, authorized: bool = True) -> CounterpartyProviderActivationRequest:
-    return CounterpartyProviderActivationRequest(
+def request(*, authorized: bool = True) -> CounterpartyProviderActivationCommand:
+    return CounterpartyProviderActivationCommand(
         provider_id=DADATA_PROVIDER_ID,
         actor_id="operator-1",
         reason="controlled verification",
