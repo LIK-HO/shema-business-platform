@@ -1,5 +1,12 @@
+from datetime import UTC, datetime
+
 from fastapi.testclient import TestClient
 
+from shema_platform.application.counterparty_check import (
+    CounterpartyCheckResult,
+    CounterpartyContradiction,
+    FreshnessState,
+)
 from shema_platform.experience.api import (
     APIApplication,
     RequestContext,
@@ -145,6 +152,29 @@ class FakeApplication(APIApplication):
         )
 
 
+class FakeCounterpartyChecker:
+    def __init__(self):
+        self.calls = []
+
+    def check(self, observation, *, actor_id, correlation_id, now=None):
+        self.calls.append((observation, actor_id, correlation_id))
+        return CounterpartyCheckResult(
+            subject_ref="identity-1",
+            identity=None,
+            freshness=FreshnessState.FRESH,
+            evidence_ids=("evidence-1",),
+            contradictions=(
+                CounterpartyContradiction(
+                    field="canonical_name",
+                    existing_value="Old Name",
+                    observed_value="New Name",
+                ),
+            ),
+            quarantined=True,
+            operator_brief="review required",
+        )
+
+
 class QuarantineApplication(FakeApplication):
     def research(self, request: ResearchRequest, context: RequestContext) -> ResearchResponse:
         raise QuarantineRequired("review required")
@@ -251,6 +281,71 @@ def test_runtime_api_requires_idempotency_for_critical_mutation() -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_runtime_api_counterparty_check_exposes_evidence_boundary() -> None:
+    checker = FakeCounterpartyChecker()
+    response = TestClient(
+        create_app(
+            FakeApplication(),
+            FakeAuthenticator(),
+            counterparty_checker=checker,
+        )
+    ).post(
+        "/v1/intelligence/counterparty-check",
+        headers={
+            "Authorization": "Bearer test-token",
+            "X-Correlation-Id": "corr-counterparty",
+        },
+        json={
+            "identifierType": "INN",
+            "identifier": "7707083893",
+            "canonicalName": "New Name",
+            "taxId": "7707083893",
+            "registrationId": "1027700132195",
+            "legalStatus": "active",
+            "sourceRef": "https://pb.nalog.ru/",
+            "sourceReliability": "authoritative",
+            "claimConfidence": 0.95,
+            "observedAt": "2026-09-26T10:00:00Z",
+            "expiresAt": "2026-10-03T10:00:00Z",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["subjectRef"] == "identity-1"
+    assert body["evidenceIds"] == ["evidence-1"]
+    assert body["quarantined"] is True
+    assert body["correlationId"] == "corr-counterparty"
+    assert body["contradictions"][0]["field"] == "canonical_name"
+    assert checker.calls[0][1:] == ("operator-1", "corr-counterparty")
+
+
+def test_runtime_api_counterparty_check_requires_composed_capability() -> None:
+    response = TestClient(
+        create_app(FakeApplication(), FakeAuthenticator())
+    ).post(
+        "/v1/intelligence/counterparty-check",
+        headers={"Authorization": "Bearer test-token"},
+        json={
+            "identifierType": "INN",
+            "identifier": "7707083893",
+            "canonicalName": "New Name",
+            "taxId": "7707083893",
+            "registrationId": "1027700132195",
+            "legalStatus": "active",
+            "sourceRef": "https://pb.nalog.ru/",
+            "sourceReliability": "authoritative",
+            "claimConfidence": 0.95,
+            "observedAt": "2026-09-26T10:00:00Z",
+            "expiresAt": "2026-10-03T10:00:00Z",
+        },
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "application_unavailable"
+
 
 
 def test_runtime_api_maps_quarantine_to_423() -> None:
