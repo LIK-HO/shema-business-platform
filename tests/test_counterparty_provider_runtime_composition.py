@@ -50,7 +50,7 @@ class FakeProvider:
     def lookup(self, query: CounterpartyLookupQuery) -> CounterpartyProviderRecord:
         return CounterpartyProviderRecord(
             provider_id=DADATA_PROVIDER_ID,
-            source_ref="fixture:dadata",
+            source_ref="https://fixture.example/dadata",
             canonical_name="ООО ТЕСТ",
             tax_id=query.identifier,
             registration_id=None,
