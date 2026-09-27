@@ -89,8 +89,11 @@ Shema — это **личная операционная система влад
 - Lawful-use evidence is established for the FNS open-data context, including the requirement for lawful use and source attribution. This still does not establish a provider-specific automation API, rate-limit, timeout or machine-error contract.
 - **Phase 2-G overall remains IN PROGRESS / activation BLOCKED.** The repository does not infer missing provider automation facts.
 - No live provider traffic, automatic retry/fallback, new persistence authority, ranking authority, automatic qualification, MAX activation or frozen-kernel change is authorized by this boundary.
-- No formal Phase 2-H is defined in the current roadmap. Further Phase 2 work must remain capability-bounded and must create an explicit durable boundary before entering provider execution.
-- **Safest continuation:** keep provider execution disabled and either close the remaining provider-contract evidence gaps through authoritative documentation or define a separate controlled-execution boundary with its own contract, negative tests, rollback and release gate.
+- Phase 2-H is now explicitly defined as the controlled provider-execution boundary for a documented API provider. `dadata_organization_api` is selected as the parallel alternative track because its official API documentation establishes the endpoint, authentication, daily quota model, request-rate/connection limits and machine-readable HTTP error classes. This selection does not grant live activation.
+- `fns_transparent_business` remains independently tracked as an evidence-hold alternative and stays BLOCKED for automated activation until its own provider-specific automation contract is authoritatively established.
+- Phase 2-H must preserve provider isolation: one provider adapter cannot inherit another provider's rate limits, errors, timeout semantics, retry policy or authorization assumptions.
+- DaData is classified as `trusted_secondary`, not `authoritative`; its data may support discovery, identity resolution and enrichment, but cannot by itself promote canonical truth without the existing Evidence/identity rules.
+- Live execution remains disabled until the Phase 2-H readiness contract, negative tests, credential boundary, bounded timeout/retry policy, observability, rollback and full release gate are all satisfied.
 
 ### Критерий допуска новой capability
 
