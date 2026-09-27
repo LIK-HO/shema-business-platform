@@ -2,7 +2,7 @@
 ## Current development-session synchronization — 2026-09-27
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-- HEAD: `3625d0e30309b64ebfb6eada4a2a75a4b619fa52` — latest verified implementation/evidence commit after full CI #1348.
+NaN
 - PR: #56 — open, draft, mergeable.
 - Current boundary: **Phase 2-G — First Source Selection and Evidence Capture — IN PROGRESS; source-selection/evidence sub-boundary CLOSED / VERIFIED; activation BLOCKED.**
 - Phase 2-A — Search Run Integrity Boundary: CLOSED / VERIFIED by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
