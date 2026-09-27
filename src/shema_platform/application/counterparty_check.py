@@ -127,15 +127,8 @@ class CounterpartyCheckResult:
     operator_brief: str
 
 
-def _evidence_id(
-    subject_ref: str,
-    claim: str,
-    source_ref: str,
-    observed_at: datetime,
-) -> str:
-    key = f"{subject_ref}|{claim}|{source_ref}|{observed_at.isoformat()}"
-    return str(uuid5(NAMESPACE_URL, key))
-
+def _evidence_id() -> str:
+    return str(uuid4())
 
 def _freshness(
     expires_at: datetime,
@@ -231,10 +224,6 @@ class CounterpartyCheckService:
                 claim = f"{field}={value}"
                 evidence = Evidence(
                     evidence_id=_evidence_id(
-                        subject_ref,
-                        claim,
-                        observation.source_ref,
-                        observation.observed_at,
                     ),
                     subject_ref=subject_ref,
                     claim=claim,
