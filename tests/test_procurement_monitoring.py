@@ -35,6 +35,7 @@ def opportunity(
         source_ref="https://fixture.example/procurement",
         external_id=external_id,
         law=ProcurementLaw.FZ44,
+        collection=ProcurementCollection.PURCHASES,
         title=title,
         customer_name='ООО "Заказчик"',
         customer_tax_id="7707083893",
@@ -72,7 +73,7 @@ def test_first_poll_returns_new_items_and_stores_cursor():
     assert [item.external_id for item in result.new_items] == ["1"]
     assert result.changed_items == ()
     assert result.state.cursor == "1"
-    assert result.state.fingerprints["1"] == opportunity().fingerprint
+    assert result.state.fingerprints["fixture-procurement:1"] == opportunity().fingerprint
 
 
 def test_repeated_poll_is_idempotent_and_change_is_visible():
