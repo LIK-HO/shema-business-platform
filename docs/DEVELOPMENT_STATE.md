@@ -4,16 +4,17 @@
 - Branch: `v1.5/p46-max-provider-evidence-hold`
 - HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
 - PR: #56 — open, draft, mergeable.
-- Current boundary: Phase 1-A — manual authoritative counterparty evidence check — IN_PROGRESS / verification pending.
+- Current boundary: Phase 1-B — Intelligence benchmark and source registry — READY / implementation not started.
 - P46 MAX provider evidence hold: CLOSED / VERIFIED.
 - Phase 1-A implementation is bounded to application service, canonical API adapter, OpenAPI contract and tests; no external provider automation is enabled.
 - Frozen kernel: unchanged.
 - No database schema, canonical identity semantics, MAX activation or external network execution was introduced.
-- Current implementation HEAD: `bc6652c63f53f37dc4e405c938ba6b1c402cbbd4`.
-- Completed sub-boundaries: authoritative-source validation, INN/OGRN/OGRNIP observation contract, identity resolution by tax ID, traceable evidence, freshness, contradiction quarantine, append-only audit, compact operator brief, API/OpenAPI boundary.
-- Unfinished sub-boundary: final full CI/release verification and closure record.
-- Safest next action: run the full CI matrix on the current HEAD and inspect every required job.
-- Prohibited until Phase 1-A is closed: automatic FNS/network lookup, new source-of-truth tables, kernel semantic changes, silent VERIFIED promotion, provider activation or MAX changes.
+- Verified Phase 1-A implementation commit: `363eb19043e280585fae1d3a2e7c78e2d387ab02`.
+- Verification CI: run #1297 (`36284386157`) — all seven required jobs passed.
+- Phase 1-A completed sub-boundaries: authoritative-source validation, INN/OGRN/OGRNIP observation contract, identity resolution by tax ID when available, traceable evidence, freshness, contradiction quarantine, append-only audit, compact operator brief, API/OpenAPI boundary.
+- Phase 1-A exit: full CI/release verification passed; frozen kernel unchanged; no database migration or external FNS network execution introduced.
+- Safest next action: implement the permanent benchmark corpus and source registry, then run the full gate before selecting broader research automation.
+- Prohibited in Phase 1-B until benchmark evidence exists: mass source integration, hidden ranking gates, automatic qualification/promotion, new source-of-truth tables, kernel semantic changes, provider activation or MAX changes.
 - Prior P46 full CI verification remains run #1265 (`36283673042`) on commit `b4c404404b7d0cf9317caf765723a3bc2003cd46`; all seven required jobs passed.
 
 
