@@ -402,57 +402,59 @@ Build a contact-script test set covering:
 ### Exit criteria
 The operator can open a verified client dossier and receive a usable, evidence-grounded first-contact script without manually reconstructing the research.
 
-## 7A. Phase 3A — Repeat Customer Order Engine
+## 7A. Phase 3A — Repeat Business Preparation
 
 ### Placement
-This capability is deliberately between Contact Preparation and Legal/Document Configuration: contact preparation creates commercial intent; repeat-order orchestration creates the next order; document configuration produces the exact legal/document pack for that order.
+This capability sits between Contact Preparation and Document Configuration. Its purpose is to detect and prepare repeat demand, not to create a second transaction engine.
 
 ### Objective
-Make repeat business a first-class operator workflow for established customers without cloning old orders or silently reusing obsolete prices, terms or document versions.
+Turn repeat business into a first-class operator workflow while leaving live deal/order, pricing and economic authority to the mature business plane.
 
 ### Chosen pattern
-Use a reusable **Repeat Order Rule / Customer Order Template** attached to the canonical customer. The rule stores recurrence and next-due information plus references to pricing/document configuration. Each repetition creates a **fresh draft order snapshot**; the historical order remains immutable.
+Use a reusable **Repeat Business Rule / Customer Pattern** attached to the canonical customer. The rule stores recurrence signals, preparation window, last known business reference, and references to relevant evidence/document configuration. Each recurrence creates a **fresh preparation/handoff snapshot**. It never becomes the live order ledger.
 
 ### Operator workflow
-- show **Next repeat order** prominently on the customer/work queue;
-- one compact rule exposes recurrence, next due date/window, last order, owner and current pricing/document state;
-- primary actions: **Create next order**, **Skip once**, **Pause**, **Resume**, **Change pattern**;
-- new order is a fresh draft for operator review before confirmation;
-- changed/expired prices, terms or document versions are surfaced explicitly;
-- prevent duplicate generation when an open repeat order already exists;
-- support one-time, fixed-count, end-date and until-paused recurrence;
-- reminders use a preparation window and do not silently create commercial effects.
+- show **Upcoming repeat business** in the work queue;
+- one compact rule exposes recurrence pattern, next preparation window, last known business reference and evidence freshness;
+- primary actions: **Prepare next handoff**, **Skip once**, **Pause**, **Resume**, **Change pattern**;
+- revalidate evidence, current commercial assumptions and document requirements before preparing the handoff;
+- prevent duplicate open preparation snapshots for the same recurrence window;
+- preserve lineage from the preparation snapshot to the originating customer and prior outcome;
+- after Bitrix24 handoff becomes available, map the preparation snapshot to a Bitrix recurring/repeat-deal capability rather than reimplementing that engine in Shema.
 
 ### Research basis
-This combines mature recurring-deal/subscription/renewal/scheduling-agreement patterns observed in Bitrix24, HubSpot/Pipedrive, SAP, Salesforce and ServiceNow.
+Mature CRM/ERP products treat recurrence as a reusable rule/template that generates distinct business transactions. Bitrix24, Salesforce and SAP expose this pattern in different forms. Shema adopts only the preparation/intelligence part of the pattern and delegates the live transaction engine to the business plane. citeturn496805search1turn495622search5turn496805search11
 
 ### Exit criteria
-The operator can see customers requiring repeat attention, create the next order in one controlled action, review changes, and retain full lineage to the originating rule and previous order.
+The operator can identify upcoming repeat demand, review changed evidence/configuration, and generate a traceable handoff package without creating a live transaction or calculating authoritative business economics in Shema.
 
-## 8. Phase 4 — Legal / Document Configuration Engine
+## 8. Phase 4 — Document Configuration & Handoff Preparation
 
 ### Objective
-Turn a verified client and transaction configuration into a correct selectable document pack.
+Produce an evidence-backed document requirement/configuration snapshot without turning Shema into the final legal-document execution or signing system.
 
 ### Work
 - legal-role matrix;
 - tax/regime configuration;
 - service/work type;
-- payment/acceptance configuration;
-- EDO/e-signature configuration;
+- payment/acceptance requirements;
+- EDO/e-signature requirements;
 - document applicability rules;
-- complete baseline document registry: master service contract, one-off service/work order, contractor/subcontractor forms, specifications/technical statements, commercial offers/quotations, invoices/payment requests, acceptance/service acts, UПД or equivalent tax documents where applicable, addenda/change orders, reconciliation acts, NDA/confidentiality forms, authority/power-of-attorney forms, termination documents, applications/requests and procurement/tender document packs;
-- template registry;
+- complete baseline document registry: service contract, one-off service/work order, specifications/technical statements, commercial offers/quotations, invoice/payment request requirements, acceptance acts, УПД or equivalent tax documents where applicable, addenda/change orders, reconciliation, NDA/confidentiality, authority/power-of-attorney, termination and procurement/tender packs;
+- template/configuration registry;
 - effective dates;
 - legal-source references;
 - document versioning;
-- generation snapshots and checksums;
-- mandatory/conditional/recommended/optional/not-applicable statuses;
+- generation/configuration snapshots and checksums;
+- mandatory/conditional/recommended/optional/not-applicable status;
 - NPD status/check controls where relevant;
 - LEGAL_REVIEW_REQUIRED path.
 
+### Ownership boundary
+Shema prepares the **requirement set and configuration snapshot**. Final business document issuance, signing, storage, approval and legally operative lifecycle belong to Bitrix24 or a dedicated business/EDO system after handoff.
+
 ### Exit criteria
-For each supported configuration the system can explain why every document is included or excluded, and reproduce the exact generated pack from its configuration/version snapshot.
+For each supported configuration the system can explain why a document is required or excluded and produce a versioned handoff package that a downstream business system can execute without reconstructing the intelligence context.
 
 ## 9. Phase 5 — Web Operator System
 
@@ -464,7 +466,7 @@ Build only the workflows already proven in Phases 1–4:
 - command/search center;
 - counterparty check;
 - procurement/tender watchlist and monitoring queue;
-- repeat-order work queue;
+- repeat-business preparation queue;
 - client dossier;
 - intelligence/evidence view;
 - qualification;
@@ -754,8 +756,8 @@ The practical priority is:
 1. Intelligence quality benchmark + manual counterparty verification
 2. Search/Research maturity
 3. Contact preparation
-4. Legal/Document engine
-5. Web operator system + repeat-order/procurement workspaces
+4. Document Configuration & Handoff Preparation
+5. Web operator system + repeat-business/procurement workspaces
 6. PWA
 7. Production Web/PWA consolidation
 8. Yandex Cloud production foundation
