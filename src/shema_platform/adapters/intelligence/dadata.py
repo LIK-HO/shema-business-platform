@@ -162,6 +162,12 @@ class DaDataCounterpartyLookupProvider:
                 retryable=True,
             ) from None
 
+        if len(body) > self._configuration.max_response_bytes:
+            raise CounterpartyLookupProviderError(
+                "RESPONSE_TOO_LARGE",
+                "DaData response exceeds configured max_response_bytes",
+            )
+
         error_map = {
             400: ("INVALID_REQUEST", False),
             401: ("MISSING_OR_INVALID_API_KEY", False),
