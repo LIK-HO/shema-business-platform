@@ -247,3 +247,19 @@ def test_model_response_must_fit_output_budget() -> None:
     with pytest.raises(YandexGPTExecutionError) as exc:
         instance.invoke(request(max_tokens=100))
     assert exc.value.failure.code is AIProviderFailureCode.RESOURCE_EXHAUSTED
+
+
+def test_from_environment_requires_explicit_positive_cost_ceiling(monkeypatch):
+    monkeypatch.setenv("YANDEXGPT_API_KEY", "secret")
+    monkeypatch.delenv("YANDEXGPT_MAX_COST", raising=False)
+
+    with pytest.raises(ValueError, match="YANDEXGPT_MAX_COST is required"):
+        YandexGPTConfiguration.from_environment()
+
+
+def test_from_environment_rejects_zero_cost_ceiling(monkeypatch):
+    monkeypatch.setenv("YANDEXGPT_API_KEY", "secret")
+    monkeypatch.setenv("YANDEXGPT_MAX_COST", "0")
+
+    with pytest.raises(ValueError, match="YANDEXGPT_MAX_COST"):
+        YandexGPTConfiguration.from_environment()
