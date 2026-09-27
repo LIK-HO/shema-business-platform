@@ -53,7 +53,8 @@ POST /v1/search is the canonical operator search edge.
 
 - Provider identity is taken from the {providerId} path parameter; it is not duplicated in the request body.
 - Activation is disabled by default and remains a separate control-plane operation from lookup execution.
-- The activation operation requires an authenticated actor, the provider-specific permission, explicit operator confirmation, complete readiness evidence and an enabled provider configuration.
+- The activation operation requires an authenticated actor, `intelligence.provider.activate`, explicit operator confirmation, complete readiness evidence and an enabled provider configuration.
+- Rollback requires `intelligence.provider.rollback` and explicit operator confirmation.
 - Activation state never stores provider credentials; telemetry is restricted to the existing redacted allow-list.
 - Rollback disables the in-process provider binding and preserves safe historical activation metadata without deleting evidence or changing the database schema.
 - No automatic activation or fallback provider exists.
