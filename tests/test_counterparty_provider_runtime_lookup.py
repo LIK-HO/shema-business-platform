@@ -13,8 +13,9 @@ from shema_platform.application.counterparty_lookup import (
     CounterpartyLookupQuery,
     CounterpartyProviderRecord,
 )
-from shema_platform.domain.identity import Identity
-from shema_platform.experience.runtime_composition import compose_counterparty_provider_runtime
+from shema_platform.experience.runtime_composition import (
+    compose_counterparty_provider_runtime,
+)
 from shema_platform.foundation.authentication import (
     AuthenticatedActor,
     AuthenticationPort,

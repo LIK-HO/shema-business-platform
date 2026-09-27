@@ -384,7 +384,13 @@ def create_app(
         request: Request,
         exc: CounterpartyLookupProviderError,
     ) -> JSONResponse:
-        status_code = 404 if exc.code == "NOT_FOUND" else 429 if exc.code == "PROVIDER_RATE_LIMIT" else 502
+        status_code = (
+            404
+            if exc.code == "NOT_FOUND"
+            else 429
+            if exc.code == "PROVIDER_RATE_LIMIT"
+            else 502
+        )
         return _error(
             request,
             status_code=status_code,
