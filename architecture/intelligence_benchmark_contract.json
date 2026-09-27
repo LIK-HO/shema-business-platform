@@ -1,0 +1,139 @@
+{
+  "version": "1.0",
+  "scope": "intelligence_identity_benchmark",
+  "status": "permanent_synthetic_baseline",
+  "policy": {
+    "synthetic_data_only": true,
+    "no_personal_data": true,
+    "no_live_source_lookup": true,
+    "no_automatic_identity_promotion": true,
+    "ground_truth_required_for_precision_recall": true
+  },
+  "measurement": {
+    "metrics": [
+      "precision",
+      "recall",
+      "false_positive_rate",
+      "false_negative_rate",
+      "provenance_completeness",
+      "freshness_correctness",
+      "operator_correction_rate"
+    ],
+    "decision_rule": "benchmark outputs never mutate canonical identity state",
+    "minimum_case_classes": [
+      "exact_identifier_match",
+      "same_name_different_entity",
+      "old_identifier",
+      "changed_registration",
+      "duplicate_sources",
+      "contradictory_claims",
+      "stale_claim",
+      "missing_identifier",
+      "misleading_near_match"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "B01",
+      "class": "exact_identifier_match",
+      "candidate_ref": "candidate-b01",
+      "candidate_name": "ООО Синтетика Север",
+      "candidate_tax_id": "7700000001",
+      "known_identity_ref": "identity-a",
+      "known_tax_id": "7700000001",
+      "expected_resolution": "match"
+    },
+    {
+      "case_id": "B02",
+      "class": "same_name_different_entity",
+      "candidate_ref": "candidate-b02",
+      "candidate_name": "ООО Синтетика Юг",
+      "candidate_tax_id": "7700000002",
+      "known_identity_ref": "identity-b",
+      "known_tax_id": "7700000099",
+      "expected_resolution": "keep_separate"
+    },
+    {
+      "case_id": "B03",
+      "class": "old_identifier",
+      "candidate_ref": "candidate-b03",
+      "candidate_name": "ООО Перезапуск",
+      "candidate_tax_id": "7700000003",
+      "known_identity_ref": "identity-c",
+      "known_tax_id": "7700000003",
+      "expected_resolution": "match",
+      "note": "historical source also contains superseded registration identifier"
+    },
+    {
+      "case_id": "B04",
+      "class": "changed_registration",
+      "candidate_ref": "candidate-b04",
+      "candidate_name": "ООО Регистрация Плюс",
+      "candidate_tax_id": "7700000004",
+      "known_identity_ref": "identity-d",
+      "known_tax_id": "7700000004",
+      "expected_resolution": "manual_review"
+    },
+    {
+      "case_id": "B05",
+      "class": "duplicate_sources",
+      "candidate_ref": "candidate-b05",
+      "candidate_name": "ООО Дубликат",
+      "candidate_tax_id": "7700000005",
+      "known_identity_ref": "identity-e",
+      "known_tax_id": "7700000005",
+      "expected_resolution": "match",
+      "note": "two sources repeat the same claim"
+    },
+    {
+      "case_id": "B06",
+      "class": "contradictory_claims",
+      "candidate_ref": "candidate-b06",
+      "candidate_name": "ООО Конфликт",
+      "candidate_tax_id": "7700000006",
+      "known_identity_ref": "identity-f",
+      "known_tax_id": "7700000006",
+      "expected_resolution": "quarantine"
+    },
+    {
+      "case_id": "B07",
+      "class": "stale_claim",
+      "candidate_ref": "candidate-b07",
+      "candidate_name": "ООО Старые Данные",
+      "candidate_tax_id": "7700000007",
+      "known_identity_ref": "identity-g",
+      "known_tax_id": "7700000007",
+      "expected_resolution": "manual_review"
+    },
+    {
+      "case_id": "B08",
+      "class": "missing_identifier",
+      "candidate_ref": "candidate-b08",
+      "candidate_name": "ООО Без Идентификатора",
+      "candidate_tax_id": null,
+      "known_identity_ref": null,
+      "known_tax_id": null,
+      "expected_resolution": "manual_review"
+    },
+    {
+      "case_id": "B09",
+      "class": "misleading_near_match",
+      "candidate_ref": "candidate-b09",
+      "candidate_name": "ООО Синтетика Север Сервис",
+      "candidate_tax_id": "7700000009",
+      "known_identity_ref": "identity-a",
+      "known_tax_id": "7700000001",
+      "expected_resolution": "keep_separate"
+    },
+    {
+      "case_id": "B10",
+      "class": "same_name_different_entity",
+      "candidate_ref": "candidate-b10",
+      "candidate_name": "ООО Два Адреса",
+      "candidate_tax_id": "7700000010",
+      "known_identity_ref": "identity-h",
+      "known_tax_id": "7700000011",
+      "expected_resolution": "keep_separate"
+    }
+  ]
+}
