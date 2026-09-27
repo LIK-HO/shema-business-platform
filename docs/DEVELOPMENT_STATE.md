@@ -4,12 +4,17 @@
 - Branch: `v1.5/p46-max-provider-evidence-hold`
 - HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
 - PR: #56 — open, draft, mergeable.
-- Current boundary: P46 MAX provider evidence hold — CLOSED / VERIFIED.
-- Next selected boundary: Phase 1 — Intelligence Quality Foundation (ready; implementation not started).
-- Strategy review: completed and committed.
+- Current boundary: Phase 1-A — manual authoritative counterparty evidence check — IN_PROGRESS / verification pending.
+- P46 MAX provider evidence hold: CLOSED / VERIFIED.
+- Phase 1-A implementation is bounded to application service, canonical API adapter, OpenAPI contract and tests; no external provider automation is enabled.
 - Frozen kernel: unchanged.
-- No production code, database schema, API semantics or MAX activation was introduced by the P46 closure or strategy synchronization.
-- Full P46 CI verification: run #1265 (`36283673042`) on commit `b4c404404b7d0cf9317caf765723a3bc2003cd46`; all seven required jobs passed.
+- No database schema, canonical identity semantics, MAX activation or external network execution was introduced.
+- Current implementation HEAD: `34453066a1c9ebc3163d5c3afcdb98edc72bd8cb`.
+- Completed sub-boundaries: authoritative-source validation, INN/OGRN/OGRNIP observation contract, identity resolution by tax ID, traceable evidence, freshness, contradiction quarantine, append-only audit, compact operator brief, API/OpenAPI boundary.
+- Unfinished sub-boundary: final full CI/release verification and closure record.
+- Safest next action: run the full CI matrix on the current HEAD and inspect every required job.
+- Prohibited until Phase 1-A is closed: automatic FNS/network lookup, new source-of-truth tables, kernel semantic changes, silent VERIFIED promotion, provider activation or MAX changes.
+- Prior P46 full CI verification remains run #1265 (`36283673042`) on commit `b4c404404b7d0cf9317caf765723a3bc2003cd46`; all seven required jobs passed.
 
 
 ## Historical core-certification baseline
