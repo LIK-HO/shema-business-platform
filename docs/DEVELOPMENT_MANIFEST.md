@@ -1,8 +1,8 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold / Phase 2-H Runtime Negative/Recovery Closed
-**Active development boundary:** NONE — Phase 2-H Runtime Negative Provider Outcomes & Recovery is CLOSED / VERIFIED; DaData live execution remains explicitly OFF.
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / Phase 2-I Procurement Intelligence In Progress / MAX Evidence Hold
+**Active development boundary:** Phase 2-I Procurement Intelligence & Tender Monitoring API — bounded foundation; live provider execution remains OFF until its contract, negative paths, budgets, observability and activation gate are verified.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -107,6 +107,20 @@ Shema — это **личная операционная система влад
 - DaData is classified as `trusted_secondary`, not `authoritative`; its data may support discovery, identity resolution and enrichment, but cannot by itself promote canonical truth without the existing Evidence/identity rules.
 - Live execution remains disabled. Provider lookup observations may enter Evidence through the verified boundary, but trusted-secondary data cannot promote canonical Identity by itself.
 
+### Product decisions added 2026-09-28
+
+- **Repeat customer orders:** mandatory Phase 3A between Contact Preparation and Legal/Document Engine. The chosen pattern is a reusable Repeat Order Rule attached to the canonical customer; each repetition creates a fresh order snapshot for operator review, never a mutable clone of history. Price/document versions are revalidated when expired. Reference patterns: Bitrix24 recurring deals, HubSpot/Pipedrive recurring products/subscriptions, SAP scheduling agreements/contracts, Salesforce orders/contracts, ServiceNow contract renewal.
+- **Tender/procurement intelligence:** mandatory Phase 2-I inside Mature Search/Research, before Contact Preparation. Initial provider boundary: ГосПлан API v2 over ЕИС data because current documentation exposes plans, purchases, procedures and contracts through REST and explicitly describes monitoring/search use cases. Production access is API-key/tariff governed; test access is available without key but rate limited.
+- **Documents:** Phase 4 includes a complete configurable document registry rather than a small template set: contract, service/work order, specification, commercial offer, invoice/payment request, act, UПД/equivalent tax document where applicable, addendum/change order, reconciliation, confidentiality/authority/termination forms and procurement packs.
+- **Interface:** adopted mature workspace pattern — summary/highlights + details + related records + activity/history; work lists with filters/sorts and quick actions; contextual/split inspection; progressive disclosure; personal view preferences; responsive/accessibility baseline; server-authoritative business state.
+- **Multi-operator:** collaboration is a permanent architectural requirement: explicit actor, ownership/assignment/team queues, server-side permissions, revision/concurrency protection, audited handoff, explicit conflict resolution and no shadow copies.
+- **Clients:** Web + PWA are sufficient and remain the only approved experience surfaces. Android is removed from the roadmap.
+
+### Research basis
+Recurring work: https://helpdesk.bitrix24.com/open/25850555/ ; https://knowledge.hubspot.com/payments/manage-subscriptions-for-recurring-payments ; https://support.pipedrive.com/en/article/recurring-products ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/a630d57fc5004c6383e7a81efee7a8bb/f7b3e498c30a4f89c30a4f9aad381062cc9d8b09.html ; https://help.salesforce.com/s/articleView?id=sf.order_overview.htm&language=en_US&type=5
+Interface/workspace: https://help.salesforce.com/s/articleView?id=sf.lightning_page_components.htm&language=en_US&type=5 ; https://learn.microsoft.com/en-us/power-apps/user/use-model-driven-apps ; https://learn.microsoft.com/en-us/power-automate/business-process-flows-overview ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/a630d57fc5004c6383e7a81efee7a8bb/f7b3e498c30a4f9aad381062cc9d8b09.html ; https://www.b2b-center.ru/plus/
+Multi-operator: https://learn.microsoft.com/en-us/power-platform/admin/how-record-access-determined ; https://learn.microsoft.com/en-us/power-platform/admin/security-roles-privileges
+Procurement API: https://gosplan.info/docs/guides/purchases/ ; https://gosplan.info/docs/getting-started/quickstart-curl/ ; https://www.b2b-center.ru/plus/
 ### Критерий допуска новой capability
 
 Перед разработкой capability должны быть даны ответы:
@@ -787,32 +801,18 @@ PWA является installable/resilient Web surface, а не отдельно
 
 Offline mode не должен создавать вторую canonical transaction authority. Локальные данные — cache/read model; canonical write semantics остаются на сервере.
 
-## 5A.4. Android application
+## 5A.4. Web/PWA mobile doctrine
 
-Android — самостоятельный client surface, использующий тот же canonical API и domain semantics.
+Android is explicitly removed from the approved roadmap. Mobile-specific product requirements are implemented in PWA unless a future evidence-backed exception is approved. There is no Android-specific business rule, data model, authorization path or offline authority.
 
-Обязательно:
-- state-driven UI;
-- clear separation UI / data / domain concerns;
-- local persistence only as cache/read model or bounded offline queue;
-- reconnect and sync semantics;
-- lifecycle-safe background work;
-- secure credential/session storage;
-- notification/deep-link handling;
-- app update and rollback strategy;
-- crash diagnostics;
-- permission minimization;
-- network and battery aware execution;
-- end-to-end coverage критических workflows.
-
-## 5A.5. Offline-aware multi-device continuity
+## 5A.5. Offline-aware Web/PWA continuity
 
 Система должна нормально переживать:
 - потерю сети;
 - смену устройства;
 - временную недоступность API;
 - повторное открытие приложения;
-- одновременное использование Web/PWA/Android.
+- одновременное использование Web и PWA.
 
 Правило:
 **local state may accelerate or buffer the experience, but cannot silently override canonical server state.**
@@ -854,7 +854,7 @@ Background work не должен незаметно создавать critical
 
 ## 5A.8. Client observability
 
-Для Web/PWA/Android должны быть различимы:
+Для Web/PWA должны быть различимы:
 - application error;
 - network error;
 - auth/session failure;
@@ -962,10 +962,10 @@ Provider availability alone никогда не является основан�
 
 Масштабируемость достигается архитектурой, а не усложнением повседневного интерфейса.
 
-Web является обязательным первым универсальным surface. PWA рассматривается как способ улучшить доступность/устойчивость работы при реальной потребности. Android строится только там, где native-возможности дают измеримое преимущество. Ни один client surface не является обязательным исключительно ради галочки зрелости.
+Web является обязательным первым универсальным surface. PWA — второй и достаточный mobile surface. Android исключён из текущей целевой архитектуры. Ни один client surface не является обязательным исключительно ради галочки зрелости.
 ## 5A.15. Experience-layer completion boundary
 
-Experience layer не считается завершённым по факту наличия Web/PWA/Android.
+Experience layer не считается завершённым по факту наличия Web/PWA.
 
 Завершение требует:
 - visual/interaction system;
@@ -1016,6 +1016,15 @@ Ranking может менять порядок показа, но не долж�
 
 Это делает результат воспроизводимым и предотвращает ошибочное толкование ограниченного поиска как полного отсутствия данных.
 
+# 5B.20. Procurement Intelligence & Tender Monitoring
+
+**Status: Phase 2-I IN PROGRESS.** Procurement intelligence is a bounded extension of the search/research system. The first provider is ГосПлан API v2 over ЕИС. The adapter consumes plans, procurements, procedures and contracts through REST; procurement records remain external observations and do not become canonical Identity.
+
+The required chain is:
+**plan/notice → procurement observation → identity/evidence → qualification → contact reason → commercial action → order → document pack → result/learning.**
+
+The system must distinguish planned procurement, published notice, active procedure, completed procedure and cancellation/change events. Monitoring is cursor-based and deduplicated. Provider identifiers remain provider references, not canonical business IDs. No tender submission automation is part of this boundary. B2B-Center remains a later separately gated commercial ETP adapter because its official materials document API integration but production access is plan-dependent.
+
 # 5C. Контур подготовки первого контакта
 
 Search/Intelligence не заканчивается квалификацией.
@@ -1050,6 +1059,21 @@ DOSSIER → ЛПР/ROLE HYPOTHESIS → CONTACT CONTEXT → VALUE HYPOTHESIS → 
 - какие факты требуют повторной проверки;
 - какие вопросы лучше задать вместо предположения.
 
+# 5C-A. Repeat Customer Order Engine
+
+A repeat order is represented by a reusable rule/template attached to an existing canonical customer, not by copying a historical order.
+
+Required semantics:
+- recurrence pattern, next due date/window, owner/assignee and pause/end controls;
+- lineage to the previous order and original commercial configuration;
+- fresh draft order snapshot per repetition;
+- explicit review before order confirmation;
+- changed/expired price and document configuration surfaced as deltas;
+- no duplicate next-order creation when an open repeat instance exists;
+- one-time skip, pause/resume, fixed-count and end-date controls;
+- reminders are preparation signals, not hidden business effects.
+
+This is deliberately a sales scheduling/renewal pattern and is placed between contact preparation and the document engine.
 # 5D. Конструктор документов и юридическая конфигурация
 
 Система должна иметь отдельный Document & Legal Configuration layer, не являющийся частью frozen domain kernel.
@@ -1882,6 +1906,25 @@ Core изменяется только по доказанному invariant def
 ---
 
 ## Experience / Client doctrine
+
+**One system, two surfaces: Web + PWA.**
+
+Применяется зрелый workspace-паттерн: компактный summary/highlights сверху; Details; Related records; Activity/History; list/work queues; quick actions; contextual/split inspection; progressive disclosure для Evidence/Technical; персональные view preferences без изменения canonical truth. Этапы процесса могут отображаться как stage strip/checklist, но серверные contracts остаются единственной authority.
+
+### Multi-operator collaboration doctrine
+
+Система с первого дня готова к увеличению числа операторов:
+- явный actor identity на consequential actions;
+- owner/assignee/team queue отделены от customer Identity;
+- server-side authorization and least privilege;
+- audited assignment/reassignment/handoff;
+- revision/concurrency token; stale writes fail instead of silently overwriting newer state;
+- shared work without shadow copies;
+- explicit conflict outcomes: reload, accept current, merge supported fields, manual review;
+- durable work state and notifications derived from server state, not private UI state.
+
+Это bounded experience/application layer вокруг frozen core, а не новый источник истины или преждевременная multi-tenant архитектура.
+
 
 **One system, multiple surfaces.**
 
