@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "status": "phase_2h_verified_design_activation_off",
+  "status": "phase_2h_controlled_activation_operation_implemented_activation_off",
   "provider_id": "dadata_organization_api",
   "execution_kind": "counterparty_lookup",
   "network_execution_enabled": false,
@@ -18,7 +18,10 @@
     "kill_switch",
     "rollback_without_schema_change",
     "full_release_ci",
-    "explicit_operator_authorization"
+    "explicit_operator_authorization",
+    "controlled_activation_operation",
+    "operator_api_boundary",
+    "default_disabled_runtime_composition"
   ],
   "authority_rules": {
     "provider_output_is_canonical_truth": false,
@@ -29,5 +32,16 @@
   "live_ci_traffic": false,
   "secret_source": "deployment_configuration_only",
   "fallback_provider": "none",
-  "rollback": "disable provider binding; preserve historical evidence; no schema rewrite"
+  "rollback": "disable provider binding; preserve historical evidence; no schema rewrite",
+  "operator_control_plane": {
+    "activation_endpoint": "POST /v1/intelligence/providers/{providerId}/activation",
+    "rollback_endpoint": "POST /v1/intelligence/providers/{providerId}/rollback",
+    "authentication": "existing API authentication",
+    "authorization": [
+      "intelligence.provider.activate",
+      "intelligence.provider.rollback"
+    ],
+    "explicit_operator_authorization": true,
+    "provider_identity_source": "path_parameter"
+  }
 }

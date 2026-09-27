@@ -103,7 +103,7 @@ def test_activation_is_fail_closed_without_explicit_authorization() -> None:
 def test_activation_requires_authorized_permission() -> None:
     _, gate, service = gate_and_service()
 
-    with pytest.raises(Exception, match="permission denied"):
+    with pytest.raises(AuthorizationError, match="permission denied"):
         service.activate(
             request(),
             permissions=frozenset(),

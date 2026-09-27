@@ -125,7 +125,6 @@ class CounterpartyContradictionResponse(APIModel):
 
 
 class CounterpartyProviderActivationRequest(APIModel):
-    provider_id: str = Field(alias="providerId")
     reason: str = Field(min_length=1, max_length=256)
     operator_authorized: bool = Field(alias="operatorAuthorized")
     activation_version: str = Field(
@@ -136,7 +135,6 @@ class CounterpartyProviderActivationRequest(APIModel):
 
 
 class CounterpartyProviderRollbackRequest(APIModel):
-    provider_id: str = Field(alias="providerId")
     reason: str = Field(min_length=1, max_length=256)
     operator_authorized: bool = Field(alias="operatorAuthorized")
 

@@ -2,31 +2,23 @@
 ## Current development-session synchronization — 2026-09-27
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-- HEAD: `b9d9b2c730339a8f2a4819218bc831653a15e12e` — latest documentation-synchronization commit after Phase 2-H lookup-to-evidence composition verification.
+- HEAD before activation-operation synchronization commit: `23bce565ee7fa326dc35008317c4ea409e200982`.
 - PR: #56 — open, draft, mergeable.
-- Current boundary: **Phase 2-H — Controlled Provider Execution Boundary (DaData parallel alternative) — implementation sub-boundaries VERIFIED; live activation OFF. Phase 2-G FNS evidence hold remains independently BLOCKED for automation.**
-- Phase 2-A — Search Run Integrity Boundary: CLOSED / VERIFIED by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
-- Phase 2-B — Source-Registry-Backed Search Planning: CLOSED / VERIFIED by CI #1324 (`36308069460`) on `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
-- Phase 2-C — Registry-Backed Operator Search Composition: CLOSED / VERIFIED by CI #1330 (`36308647549`) on `16c08111e025bd267787eaa5de36c4dd53f70609`.
-- Phase 2-D — Generic Runtime Composition: CLOSED / VERIFIED by CI #1336 (`36309294705`) on `7637871b3cac379fdff056aed90ddc73aacf760f`.
-- Phase 2-E — Search Adapter Compliance Boundary: CLOSED / VERIFIED by CI #1340 (`36310957082`) on `abca1b26e32498105b4ea855474aab387091218c`.
-- Phase 2-F — First Approved Source Adapter Readiness: CLOSED / VERIFIED by CI #1343 (`36311263929`) on `9e49e79c3825703117ad6b587e9cee5160feaca9`.
-- Phase 2-G selection/evidence sub-boundary: CLOSED / VERIFIED by CI #1348 (`36312176697`) on `3625d0e30309b64ebfb6eada4a2a75a4b619fa52`.
-- Selected source: `fns_transparent_business` / FNS Transparent Business.
-- Phase 2-G contract: `architecture/fns_transparent_business_adapter_contract.json`.
-- Phase 2-G authoritative evidence record: `architecture/fns_transparent_business_evidence_2026_09_27.json`.
-- Phase 2-G deterministic fixture coverage: `tests/test_fns_transparent_business_contract.py`.
-- Lawful-use evidence is established for the FNS open-data context, with source attribution and lawful-use conditions preserved; this does not establish a provider-specific automation API contract.
-- Remaining evidence gaps: authoritative provider-side automation rate limits, timeout semantics and machine-error contract for an automated Transparent Business path remain unestablished.
-- Phase 2-G guardrail: no provider activation, automatic retry/fallback, new persistence authority, ranking authority, automatic qualification, MAX activation or frozen-kernel change.
-- Full CI #1347 (`36312001643`) passed all seven release-gate jobs on `88ae48ebda7b09bc525e8f6c29b911af7ccf0b60` before the final evidence-record update.
-- Full CI #1348 (`36312176697`) passed all seven release-gate jobs on `3625d0e30309b64ebfb6eada4a2a75a4b619fa52` after the final evidence-record update.
-- P46 MAX provider evidence hold: CLOSED / VERIFIED.
-- Frozen kernel: unchanged.
-- No database schema, canonical identity semantic change, network automation, MAX activation or external network execution was introduced by Phase 2-A through this Phase 2-G boundary.
-- Phase 2-H artifacts now present: `architecture/dadata_adapter_contract.json`, `architecture/dadata_provider_evidence_2026_09_27.json`, `architecture/dadata_activation_contract.json`, provider-neutral lookup port `src/shema_platform/application/counterparty_lookup.py`, DaData adapter `src/shema_platform/adapters/intelligence/dadata.py`, evidence intake `src/shema_platform/application/counterparty_provider_evidence.py`, composition service `src/shema_platform/application/counterparty_provider_lookup.py`, deterministic tests `tests/test_dadata_contract.py`, `tests/test_dadata_lookup.py`, `tests/test_dadata_activation_contract.py`, `tests/test_counterparty_provider_evidence.py`, `tests/test_counterparty_provider_lookup.py`, `docs/SEARCH_RESEARCH_PHASE2H.md`, and `docs/CODEBASE_DIRECTION_AUDIT_2026_09_27.md`.
-- DaData is registered as `trusted_structured_dataset` / `trusted_secondary`; provider output remains evidence input rather than canonical truth.
-- Phase 2-H lookup→retry→evidence composition is verified by full CI #1377 (`36315266092`) 7/7 GREEN. Safest next action: define and test the separate controlled activation operation and operator/API boundary; live provider execution remains OFF until that activation gate is independently verified and explicitly authorized.e matrix behind the generic SearchProvider boundary, with live network execution still disabled until the full Phase 2-H release gate passes.
+- Phase 2-H lookup→retry→evidence composition and synchronized documentation are CLOSED / VERIFIED by full CI #1383 (`36315401510`) with all seven release-gate jobs GREEN.
+- Current active boundary: **Phase 2-H controlled activation operation / operator API boundary — IMPLEMENTED, final seven-job verification pending; live activation OFF.**
+- Phase 2-G FNS evidence hold remains independently BLOCKED for automation.
+- Implemented activation artifacts: `src/shema_platform/adapters/intelligence/dadata_activation.py`, `src/shema_platform/application/counterparty_provider_activation.py`, `architecture/dadata_activation_operation_contract.json`, `tests/test_counterparty_provider_activation.py`, plus API models/routes and canonical OpenAPI updates.
+- Activation invariant: construction and startup do not activate DaData; the provider binding starts disabled and can only be enabled through the explicit control-plane operation.
+- Authorization invariant: provider activation and rollback require dedicated permissions and explicit operator confirmation.
+- Credential invariant: activation state, API DTOs, telemetry and operation contracts contain no provider secret.
+- Identity invariant: `providerId` is supplied only by the route path, not duplicated in the request body.
+- Rollback invariant: the kill-switch disables the binding, preserves safe historical activation metadata and makes no database schema change.
+- Evidence invariant: DaData remains `trusted_secondary`; provider observations remain Evidence input and cannot promote canonical Identity.
+- Network invariant: no live DaData traffic, no automatic activation, no fallback provider, no CI provider traffic and no credentials in source control.
+- Final gate for this sub-boundary: full seven-job CI on the final synchronized activation-operation HEAD.
+- Safe next action after green: mark controlled activation operation VERIFIED/CLOSED, then advance to the next explicitly bounded activation-rehearsal boundary without enabling live provider traffic.
+- Prohibited until separate explicit authorization: live DaData execution, provider credentials in repository, automatic fallback, FNS automation, MAX activation, DB schema change and frozen-kernel semantic change.
+
 
 ## Historical core-certification baseline
 

@@ -1,5 +1,14 @@
 from fastapi.testclient import TestClient
 
+from shema_platform.adapters.intelligence.dadata import DaDataConfiguration
+from shema_platform.adapters.intelligence.dadata_activation import (
+    DADATA_PROVIDER_ID,
+    DaDataActivationReadiness,
+    DaDataControlledActivationGate,
+)
+from shema_platform.application.counterparty_provider_activation import (
+    CounterpartyProviderActivationService,
+)
 from shema_platform.application.counterparty_check import (
     CounterpartyCheckResult,
     CounterpartyContradiction,
@@ -57,6 +66,23 @@ class PermissionedAuthenticator(AuthenticationPort):
                 "operator-1",
                 trust_level=2,
                 permissions=frozenset({Permission.ORDER_CREATE}),
+            )
+        raise AuthenticationRequired()
+
+
+class ProviderActivationAuthenticator(AuthenticationPort):
+    def authenticate(self, authorization: str | None) -> AuthenticatedActor:
+        if authorization == "Bearer provider-token":
+            return AuthenticatedActor(
+                "operator-1",
+                trust_level=2,
+                permissions=frozenset({Permission.INTELLIGENCE_PROVIDER_ACTIVATE}),
+            )
+        if authorization == "Bearer rollback-token":
+            return AuthenticatedActor(
+                "operator-2",
+                trust_level=2,
+                permissions=frozenset({Permission.INTELLIGENCE_PROVIDER_ROLLBACK}),
             )
         raise AuthenticationRequired()
 
@@ -439,3 +465,114 @@ def test_runtime_api_ai_route_uses_existing_application_unavailable_boundary() -
 
     assert response.status_code == 503
     assert response.json()["code"] == "application_unavailable"
+
+
+def _activation_service() -> CounterpartyProviderActivationService:
+    readiness = DaDataActivationReadiness(
+        source_registry_entry=True,
+        authoritative_provider_contract_evidence=True,
+        provider_neutral_counterparty_lookup_port=True,
+        deterministic_positive_fixture=True,
+        deterministic_negative_fixture_matrix=True,
+        bounded_retry_policy=True,
+        application_timeout_policy=True,
+        credential_boundary=True,
+        redacted_observability=True,
+        kill_switch=True,
+        rollback_without_schema_change=True,
+        full_release_ci=True,
+    )
+    gate = DaDataControlledActivationGate(telemetry=InMemoryTelemetrySink())
+    return CounterpartyProviderActivationService(
+        gate=gate,
+        configuration=DaDataConfiguration(api_key="test-secret", enabled=True),
+        readiness=readiness,
+    )
+
+
+def test_runtime_api_provider_activation_requires_explicit_confirmation() -> None:
+    service = _activation_service()
+    denied = TestClient(
+        create_app(
+            FakeApplication(),
+            ProviderActivationAuthenticator(),
+            counterparty_provider_activation=service,
+        )
+    ).post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/activation",
+        headers={"Authorization": "Bearer provider-token"},
+        json={
+            "reason": "controlled verification",
+            "operatorAuthorized": False,
+            "activationVersion": "activation:test-v1",
+        },
+    )
+    assert denied.status_code == 403
+    assert denied.json()["code"] == "authorization_denied"
+
+    granted = TestClient(
+        create_app(
+            FakeApplication(),
+            ProviderActivationAuthenticator(),
+            counterparty_provider_activation=service,
+        )
+    ).post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/activation",
+        headers={"Authorization": "Bearer provider-token"},
+        json={
+            "reason": "controlled verification",
+            "operatorAuthorized": True,
+            "activationVersion": "activation:test-v1",
+        },
+    )
+    assert granted.status_code == 200
+    assert granted.json()["providerId"] == DADATA_PROVIDER_ID
+    assert granted.json()["enabled"] is True
+
+
+def test_runtime_api_provider_activation_remains_unavailable_when_not_composed() -> None:
+    response = TestClient(
+        create_app(FakeApplication(), ProviderActivationAuthenticator())
+    ).post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/activation",
+        headers={"Authorization": "Bearer provider-token"},
+        json={
+            "reason": "should remain unavailable",
+            "operatorAuthorized": True,
+            "activationVersion": "activation:test-v1",
+        },
+    )
+    assert response.status_code == 503
+    assert response.json()["code"] == "application_unavailable"
+
+
+def test_runtime_api_provider_rollback_uses_path_provider_identity() -> None:
+    service = _activation_service()
+    client_instance = TestClient(
+        create_app(
+            FakeApplication(),
+            ProviderActivationAuthenticator(),
+            counterparty_provider_activation=service,
+        )
+    )
+    activated = client_instance.post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/activation",
+        headers={"Authorization": "Bearer provider-token"},
+        json={
+            "reason": "controlled verification",
+            "operatorAuthorized": True,
+            "activationVersion": "activation:test-v1",
+        },
+    )
+    assert activated.status_code == 200
+
+    rolled_back = client_instance.post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/rollback",
+        headers={"Authorization": "Bearer rollback-token"},
+        json={
+            "reason": "kill switch drill",
+            "operatorAuthorized": True,
+        },
+    )
+    assert rolled_back.status_code == 200
+    assert rolled_back.json()["enabled"] is False

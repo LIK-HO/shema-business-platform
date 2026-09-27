@@ -104,6 +104,50 @@ paths:
               schema: { $ref: '#/components/schemas/CounterpartyCheckResponse' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '503': { $ref: '#/components/responses/ApplicationUnavailableError' }
+  /v1/intelligence/providers/{providerId}/activation:
+    post:
+      operationId: activateCounterpartyProvider
+      summary: Explicitly activate one verified counterparty provider binding
+      parameters:
+        - $ref: '#/components/parameters/ProviderId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CounterpartyProviderActivationRequest' }
+      responses:
+        '200':
+          description: Provider activation state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CounterpartyProviderActivationResponse' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ApplicationUnavailableError' }
+  /v1/intelligence/providers/{providerId}/rollback:
+    post:
+      operationId: rollbackCounterpartyProvider
+      summary: Explicitly disable one counterparty provider binding
+      parameters:
+        - $ref: '#/components/parameters/ProviderId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CounterpartyProviderRollbackRequest' }
+      responses:
+        '200':
+          description: Provider activation state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CounterpartyProviderActivationResponse' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ApplicationUnavailableError' }
   /v1/commercial-actions:
     post:
       operationId: createCommercialAction
@@ -230,6 +274,11 @@ components:
       in: path
       required: true
       schema: { type: string }
+    ProviderId:
+      name: providerId
+      in: path
+      required: true
+      schema: { type: string, enum: [dadata_organization_api] }
     EntityRef:
       name: entityRef
       in: path
@@ -384,6 +433,31 @@ components:
         sourceRef: { type: string }
         trustLevel: { type: string }
         confidence: { type: number, minimum: 0, maximum: 1 }
+    CounterpartyProviderActivationRequest:
+      type: object
+      additionalProperties: false
+      required: [reason, operatorAuthorized, activationVersion]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 256 }
+        operatorAuthorized: { type: boolean }
+        activationVersion: { type: string, minLength: 1, maxLength: 128 }
+    CounterpartyProviderRollbackRequest:
+      type: object
+      additionalProperties: false
+      required: [reason, operatorAuthorized]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 256 }
+        operatorAuthorized: { type: boolean }
+    CounterpartyProviderActivationResponse:
+      type: object
+      required: [providerId, enabled]
+      properties:
+        providerId: { type: string }
+        enabled: { type: boolean }
+        activatedBy: { type: [string, 'null'] }
+        activationVersion: { type: [string, 'null'] }
+        rollbackBy: { type: [string, 'null'] }
+        rollbackReason: { type: [string, 'null'] }
     CounterpartyCheckRequest:
       type: object
       additionalProperties: false
