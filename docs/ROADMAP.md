@@ -359,8 +359,15 @@ The provider-neutral contract, deterministic GosPlan adapter boundary, bounded e
 - full seven-job CI GREEN;
 - Development State updated with the verified boundary.
 
-### Deferred provider expansion
-B2B-Center is a later commercial-ETP adapter candidate. Its official site documents API integration with corporate systems, but production API access is plan-dependent; it therefore remains a separately gated provider boundary.
+### Provider-neutral procurement expansion
+B2B-Center is removed as a named strategic provider. The durable runtime boundary is a provider-neutral ProcurementSourceRegistry with per-source capability declarations and preserved provenance.
+
+The provider portfolio is:
+- ГосПлан API v2 / ЕИС-origin data as the official-origin baseline already covered by the current foundation;
+- TenderGuru API as the first commercial aggregation candidate, activated only after measured coverage evidence shows a gap that justifies its cost;
+- future specialized sources only through separate evidence/cost gates.
+
+No provider is an implicit fallback, and provider failure never changes canonical identity or business truth.
 
 ## 7. Phase 3 — Contact Preparation
 
@@ -543,6 +550,33 @@ From the beginning the system supports growth from one operator to several witho
 
 This is a bounded extension around the frozen core, not a new system-of-record or a premature multi-tenant architecture.
 
+## 12. Phase 8A — Yandex Cloud Production Foundation
+
+### Objective
+Move the proven modular monolith into Yandex Cloud without changing domain semantics or creating a second persistence authority.
+
+### Work
+- containerized canonical API/runtime in Serverless Containers;
+- API Gateway as the explicit external edge;
+- Cloud Functions only for narrow scheduled/triggered work;
+- Timer-triggered procurement polling;
+- Lockbox for provider/API credentials;
+- Container Registry for immutable application artifacts;
+- Object Storage for bounded large evidence objects and exports;
+- Monium + Monitoring for observability and operational health;
+- Managed PostgreSQL as the production canonical transactional database;
+- target VPC/private networking for production database access;
+- cost budgets and alerts.
+
+### Free/minimal deployment rule
+The serverless shell can begin inside Yandex Cloud free allowances. Real production data requires Managed PostgreSQL cost; the architecture must not replace PostgreSQL with a second database merely to avoid that cost.
+
+### Queue rule
+The existing PostgreSQL job/outbox model remains the business reliability authority. Yandex Message Queue may be introduced later as transport/fanout when measured workload requires it; it must not become a competing transaction authority.
+
+### Exit criteria
+The same frozen kernel and canonical API run in Yandex Cloud with verified secrets, database connectivity, backup/recovery, health checks, observability and rollback, without introducing duplicate business state.
+
 ## 12. Phase 8 — Production Operations
 
 ### Objective
@@ -568,6 +602,48 @@ Roll out gradually, observe, and roll back first when a release is unhealthy. Th
 
 ### Exit criteria
 A release can be deployed, observed, rolled back and reconstructed without ad hoc manual intervention.
+
+## 13. Phase 9A — Bitrix24 Business Control Plane Integration
+
+### Objective
+Introduce Bitrix24 as the mature external business-process and transaction-control plane, without rebuilding CRM/finance inside Shema.
+
+### Ownership
+Shema remains authoritative for:
+- source observations;
+- identity resolution;
+- evidence/provenance/freshness;
+- intelligence and qualification;
+- procurement observations;
+- contact preparation;
+- AI run lineage;
+- learning context.
+
+Bitrix24 becomes authoritative after handoff for:
+- live lead/deal/order lifecycle;
+- transactional pricing;
+- invoices/payments and business economics;
+- live communication history;
+- assignments and business process stages;
+- team workflows and approvals;
+- business documents configured for the portal.
+
+### Integration phases
+1. Single-portal proof with an inbound webhook.
+2. Outbound event intake for selected business events.
+3. Idempotent Shema outbox for handoff commands.
+4. Reconciliation and field-ownership map.
+5. OAuth 2.0 application boundary before multi-user/multi-portal maturity.
+6. Outcome-only return path for learning.
+
+### Non-goals
+- no bidirectional same-field writes;
+- no full CRM mirror in Shema;
+- no second finance system;
+- no copying detailed personnel data without a separately approved need.
+
+### Exit criteria
+A qualified opportunity can be handed from Shema to Bitrix24 with traceable identity and evidence references, and the resulting business outcome can return to Shema without creating competing truth.
 
 ## 13. Phase 9 — External Provider Activation and MAX
 
@@ -595,7 +671,7 @@ A real external effect is safe under timeout, lost-response, retry, duplicate an
 ## 14. Phase 10 — Learning Loop
 
 ### Objective
-Close the loop from outcomes back into intelligence and operator decisions.
+Close the loop from outcomes back into intelligence and operator decisions without importing the complete CRM/finance database into Shema.
 
 ### Inputs
 - accepted/rejected candidates;
@@ -603,11 +679,12 @@ Close the loop from outcomes back into intelligence and operator decisions.
 - contactability;
 - script outcomes;
 - next-step outcomes;
-- order;
-- revenue/cost/margin;
+- won/lost or completed outcome classes from Bitrix24;
+- repeat-business signals;
 - provider/source quality;
 - operator corrections;
-- freshness failures.
+- freshness failures;
+- optional coarse economic outcome features only when explicitly justified.
 
 ### Outputs
 - better search plans;
@@ -615,7 +692,9 @@ Close the loop from outcomes back into intelligence and operator decisions.
 - better research depth selection;
 - better qualification;
 - better contact preparation;
-- better document configuration.
+- better document configuration;
+- better source/provider selection;
+- measured infrastructure/resource policy.
 
 ### Rule
 Learning changes controlled application policy, not canonical historical truth.
@@ -679,10 +758,11 @@ The practical priority is:
 5. Web operator system + repeat-order/procurement workspaces
 6. PWA
 7. Production Web/PWA consolidation
-8. Production operations
-9. External provider activation / MAX
-10. Learning loop
-11. Measured scalability/team mode
+8. Yandex Cloud production foundation
+9. Bitrix24 business-plane integration
+10. Production operations and guarded external activation / MAX
+11. Learning loop
+12. Measured scalability/team mode
 
 Where two capabilities are tightly coupled, build them as one vertical slice rather than separate half-finished layers.
 
