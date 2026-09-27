@@ -15,7 +15,8 @@
       "repeat_business_preparation",
       "document_requirement_configuration",
       "ai_run_lineage",
-      "learning_context"
+      "learning_context",
+      "communication_preparation"
     ],
     "bitrix24_after_handoff": [
       "live_crm_state",
@@ -25,7 +26,8 @@
       "business_economics",
       "customer_communication_history",
       "assignment_and_team_processes",
-      "final_business_document_execution_where_configured"
+      "final_business_document_execution_where_configured",
+      "customer_outbound_communication_execution"
     ],
     "forbidden_dual_ownership": [
       "transaction_price",
@@ -34,7 +36,8 @@
       "invoice_state",
       "payment_state",
       "business_margin",
-      "customer_communication_history"
+      "customer_communication_history",
+      "customer_outbound_communication_execution"
     ]
   },
   "handoff_state_machine": [
@@ -119,5 +122,11 @@
     "mapping_drift": "fail_closed_and_manual_review",
     "permission_failure": "fail_closed",
     "schema_or_contract_mismatch": "fail_closed"
+  },
+  "communication": {
+    "shema_role": "prepare context and optional operator/internal notification",
+    "bitrix24_or_business_plane_after_handoff": "authoritative customer-facing communication execution and history",
+    "max_direct_customer_outbound_from_shema": "disabled_by_default",
+    "max_customer_outbound_requires": "explicit_provider_safety_and_business_plane_reconciliation_contract"
   }
 }
