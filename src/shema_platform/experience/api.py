@@ -11,6 +11,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from shema_platform.adapters.ai.composition import AIProviderCompositionError
 from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
+from shema_platform.application.counterparty_provider_activation import (
+    CounterpartyProviderActivationRequest,
+    CounterpartyProviderActivationService,
+)
 from shema_platform.application.counterparty_check import (
     CounterpartyCheckService,
     CounterpartyIdentifierType,
@@ -25,6 +29,9 @@ from shema_platform.experience.api_models import (
     CommercialActionSendRequest,
     CommunicationResult,
     CounterpartyCheckRequest,
+    CounterpartyProviderActivationRequest as CounterpartyProviderActivationRequestModel,
+    CounterpartyProviderActivationResponse as CounterpartyProviderActivationResponseModel,
+    CounterpartyProviderRollbackRequest,
     CounterpartyCheckResponse,
     CounterpartyContradictionResponse,
     DiagnosticsResponse,
@@ -254,6 +261,7 @@ def create_app(
     telemetry: TelemetrySink | None = None,
     provider_health: ProviderHealthRegistry | None = None,
     counterparty_checker: CounterpartyCheckService | None = None,
+    counterparty_provider_activation: CounterpartyProviderActivationService | None = None,
 ) -> FastAPI:
     runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
@@ -276,6 +284,7 @@ def create_app(
     app.state.authenticator = authenticator
     app.state.provider_health = provider_health or ProviderHealthRegistry()
     app.state.counterparty_checker = counterparty_checker
+    app.state.counterparty_provider_activation = counterparty_provider_activation
     default_telemetry: TelemetrySink = (
         StructuredLoggingTelemetrySink()
         if runtime_security.environment == "production"
@@ -495,6 +504,75 @@ def create_app(
             quarantined=result.quarantined,
             operatorBrief=result.operator_brief,
             correlationId=context.correlation_id,
+        )
+
+    @router.post(
+        "/intelligence/providers/{providerId}/activation",
+        response_model=CounterpartyProviderActivationResponseModel,
+    )
+    async def activate_counterparty_provider(
+        request: Request,
+        payload: CounterpartyProviderActivationRequestModel,
+    ) -> CounterpartyProviderActivationResponseModel:
+        service: CounterpartyProviderActivationService | None = (
+            request.app.state.counterparty_provider_activation
+        )
+        if service is None:
+            raise ApplicationUnavailable(
+                "counterparty provider activation capability is not composed"
+            )
+        context = _context(request, None)
+        result = service.activate(
+            CounterpartyProviderActivationRequest(
+                provider_id=payload.provider_id,
+                actor_id=context.actor_id,
+                reason=payload.reason,
+                operator_authorized=payload.operator_authorized,
+                activation_version=payload.activation_version,
+                correlation_id=context.correlation_id,
+            ),
+            permissions=context.permissions,
+        )
+        return CounterpartyProviderActivationResponseModel(
+            providerId=result.provider_id,
+            enabled=result.enabled,
+            activatedBy=result.activated_by,
+            activationVersion=result.activation_version,
+            rollbackBy=result.rollback_by,
+            rollbackReason=result.rollback_reason,
+        )
+
+    @router.post(
+        "/intelligence/providers/{providerId}/rollback",
+        response_model=CounterpartyProviderActivationResponseModel,
+    )
+    async def rollback_counterparty_provider(
+        request: Request,
+        payload: CounterpartyProviderRollbackRequest,
+    ) -> CounterpartyProviderActivationResponseModel:
+        service: CounterpartyProviderActivationService | None = (
+            request.app.state.counterparty_provider_activation
+        )
+        if service is None:
+            raise ApplicationUnavailable(
+                "counterparty provider activation capability is not composed"
+            )
+        context = _context(request, None)
+        result = service.rollback(
+            provider_id=payload.provider_id,
+            actor_id=context.actor_id,
+            reason=payload.reason,
+            operator_authorized=payload.operator_authorized,
+            correlation_id=context.correlation_id,
+            permissions=context.permissions,
+        )
+        return CounterpartyProviderActivationResponseModel(
+            providerId=result.provider_id,
+            enabled=result.enabled,
+            activatedBy=result.activated_by,
+            activationVersion=result.activation_version,
+            rollbackBy=result.rollback_by,
+            rollbackReason=result.rollback_reason,
         )
 
     @router.post(

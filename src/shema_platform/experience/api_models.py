@@ -124,6 +124,32 @@ class CounterpartyContradictionResponse(APIModel):
     observed_value: str = Field(alias="observedValue")
 
 
+class CounterpartyProviderActivationRequest(APIModel):
+    provider_id: str = Field(alias="providerId")
+    reason: str = Field(min_length=1, max_length=256)
+    operator_authorized: bool = Field(alias="operatorAuthorized")
+    activation_version: str = Field(
+        min_length=1,
+        max_length=128,
+        alias="activationVersion",
+    )
+
+
+class CounterpartyProviderRollbackRequest(APIModel):
+    provider_id: str = Field(alias="providerId")
+    reason: str = Field(min_length=1, max_length=256)
+    operator_authorized: bool = Field(alias="operatorAuthorized")
+
+
+class CounterpartyProviderActivationResponse(APIModel):
+    provider_id: str = Field(alias="providerId")
+    enabled: bool
+    activated_by: str | None = Field(default=None, alias="activatedBy")
+    activation_version: str | None = Field(default=None, alias="activationVersion")
+    rollback_by: str | None = Field(default=None, alias="rollbackBy")
+    rollback_reason: str | None = Field(default=None, alias="rollbackReason")
+
+
 class CounterpartyCheckResponse(APIModel):
     subject_ref: str = Field(alias="subjectRef")
     identity_ref: str | None = Field(default=None, alias="identityRef")
