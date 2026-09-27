@@ -132,6 +132,31 @@
         "context"
       ],
       "freshness_required": true
+    },
+    {
+      "source_id": "dadata_organization_api",
+      "name": "DaData Organization API",
+      "source_class": "trusted_structured_dataset",
+      "default_reliability": "trusted_secondary",
+      "access_mode": "approved_adapter_only",
+      "network_automation": false,
+      "identifier_types": [
+        "INN",
+        "OGRN",
+        "name"
+      ],
+      "claim_types": [
+        "registration",
+        "legal_status",
+        "tax_identifier",
+        "company_context",
+        "contact_channel",
+        "financial_context"
+      ],
+      "freshness_required": true,
+      "provider_contract": "architecture/dadata_adapter_contract.json",
+      "evidence_record": "architecture/dadata_provider_evidence_2026_09_27.json",
+      "authority_rule": "provider_output_is_evidence_input_not_canonical_truth"
     }
   ]
 }
