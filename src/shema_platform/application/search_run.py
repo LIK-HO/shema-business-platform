@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from math import isfinite
-from typing import Sequence
 from uuid import uuid4
 
 from shema_platform.domain.search import SearchCriteria, SearchHit, SearchProvider, SearchService
