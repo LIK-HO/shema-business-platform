@@ -59,6 +59,22 @@ Therefore:
 
 This mirrors mature remote-call practice: retries belong to the reliability layer and are bounded rather than hidden inside arbitrary provider adapters.
 
+## Verified implementation boundary
+
+Implemented and verified by full release-gate CI #1377 (`36315266092`):
+
+- provider-neutral `CounterpartyLookupProvider`;
+- DaData `find-party` adapter with activation OFF by default;
+- bounded retry and application timeout policy;
+- explicit HTTP/transport error taxonomy;
+- response-size defense-in-depth;
+- provider evidence record and fail-closed activation contract;
+- `CounterpartyProviderEvidenceService` feeding the existing Evidence boundary;
+- `CounterpartyProviderLookupService` composing lookup → retry → evidence intake;
+- conservative rule: trusted-secondary provider output cannot create or promote canonical Identity by itself;
+- deterministic lookup, failure, activation and evidence-intake tests;
+- CI 7/7 GREEN.
+
 ## Required implementation before activation
 
 1. provider adapter behind the generic SearchProvider;
