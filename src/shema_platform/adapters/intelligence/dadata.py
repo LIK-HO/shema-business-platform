@@ -74,7 +74,7 @@ class DaDataConfiguration:
     min_connection_interval_seconds: float = DEFAULT_MIN_CONNECTION_INTERVAL_SECONDS
 
     @classmethod
-    def from_environment(cls) -> "DaDataConfiguration":
+    def from_environment(cls) -> DaDataConfiguration:
         return cls(
             api_key=os.getenv("DADATA_API_KEY", "").strip(),
             endpoint=os.getenv("DADATA_ENDPOINT", DEFAULT_ENDPOINT).strip(),
