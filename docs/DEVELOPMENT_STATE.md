@@ -2,7 +2,7 @@
 ## Current development-session synchronization — 2026-09-27
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-- HEAD: `13b9cacf38250253b6602a6f30a829998abdfad5`.
+- HEAD: resolved live from GitHub; this ledger does not store a static commit pointer.
 - PR: #56 — open, draft, mergeable.
 - Phase 2-H lookup→retry→evidence composition and synchronized documentation are CLOSED / VERIFIED by full CI #1383 (`36315401510`) with all seven release-gate jobs GREEN.
 - Phase 2-H controlled activation operation: **CLOSED / VERIFIED by CI #1392 (`36316219807`) on `de99fd3e30514c140464947099a03fa9399809f9`.**
