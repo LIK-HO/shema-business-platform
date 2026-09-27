@@ -162,7 +162,8 @@ def test_lookup_requires_active_provider_binding() -> None:
     assert response.json()["code"] == "provider_activation_blocked"
 
 
-def test_lookup_runs_through_runtime_to_evidence_and_audit_then_rollback_blocks_future_lookup() -> None:
+def test_lookup_runs_through_runtime_to_evidence_and_audit_then_rollback_blocks_future_lookup(
+) -> None:
     assembly, state = build()
     client = TestClient(
         assembly.create_http_app(authenticator=LookupAuthenticator())
