@@ -1,8 +1,8 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / Phase 2-I Procurement Intelligence In Progress / MAX Evidence Hold
-**Active development boundary:** Phase 2-I Procurement Intelligence & Tender Monitoring API — bounded foundation; live provider execution remains OFF until its contract, negative paths, budgets, observability and activation gate are verified.
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / Phase 2-I Procurement Foundation Closed / MAX Evidence Hold
+**Active development boundary:** NONE — Phase 2-I procurement foundation is CLOSED / VERIFIED by CI #1417; remaining live/runtime monitoring work must be opened as a separate bounded sub-boundary.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -1018,7 +1018,7 @@ Ranking может менять порядок показа, но не долж�
 
 # 5B.20. Procurement Intelligence & Tender Monitoring
 
-**Status: Phase 2-I IN PROGRESS.** Procurement intelligence is a bounded extension of the search/research system. The first provider is ГосПлан API v2 over ЕИС. The adapter consumes plans, procurements, procedures and contracts through REST; procurement records remain external observations and do not become canonical Identity.
+**Status: Phase 2-I IN PROGRESS — foundation sub-boundary CLOSED / VERIFIED by CI #1417; live/runtime sub-boundaries remain separately gated.** Procurement intelligence is a bounded extension of the search/research system. The first provider is ГосПлан API v2 over ЕИС. The adapter consumes plans, procurements, procedures and contracts through REST; procurement records remain external observations and do not become canonical Identity.
 
 The required chain is:
 **plan/notice → procurement observation → identity/evidence → qualification → contact reason → commercial action → order → document pack → result/learning.**
