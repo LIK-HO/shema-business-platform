@@ -10,23 +10,23 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from shema_platform.adapters.ai.composition import AIProviderCompositionError
+from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.application.counterparty_check import (
     CounterpartyCheckService,
     CounterpartyIdentifierType,
     CounterpartyObservation,
     SourceReliability,
 )
-from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.experience.api_models import (
     AIRunRequest,
     AIRunResponse,
     CommercialActionCreateRequest,
     CommercialActionResponse,
+    CommercialActionSendRequest,
+    CommunicationResult,
     CounterpartyCheckRequest,
     CounterpartyCheckResponse,
     CounterpartyContradictionResponse,
-    CommercialActionSendRequest,
-    CommunicationResult,
     DiagnosticsResponse,
     DiscoveryRequest,
     DiscoveryResponse,
