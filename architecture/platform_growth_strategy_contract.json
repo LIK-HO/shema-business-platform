@@ -1,0 +1,107 @@
+{
+  "version": "1.0",
+  "status": "strategic_boundary_contract",
+  "frozen_kernel_impact": false,
+  "product_boundary": {
+    "shema_role": "search_intelligence_evidence_qualification_contact_preparation_learning",
+    "yandex_cloud_role": "primary_runtime_and_infrastructure_environment",
+    "bitrix24_role_after_maturity": "transaction_business_process_communication_calculation_and_economics_control_plane"
+  },
+  "ownership": {
+    "shema_authoritative": [
+      "source_observations",
+      "identity_resolution",
+      "evidence",
+      "provenance",
+      "freshness",
+      "qualification_evidence",
+      "procurement_observations",
+      "research_history",
+      "ai_run_lineage",
+      "contact_preparation",
+      "learning_outcomes"
+    ],
+    "bitrix24_authoritative_after_handoff": [
+      "lead_deal_order_lifecycle",
+      "pricing_for_live_transactions",
+      "invoices_payments_and_business_finance",
+      "commercial_process_stages",
+      "task_assignment_and_team_business_workflows",
+      "customer_communication_history",
+      "business_documents_and_approvals_where_configured"
+    ],
+    "shared_by_reference_only": [
+      "canonical_identity_reference",
+      "shema_record_reference",
+      "bitrix_entity_reference",
+      "integration_correlation_id"
+    ]
+  },
+  "yandex_cloud": {
+    "runtime_shape": "modular_monolith_first",
+    "api_runtime": "serverless_containers",
+    "edge": "api_gateway",
+    "canonical_database": "managed_postgresql",
+    "secret_store": "lockbox",
+    "artifact_registry": "container_registry",
+    "object_storage_role": "bounded_documents_exports_and_large_evidence_objects",
+    "scheduler": "cloud_functions_timer_trigger",
+    "async_transport": "message_queue_only_when_transport_scaling_requires_it",
+    "observability": "monium",
+    "secondary_database_policy": "ydb_only_after_measured_constraint",
+    "kubernetes_policy": "deferred_until_measured_need"
+  },
+  "ai": {
+    "primary_current_provider": "yandexgpt",
+    "provider_neutral_gateway": true,
+    "allowed_roles": [
+      "research_synthesis",
+      "classification",
+      "evidence_summarization",
+      "contact_preparation",
+      "operator_assistance"
+    ],
+    "not_authoritative_for": [
+      "identity_truth",
+      "legal_truth",
+      "transaction_price",
+      "business_economics"
+    ]
+  },
+  "max": {
+    "role": "communication_adapter_and_non_authoritative_notification_channel",
+    "live_outbound_status": "blocked_until_provider_idempotency_or_reconciliation_is_proven",
+    "no_business_truth": true
+  },
+  "integration": {
+    "initial_bitrix_auth": "single_portal_inbound_webhook_for_prototype",
+    "mature_bitrix_auth": "oauth2_application",
+    "sync_direction": "field_ownership_based_event_driven",
+    "shema_to_bitrix": "qualified_context_and_handoff_package",
+    "bitrix_to_shema": "outcome_events_and_minimal_learning_features",
+    "bi_directional_same_field_writes": false,
+    "reconciliation_required": true,
+    "idempotent_outbox_required": true
+  },
+  "economics_boundary": {
+    "new_shema_transaction_economics_feature_development": false,
+    "historical_frozen_kernel_compatibility": true,
+    "mature_live_economics_owner": "bitrix24",
+    "learning_import": "outcome_features_only_unless_separately_justified"
+  },
+  "deployment_stages": [
+    "cloud_rehearsal_minimal_free_components",
+    "minimal_production_with_managed_postgresql",
+    "production_hardening",
+    "bitrix24_business_plane_integration",
+    "measured_scale"
+  ],
+  "non_goals": [
+    "duplicate_crm_in_shema",
+    "second_finance_system",
+    "executor_personnel_management_platform",
+    "unbounded_confidential_personnel_dataset",
+    "provider_specific_domain_logic",
+    "microservices_for_maturity_signal"
+  ]
+}
