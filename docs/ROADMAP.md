@@ -132,7 +132,7 @@ Close P46 cleanly before starting new implementation.
 ### Phase 0 result
 **CLOSED / VERIFIED.** P46 is complete as an evidence-revalidation boundary. MAX readiness remains blocked until authoritative provider-side idempotency and provider-side reconciliation evidence becomes available. No implementation workaround, fallback provider or kernel change is permitted.
 
-**Next selected boundary:** Phase 1 — Intelligence Quality Foundation. Implementation has not started.
+**Next selected boundary:** Phase 1 — Intelligence Quality Foundation. Phase 1-A is now in implementation/verification.
 
 ## 5. Phase 1 — Intelligence Quality Foundation
 
@@ -143,6 +143,13 @@ Build the smallest but highest-quality external intelligence engine, starting wi
 Manual counterparty check:
 
 INN/OGRN/OGRNIP → authoritative source lookup → identity resolution → evidence → contradiction/freshness → compact operator brief.
+
+### Phase 1-A — Manual authoritative counterparty evidence check
+- **Status:** implementation complete; full verification pending.
+- Entry point: an operator supplies an observation obtained from an authoritative FNS source.
+- The bounded application capability validates INN/OGRN/OGRNIP structure and official source provenance, resolves existing identity data by tax identifier when available, persists Evidence with freshness/provenance/confidence, quarantines contradictions and emits an append-only audit record.
+- Canonical API adapter exposes the same result and compact operator brief without introducing a second system of record.
+- No automatic FNS network lookup, provider SDK, new database table, kernel semantic change or MAX activation is part of this substage.
 
 ### Required capabilities
 - source registry;
