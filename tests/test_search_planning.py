@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# ruff: noqa: I001
+
 import json
 from pathlib import Path
 
@@ -28,7 +30,9 @@ def criteria() -> domain_search.SearchCriteria:
 
 
 def test_registry_planner_accepts_declared_sources_only() -> None:
-    planner = search_planning.search_planning.RegistryBackedSearchPlanner(search_planning.search_planning.SearchSourceRegistry.from_contract(contract()))
+    planner = search_planning.RegistryBackedSearchPlanner(
+        search_planning.SearchSourceRegistry.from_contract(contract())
+    )
     plan = planner.plan(
         criteria(),
         ("fns_transparent_business", "primary_company_site"),
@@ -42,7 +46,9 @@ def test_registry_planner_accepts_declared_sources_only() -> None:
 
 
 def test_registry_planner_preserves_explicit_source_order_without_ranking() -> None:
-    planner = search_planning.RegistryBackedSearchPlanner(search_planning.SearchSourceRegistry.from_contract(contract()))
+    planner = search_planning.RegistryBackedSearchPlanner(
+        search_planning.SearchSourceRegistry.from_contract(contract())
+    )
     plan = planner.plan(
         criteria(),
         ("open_web_signal", "fns_transparent_business"),
@@ -78,7 +84,7 @@ def test_registry_keeps_search_budget_separate_from_source_reliability() -> None
     plan = planner.plan(
         criteria(),
         ("fns_transparent_business",),
-        budget=search_run.search_run.SearchBudget(max_sources=1, max_candidates=25),
+        budget=search_run.SearchBudget(max_sources=1, max_candidates=25),
     )
 
     assert plan.budget.max_sources == 1
