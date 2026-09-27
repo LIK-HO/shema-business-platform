@@ -1,8 +1,8 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold / Phase 2-G Evidence Boundary Verified
-**Active development boundary:** Phase 2-H — Runtime Negative Provider Outcomes & Recovery (DaData live execution remains explicitly OFF)
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold / Phase 2-H Runtime Negative/Recovery Closed
+**Active development boundary:** NONE — Phase 2-H Runtime Negative Provider Outcomes & Recovery is CLOSED / VERIFIED; DaData live execution remains explicitly OFF.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -69,7 +69,10 @@ Shema — это **личная операционная система влад
 - **Phase 2-H provider lookup → Evidence runtime vertical slice:** CLOSED / VERIFIED by full CI #1402 (`36317002134`) on `88dab9aa995c70217af0b616d59039f62450bb26`.
 - Verified control-plane properties: dedicated RBAC permissions, explicit operator confirmation, provider identity taken from the route path, readiness fail-closed gate, disabled-by-default provider configuration, redacted telemetry, kill-switch rollback and no secret persistence.
 - No live DaData traffic occurred. No CI traffic uses the real provider. FNS automation remains independently BLOCKED.
-- **Next active boundary:** Phase 2-H Runtime Negative Provider Outcomes & Recovery — verify rate-limit/not-found/provider failure mapping, secondary-evidence contradiction quarantine and fail-closed recovery through the same runtime boundary. Live provider execution remains OFF.
+- **Phase 2-H Runtime Negative Provider Outcomes & Recovery:** CLOSED / VERIFIED by full CI #1404 (`36317178100`) on `758690225996c1c2cca95cbbd3b1c56638d69db8`.
+- Verified runtime negative cases: not-found, rate-limit retry and exhaustion, provider 5xx, transport recovery, secondary-evidence contradiction quarantine, no-fallback behavior and terminal-error no-partial-state guarantees.
+- Stage exit: no live DaData traffic, no provider credentials in Git, no automatic fallback, no FNS automation, no DB schema change and no frozen-kernel semantic change.
+- No new capability is activated by this closure; the next implementation boundary must be selected and documented separately before coding resumes.
 
 
 - **Phase 2-A closure:** Search Run Integrity Boundary is CLOSED / VERIFIED.
@@ -102,7 +105,7 @@ Shema — это **личная операционная система влад
 - `fns_transparent_business` remains independently tracked as an evidence-hold alternative and stays BLOCKED for automated activation until its own provider-specific automation contract is authoritatively established.
 - Phase 2-H must preserve provider isolation: one provider adapter cannot inherit another provider's rate limits, errors, timeout semantics, retry policy or authorization assumptions. DaData enters through the provider-neutral counterparty-lookup boundary, not the discovery SearchProvider contract.
 - DaData is classified as `trusted_secondary`, not `authoritative`; its data may support discovery, identity resolution and enrichment, but cannot by itself promote canonical truth without the existing Evidence/identity rules.
-- Live execution remains disabled until the Phase 2-H activation contract, negative tests, credential boundary, bounded timeout/retry policy, observability, rollback and full release gate are all satisfied. Provider lookup observations may enter Evidence, but trusted-secondary data cannot promote canonical Identity by itself.
+- Live execution remains disabled. Provider lookup observations may enter Evidence through the verified boundary, but trusted-secondary data cannot promote canonical Identity by itself.
 
 ### Критерий допуска новой capability
 
