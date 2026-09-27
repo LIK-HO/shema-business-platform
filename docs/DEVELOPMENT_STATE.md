@@ -2,9 +2,9 @@
 ## Current development-session synchronization — 2026-09-27
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-- HEAD: `baf970c444fe9e8b4acebe680f22c739067cccb2` — latest development commit; DaData provider-neutral lookup adapter, activation contract, documentation and tests are present; the new boundary still requires release-gate verification.
+- HEAD: `b9d9b2c730339a8f2a4819218bc831653a15e12e` — latest documentation-synchronization commit after Phase 2-H lookup-to-evidence composition verification.
 - PR: #56 — open, draft, mergeable.
-- Current boundary: **Phase 2-H — Controlled Provider Execution Boundary (DaData parallel alternative) — DEFINED / IMPLEMENTATION OPEN; live activation OFF. Phase 2-G FNS evidence hold remains independently BLOCKED for automation.**
+- Current boundary: **Phase 2-H — Controlled Provider Execution Boundary (DaData parallel alternative) — implementation sub-boundaries VERIFIED; live activation OFF. Phase 2-G FNS evidence hold remains independently BLOCKED for automation.**
 - Phase 2-A — Search Run Integrity Boundary: CLOSED / VERIFIED by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
 - Phase 2-B — Source-Registry-Backed Search Planning: CLOSED / VERIFIED by CI #1324 (`36308069460`) on `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
 - Phase 2-C — Registry-Backed Operator Search Composition: CLOSED / VERIFIED by CI #1330 (`36308647549`) on `16c08111e025bd267787eaa5de36c4dd53f70609`.
@@ -24,9 +24,9 @@
 - P46 MAX provider evidence hold: CLOSED / VERIFIED.
 - Frozen kernel: unchanged.
 - No database schema, canonical identity semantic change, network automation, MAX activation or external network execution was introduced by Phase 2-A through this Phase 2-G boundary.
-- Phase 2-H artifacts now present: `architecture/dadata_adapter_contract.json`, `architecture/dadata_provider_evidence_2026_09_27.json`, `architecture/dadata_activation_contract.json`, provider-neutral lookup port `src/shema_platform/application/counterparty_lookup.py`, DaData adapter `src/shema_platform/adapters/intelligence/dadata.py`, deterministic tests `tests/test_dadata_contract.py`, `tests/test_dadata_lookup.py`, `tests/test_dadata_activation_contract.py`, `docs/SEARCH_RESEARCH_PHASE2H.md`, and `docs/CODEBASE_DIRECTION_AUDIT_2026_09_27.md`.
+- Phase 2-H artifacts now present: `architecture/dadata_adapter_contract.json`, `architecture/dadata_provider_evidence_2026_09_27.json`, `architecture/dadata_activation_contract.json`, provider-neutral lookup port `src/shema_platform/application/counterparty_lookup.py`, DaData adapter `src/shema_platform/adapters/intelligence/dadata.py`, evidence intake `src/shema_platform/application/counterparty_provider_evidence.py`, composition service `src/shema_platform/application/counterparty_provider_lookup.py`, deterministic tests `tests/test_dadata_contract.py`, `tests/test_dadata_lookup.py`, `tests/test_dadata_activation_contract.py`, `tests/test_counterparty_provider_evidence.py`, `tests/test_counterparty_provider_lookup.py`, `docs/SEARCH_RESEARCH_PHASE2H.md`, and `docs/CODEBASE_DIRECTION_AUDIT_2026_09_27.md`.
 - DaData is registered as `trusted_structured_dataset` / `trusted_secondary`; provider output remains evidence input rather than canonical truth.
-- Safest next action: complete Phase 2-H release-gate verification, then integrate the lookup result into the existing Identity/Evidence pipeline under a separate controlled activation operation; live provider execution remains OFF.e matrix behind the generic SearchProvider boundary, with live network execution still disabled until the full Phase 2-H release gate passes.
+- Phase 2-H lookup→retry→evidence composition is verified by full CI #1377 (`36315266092`) 7/7 GREEN. Safest next action: define and test the separate controlled activation operation and operator/API boundary; live provider execution remains OFF until that activation gate is independently verified and explicitly authorized.e matrix behind the generic SearchProvider boundary, with live network execution still disabled until the full Phase 2-H release gate passes.
 
 ## Historical core-certification baseline
 
