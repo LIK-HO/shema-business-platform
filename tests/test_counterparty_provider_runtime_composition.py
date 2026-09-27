@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-
 import pytest
 from fastapi.testclient import TestClient
 
 from shema_platform.adapters.intelligence.dadata import DaDataConfiguration
 from shema_platform.adapters.intelligence.dadata_activation import (
     DADATA_PROVIDER_ID,
-    DaDataActivationReadiness,
     DaDataActivationError,
+    DaDataActivationReadiness,
 )
 from shema_platform.application.counterparty_lookup import (
     CounterpartyLookupIdentifierType,
