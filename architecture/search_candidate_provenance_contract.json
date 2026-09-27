@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "status": "phase_2i_provenance_consolidation",
+  "purpose": "Deterministic cross-source candidate consolidation that preserves source provenance without introducing a ranking or canonical-identity authority.",
+  "network_execution_enabled": false,
+  "ranking_authority": false,
+  "qualification_authority": false,
+  "persistence_authority": "none",
+  "merge_rules": [
+    "exact_tax_id_match_is_mergeable_when_no_conflicting_registration_id_exists",
+    "exact_registration_id_match_is_mergeable_when_no_conflicting_tax_id_exists",
+    "same_candidate_ref_is_mergeable_only_within_the_same_source_when_no_strong_identifier_exists",
+    "conflicting_strong_identifiers_are_not_merged",
+    "name_or_other_fuzzy_similarity_is_not_an_identity_merge_rule"
+  ],
+  "provenance_rules": [
+    "primary_source_ref_is_preserved",
+    "all_supporting_source_refs_are_retained_in_stable_first-seen_order",
+    "contact_refs_are_unioned_deterministically_for_a_confirmed_merge",
+    "search_order_remains_the_only_result-order authority",
+    "candidate_consolidation_does_not_promote_canonical_identity"
+  ],
+  "operator_contract": [
+    "source_refs_are_returned_on_each_consolidated_candidate",
+    "same-source_duplicate_candidates remain deduplicated",
+    "cross-source candidates without deterministic identifiers remain separate",
+    "identifier conflicts remain visible as separate candidates rather than being silently merged"
+  ],
+  "non_goals": [
+    "live_provider_activation",
+    "fuzzy_entity_resolution",
+    "canonical_identity_mutation",
+    "database_schema_changes",
+    "automatic_qualification",
+    "ranking_by_source_reliability",
+    "MAX_activation",
+    "provider_fallback"
+  ]
+}
