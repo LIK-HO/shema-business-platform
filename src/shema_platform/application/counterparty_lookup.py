@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from collections.abc import Callable
 from time import sleep
-from collections.abc import Callable\nfrom typing import Protocol
+from typing import Protocol
 
 
 class CounterpartyLookupProviderError(RuntimeError):
