@@ -2,7 +2,7 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold / Phase 2-G Evidence Boundary Verified
-**Active development boundary:** Phase 2-H — Runtime Activation Rehearsal (DaData live execution remains explicitly OFF)
+**Active development boundary:** Phase 2-H — Counterparty Provider Lookup → Evidence Runtime Vertical Slice (DaData live execution remains explicitly OFF)
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -65,9 +65,10 @@ Shema — это **личная операционная система влад
 
 - **Phase 2-H lookup/retry/evidence boundary:** CLOSED / VERIFIED by full CI #1377 (`36315266092`) and final documentation synchronization CI #1383 (`36315401510`).
 - **Phase 2-H controlled activation operation:** CLOSED / VERIFIED by full CI #1392 (`36316219807`) on final synchronized HEAD `de99fd3e30514c140464947099a03fa9399809f9`.
+- **Phase 2-H runtime activation rehearsal:** CLOSED / VERIFIED by full CI #1397 (`36316599417`) on `c47c9b7368abd5de8488390d47f212884f5eb3cc`.
 - Verified control-plane properties: dedicated RBAC permissions, explicit operator confirmation, provider identity taken from the route path, readiness fail-closed gate, disabled-by-default provider configuration, redacted telemetry, kill-switch rollback and no secret persistence.
 - No live DaData traffic occurred. No CI traffic uses the real provider. FNS automation remains independently BLOCKED.
-- **Next active boundary:** Phase 2-H Runtime Activation Rehearsal — compose the control-plane through the runtime composition boundary and prove activation/rollback behavior with a deterministic no-network test provider. Live provider execution remains OFF.
+- **Next active boundary:** Phase 2-H Counterparty Provider Lookup → Evidence Runtime Vertical Slice — expose the provider-neutral lookup/evidence composition through an explicitly activated runtime assembly using a deterministic no-network provider fixture. Live provider execution remains OFF.
 
 
 - **Phase 2-A closure:** Search Run Integrity Boundary is CLOSED / VERIFIED.

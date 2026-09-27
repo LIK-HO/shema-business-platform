@@ -6,7 +6,8 @@
 - PR: #56 — open, draft, mergeable.
 - Phase 2-H lookup→retry→evidence composition and synchronized documentation are CLOSED / VERIFIED by full CI #1383 (`36315401510`) with all seven release-gate jobs GREEN.
 - Phase 2-H controlled activation operation: **CLOSED / VERIFIED by CI #1392 (`36316219807`) on `de99fd3e30514c140464947099a03fa9399809f9`.**
-- Current active boundary: **Phase 2-H Runtime Activation Rehearsal — implementation not yet started; live activation OFF.**
+- Phase 2-H runtime activation rehearsal: **CLOSED / VERIFIED by CI #1397 (`36316599417`) on `c47c9b7368abd5de8488390d47f212884f5eb3cc`.**
+- Current active boundary: **Phase 2-H Counterparty Provider Lookup → Evidence Runtime Vertical Slice — implementation not yet started; live activation OFF.**
 - Phase 2-G FNS evidence hold remains independently BLOCKED for automation.
 - Implemented activation artifacts: `src/shema_platform/adapters/intelligence/dadata_activation.py`, `src/shema_platform/application/counterparty_provider_activation.py`, `architecture/dadata_activation_operation_contract.json`, `tests/test_counterparty_provider_activation.py`, plus API models/routes and canonical OpenAPI updates.
 - Activation invariant: construction and startup do not activate DaData; the provider binding starts disabled and can only be enabled through the explicit control-plane operation.
@@ -17,7 +18,7 @@
 - Evidence invariant: DaData remains `trusted_secondary`; provider observations remain Evidence input and cannot promote canonical Identity.
 - Network invariant: no live DaData traffic, no automatic activation, no fallback provider, no CI provider traffic and no credentials in source control.
 - Final gate for controlled activation operation: full seven-job CI #1392 (`36316219807`) — all seven jobs GREEN.
-- Safe next action: compose the activation service through the runtime boundary using an explicit readiness witness and deterministic fake provider, then verify HTTP activation/rollback and no-network default without enabling live DaData.
+- Safe next action: expose the existing CounterpartyProviderLookupService through the explicitly composed provider runtime, with evidence persistence supplied through the existing UnitOfWork boundary, then prove lookup→Evidence→audit behavior end-to-end using a deterministic fake provider. No live DaData execution.
 - Prohibited until separate explicit authorization: live DaData execution, provider credentials in repository, automatic fallback, FNS automation, MAX activation, DB schema change and frozen-kernel semantic change.
 
 

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "status": "runtime_activation_rehearsal_implementation_in_progress_live_off",
+  "status": "runtime_activation_rehearsal_verified_live_off",
   "provider_id": "dadata_organization_api",
   "composition": {
     "runtime_assembly": "CounterpartyProviderRuntimeAssembly",

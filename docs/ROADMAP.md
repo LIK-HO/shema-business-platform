@@ -263,7 +263,7 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - **Next boundary:** Phase 2-H — controlled provider execution with DaData as the parallel alternative; FNS remains a separately gated evidence hold.
 
 ### Phase 2-H — Controlled Provider Execution Boundary (DaData parallel alternative)
-- **Status:** CONTROLLED ACTIVATION OPERATION CLOSED / VERIFIED; live activation remains OFF.
+- **Status:** RUNTIME ACTIVATION REHEARSAL CLOSED / VERIFIED; live activation remains OFF.
 - **Purpose:** introduce the first provider-specific execution path without weakening the provider-neutral search contracts or frozen kernel.
 - **Primary alternative:** `dadata_organization_api` using the documented DaData organization-by-INN/OGRN API.
 - **Parallel hold:** `fns_transparent_business` remains independently governed and BLOCKED for automation.
@@ -276,7 +276,8 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - **Verified implementation evidence:** source registry entry; provider contract; authoritative evidence record; provider-neutral lookup port; DaData adapter; deterministic positive/negative/rate-limit/timeout/size fixtures; bounded retry tests; secret-boundary tests; activation contract; conservative secondary-evidence intake; lookup→retry→evidence composition; full seven-job release-gate CI #1377 (`36315266092`) GREEN; final synchronized composition/docs gate CI #1383 (`36315401510`) GREEN; controlled activation operation and API control-plane CI #1392 (`36316219807`) GREEN.
 - **Controlled activation operation:** provider-specific gate, dedicated RBAC permissions, explicit operator confirmation, disabled-by-default configuration, redacted activation/rollback telemetry, fail-closed kill-switch, rollback without schema changes, and dedicated authenticated API endpoints are implemented as a separate control-plane boundary. The provider identifier is taken from the route path to avoid duplicate identity input.
 - **Exit evidence:** dedicated RBAC permissions, explicit operator confirmation, route-path provider identity, readiness fail-closed gate, disabled-by-default configuration, redacted activation/rollback telemetry, kill-switch rollback, authenticated API endpoints and full CI #1392 (`36316219807`).
-- **Next boundary:** Phase 2-H Runtime Activation Rehearsal — runtime-composition wiring with a deterministic no-network provider fixture, proving that composed control-plane access does not imply live provider traffic.
+- **Runtime rehearsal evidence:** explicit CounterpartyProviderRuntimeAssembly, injected readiness witness, disabled-by-default activation state, deterministic fake-provider boundary, authenticated activation/rollback HTTP path, readiness fail-closed behavior and no real network on assembly/startup; full seven-job CI #1397 (`36316599417`) GREEN.
+- **Next boundary:** Phase 2-H Counterparty Provider Lookup → Evidence Runtime Vertical Slice — connect the already verified provider lookup→retry→Evidence composition to the runtime control-plane, with deterministic fixtures and no live DaData traffic.
 - **No changes to:** v1.4 semantics, DB schema, canonical identity semantics or frozen kernel.
 
 ### Work
