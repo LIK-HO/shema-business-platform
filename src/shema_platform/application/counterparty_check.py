@@ -3,9 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from hashlib import sha256
 from urllib.parse import urlsplit
-from uuid import NAMESPACE_URL, uuid5
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.domain.identity import Identity, IdentityState
@@ -93,6 +92,10 @@ class CounterpartyObservation:
         ):
             raise ValueError("counterparty source must be an official nalog.ru URL")
 
+        if self.source_reliability is not SourceReliability.AUTHORITATIVE:
+            raise ValueError(
+                "manual counterparty checks require an authoritative source"
+            )
         if not 0.0 <= self.claim_confidence <= 1.0:
             raise ValueError("claim_confidence must be between 0 and 1")
         if self.expires_at < self.observed_at:
@@ -124,8 +127,13 @@ class CounterpartyCheckResult:
     operator_brief: str
 
 
-def _evidence_id(subject_ref: str, claim: str, source_ref: str) -> str:
-    key = f"{subject_ref}|{claim}|{source_ref}"
+def _evidence_id(
+    subject_ref: str,
+    claim: str,
+    source_ref: str,
+    observed_at: datetime,
+) -> str:
+    key = f"{subject_ref}|{claim}|{source_ref}|{observed_at.isoformat()}"
     return str(uuid5(NAMESPACE_URL, key))
 
 
@@ -273,7 +281,7 @@ class CounterpartyCheckService:
             )
             uow.audits.append(
                 AuditRecord(
-                    audit_id=str(uuid5(NAMESPACE_URL, f"audit:{audit_key}")),
+                    audit_id=str(uuid4()),
                     actor_id=actor_id,
                     action="counterparty.check",
                     resource_type="counterparty_check",
