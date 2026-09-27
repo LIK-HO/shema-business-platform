@@ -177,7 +177,13 @@ class ProcurementWatchResult:
 class ProcurementMonitor:
     """Cursor-based, idempotent procurement monitoring without canonical-state mutation."""
 
-    def __init__(self, provider: ProcurementProvider, *, max_attempts: int = 3, sleeper=None) -> None:
+    def __init__(
+        self,
+        provider: ProcurementProvider,
+        *,
+        max_attempts: int = 3,
+        sleeper=None,
+    ) -> None:
         self._search = BoundedProcurementSearch(
             provider,
             max_attempts=max_attempts,
