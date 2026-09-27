@@ -1138,7 +1138,12 @@ This is deliberately a sales scheduling/renewal pattern and is placed between co
 
 Система не должна зашивать налоговые ставки или правовые последствия как вечные constants.
 
-## 5D.2. Document Pack Builder
+## 5D.2. Document Configuration / Handoff Pack
+
+Для каждой конфигурации система формирует versioned preparation snapshot. Она не становится финальным business-document system of record:
+
+- Shema определяет состав и конфигурацию;
+- Bitrix24/EDO/business plane выполняет финальную выдачу, подписание, хранение и operational document lifecycle после handoff.
 
 Для каждой конфигурации система предлагает:
 - обязательные документы;
@@ -1176,7 +1181,7 @@ This is deliberately a sales scheduling/renewal pattern and is placed between co
 - checksum;
 - change reason.
 
-Документогенерация должна быть детерминированной и аудируемой.
+Конфигурация/подготовительный пакет должен быть детерминированным и аудируемым. Любая финальная юридически значимая версия документа после handoff принадлежит downstream business/document system.
 
 ## 5D.4. Legal safety
 
