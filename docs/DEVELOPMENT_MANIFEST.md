@@ -109,7 +109,7 @@ Shema — это **личная операционная система влад
 
 ### Product decisions added 2026-09-28
 
-- **Repeat customer orders:** mandatory Phase 3A between Contact Preparation and Legal/Document Engine. The chosen pattern is a reusable Repeat Order Rule attached to the canonical customer; each repetition creates a fresh order snapshot for operator review, never a mutable clone of history. Price/document versions are revalidated when expired. Reference patterns: Bitrix24 recurring deals, HubSpot/Pipedrive recurring products/subscriptions, SAP scheduling agreements/contracts, Salesforce orders/contracts, ServiceNow contract renewal.
+- **Repeat customer orders:** mandatory Phase 3A between Contact Preparation and Legal/Document Engine. The chosen pattern is a reusable Repeat Order Rule attached to the canonical customer; each recurrence creates a fresh **repeat-order preparation/handoff snapshot**, not a live transaction ledger inside Shema. Historical business orders remain immutable outside this preparation layer; current price/document configuration is revalidated before the handoff package is produced. Reference patterns: Bitrix24 recurring deals, HubSpot/Pipedrive recurring products/subscriptions, SAP scheduling agreements/contracts, Salesforce orders/contracts, ServiceNow contract renewal.
 - **Tender/procurement intelligence:** mandatory Phase 2-I inside Mature Search/Research, before Contact Preparation. Initial provider boundary: ГосПлан API v2 over ЕИС data because current documentation exposes plans, purchases, procedures and contracts through REST and explicitly describes monitoring/search use cases. Production access is API-key/tariff governed; test access is available without key but rate limited.
 - **Documents:** Phase 4 includes a complete configurable document registry rather than a small template set: contract, service/work order, specification, commercial offer, invoice/payment request, act, UПД/equivalent tax document where applicable, addendum/change order, reconciliation, confidentiality/authority/termination forms and procurement packs.
 - **Interface:** adopted mature workspace pattern — summary/highlights + details + related records + activity/history; work lists with filters/sorts and quick actions; contextual/split inspection; progressive disclosure; personal view preferences; responsive/accessibility baseline; server-authoritative business state.
@@ -387,21 +387,27 @@ Migration 0009 state_ownership_invariants добавляет PostgreSQL constrai
 
 # 4. Архитектурная истина
 
-## 4.1. Единственная canonical transactional authority
+## 4.1. Canonical transactional authority inside Shema and bounded external business authority
 
-PostgreSQL.
+Внутри Shema единственная canonical transactional authority — **PostgreSQL**.
 
-Не являются system of record:
-- Airtable;
-- Replit;
-- Bitrix24;
-- MAX;
-- AI provider;
-- CRM;
-- UI;
-- intelligence provider.
+Это правило относится к состоянию, которым владеет сама Shema:
+- Identity;
+- Evidence;
+- provenance/freshness;
+- research/intelligence state;
+- platform audits;
+- platform jobs/outbox;
+- historical compatibility state of the frozen kernel.
 
-Они могут быть adapters/integrations, но не источниками canonical business truth.
+Внешняя система может быть authoritative **только для собственного явно выделенного бизнес-домена после формального handoff**. Для зрелой стадии это означает:
+- Bitrix24 — owner live business-process fields, CRM/deal/order lifecycle, transaction pricing, payments/economics and business communication history after handoff;
+- Shema не зеркалит эти поля как вторую истину, а хранит reference/correlation и минимальные outcome signals required for learning;
+- MAX remains a communication adapter and is not a business system of record;
+- AI providers and intelligence providers never become canonical truth;
+- UI, Airtable and Replit never become canonical truth.
+
+Таким образом, нет двух систем, редактирующих одну и ту же canonical field. Есть **domain ownership**, explicit handoff и reconciliation между границами.
 
 ## 4.2. Modular monolith остаётся осознанным решением
 
@@ -692,7 +698,7 @@ Risk/reputation findings не должны автоматически стано
 
 Результат downstream работы должен возвращаться в поиск:
 
-**SEARCH → QUALIFICATION → ACTION → ORDER/RESULT → ECONOMICS → LEARNING → SEARCH**
+**SEARCH → QUALIFICATION → CONTACT/PREPARATION → HANDOFF → BUSINESS OUTCOME → LEARNING → SEARCH**
 
 Система должна учиться на:
 - accepted/rejected candidates;
