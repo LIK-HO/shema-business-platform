@@ -17,6 +17,17 @@
 - Remaining Phase 2-I work is not implicitly opened: production activation, durable server-side monitoring state/scheduling, canonical API/runtime exposure, Evidence/Identity intake composition and operational monitoring require a separately selected bounded sub-boundary.
 - Prohibited until that boundary is explicitly opened: frozen-kernel semantics, unrelated UI/repeat-order implementation, FNS automation, MAX activation, provider fallback, tender submission automation and unbounded crawling.
 
+## Adversarial regression synchronization — 2026-09-28
+
+- Added explicit `architecture/business_plane_boundary_contract.json` for Shema → Bitrix24 handoff, field ownership, retry/reconciliation and outcome return.
+- Corrected YandexGPT configuration so `YANDEXGPT_MAX_COST` is explicitly required and positive; zero/missing cost ceilings now fail closed.
+- Corrected procurement monitoring semantics: provider page offsets are not represented as a durable cursor. Production incremental monitoring requires stable ordering plus watermark/overlap strategy and durable checkpointing.
+- Procurement fingerprints now preserve provider update timestamps and source URLs so material changes are not silently missed.
+- Phase 3A is renamed/redefined as Repeat Business Preparation; Shema must not reimplement Bitrix24 recurring-deal execution.
+- Phase 4 is redefined as Document Configuration & Handoff Preparation; final issuance/signing/storage remains in the mature business/EDO plane.
+- Monium is explicitly operational telemetry; durable audit/business history remains PostgreSQL-owned.
+- Full repository release-gate CI for the latest HEAD remains pending; no new boundary is considered verified until that gate is green.
+
 ## Strategic boundary synchronization — 2026-09-28
 
 - B2B-Center is removed as a named strategic procurement provider.
