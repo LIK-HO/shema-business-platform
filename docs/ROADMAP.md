@@ -205,8 +205,9 @@ The first operator slice can search/check a counterparty, inspect the compact re
 
 ### Status synchronization — 2026-09-27
 - Phase 2-A — Search Run Integrity Boundary: **CLOSED / VERIFIED** by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
-- Phase 2-B — Source-Registry-Backed Search Planning: **CLOSED / VERIFIED** by CI #1324 (`36308069460`) on `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
-- Next active sub-boundary: **Phase 2-C — registry-backed operator search composition** over the existing application/API boundary, using injected non-network adapters.
+- Phase 2-B — Source-Registry-Backed Search Planning: **CLOSED / VERIFIED** by CI #1324 (`36308069460`) on `ee549cada95a0a7647b2b01eec51fa0bdd9bc`.
+- Phase 2-C — Registry-Backed Operator Search Composition: **CLOSED / VERIFIED** by CI #1330 (`36308647549`) on `16c08111e025bd267787eaa5de36c4dd53f70609`.
+- Next active sub-boundary: **Phase 2-D — generic runtime composition** for the verified search capability, provider-neutral and network-disabled.
 
 ### Objective
 Scale from deterministic checks to repeatable customer discovery and deep intelligence.
@@ -224,12 +225,18 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - No provider execution, new persistence authority or kernel semantic change is introduced.
 
 ### Phase 2-C — Registry-backed operator search composition
+- **Status:** CLOSED / VERIFIED by CI #1330 (`36308647549`).
+- Composes the verified Phase 2-A runner and Phase 2-B registry planner behind the existing canonical `/v1/search` application edge.
+- Adds bounded source IDs/budgets, explicit completeness, plan version and source provenance to the search response while retaining backwards compatibility for requests that omit the new fields.
+- Uses injected non-network adapters only; it does not activate provider traffic, ranking authority or automatic qualification.
+- This boundary deliberately stops short of wiring the search capability into the provider-specific runtime composition.
+
+### Phase 2-D — Generic runtime composition
 - **Status:** READY / not started.
-- Compose the verified registry-backed search plan with the existing operator/application boundary and canonical `domain.search` normalization.
-- Keep provider adapters injected and network-disabled in the first vertical slice.
-- Preserve explicit search completeness and source-attempt state from Phase 2-A.
-- Expose plan/source provenance without introducing a ranking gate or automatic qualification.
-- Preserve backward compatibility for the existing search API edge until the new response contract is fully tested.
+- Wire the verified search application capability into a generic runtime composition layer without changing the existing AI/provider activation semantics.
+- Keep search adapters injected and provider-neutral; provider traffic remains disabled by default.
+- Preserve the existing `APIApplication` edge and all previously verified AI/runtime tests.
+- Add an end-to-end runtime smoke path proving `/v1/search` works through the real composition boundary while `/v1/ai/run` retains its current behavior.
 
 ### Work
 - multi-source search orchestration;

@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2-C is an active bounded implementation slice. It composes the verified Phase 2-A search runner and Phase 2-B registry planner behind the existing canonical /v1/search application boundary.
+Phase 2-C is CLOSED / VERIFIED. It composes the verified Phase 2-A search runner and Phase 2-B registry planner behind the existing canonical /v1/search application boundary.
 
 ## Boundary
 
@@ -46,6 +46,13 @@ operator request → SearchCriteria → registry-backed plan → injected non-ne
 - kernel semantic changes;
 - MAX activation.
 
-## Verification target
+## Verification
 
-Full CI/release gate, including quality, integration, backup-recovery and release-contract, must pass before Phase 2-C can be CLOSED / VERIFIED.
+
+Full CI #1330 (run id 36308647549) passed all seven release-gate jobs on HEAD 16c08111e025bd267787eaa5de36c4dd53f70609.
+
+Phase 2-C is CLOSED / VERIFIED.
+
+## Deliberate boundary stop
+
+The verified slice composes the canonical search application edge but does not alter the existing provider-specific runtime composition. Phase 2-D is the separate boundary for wiring this capability into a generic runtime composition without activating providers.

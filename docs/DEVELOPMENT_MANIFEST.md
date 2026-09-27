@@ -2,7 +2,7 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold
-**Active development boundary:** Phase 2 — Mature Search and Research / Phase 2-C registry-backed operator search composition (ready)
+**Active development boundary:** Phase 2 — Mature Search and Research / Phase 2-D runtime composition of the verified search capability (ready)
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -69,9 +69,12 @@ Shema — это **личная операционная система влад
 - **Phase 2-B closure:** Source-Registry-Backed Search Planning is CLOSED / VERIFIED.
 - Implementation HEAD: `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
 - Full verification CI run #1324 (`36308069460`) passed all seven release-gate jobs.
-- Phase 2-B binds search planning to the approved Phase 1-B source registry while keeping network execution disabled, source reliability separate from claim confidence, and source ordering explicit.
-- No database schema, network automation, ranking authority, automatic qualification, canonical identity semantic change, MAX activation or frozen-kernel change was introduced in Phase 2-A or Phase 2-B.
-- **Next selected boundary:** Phase 2-C — registry-backed operator search composition over the existing application/API boundary; no provider network execution and no ranking authority.
+- **Phase 2-C closure:** Registry-Backed Operator Search Composition is CLOSED / VERIFIED.
+- Implementation HEAD: `16c08111e025bd267787eaa5de36c4dd53f70609`.
+- Full verification CI run #1330 (`36308647549`) passed all seven release-gate jobs.
+- Phase 2-C exposes bounded completeness, plan version and registry provenance through the canonical search application edge while keeping adapters injected and network-disabled. It does not alter provider-specific runtime semantics.
+- No database schema, network automation, ranking authority, automatic qualification, canonical identity semantic change, MAX activation or frozen-kernel change was introduced in Phase 2-A, Phase 2-B or Phase 2-C.
+- **Next selected boundary:** Phase 2-D — generic runtime composition of the verified search capability without provider-specific semantics or provider activation.
 
 ### Критерий допуска новой capability
 
