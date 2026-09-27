@@ -193,5 +193,6 @@ def test_response_size_is_bounded() -> None:
         enabled_config(max_response_bytes=1024),
         requester=lambda *args: (200, oversized),
     )
-    with pytest.raises(ValueError, match="exceeds"):
+    with pytest.raises(CounterpartyLookupProviderError) as excinfo:
         provider.lookup(inn_query())
+    assert excinfo.value.code == "RESPONSE_TOO_LARGE"
