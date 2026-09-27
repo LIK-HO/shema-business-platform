@@ -263,7 +263,7 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - **Next boundary:** Phase 2-H — controlled provider execution with DaData as the parallel alternative; FNS remains a separately gated evidence hold.
 
 ### Phase 2-H — Controlled Provider Execution Boundary (DaData parallel alternative)
-- **Status:** CONTROLLED ACTIVATION OPERATION IMPLEMENTED; final release verification pending; live activation remains OFF.
+- **Status:** CONTROLLED ACTIVATION OPERATION CLOSED / VERIFIED; live activation remains OFF.
 - **Purpose:** introduce the first provider-specific execution path without weakening the provider-neutral search contracts or frozen kernel.
 - **Primary alternative:** `dadata_organization_api` using the documented DaData organization-by-INN/OGRN API.
 - **Parallel hold:** `fns_transparent_business` remains independently governed and BLOCKED for automation.
@@ -273,9 +273,10 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - **Required evidence discipline:** only documented provider semantics may be encoded as facts; unknown provider behavior remains explicitly unknown.
 - **Safety:** read-only lookup permits retries from an external-effect perspective, but not unbounded retries or quota amplification. Retry/backoff/jitter and application budgets must be bounded and observable.
 - **Activation:** no CI live traffic, no credentials in source control, no automatic activation and no implicit fallback to FNS or another provider. Live execution is a separate authorized operation after the complete gate.
-- **Verified implementation evidence:** source registry entry; provider contract; authoritative evidence record; provider-neutral lookup port; DaData adapter; deterministic positive/negative/rate-limit/timeout/size fixtures; bounded retry tests; secret-boundary tests; activation contract; conservative secondary-evidence intake; lookup→retry→evidence composition; full seven-job release-gate CI #1377 (`36315266092`) GREEN; final synchronized composition/docs gate CI #1383 (`36315401510`) GREEN.
+- **Verified implementation evidence:** source registry entry; provider contract; authoritative evidence record; provider-neutral lookup port; DaData adapter; deterministic positive/negative/rate-limit/timeout/size fixtures; bounded retry tests; secret-boundary tests; activation contract; conservative secondary-evidence intake; lookup→retry→evidence composition; full seven-job release-gate CI #1377 (`36315266092`) GREEN; final synchronized composition/docs gate CI #1383 (`36315401510`) GREEN; controlled activation operation and API control-plane CI #1392 (`36316219807`) GREEN.
 - **Controlled activation operation:** provider-specific gate, dedicated RBAC permissions, explicit operator confirmation, disabled-by-default configuration, redacted activation/rollback telemetry, fail-closed kill-switch, rollback without schema changes, and dedicated authenticated API endpoints are implemented as a separate control-plane boundary. The provider identifier is taken from the route path to avoid duplicate identity input.
-- **Current verification cursor:** this activation-operation implementation requires a new final seven-job CI gate before this sub-boundary can be marked VERIFIED/CLOSED.
+- **Exit evidence:** dedicated RBAC permissions, explicit operator confirmation, route-path provider identity, readiness fail-closed gate, disabled-by-default configuration, redacted activation/rollback telemetry, kill-switch rollback, authenticated API endpoints and full CI #1392 (`36316219807`).
+- **Next boundary:** Phase 2-H Runtime Activation Rehearsal — runtime-composition wiring with a deterministic no-network provider fixture, proving that composed control-plane access does not imply live provider traffic.
 - **No changes to:** v1.4 semantics, DB schema, canonical identity semantics or frozen kernel.
 
 ### Work

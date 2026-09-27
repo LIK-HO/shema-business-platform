@@ -5,7 +5,8 @@
 - HEAD before activation-operation synchronization commit: `23bce565ee7fa326dc35008317c4ea409e200982`.
 - PR: #56 — open, draft, mergeable.
 - Phase 2-H lookup→retry→evidence composition and synchronized documentation are CLOSED / VERIFIED by full CI #1383 (`36315401510`) with all seven release-gate jobs GREEN.
-- Current active boundary: **Phase 2-H controlled activation operation / operator API boundary — IMPLEMENTED, final seven-job verification pending; live activation OFF.**
+- Phase 2-H controlled activation operation: **CLOSED / VERIFIED by CI #1392 (`36316219807`) on `de99fd3e30514c140464947099a03fa9399809f9`.**
+- Current active boundary: **Phase 2-H Runtime Activation Rehearsal — implementation not yet started; live activation OFF.**
 - Phase 2-G FNS evidence hold remains independently BLOCKED for automation.
 - Implemented activation artifacts: `src/shema_platform/adapters/intelligence/dadata_activation.py`, `src/shema_platform/application/counterparty_provider_activation.py`, `architecture/dadata_activation_operation_contract.json`, `tests/test_counterparty_provider_activation.py`, plus API models/routes and canonical OpenAPI updates.
 - Activation invariant: construction and startup do not activate DaData; the provider binding starts disabled and can only be enabled through the explicit control-plane operation.
@@ -15,8 +16,8 @@
 - Rollback invariant: the kill-switch disables the binding, preserves safe historical activation metadata and makes no database schema change.
 - Evidence invariant: DaData remains `trusted_secondary`; provider observations remain Evidence input and cannot promote canonical Identity.
 - Network invariant: no live DaData traffic, no automatic activation, no fallback provider, no CI provider traffic and no credentials in source control.
-- Final gate for this sub-boundary: full seven-job CI on the final synchronized activation-operation HEAD.
-- Safe next action after green: mark controlled activation operation VERIFIED/CLOSED, then advance to the next explicitly bounded activation-rehearsal boundary without enabling live provider traffic.
+- Final gate for controlled activation operation: full seven-job CI #1392 (`36316219807`) — all seven jobs GREEN.
+- Safe next action: compose the activation service through the runtime boundary using an explicit readiness witness and deterministic fake provider, then verify HTTP activation/rollback and no-network default without enabling live DaData.
 - Prohibited until separate explicit authorization: live DaData execution, provider credentials in repository, automatic fallback, FNS automation, MAX activation, DB schema change and frozen-kernel semantic change.
 
 

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "status": "controlled_activation_boundary_implemented_live_off",
+  "status": "controlled_activation_boundary_verified_live_off",
   "provider_id": "dadata_organization_api",
   "operator_surface": {
     "activation": "POST /v1/intelligence/providers/{providerId}/activation",

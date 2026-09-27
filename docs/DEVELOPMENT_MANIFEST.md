@@ -2,7 +2,7 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold / Phase 2-G Evidence Boundary Verified
-**Active development boundary:** Phase 2-H — Controlled Provider Execution Boundary (DaData selected as the parallel alternative; activation remains explicitly gated)
+**Active development boundary:** Phase 2-H — Runtime Activation Rehearsal (DaData live execution remains explicitly OFF)
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -62,6 +62,13 @@ Shema — это **личная операционная система влад
 Эти уровни являются progressive disclosure, а не тремя разными системами.
 
 ## Current stage synchronization — 2026-09-27
+
+- **Phase 2-H lookup/retry/evidence boundary:** CLOSED / VERIFIED by full CI #1377 (`36315266092`) and final documentation synchronization CI #1383 (`36315401510`).
+- **Phase 2-H controlled activation operation:** CLOSED / VERIFIED by full CI #1392 (`36316219807`) on final synchronized HEAD `de99fd3e30514c140464947099a03fa9399809f9`.
+- Verified control-plane properties: dedicated RBAC permissions, explicit operator confirmation, provider identity taken from the route path, readiness fail-closed gate, disabled-by-default provider configuration, redacted telemetry, kill-switch rollback and no secret persistence.
+- No live DaData traffic occurred. No CI traffic uses the real provider. FNS automation remains independently BLOCKED.
+- **Next active boundary:** Phase 2-H Runtime Activation Rehearsal — compose the control-plane through the runtime composition boundary and prove activation/rollback behavior with a deterministic no-network test provider. Live provider execution remains OFF.
+
 
 - **Phase 2-A closure:** Search Run Integrity Boundary is CLOSED / VERIFIED.
 - Implementation HEAD: `af813ff79802aa358eafcb68586d3bf0b105aa7d`.

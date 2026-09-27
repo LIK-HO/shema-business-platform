@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "status": "phase_2h_controlled_activation_operation_implemented_activation_off",
+  "status": "phase_2h_controlled_activation_operation_verified_activation_off",
   "provider_id": "dadata_organization_api",
   "execution_kind": "counterparty_lookup",
   "network_execution_enabled": false,
