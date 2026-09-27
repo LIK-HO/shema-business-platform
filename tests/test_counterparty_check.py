@@ -130,6 +130,25 @@ def test_manual_counterparty_check_resolves_identity_and_persists_evidence():
     assert "Конфликтов" in result.operator_brief
 
 
+def test_repeated_manual_checks_create_distinct_evidence_observations():
+    state = MemoryUnitOfWork(identities=MemoryIdentities())
+    service = make_service(state)
+
+    first = service.check(
+        observation(),
+        actor_id="operator",
+        now=datetime(2026, 9, 27, tzinfo=UTC),
+    )
+    second = service.check(
+        observation(),
+        actor_id="operator",
+        now=datetime(2026, 9, 27, 0, 1, tzinfo=UTC),
+    )
+
+    assert set(first.evidence_ids).isdisjoint(second.evidence_ids)
+    assert len(state.evidence.records) == 8
+
+
 def test_manual_counterparty_check_quarantines_identity_conflict():
     existing = Identity(
         identity_id="identity-existing",
