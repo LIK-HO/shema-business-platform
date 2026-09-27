@@ -2,7 +2,7 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold / Phase 2-G Evidence Boundary Verified
-**Active development boundary:** Phase 2-G — First Source Selection and Evidence Capture (source selected; evidence boundary verified; activation blocked)
+**Active development boundary:** Phase 2-H — Controlled Provider Execution Boundary (DaData selected as the parallel alternative; activation remains explicitly gated)
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
