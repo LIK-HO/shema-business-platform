@@ -4,6 +4,7 @@ import json
 import os
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -218,18 +219,19 @@ class GosplanProcurementProvider:
                 "GosPlan purchase response must be a JSON array",
             )
 
-        items = tuple(self._parse_item(raw, query.law) for raw in payload)
+        items = tuple(self._parse_item(raw, query.law, query.collection) for raw in payload)
         return ProcurementSearchResult(
             items=items,
             has_more=len(items) == query.limit,
             next_skip=query.skip + len(items),
-            observed_at=__import__("datetime").datetime.now(__import__("datetime").UTC),
+            observed_at=datetime.now(UTC),
         )
 
     def _parse_item(
         self,
         raw: object,
         law: ProcurementLaw,
+        collection: ProcurementCollection,
     ) -> ProcurementOpportunity:
         if not isinstance(raw, dict):
             raise ProcurementProviderError(
@@ -251,6 +253,7 @@ class GosplanProcurementProvider:
             source_ref="https://gosplan.info/api/",
             external_id=external_id,
             law=law,
+            collection=collection,
             title=title,
             customer_name=self._string_value(raw, self._field_map.customer_name),
             customer_tax_id=self._string_value(raw, self._field_map.customer_tax_id),
