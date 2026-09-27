@@ -6,13 +6,13 @@ from shema_platform.adapters.intelligence.dadata_activation import (
     DaDataActivationReadiness,
     DaDataControlledActivationGate,
 )
-from shema_platform.application.counterparty_provider_activation import (
-    CounterpartyProviderActivationService,
-)
 from shema_platform.application.counterparty_check import (
     CounterpartyCheckResult,
     CounterpartyContradiction,
     FreshnessState,
+)
+from shema_platform.application.counterparty_provider_activation import (
+    CounterpartyProviderActivationService,
 )
 from shema_platform.experience.api import (
     APIApplication,
