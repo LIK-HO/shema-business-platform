@@ -178,7 +178,7 @@ def test_manual_counterparty_check_quarantines_identity_conflict():
     ("identifier_type", "identifier"),
     [
         (CounterpartyIdentifierType.INN, "123"),
-        (CounterpartyIdentifierType.OGRN, "7707083893123"),
+        (CounterpartyIdentifierType.OGRN, "770708389312"),
         (CounterpartyIdentifierType.OGRNIP, "1234567890123"),
         (CounterpartyIdentifierType.INN, "77070838A3"),
     ],
@@ -202,7 +202,7 @@ def test_counterparty_observation_requires_official_source_and_expiry():
 
     with pytest.raises(ValueError, match="expires_at"):
         observation(
-            expires_at=datetime(2026, 9, 26, 9, tzinfo=UTC),
+            expires_at=datetime(2026, 9, 26, 11, tzinfo=UTC),
         )
 
 
