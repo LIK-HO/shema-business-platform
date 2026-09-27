@@ -60,7 +60,7 @@ def page(*items):
     return ProcurementSearchResult(
         items=tuple(items),
         has_more=False,
-        next_skip=len(items),
+        next_page_offset=len(items),
         observed_at=datetime(2026, 9, 28, tzinfo=UTC),
     )
 
