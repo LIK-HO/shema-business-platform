@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2-A is a bounded pilot. It does not activate external network execution and does not add persistence.
+Phase 2-A is CLOSED / VERIFIED. Full release-gate CI #1316 passed on 2026-09-27. It does not activate external network execution and does not add persistence.
 
 ## Purpose
 
@@ -59,3 +59,7 @@ The pilot exposes deterministic precision, recall, and source coverage metrics. 
 - MAX/provider activation;
 - new database schema;
 - frozen-kernel semantic changes.
+
+## Verification
+
+CI #1316 (run id 36304414654) passed all seven release-gate jobs on HEAD af813ff79802aa358eafcb68586d3bf0b105aa7d. Phase 2-A is therefore CLOSED / VERIFIED.

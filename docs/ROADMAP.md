@@ -203,8 +203,26 @@ The first operator slice can search/check a counterparty, inspect the compact re
 
 ## 6. Phase 2 — Mature Search and Research
 
+### Status synchronization — 2026-09-27
+- Phase 2-A — Search Run Integrity Boundary: **CLOSED / VERIFIED** by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
+- Phase 2-A covers bounded multi-source orchestration, explicit completeness, source/candidate budgets, deterministic source order, canonical candidate normalization and measurable search quality.
+- Next active sub-boundary: **Phase 2-B — source-registry-backed search planning**. Scope is registry validation, provenance/reliability binding and deterministic plan validation; no network activation, opaque ranking authority or automatic qualification.
+
 ### Objective
 Scale from deterministic checks to repeatable customer discovery and deep intelligence.
+
+### Phase 2-A — Search Run Integrity Boundary
+- **Status:** CLOSED / VERIFIED by CI #1316 (`36304414654`).
+- Bounded application orchestration accepts operator criteria and an ordered set of source adapters, enforces source/candidate budgets, records explicit source/run completeness, delegates candidate normalization to the existing canonical search contract and exposes benchmark metrics for precision, recall and source coverage.
+- No persistence authority, external network activation, ranking score, automatic qualification or kernel change was introduced.
+
+### Phase 2-B — Source-registry-backed search planning
+- **Status:** READY / not started.
+- Bind the Phase 1-B machine-readable source registry to search planning without activating network execution.
+- Validate source references, source classes, reliability metadata and lawful-access policy before a source can enter a plan.
+- Keep source reliability separate from candidate relevance and claim confidence.
+- Preserve explicit source-unavailable and budget-limited states.
+- Do not introduce provider-specific semantics, opaque ranking, mass source integration or new persistence authority.
 
 ### Work
 - multi-source search orchestration;
@@ -226,9 +244,6 @@ Resolution optimizes identity precision.
 Research optimizes decision evidence.
 
 Do not collapse these three tasks into one score.
-
-### Exit criteria
-A search run produces a reproducible, evidence-backed candidate set and a compact intelligence brief without flooding the operator with raw source noise.
 
 ## 7. Phase 3 — Contact Preparation
 
