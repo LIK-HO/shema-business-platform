@@ -4,14 +4,14 @@
 - Branch: `v1.5/p46-max-provider-evidence-hold`
 - HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
 - PR: #56 — open, draft, mergeable.
-- Current boundary: Phase 2 — Mature Search and Research — IN_PROGRESS / Phase 2-B source-registry-backed search planning.
+- Current boundary: Phase 2 — Mature Search and Research — READY / Phase 2-C registry-backed operator search composition.
 - Phase 2-A implementation: bounded search-run orchestration, explicit completeness states, source/candidate budgets, deterministic source order, canonical candidate normalization and benchmark search-quality metrics.
 - Phase 2-A implementation commits: cfb48dd9dbccee426403834f1e153ac4440ed11b (initial slice) and a94573ad8c5ab83b6f44ceb5281b9f7c9d045182 (test-contract correction).
 - Phase 2-A verification: CLOSED / VERIFIED by full CI #1316 (36304414654) on HEAD af813ff79802aa358eafcb68586d3bf0b105aa7d; supply-chain, quality 3.12/3.13, integration 3.12/3.13, backup-recovery and release-contract all passed.
-- Phase 2-B scope: validate registry source references, reliability/access metadata and lawful-access policy before a source enters a search plan; no network automation or ranking authority.
-- Phase 2-B verification is NOT YET CLOSED; full CI verification is required after implementation.
+- Phase 2-B scope: validate registry source references, reliability/access metadata and lawful-access policy before a source enters a search plan; no network automation or ranking authority. CLOSED / VERIFIED.
+- Phase 2-B verification: CLOSED / VERIFIED by full CI #1324 (36308069460) on HEAD ee549cada95a0a90a7647b2b01eec51fa0bdd9bc; all seven release-gate jobs passed.
 - CI #1314 and #1315 were cancelled by GitHub concurrency after the corrected run was superseded; they are not authoritative verification evidence.
-- No database schema, network automation, ranking authority, automatic qualification, canonical identity semantic change, MAX activation or frozen-kernel change was introduced in Phase 2-A.
+- No database schema, network automation, ranking authority, automatic qualification, canonical identity semantic change, MAX activation or frozen-kernel change was introduced in Phase 2-A or Phase 2-B.
 - P46 MAX provider evidence hold: CLOSED / VERIFIED.
 - Phase 1-A implementation is bounded to application service, canonical API adapter, OpenAPI contract and tests; no external provider automation is enabled.
 - Frozen kernel: unchanged.
@@ -25,7 +25,7 @@
 - Phase 1-B implementation complete: source registry contract, ten-case synthetic benchmark corpus, pure resolution/quality metric evaluator, operator documentation and negative-path tests.
 - Phase 1-B verification complete: CI run #1307 (`36302695693`) on `6172bb4dfd2fda1d75a766368bf669ce1e57ed39`; all seven required jobs passed.
 - Phase 1-B exit: no database schema, network automation, canonical identity semantic change or frozen-kernel change.
-- Safest next action: define and implement Phase 2-B — source-registry-backed search planning, limited to registry validation, explicit source reliability/provenance and no network activation or ranking authority.
+- Safest next action: define and implement Phase 2-C — registry-backed operator search composition over the existing application/API boundary, using only injected non-network source adapters and the already verified Phase 2-A/2-B contracts.
 - Historical Phase 1-B guardrail: mass source integration, hidden ranking gates, automatic qualification/promotion, new source-of-truth tables, kernel semantic changes, provider activation and MAX changes were prohibited until the benchmark boundary was closed.
 - Current Phase 2 guardrail: do not broaden into mass source orchestration or ranking authority before the smallest search/research vertical slice is contracted and measured.
 - Prior P46 full CI verification remains run #1265 (`36283673042`) on commit `b4c404404b7d0cf9317caf765723a3bc2003cd46`; all seven required jobs passed.

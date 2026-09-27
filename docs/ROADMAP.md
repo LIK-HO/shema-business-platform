@@ -205,8 +205,8 @@ The first operator slice can search/check a counterparty, inspect the compact re
 
 ### Status synchronization — 2026-09-27
 - Phase 2-A — Search Run Integrity Boundary: **CLOSED / VERIFIED** by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
-- Phase 2-A covers bounded multi-source orchestration, explicit completeness, source/candidate budgets, deterministic source order, canonical candidate normalization and measurable search quality.
-- Next active sub-boundary: **Phase 2-B — source-registry-backed search planning**. Scope is registry validation, provenance/reliability binding and deterministic plan validation; no network activation, opaque ranking authority or automatic qualification.
+- Phase 2-B — Source-Registry-Backed Search Planning: **CLOSED / VERIFIED** by CI #1324 (`36308069460`) on `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
+- Next active sub-boundary: **Phase 2-C — registry-backed operator search composition** over the existing application/API boundary, using injected non-network adapters.
 
 ### Objective
 Scale from deterministic checks to repeatable customer discovery and deep intelligence.
@@ -217,12 +217,19 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - No persistence authority, external network activation, ranking score, automatic qualification or kernel change was introduced.
 
 ### Phase 2-B — Source-registry-backed search planning
+- **Status:** CLOSED / VERIFIED by CI #1324 (`36308069460`).
+- Binds the Phase 1-B machine-readable source registry to search planning without activating network execution.
+- Validates source references, source classes, reliability metadata and lawful-access policy before a source can enter a plan.
+- Keeps source reliability separate from candidate relevance and claim confidence and preserves explicit source order without ranking.
+- No provider execution, new persistence authority or kernel semantic change is introduced.
+
+### Phase 2-C — Registry-backed operator search composition
 - **Status:** READY / not started.
-- Bind the Phase 1-B machine-readable source registry to search planning without activating network execution.
-- Validate source references, source classes, reliability metadata and lawful-access policy before a source can enter a plan.
-- Keep source reliability separate from candidate relevance and claim confidence.
-- Preserve explicit source-unavailable and budget-limited states.
-- Do not introduce provider-specific semantics, opaque ranking, mass source integration or new persistence authority.
+- Compose the verified registry-backed search plan with the existing operator/application boundary and canonical `domain.search` normalization.
+- Keep provider adapters injected and network-disabled in the first vertical slice.
+- Preserve explicit search completeness and source-attempt state from Phase 2-A.
+- Expose plan/source provenance without introducing a ranking gate or automatic qualification.
+- Preserve backward compatibility for the existing search API edge until the new response contract is fully tested.
 
 ### Work
 - multi-source search orchestration;
@@ -244,6 +251,9 @@ Resolution optimizes identity precision.
 Research optimizes decision evidence.
 
 Do not collapse these three tasks into one score.
+
+### Exit criteria
+A search run produces a reproducible, evidence-backed candidate set and a compact intelligence brief without flooding the operator with raw source noise.
 
 ## 7. Phase 3 — Contact Preparation
 

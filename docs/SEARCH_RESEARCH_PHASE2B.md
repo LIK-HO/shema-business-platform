@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2-B is an active bounded implementation slice. It validates search sources against the Phase 1-B machine-readable intelligence source registry before a source enters a search plan.
+Phase 2-B is CLOSED / VERIFIED. It validated search sources against the Phase 1-B machine-readable intelligence source registry before a source entered a search plan.
 
 ## Boundary
 
@@ -52,3 +52,6 @@ No provider execution occurs inside this boundary.
 ## Verification target
 
 Full CI/release gate must pass before Phase 2-B can be CLOSED / VERIFIED.
+## Verification
+
+Full CI #1324 (run id 36308069460) passed all seven release-gate jobs on HEAD ee549cada95a0a90a7647b2b01eec51fa0bdd9bc. The boundary is CLOSED / VERIFIED.
