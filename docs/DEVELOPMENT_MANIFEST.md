@@ -1097,12 +1097,12 @@ Repeat business is represented by a reusable preparation rule attached to an exi
 
 Required semantics:
 - recurrence signal, preparation window, owner/assignee and pause/end controls;
-- lineage to the previous order and original commercial configuration;
+- lineage to the previous business outcome/reference and original commercial configuration;
 - fresh preparation/handoff snapshot per repetition;
 - explicit review before business-plane handoff;
 - changed/expired price and document configuration surfaced as deltas;
-- no duplicate next-order creation when an open repeat instance exists;
-- one-time skip, pause/resume, fixed-count and end-date controls;
+- no duplicate preparation snapshot when an open repeat preparation exists;
+- one-time skip, pause/resume, fixed-count and end-date preparation controls;
 - reminders are preparation signals, not hidden business effects.
 
 This is deliberately a sales scheduling/renewal pattern and is placed between contact preparation and the document engine.
