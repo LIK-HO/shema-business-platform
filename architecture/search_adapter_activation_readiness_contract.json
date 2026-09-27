@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "status": "phase_2f_readiness",
+  "status": "phase_2f_verified",
   "purpose": "Provider-neutral readiness gate before any first-source adapter activation.",
   "network_execution_enabled": false,
   "automatic_activation": false,

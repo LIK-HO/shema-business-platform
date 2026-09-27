@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2-F is an active readiness boundary. It does not select or activate a live provider.
+Phase 2-F is CLOSED / VERIFIED. It does not select or activate a live provider.
 
 ## Purpose
 
@@ -34,3 +34,13 @@ provider selection → authoritative provider contract → lawful access → ada
 ## Verification target
 
 Full seven-job CI must pass before this readiness boundary is CLOSED / VERIFIED.
+
+## Verification
+
+Full CI #1343 (`36311263929`) passed all seven release-gate jobs on HEAD `9e49e79c3825703117ad6b587e9cee5160feaca9`.
+
+Phase 2-F is CLOSED / VERIFIED.
+
+## Next boundary
+
+Phase 2-G — First Source Selection and Evidence Capture. No provider activation is authorized by this document.

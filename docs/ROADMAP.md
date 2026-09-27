@@ -209,7 +209,8 @@ The first operator slice can search/check a counterparty, inspect the compact re
 - Phase 2-C — Registry-Backed Operator Search Composition: **CLOSED / VERIFIED** by CI #1330 (`36308647549`) on `16c08111e025bd267787eaa5de36c4dd53f70609`.
 - Phase 2-D — Generic Runtime Composition: **CLOSED / VERIFIED** by CI #1336 (`36309294705`) on `7637871b3cac379fdff056aed90ddc73aacf760f`.
 - Phase 2-E — Search Adapter Compliance Boundary: **CLOSED / VERIFIED** by CI #1340 (`36310957082`) on `abca1b26e32498105b4ea855474aab387091218c`.
-- Next active sub-boundary: **Phase 2-F — First Approved Source Adapter Readiness**; provider selection and live network execution remain blocked pending a bounded adapter-specific contract.
+- Phase 2-F — First Approved Source Adapter Readiness: **CLOSED / VERIFIED** by CI #1343 (`36311263929`) on `9e49e79c3825703117ad6b587e9cee5160feaca9`.
+- Next active sub-boundary: **Phase 2-G — First Source Selection and Evidence Capture**; provider activation remains disabled.
 
 ### Objective
 Scale from deterministic checks to repeatable customer discovery and deep intelligence.
@@ -245,11 +246,16 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - No provider traffic, persistence authority, ranking or qualification semantics were introduced.
 
 ### Phase 2-F — First Approved Source Adapter Readiness
+- **Status:** CLOSED / VERIFIED by CI #1343 (`36311263929`).
+- The provider-neutral readiness gate distinguishes absent provider selection, missing evidence, controlled-activation readiness and blocked activation.
+- No provider was selected, no live network execution occurred, and no automatic activation/retry/fallback semantics were introduced.
+
+### Phase 2-G — First Source Selection and Evidence Capture
 - **Status:** READY / implementation not started.
-- Select exactly one registry-declared source for the first controlled adapter implementation only after provider-specific evidence and lawful-access conditions are explicit.
-- Contract provider-specific adapter inputs/outputs, source provenance, bounded rate/time/candidate limits, error mapping, observability, rollback/kill-switch and network-disabled default.
-- Do not activate live traffic, automatic retries, fallback providers, new persistence or kernel semantics in the readiness stage.
-- Exit evidence: one adapter-specific contract plus deterministic fixture tests proving all required failure states before any live execution authorization.
+- Select exactly one registry-declared source for the first controlled adapter path.
+- Capture authoritative provider contract, access/lawful-use evidence, rate/timeout behavior, provenance requirements, error semantics, kill-switch/rollback expectations and current provider-side idempotency/reconciliation facts where external effects are involved.
+- Keep live provider traffic disabled during evidence capture unless a separately approved controlled-execution boundary is created.
+- Exit evidence: source-specific adapter contract plus authoritative evidence record and deterministic fixture tests before any activation decision.
 
 ### Work
 - multi-source search orchestration;

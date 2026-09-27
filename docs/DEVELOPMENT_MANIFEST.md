@@ -2,7 +2,7 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold
-**Active development boundary:** Phase 2-F — First Approved Source Adapter Readiness (selected; implementation not started)
+**Active development boundary:** Phase 2-G — First Source Selection and Evidence Capture (selected; implementation not started)
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -82,7 +82,11 @@ Shema — это **личная операционная система влад
 - Verified HEAD: `abca1b26e32498105b4ea855474aab387091218c`.
 - Full CI #1340 (`36310957082`) passed all seven release-gate jobs.
 - Phase 2-E establishes registry-to-adapter compliance validation for source identity, metadata, lawful access and network-disabled state; no provider traffic is enabled.
-- **Next selected boundary:** Phase 2-F — First Approved Source Adapter Readiness. The first source remains unselected; no live provider traffic is permitted until adapter-specific evidence, access controls and rollback/kill-switch conditions are contracted.
+- **Phase 2-F closure:** First Approved Source Adapter Readiness Gate is CLOSED / VERIFIED.
+- Verified HEAD: `9e49e79c3825703117ad6b587e9cee5160feaca9`.
+- Full CI #1343 (`36311263929`) passed all seven release-gate jobs.
+- Phase 2-F proves a provider-neutral readiness gate with explicit NOT_READY, EVIDENCE_REQUIRED, READY_FOR_CONTROLLED_ACTIVATION and BLOCKED states. It does not select or activate a provider.
+- **Next selected boundary:** Phase 2-G — First Source Selection and Evidence Capture. The source must be chosen from the registry and its authoritative provider/access evidence captured before any controlled activation.
 
 ### Критерий допуска новой capability
 
