@@ -32,14 +32,15 @@ Its output may contribute to candidate discovery, identifier resolution and enri
 
 ## Execution boundary
 
-The implementation must be layered:
+The implementation is deliberately split from discovery:
 
-provider-neutral SearchProvider
-→ DaData adapter
+provider-neutral CounterpartyLookupProvider
+→ DaData lookup adapter
 → provider-specific request/response mapping
-→ application budget/timeout/retry policy
-→ existing SearchRun completeness/provenance
+→ bounded application timeout/retry policy
 → existing Identity/Evidence pipeline
+
+DaData's `find-party` endpoint is an identifier lookup/enrichment capability, not a generic region/industry discovery source. It must not be forced into the Phase 2 SearchProvider contract.
 
 The adapter must not write canonical business state directly.
 
