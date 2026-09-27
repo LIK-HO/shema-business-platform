@@ -202,7 +202,7 @@ def test_counterparty_observation_requires_official_source_and_expiry():
 
     with pytest.raises(ValueError, match="expires_at"):
         observation(
-            expires_at=datetime(2026, 9, 26, 11, tzinfo=UTC),
+            expires_at=datetime(2026, 9, 26, 9, tzinfo=UTC),
         )
 
 
@@ -210,7 +210,7 @@ def test_expired_observation_is_explicitly_marked_expired():
     state = MemoryUnitOfWork(identities=MemoryIdentities())
     result = make_service(state).check(
         observation(
-            expires_at=datetime(2026, 9, 26, 9, tzinfo=UTC),
+            expires_at=datetime(2026, 9, 26, 11, tzinfo=UTC),
         ),
         actor_id="operator",
         now=datetime(2026, 9, 27, tzinfo=UTC),
