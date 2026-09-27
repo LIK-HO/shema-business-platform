@@ -5,40 +5,20 @@
 - HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
 - PR: #56 — open, draft, mergeable.
 - Current boundary: Phase 2-G — First Source Selection and Evidence Capture — READY / implementation not started.
-- Phase 2-A implementation: bounded search-run orchestration, explicit completeness states, source/candidate budgets, deterministic source order, canonical candidate normalization and benchmark search-quality metrics.
-- Phase 2-A implementation commits: cfb48dd9dbccee426403834f1e153ac4440ed11b (initial slice) and a94573ad8c5ab83b6f44ceb5281b9f7c9d045182 (test-contract correction).
-- Phase 2-A verification: CLOSED / VERIFIED by full CI #1316 (36304414654) on HEAD af813ff79802aa358eafcb68586d3bf0b105aa7d; supply-chain, quality 3.12/3.13, integration 3.12/3.13, backup-recovery and release-contract all passed.
-- Phase 2-B scope: validate registry source references, reliability/access metadata and lawful-access policy before a source enters a search plan; no network automation or ranking authority. CLOSED / VERIFIED.
-- Phase 2-B verification: CLOSED / VERIFIED by full CI #1324 (36308069460) on HEAD ee549cada95a0a90a7647b2b01eec51fa0bdd9bc; all seven release-gate jobs passed.
-- CI #1314 and #1315 were cancelled by GitHub concurrency after the corrected run was superseded; they are not authoritative verification evidence.
-- No database schema, network automation, ranking authority, automatic qualification, canonical identity semantic change, MAX activation or frozen-kernel change was introduced in Phase 2-A or Phase 2-B.
-- Phase 2-C implementation: registry-backed operator search composition over the existing API/application boundary; injected non-network adapters only; explicit completeness, plan version and source provenance returned to the operator.
-- Phase 2-C closure: the API/application composition is verified; it intentionally remains provider-neutral and is not yet wired into the provider-specific runtime composition.
-- Phase 2-C verification: CLOSED / VERIFIED by full CI #1330 (36308647549) on HEAD 16c08111e025bd267787eaa5de36c4dd53f70609; all seven release-gate jobs passed.
-- Phase 2-D implementation: provider-neutral SearchAugmentedAPIApplication composes the verified search capability with the existing runtime API application; existing AI/provider lifecycle remains unchanged.
-- Phase 2-D closure: CLOSED / VERIFIED.
-- Phase 2-D verification: full CI #1336 (`36309294705`) on HEAD `7637871b3cac379fdff056aed90ddc73aacf760f`; all seven release-gate jobs passed.
-- Phase 2-D evidence: provider-neutral SearchAugmentedAPIApplication, real runtime HTTP `/v1/search` smoke through the composition root, existing AI/provider lifecycle preservation, and existing API behavior preservation.
-- Phase 2-E selected boundary: define and enforce the compliance contract between registry-declared sources and provider adapters, with network activation remaining disabled.
-- Safest next action: implement the smallest adapter-compliance contract and deterministic negative-path tests; no live provider traffic.
+- Phase 2-A — Search Run Integrity Boundary: CLOSED / VERIFIED by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
+- Phase 2-B — Source-Registry-Backed Search Planning: CLOSED / VERIFIED by CI #1324 (`36308069460`) on `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
+- Phase 2-C — Registry-Backed Operator Search Composition: CLOSED / VERIFIED by CI #1330 (`36308647549`) on `16c08111e025bd267787eaa5de36c4dd53f70609`.
+- Phase 2-D — Generic Runtime Composition: CLOSED / VERIFIED by CI #1336 (`36309294705`) on `7637871b3cac379fdff056aed90ddc73aacf760f`.
+- Phase 2-E — Search Adapter Compliance Boundary: CLOSED / VERIFIED by CI #1340 (`36310957082`) on `abca1b26e32498105b4ea855474aab387091218c`.
+- Phase 2-F — First Approved Source Adapter Readiness: CLOSED / VERIFIED by CI #1343 (`36311263929`) on `9e49e79c3825703117ad6b587e9cee5160feaca9`.
+- Phase 2-F evidence: provider-neutral readiness gate with explicit NOT_READY, EVIDENCE_REQUIRED, READY_FOR_CONTROLLED_ACTIVATION and BLOCKED states; no provider selected and no live network execution.
+- Phase 2-G selected boundary: select exactly one registry-declared source, capture authoritative provider/access evidence, and define its source-specific adapter contract before any live execution.
+- Phase 2-G guardrail: no provider activation, automatic retry/fallback, new persistence authority, ranking authority, automatic qualification, MAX activation or frozen-kernel change.
+- Full documentation synchronization CI: run #1344 (`36311389471`) passed all seven release-gate jobs on HEAD `bee36a83bb69c088e4dadb0be5bde554c3c094da`.
 - P46 MAX provider evidence hold: CLOSED / VERIFIED.
-- Phase 1-A implementation is bounded to application service, canonical API adapter, OpenAPI contract and tests; no external provider automation is enabled.
 - Frozen kernel: unchanged.
-- No database schema, canonical identity semantics, MAX activation or external network execution was introduced.
-- Verified Phase 1-A implementation commit: `363eb19043e280585fae1d3a2e7c78e2d387ab02`.
-- Verification CI: run #1297 (`36284386157`) — all seven required jobs passed.
-- Phase 1-A completed sub-boundaries: authoritative-source validation, INN/OGRN/OGRNIP observation contract, identity resolution by tax ID when available, traceable evidence, freshness, contradiction quarantine, append-only audit, compact operator brief, API/OpenAPI boundary.
-- Phase 1-A exit: full CI/release verification passed; frozen kernel unchanged; no database migration or external FNS network execution introduced.
-- Phase 1-B entry synchronization and integrity boundary: completed.
-- Phase 1-B is CLOSED / VERIFIED; the active boundary is now Phase 2 and no Phase 2 implementation has started.
-- Phase 1-B implementation complete: source registry contract, ten-case synthetic benchmark corpus, pure resolution/quality metric evaluator, operator documentation and negative-path tests.
-- Phase 1-B verification complete: CI run #1307 (`36302695693`) on `6172bb4dfd2fda1d75a766368bf669ce1e57ed39`; all seven required jobs passed.
-- Phase 1-B exit: no database schema, network automation, canonical identity semantic change or frozen-kernel change.
-- Phase 2-E implementation: adapter descriptor, registry-metadata compliance validator, canonical SearchSource binding and negative-path tests; network execution remains disabled. CLOSED / VERIFIED.
-- Historical Phase 1-B guardrail: mass source integration, hidden ranking gates, automatic qualification/promotion, new source-of-truth tables, kernel semantic changes, provider activation and MAX changes were prohibited until the benchmark boundary was closed.
-- Current Phase 2 guardrail: do not broaden into mass source orchestration or ranking authority before the smallest search/research vertical slice is contracted and measured.
-- Prior P46 full CI verification remains run #1265 (`36283673042`) on commit `b4c404404b7d0cf9317caf765723a3bc2003cd46`; all seven required jobs passed.
-
+- No database schema, canonical identity semantic change, MAX activation or external network execution was introduced by Phase 2-A through Phase 2-F.
+- Safest next action: begin Phase 2-G with source selection and authoritative evidence capture; do not activate the provider.
 
 ## Historical core-certification baseline
 
