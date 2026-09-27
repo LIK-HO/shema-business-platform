@@ -234,6 +234,7 @@ class CounterpartyCheckService:
                         subject_ref,
                         claim,
                         observation.source_ref,
+                        observation.observed_at,
                     ),
                     subject_ref=subject_ref,
                     claim=claim,
@@ -275,10 +276,6 @@ class CounterpartyCheckService:
                 )
 
             occurred_at = current_time
-            audit_key = (
-                f"counterparty-check:{subject_ref}:"
-                f"{observation.identifier}:{observation.observed_at.isoformat()}"
-            )
             uow.audits.append(
                 AuditRecord(
                     audit_id=str(uuid4()),
