@@ -372,3 +372,38 @@ def test_provider_errors_never_activate_network_fallback() -> None:
 
     assert response.status_code == 502
     assert provider.calls == 1
+
+
+def test_rollback_disables_binding_and_subsequent_lookup_fails_closed() -> None:
+    provider = OutcomeProvider([])
+    assembly, state = build(provider, max_attempts=1)
+    client = TestClient(assembly.create_http_app(authenticator=LookupAuthenticator()))
+
+    activate(client)
+
+    rollback = client.post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/rollback",
+        headers={
+            "Authorization": "Bearer activate-token",
+            "X-Correlation-Id": "corr-rollback",
+        },
+        json={
+            "reason": "negative runtime rehearsal rollback",
+            "operatorAuthorized": True,
+        },
+    )
+
+    assert rollback.status_code == 200
+    assert rollback.json()["enabled"] is False
+
+    response = client.post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/lookup",
+        headers={"Authorization": "Bearer lookup-token"},
+        json=request_body(),
+    )
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "provider_activation_blocked"
+    assert provider.calls == 0
+    assert state.evidence.records == []
+    assert state.audits.records == []
