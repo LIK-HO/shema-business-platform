@@ -127,3 +127,35 @@ def test_rate_limit_is_bounded_then_recovers_without_duplicate_signal():
     assert provider.calls == 2
     assert delays == [0.25]
     assert [item.external_id for item in result.new_items] == ["1"]
+
+
+def test_material_source_change_is_detected_even_when_title_and_price_are_unchanged():
+    provider = FakeProvider(
+        [
+            page(opportunity()),
+            page(
+                ProcurementOpportunity(
+                    provider_id="fixture-procurement",
+                    source_ref="https://fixture.example/procurement",
+                    external_id="1",
+                    law=ProcurementLaw.FZ44,
+                    collection=ProcurementCollection.PURCHASES,
+                    title="Подъём оборудования",
+                    customer_name='ООО "Заказчик"',
+                    customer_tax_id="7707083893",
+                    max_price=Decimal("100000"),
+                    published_at=datetime(2026, 9, 28, tzinfo=UTC),
+                    deadline_at=datetime(2026, 10, 10, tzinfo=UTC),
+                    stage="planned",
+                    updated_at=datetime(2026, 9, 29, tzinfo=UTC),
+                    source_url="https://fixture.example/tender/1-revised",
+                )
+            ),
+        ]
+    )
+    monitor = ProcurementMonitor(provider, max_attempts=1)
+
+    first = monitor.poll(query(), ProcurementWatchState())
+    second = monitor.poll(query(), first.state)
+
+    assert [item.external_id for item in second.changed_items] == ["1"]
