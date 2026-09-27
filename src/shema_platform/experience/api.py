@@ -10,12 +10,21 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from shema_platform.adapters.ai.composition import AIProviderCompositionError
+from shema_platform.application.counterparty_check import (
+    CounterpartyCheckService,
+    CounterpartyIdentifierType,
+    CounterpartyObservation,
+    SourceReliability,
+)
 from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.experience.api_models import (
     AIRunRequest,
     AIRunResponse,
     CommercialActionCreateRequest,
     CommercialActionResponse,
+    CounterpartyCheckRequest,
+    CounterpartyCheckResponse,
+    CounterpartyContradictionResponse,
     CommercialActionSendRequest,
     CommunicationResult,
     DiagnosticsResponse,
@@ -244,6 +253,7 @@ def create_app(
     enable_docs: bool = True,
     telemetry: TelemetrySink | None = None,
     provider_health: ProviderHealthRegistry | None = None,
+    counterparty_checker: CounterpartyCheckService | None = None,
 ) -> FastAPI:
     runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
@@ -265,6 +275,7 @@ def create_app(
     app.state.application = application
     app.state.authenticator = authenticator
     app.state.provider_health = provider_health or ProviderHealthRegistry()
+    app.state.counterparty_checker = counterparty_checker
     default_telemetry: TelemetrySink = (
         StructuredLoggingTelemetrySink()
         if runtime_security.environment == "production"
@@ -435,6 +446,56 @@ def create_app(
         idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> ResearchResponse:
         return services(request).research(payload, _context(request, idempotency_key))
+
+    @router.post(
+        "/intelligence/counterparty-check",
+        response_model=CounterpartyCheckResponse,
+    )
+    async def counterparty_check(
+        request: Request,
+        payload: CounterpartyCheckRequest,
+    ) -> CounterpartyCheckResponse:
+        checker: CounterpartyCheckService | None = request.app.state.counterparty_checker
+        if checker is None:
+            raise ApplicationUnavailable(
+                "counterparty check capability is not composed"
+            )
+        context = _context(request, None)
+        result = checker.check(
+            CounterpartyObservation(
+                identifier_type=CounterpartyIdentifierType(payload.identifier_type),
+                identifier=payload.identifier,
+                canonical_name=payload.canonical_name,
+                tax_id=payload.tax_id,
+                registration_id=payload.registration_id,
+                legal_status=payload.legal_status,
+                source_ref=payload.source_ref,
+                source_reliability=SourceReliability(payload.source_reliability),
+                claim_confidence=payload.claim_confidence,
+                observed_at=payload.observed_at,
+                expires_at=payload.expires_at,
+            ),
+            actor_id=context.actor_id,
+            correlation_id=context.correlation_id,
+        )
+        return CounterpartyCheckResponse(
+            subjectRef=result.subject_ref,
+            identityRef=result.identity.identity_id if result.identity else None,
+            identityState=result.identity.state.value if result.identity else None,
+            freshness=result.freshness.value,
+            evidenceIds=list(result.evidence_ids),
+            contradictions=[
+                CounterpartyContradictionResponse(
+                    field=item.field,
+                    existingValue=item.existing_value,
+                    observedValue=item.observed_value,
+                )
+                for item in result.contradictions
+            ],
+            quarantined=result.quarantined,
+            operatorBrief=result.operator_brief,
+            correlationId=context.correlation_id,
+        )
 
     @router.post(
         "/commercial-actions",
