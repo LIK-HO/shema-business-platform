@@ -269,6 +269,7 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - **Parallel hold:** `fns_transparent_business` remains independently governed and BLOCKED for automation.
 - **Classification:** `trusted_structured_dataset` / `trusted_secondary`; DaData is a provider/service aggregation layer, not the canonical authoritative source.
 - **Required provider facts:** endpoint/authentication, query/count constraints, daily quota, 30 requests/second and 60 new connections/minute, HTTP 400/401/403/405/413/429/5xx mapping, application timeout policy, bounded retry classification, provenance, correlation, kill-switch, credential isolation and rollback.
+- **Execution semantics correction:** DaData `find-party` is a deterministic identifier lookup/enrichment capability, not a generic region/industry discovery provider. It therefore enters through a provider-neutral `CounterpartyLookupProvider` boundary and then feeds the existing Identity/Evidence pipeline.
 - **Required evidence discipline:** only documented provider semantics may be encoded as facts; unknown provider behavior remains explicitly unknown.
 - **Safety:** read-only lookup permits retries from an external-effect perspective, but not unbounded retries or quota amplification. Retry/backoff/jitter and application budgets must be bounded and observable.
 - **Activation:** no CI live traffic, no credentials in source control, no automatic activation and no implicit fallback to FNS or another provider. Live execution is a separate authorized operation after the complete gate.
