@@ -11,11 +11,11 @@ from shema_platform.adapters.intelligence.dadata_activation import (
     DaDataActivationReadiness,
     DaDataControlledActivationGate,
 )
+from shema_platform.application.ai_runtime import AIExecutionTrustResolver
 from shema_platform.application.counterparty_lookup import CounterpartyLookupProvider
 from shema_platform.application.counterparty_provider_activation import (
     CounterpartyProviderActivationService,
 )
-from shema_platform.application.ai_runtime import AIExecutionTrustResolver
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api import APIApplication, create_app
