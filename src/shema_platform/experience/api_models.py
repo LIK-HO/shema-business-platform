@@ -72,6 +72,40 @@ class ResearchResponse(APIModel):
     evidence: list[EvidenceRef]
 
 
+class CounterpartyCheckRequest(APIModel):
+    identifier_type: Literal["INN", "OGRN", "OGRNIP"] = Field(alias="identifierType")
+    identifier: str = Field(min_length=1, max_length=32)
+    canonical_name: str = Field(min_length=1, alias="canonicalName")
+    tax_id: str | None = Field(default=None, alias="taxId")
+    registration_id: str | None = Field(default=None, alias="registrationId")
+    legal_status: str | None = Field(default=None, alias="legalStatus")
+    source_ref: str = Field(min_length=1, alias="sourceRef")
+    source_reliability: Literal["authoritative"] = Field(
+        alias="sourceReliability",
+    )
+    claim_confidence: float = Field(ge=0, le=1, alias="claimConfidence")
+    observed_at: datetime = Field(alias="observedAt")
+    expires_at: datetime = Field(alias="expiresAt")
+
+
+class CounterpartyContradictionResponse(APIModel):
+    field: str
+    existing_value: str = Field(alias="existingValue")
+    observed_value: str = Field(alias="observedValue")
+
+
+class CounterpartyCheckResponse(APIModel):
+    subject_ref: str = Field(alias="subjectRef")
+    identity_ref: str | None = Field(default=None, alias="identityRef")
+    identity_state: str | None = Field(default=None, alias="identityState")
+    freshness: Literal["fresh", "expired"]
+    evidence_ids: list[str] = Field(alias="evidenceIds")
+    contradictions: list[CounterpartyContradictionResponse]
+    quarantined: bool
+    operator_brief: str = Field(alias="operatorBrief")
+    correlation_id: str = Field(alias="correlationId")
+
+
 class AIRunRequest(APIModel):
     task_type: str = Field(min_length=1, alias="taskType")
     prompt_version: str = Field(min_length=1, alias="promptVersion")
