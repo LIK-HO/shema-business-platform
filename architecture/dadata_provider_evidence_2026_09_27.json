@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "status": "authoritative_provider_contract_evidence",
+  "checked_at": "2026-09-27",
+  "source_id": "dadata_organization_api",
+  "provider": "DaData",
+  "evidence": [
+    {
+      "evidence_id": "dadata-find-party-api",
+      "url": "https://dadata.ru/api/find-party/",
+      "claims": [
+        "documented POST endpoint for organization lookup by INN, INN/KPP or OGRN",
+        "documented Authorization Token API key",
+        "documented query limit of 300 characters",
+        "documented result count limit of 300",
+        "documented 30 requests/second per IP limit",
+        "documented 60 new connections/minute per IP limit",
+        "documented daily quota determined by tariff",
+        "documented HTTP 200/400/401/403/405/413/429/5xx response classes"
+      ]
+    },
+    {
+      "evidence_id": "dadata-pricing-2026-09-27",
+      "url": "https://dadata.ru/pricing/",
+      "claims": [
+        "current free tier is documented as 10000 requests/day",
+        "paid tiers have higher daily quotas and broader company data coverage"
+      ]
+    },
+    {
+      "evidence_id": "dadata-find-party-data-sources",
+      "url": "https://dadata.ru/api/find-party/",
+      "claims": [
+        "DaData documents data sourced from EGRUL/EGRIP, SME registry, bankruptcy register and other official/structured datasets",
+        "the API exposes registration, legal status, identifiers and optional enrichment fields depending on tariff"
+      ]
+    }
+  ],
+  "authoritative_scope": {
+    "provider_api_contract": true,
+    "authentication_contract": true,
+    "rate_limit_contract": true,
+    "error_class_contract": true,
+    "daily_quota_model": true,
+    "provider_timeout_semantics": false,
+    "provider_retry_after_semantics": false,
+    "provider_side_idempotency_required": false,
+    "reason_provider_side_idempotency_required": "lookup endpoint is read-only"
+  },
+  "policy_interpretation": {
+    "classification": "trusted_secondary",
+    "canonical_truth": false,
+    "evidence_role": "input to existing identity/evidence pipeline",
+    "automatic_truth_promotion": false,
+    "source_attribution_required": true
+  },
+  "security": {
+    "secret_storage_in_repository": false,
+    "live_traffic_in_ci": false,
+    "activation_off_by_default": true
+  },
+  "decision": "ELIGIBLE_FOR_CONTROLLED_EXECUTION_DESIGN_NOT_LIVE_ACTIVATION"
+}
