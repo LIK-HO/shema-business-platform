@@ -263,7 +263,7 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - **Next boundary:** Phase 2-H — controlled provider execution with DaData as the parallel alternative; FNS remains a separately gated evidence hold.
 
 ### Phase 2-H — Controlled Provider Execution Boundary (DaData parallel alternative)
-- **Status:** PROVIDER LOOKUP → EVIDENCE RUNTIME VERTICAL SLICE CLOSED / VERIFIED; live activation remains OFF.
+- **Status:** CLOSED / VERIFIED — provider lookup → Evidence runtime vertical slice and Runtime Negative Provider Outcomes & Recovery are both verified; live activation remains OFF.
 - **Purpose:** introduce the first provider-specific execution path without weakening the provider-neutral search contracts or frozen kernel.
 - **Primary alternative:** `dadata_organization_api` using the documented DaData organization-by-INN/OGRN API.
 - **Parallel hold:** `fns_transparent_business` remains independently governed and BLOCKED for automation.
@@ -278,11 +278,13 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - **Exit evidence:** dedicated RBAC permissions, explicit operator confirmation, route-path provider identity, readiness fail-closed gate, disabled-by-default configuration, redacted activation/rollback telemetry, kill-switch rollback, authenticated API endpoints and full CI #1392 (`36316219807`).
 - **Runtime rehearsal evidence:** explicit CounterpartyProviderRuntimeAssembly, injected readiness witness, disabled-by-default activation state, deterministic fake-provider boundary, authenticated activation/rollback HTTP path, readiness fail-closed behavior and no real network on assembly/startup; full seven-job CI #1397 (`36316599417`) GREEN.
 - **Runtime vertical-slice evidence:** dedicated lookup permission, path-bound provider identity, lazy activated binding, existing retry/evidence composition reused without duplication, explicit confidence/expiry, UnitOfWork-backed Evidence intake, correlation-preserving audit, canonical Identity non-promotion and rollback fail-closed behavior; full seven-job CI #1402 (`36317002134`) GREEN.
-- **Next boundary:** Phase 2-H Runtime Negative Provider Outcomes & Recovery — exercise provider error mapping, contradiction quarantine and recovery/retry behavior through the same authenticated runtime boundary. No live DaData traffic.
+- **Runtime Negative Provider Outcomes & Recovery:** CLOSED / VERIFIED by full CI #1404 (`36317178100`) on `758690225996c1c2cca95cbbd3b1c56638d69db8`.
+- Deterministic runtime evidence covers not-found, bounded rate-limit retry/exhaustion, provider 5xx, transport recovery, contradiction quarantine, no-fallback behavior and terminal-error no-partial-state guarantees.
+- Exit condition satisfied: complete seven-job release gate GREEN; no live DaData traffic; no credentials in source control; no DB schema or frozen-kernel change.
 - **No changes to:** v1.4 semantics, DB schema, canonical identity semantics or frozen kernel.
 
 ### Work
-- Phase 2-H provider-specific execution for DaData behind the generic SearchProvider boundary;
+- Phase 2-H provider-specific execution for DaData behind the provider-neutral CounterpartyLookup boundary; the controlled execution boundary is now CLOSED.
 - multi-source search orchestration;
 - search/source budgets;
 - direct operator search without mandatory ranking gates;
