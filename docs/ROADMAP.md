@@ -132,7 +132,7 @@ Close P46 cleanly before starting new implementation.
 ### Phase 0 result
 **CLOSED / VERIFIED.** P46 is complete as an evidence-revalidation boundary. MAX readiness remains blocked until authoritative provider-side idempotency and provider-side reconciliation evidence becomes available. No implementation workaround, fallback provider or kernel change is permitted.
 
-**Next selected boundary:** Phase 1-B — Intelligence benchmark and source registry. Phase 1-A is CLOSED / VERIFIED.
+**Next selected boundary:** Phase 2 — Mature Search and Research. Phase 1-A and Phase 1-B are CLOSED / VERIFIED.
 
 ## 5. Phase 1 — Intelligence Quality Foundation
 
@@ -168,10 +168,11 @@ INN/OGRN/OGRNIP → authoritative source lookup → identity resolution → evid
 - lawful-access boundary.
 
 ### Phase 1-B — Intelligence benchmark and source registry
-- **Status:** selected; implementation not started.
+- **Status:** CLOSED / VERIFIED by CI #1307 (`36302695693`).
 - Establish the permanent benchmark corpus and source registry before adding broader automated source orchestration.
 - Preserve the existing separation of candidate discovery, identity resolution, evidence provenance, source reliability, claim confidence and freshness.
 - No source volume expansion, ranking gate or automatic qualification is admitted until benchmark ground truth and operator-correction metrics exist.
+- Exit evidence: ten permanent synthetic cases, bounded precision/recall/FPR/FNR evaluator, provenance/freshness/operator-correction metrics, registry policy with network automation disabled, full seven-job CI gate green.
 
 ### Intelligence benchmark
 Create a permanent test corpus with:
