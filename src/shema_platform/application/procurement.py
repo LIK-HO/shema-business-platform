@@ -113,7 +113,7 @@ class ProcurementOpportunity:
 class ProcurementSearchResult:
     items: tuple[ProcurementOpportunity, ...]
     has_more: bool
-    next_skip: int
+    next_page_offset: int
     observed_at: datetime
 
 
@@ -167,7 +167,7 @@ class ProcurementWatchState:
             updated[f"{item.provider_id}:{item.external_id}"] = item.fingerprint
         return ProcurementWatchState(
             fingerprints=updated,
-            cursor=str(result.next_skip),
+            cursor=str(result.next_page_offset),
         )
 
 
