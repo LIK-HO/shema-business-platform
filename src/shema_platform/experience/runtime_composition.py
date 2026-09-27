@@ -10,6 +10,7 @@ from shema_platform.application.ai_runtime import AIExecutionTrustResolver
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api import APIApplication, create_app
+from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.foundation.telemetry import TelemetrySink
@@ -21,8 +22,11 @@ class YandexGPTRuntimeAssembly:
 
     ai: YandexGPTApplicationComposition
 
-    def api_application(self) -> APIApplication:
-        return AIOnlyAPIApplication(self.ai.service())
+    def api_application(self, *, search_application: APIApplication | None = None) -> APIApplication:
+        base = AIOnlyAPIApplication(self.ai.service())
+        if search_application is None:
+            return base
+        return SearchAugmentedAPIApplication(base, search_application)
 
     def create_http_app(
         self,
@@ -30,9 +34,10 @@ class YandexGPTRuntimeAssembly:
         authenticator=None,
         enable_docs: bool = True,
         telemetry: TelemetrySink | None = None,
+        search_application: APIApplication | None = None,
     ):
         return create_app(
-            application=self.api_application(),
+            application=self.api_application(search_application=search_application),
             authenticator=authenticator,
             enable_docs=enable_docs,
             telemetry=telemetry,

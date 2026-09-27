@@ -1,6 +1,7 @@
 import pytest
 
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
+from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
 from shema_platform.experience.runtime_composition import (
     YandexGPTRuntimeAssembly,
     compose_yandexgpt_runtime,
@@ -19,8 +20,12 @@ class StaticTrustResolver:
         raise AssertionError("trust resolver must not run during assembly")
 
 
-def snapshot() -> ConfigurationSnapshot:
-    return ConfigurationSnapshot(
+class MockSearchApplication:
+    def search(self, request, context):
+        raise AssertionError("search application must not execute during composition")
+
+
+def snapshot() -> ConfigurationSnapshot:    return ConfigurationSnapshot(
         version="runtime:v1",
         environment="production",
         values={
