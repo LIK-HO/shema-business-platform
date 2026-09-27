@@ -54,10 +54,24 @@ class SearchHit:
     selection_level: SelectionLevel = SelectionLevel.CANDIDATE
     observed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     captured_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    source_refs: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.captured_at < self.observed_at:
             raise ValueError("captured_at cannot precede observed_at")
+        primary_source = self.source_ref.strip()
+        normalized_sources = tuple(
+            dict.fromkeys(
+                source
+                for source in (ref.strip() for ref in self.source_refs)
+                if source
+            )
+        )
+        if not normalized_sources:
+            normalized_sources = (primary_source,)
+        elif primary_source and primary_source not in normalized_sources:
+            normalized_sources = (primary_source, *normalized_sources)
+        object.__setattr__(self, "source_refs", normalized_sources)
 
 
 class SearchProvider:
@@ -71,9 +85,74 @@ class SearchService:
     def __init__(self, provider: SearchProvider) -> None:
         self._provider = provider
 
+    @staticmethod
+    def _conflicting_identity_fields(
+        existing: SearchHit,
+        candidate: SearchHit,
+    ) -> bool:
+        return bool(
+            existing.tax_id
+            and candidate.tax_id
+            and existing.tax_id != candidate.tax_id
+        ) or bool(
+            existing.registration_id
+            and candidate.registration_id
+            and existing.registration_id != candidate.registration_id
+        )
+
+    @classmethod
+    def _merge_index(cls, accepted: list[SearchHit], candidate: SearchHit) -> int | None:
+        candidate_has_identifier = bool(candidate.tax_id or candidate.registration_id)
+        matches: list[int] = []
+
+        for index, existing in enumerate(accepted):
+            if cls._conflicting_identity_fields(existing, candidate):
+                continue
+
+            identifier_match = bool(
+                (candidate.tax_id and existing.tax_id == candidate.tax_id)
+                or (
+                    candidate.registration_id
+                    and existing.registration_id == candidate.registration_id
+                )
+            )
+            source_local_match = (
+                not candidate_has_identifier
+                and not (existing.tax_id or existing.registration_id)
+                and existing.source_ref == candidate.source_ref
+                and existing.candidate_ref == candidate.candidate_ref
+            )
+
+            if identifier_match or source_local_match:
+                matches.append(index)
+
+        return matches[0] if len(matches) == 1 else None
+
+    @staticmethod
+    def _merged_hit(existing: SearchHit, candidate: SearchHit) -> SearchHit:
+        source_refs = tuple(
+            dict.fromkeys((*existing.source_refs, *candidate.source_refs))
+        )
+        contact_refs = tuple(
+            dict.fromkeys((*existing.contact_refs, *candidate.contact_refs))
+        )
+        return SearchHit(
+            candidate_ref=existing.candidate_ref,
+            name=existing.name,
+            region=existing.region,
+            industries=frozenset((*existing.industries, *candidate.industries)),
+            source_ref=existing.source_ref,
+            tax_id=existing.tax_id or candidate.tax_id,
+            registration_id=existing.registration_id or candidate.registration_id,
+            contact_refs=contact_refs,
+            selection_level=existing.selection_level,
+            observed_at=existing.observed_at,
+            captured_at=existing.captured_at,
+            source_refs=source_refs,
+        )
+
     def execute(self, criteria: SearchCriteria) -> tuple[SearchHit, ...]:
         hits = self._provider.search(criteria)
-        seen: set[str] = set()
         accepted: list[SearchHit] = []
 
         for hit in hits:
@@ -82,11 +161,22 @@ class SearchService:
             region = hit.region.strip()
             source_ref = hit.source_ref.strip()
             tax_id = hit.tax_id.strip() if hit.tax_id else None
-            registration_id = hit.registration_id.strip() if hit.registration_id else None
+            registration_id = (
+                hit.registration_id.strip() if hit.registration_id else None
+            )
             industries = frozenset(
                 item.strip().lower() for item in hit.industries if item.strip()
             )
             contact_refs = tuple(ref.strip() for ref in hit.contact_refs if ref.strip())
+            source_refs = tuple(
+                dict.fromkeys(
+                    source
+                    for source in (
+                        ref.strip() for ref in (*hit.source_refs, source_ref)
+                    )
+                    if source
+                )
+            )
 
             if not candidate_ref or not name or not source_ref:
                 continue
@@ -97,26 +187,30 @@ class SearchService:
             if hit.selection_level.rank() < criteria.selection_level.rank():
                 continue
 
-            dedupe_key = tax_id or candidate_ref
-            if dedupe_key in seen:
-                continue
-
-            seen.add(dedupe_key)
-            accepted.append(
-                SearchHit(
-                    candidate_ref=candidate_ref,
-                    name=name,
-                    region=region,
-                    industries=industries,
-                    source_ref=source_ref,
-                    tax_id=tax_id,
-                    registration_id=registration_id,
-                    contact_refs=contact_refs,
-                    selection_level=hit.selection_level,
-                    observed_at=hit.observed_at,
-                    captured_at=hit.captured_at,
-                )
+            normalized = SearchHit(
+                candidate_ref=candidate_ref,
+                name=name,
+                region=region,
+                industries=industries,
+                source_ref=source_ref,
+                tax_id=tax_id,
+                registration_id=registration_id,
+                contact_refs=contact_refs,
+                selection_level=hit.selection_level,
+                observed_at=hit.observed_at,
+                captured_at=hit.captured_at,
+                source_refs=source_refs,
             )
+            merge_index = self._merge_index(accepted, normalized)
+
+            if merge_index is None:
+                accepted.append(normalized)
+            else:
+                accepted[merge_index] = self._merged_hit(
+                    accepted[merge_index],
+                    normalized,
+                )
+
             if len(accepted) >= criteria.limit:
                 break
 
