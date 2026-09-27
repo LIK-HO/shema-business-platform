@@ -2,7 +2,7 @@
 ## Current development-session synchronization — 2026-09-27
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-- HEAD: `8049981d06b69029e5064b3c9898d9ba739b0df4` — latest development commit; Phase 2-H design artifacts are added after verified CI #1348, but the new boundary has not yet completed its release-gate CI.
+- HEAD: `590a4b024ca18451ddba52369ab0184cc7edea9e` — latest development commit; DaData provider-neutral lookup adapter, activation contract, documentation and tests are present; the new boundary still requires release-gate verification.
 - PR: #56 — open, draft, mergeable.
 - Current boundary: **Phase 2-H — Controlled Provider Execution Boundary (DaData parallel alternative) — DEFINED / IMPLEMENTATION OPEN; live activation OFF. Phase 2-G FNS evidence hold remains independently BLOCKED for automation.**
 - Phase 2-A — Search Run Integrity Boundary: CLOSED / VERIFIED by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
@@ -24,9 +24,9 @@
 - P46 MAX provider evidence hold: CLOSED / VERIFIED.
 - Frozen kernel: unchanged.
 - No database schema, canonical identity semantic change, network automation, MAX activation or external network execution was introduced by Phase 2-A through this Phase 2-G boundary.
-- Phase 2-H artifacts now present: `architecture/dadata_adapter_contract.json`, `architecture/dadata_provider_evidence_2026_09_27.json`, `docs/SEARCH_RESEARCH_PHASE2H.md`, `tests/test_dadata_contract.py`, and `docs/CODEBASE_DIRECTION_AUDIT_2026_09_27.md`.
+- Phase 2-H artifacts now present: `architecture/dadata_adapter_contract.json`, `architecture/dadata_provider_evidence_2026_09_27.json`, `architecture/dadata_activation_contract.json`, provider-neutral lookup port `src/shema_platform/application/counterparty_lookup.py`, DaData adapter `src/shema_platform/adapters/intelligence/dadata.py`, deterministic tests `tests/test_dadata_contract.py`, `tests/test_dadata_lookup.py`, `tests/test_dadata_activation_contract.py`, `docs/SEARCH_RESEARCH_PHASE2H.md`, and `docs/CODEBASE_DIRECTION_AUDIT_2026_09_27.md`.
 - DaData is registered as `trusted_structured_dataset` / `trusted_secondary`; provider output remains evidence input rather than canonical truth.
-- Safest next action: implement the DaData adapter and its deterministic failure matrix behind the generic SearchProvider boundary, with live network execution still disabled until the full Phase 2-H release gate passes.
+- Safest next action: complete Phase 2-H release-gate verification, then integrate the lookup result into the existing Identity/Evidence pipeline under a separate controlled activation operation; live provider execution remains OFF.e matrix behind the generic SearchProvider boundary, with live network execution still disabled until the full Phase 2-H release gate passes.
 
 ## Historical core-certification baseline
 
