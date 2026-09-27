@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from shema_platform.application.procurement import (
+    ProcurementProviderError,
     ProcurementCollection,
     ProcurementLaw,
     ProcurementOpportunity,
@@ -95,3 +96,34 @@ def test_repeated_poll_is_idempotent_and_change_is_visible():
     assert second.new_items == ()
     assert [item.external_id for item in second.changed_items] == ["1"]
     assert [item.external_id for item in third.new_items] == ["2"]
+
+def test_rate_limit_is_bounded_then_recovers_without_duplicate_signal():
+    class RecoveringProvider:
+        provider_id = "fixture-procurement"
+
+        def __init__(self):
+            self.calls = 0
+
+        def search(self, query):
+            self.calls += 1
+            if self.calls == 1:
+                raise ProcurementProviderError(
+                    "PROVIDER_RATE_LIMIT",
+                    "fixture rate limit",
+                    retryable=True,
+                )
+            return page(opportunity())
+
+    provider = RecoveringProvider()
+    delays = []
+    monitor = ProcurementMonitor(
+        provider,
+        max_attempts=2,
+        sleeper=delays.append,
+    )
+
+    result = monitor.poll(query(), ProcurementWatchState())
+
+    assert provider.calls == 2
+    assert delays == [0.25]
+    assert [item.external_id for item in result.new_items] == ["1"]
