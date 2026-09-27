@@ -14,7 +14,7 @@ from shema_platform.application.search_run import (
     SearchSourceUnavailable,
     evaluate_search_quality,
 )
-from shema_platform.domain.search import SearchCriteria, SearchHit
+from shema_platform.domain.search import SearchCriteria, SearchHit, SelectionLevel
 
 
 @dataclass
@@ -157,7 +157,7 @@ def test_explicit_operator_selection_level_can_filter_results() -> None:
         region="Moscow",
         industries=frozenset({"logistics"}),
         limit=50,
-        selection_level="verified",
+        selection_level=SelectionLevel.VERIFIED,
     )
     provider = FakeProvider(
         hits=(
@@ -174,7 +174,7 @@ def test_explicit_operator_selection_level_can_filter_results() -> None:
                 "Moscow",
                 frozenset({"logistics"}),
                 "source:verified",
-                selection_level="verified",
+                selection_level=SelectionLevel.VERIFIED,
             ),
         )
     )
