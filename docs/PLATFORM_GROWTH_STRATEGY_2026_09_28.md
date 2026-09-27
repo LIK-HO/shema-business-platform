@@ -29,9 +29,8 @@ Yandex Cloud
 → AI provider environment
 
 Bitrix24 at mature-business stage
-→ live commercial transactions
-→ pricing used for transactions
-→ orders/deals
+→ live CRM/deal/order lifecycle
+→ transaction pricing and price locking
 → invoices/payments
 → business economics
 → communication history
@@ -141,13 +140,13 @@ Use serverless components for the application shell:
 - Monium for logs, metrics and traces;
 - Monitoring for service health.
 
-Yandex Cloud currently gives a free allowance for the first 1,000,000 Serverless Container invocations and 10 GB×hour RAM plus 5 vCPU×hour per month; Object Storage also has monthly free allowances. citeturn820635search1turn820635search2turn820635search6
+Yandex Cloud currently gives a free allowance for the first 1,000,000 Serverless Container invocations plus free monthly RAM/CPU allowances. This is enough for a low-traffic application shell, but it does not make the whole production stack free: Managed PostgreSQL, YandexGPT usage, external provider APIs, storage beyond free allowances and traffic can all create costs. citeturn820635search1turn820635search2turn820635search6
 
 The timer trigger can invoke a Cloud Function on a cron schedule, with bounded retries and an optional dead-letter queue. citeturn211156search0turn211156search1
 
 ### Stage YC-1 — minimal real production
 
-The one unavoidable production cost is the canonical PostgreSQL layer.
+The canonical production database is an expected baseline cost once real production data exists. Other variable costs — especially AI/provider calls and observability volume — must also be budgeted explicitly.
 
 Use Yandex Managed PostgreSQL rather than a self-managed VM when real production data begins. The service charges for compute, storage and backups while running; a stopped cluster still incurs storage/backup charges. citeturn820635search3
 
@@ -173,13 +172,13 @@ Add only when justified:
 - Object Storage lifecycle policies;
 - cost budgets and alarms.
 
-Message Queue currently provides 100,000 queue requests/month free, which makes it useful later for bounded transport workloads, but the existing PostgreSQL job/outbox mechanisms remain the business reliability authority. citeturn820635search5
+Message Queue may be introduced later for bounded transport workloads, but the existing PostgreSQL job/outbox mechanisms remain the business reliability authority. citeturn820635search5
 
 ### Observability rule
 
 Do not design the platform around Cloud Logging.
 
-Yandex Cloud currently states that Cloud Logging will be shut down in Q2 2027 and directs new workloads to Monium; the published comparison also shows Monium's current lower log-ingestion price and 31-day log TTL. citeturn211156search7turn211156search9
+Yandex Cloud states that Cloud Logging will be shut down in Q2 2027 and directs new workloads to Monium. Monium currently provides logs/metrics/traces, but its published logs/traces retention is 31 days; therefore Monium is operational telemetry, not long-term audit history. Long-lived audit and business history remain in PostgreSQL. citeturn495622search1turn495622search3turn495622search6 citeturn211156search7turn211156search9
 
 ## 6. YandexGPT
 
@@ -234,91 +233,164 @@ Do not weaken that contract to make MAX available sooner.
 
 ## 8. Bitrix24 as the mature business plane
 
+### Why Bitrix24 is a business-plane target, not a second source of research truth
+
+Mature CRM/ERP products place live sales/order/invoice state together so that the commercial transaction has one authoritative lifecycle. Salesforce defines an order as the agreement to provision services or deliver products with known quantity, price and date; Microsoft Dynamics 365 explicitly connects opportunity → quote → order → invoice and supports locking agreed prices on live transactions; SAP exposes scheduling agreements as contractual sales structures with validity and customer responsibility. citeturn495622search5turn496805search7turn496805search11
+
+That pattern supports the chosen boundary:
+
+**Shema prepares and explains the opportunity. Bitrix24 executes the live business transaction after handoff.**
+
 ### Entry point
 
-For a single Bitrix24 portal, an inbound webhook is appropriate for the first integration proof; Bitrix24 explicitly documents webhooks for simple integrations and single-account scenarios. For the mature multi-user application boundary, use OAuth 2.0. citeturn676125search0turn676125search4turn676125search6
+For the first single-portal integration proof, use the smallest supported Bitrix24 integration surface. At mature multi-user application scale, use an authenticated application boundary with explicit field ownership and reconciliation.
+
+### Handoff protocol
+
+The new `architecture/business_plane_boundary_contract.json` defines:
+
+`PREPARED → OUTBOX_RESERVED → SENT_UNKNOWN → ACKNOWLEDGED`
+
+with `RECONCILIATION_REQUIRED` and `HANDOFF_FAILED` as explicit failure states.
+
+The handoff uses:
+- stable `handoff_id`;
+- stable idempotency key;
+- mapping version;
+- payload hash;
+- correlation ID;
+- canonical Shema identity reference;
+- external Bitrix24 entity reference after acknowledgement.
+
+A lost response is **not** permission to blindly resend. The external result must be reconciled first.
+
+### Field ownership
+
+Shema owns:
+- identity resolution;
+- evidence/provenance/freshness;
+- qualification;
+- procurement observations;
+- contact preparation;
+- repeat-business preparation;
+- document requirement/configuration snapshots;
+- learning context.
+
+Bitrix24 owns after handoff:
+- live CRM/deal/order lifecycle;
+- live transaction price;
+- invoice/payment state;
+- business economics;
+- customer communication history;
+- assignment/team process state;
+- final business-document execution where configured.
+
+The same live field is never written by both systems.
 
 ### Synchronization pattern
 
-Shema → Bitrix24
+**Shema → Bitrix24**
 
-Send only the handoff package needed to operate the opportunity:
-
-- canonical identity reference;
-- company/contact reference;
+Send only the minimum execution context:
+- identity/company/contact reference;
 - qualification state;
 - evidence-backed reason for contact;
 - procurement context;
 - contact preparation;
-- dossier link/reference;
+- repeat-business preparation;
+- document requirement snapshot;
 - correlation/reference IDs.
 
-Bitrix24 → Shema
+**Bitrix24 → Shema**
 
-Return only the outcome data needed for learning:
+Return only versioned outcome events needed for learning:
+- reached/not reached;
+- response class;
+- qualified/rejected;
+- rejection reason;
+- won/lost/completed;
+- repeat demand;
+- operator correction;
+- coarse economic outcome only when explicitly justified.
 
-- contact reached / not reached;
-- response classification;
-- qualified / rejected;
-- reason for rejection;
-- deal won/lost;
-- repeat-business signal;
-- selected correction/feedback;
-- minimal outcome timestamps.
+Do not mirror the full CRM or finance database.
 
-Do not copy the full CRM or finance database back into Shema by default.
+### Repeat business
 
-### Field ownership
+Bitrix24 already provides recurring-deal functionality that can automatically create new deals from a recurring template, with intervals and stop conditions. Therefore Shema must **not** implement a second recurring-deal engine. Shema's Phase 3A is a repeat-business preparation layer that detects, revalidates and prepares the next handoff. citeturn496805search1turn496805search5
 
-A field has one owner.
+### API / integration strategy
 
-There are no unconstrained two-way writes to the same live field.
+The integration is event-driven and ownership-based:
 
-This is the critical protection against divergent price, responsible-person, stage or economic data.
+`Shema outbox → idempotent Bitrix command → Bitrix acknowledgement/event → Shema outcome intake → learning`
 
-Bitrix24 is the owner of live business-process fields after handoff. Shema remains the owner of research, evidence and intelligence fields.
+Any asynchronous transport is only a delivery mechanism. PostgreSQL remains canonical for Shema-owned state; Bitrix24 remains authoritative only for the business fields explicitly handed to it.
 
-### API mechanics
+### Tariff/capability strategy
 
-Bitrix24 supports inbound/outbound webhooks, OAuth 2.0, event handlers and batch REST calls. A batch can contain up to 50 subrequests. citeturn676125search1turn676125search6turn676125search9
+The current Bitrix24 catalog shows that plan capabilities differ materially: recurring deals and online payments are on Basic, invoices/estimates on Standard, while deeper automation/analytics appear on higher plans. Therefore the integration must use **capability detection**, not a hard-coded assumption that every portal has every feature. citeturn402426search0turn402426search1
 
-The integration should therefore use:
+When a capability is unavailable:
+- Shema keeps the preparation state;
+- the operator receives an explicit `CAPABILITY_UNAVAILABLE` state;
+- Shema does not silently recreate the missing CRM/accounting feature as a competing subsystem.
 
-Shema outbox → idempotent Bitrix command → Bitrix event → Shema outcome intake → learning
+### Reconciliation
 
-with explicit reconciliation.
+A mature integration requires:
+- periodic reconciliation of handoff IDs ↔ Bitrix24 entity IDs;
+- mapping-version checks;
+- detection of orphaned/duplicated external entities;
+- quarantine of ownership mismatches;
+- append-only handoff/outcome history.
 
-### Tariff progression
+## 9. Economics and Order Boundary
 
-Bitrix24 currently has a Free plan with basic CRM and a Basic plan that adds recurring deals and other expanded CRM functionality; higher plans add invoices/estimates, automation, analytics and deeper business-process tooling. Exact feature availability must be checked against the account's current plan before each activation. citeturn820635search4
+### Order — simple explanation
 
-The architecture does not depend on a specific tariff. The integration contract must degrade by capability rather than duplicate the missing function inside Shema.
+Inside the frozen kernel, **Order is a compatibility model**: customer/order reference, line items, quantity, unit price and lifecycle.
 
-## 9. Economics and order boundary
+It is useful because the core was certified around that business model and existing historical lineage should not be destroyed.
 
-New development in Shema must not expand live:
+It is **not** the target operational order system.
 
-- price calculation;
-- margin calculation;
-- invoice/payment accounting;
-- executor payroll/personnel management;
-- transaction accounting;
-- detailed fulfillment economics.
+After Bitrix24 handoff:
+- Bitrix24 owns the live order/deal;
+- Bitrix24 owns current price and transaction status;
+- Bitrix24 owns invoice/payment progression and business economics;
+- Shema keeps the preparation context and the reference needed for learning.
 
-The frozen kernel keeps its existing Order/Economics objects because removing them would violate the certified core boundary and historical lineage.
+This is consistent with mature sales platforms where quote/order/invoice form a controlled transaction lifecycle rather than being split between unrelated authorities. citeturn496805search0turn496805search7
 
-The product strategy changes their role:
+### Economics — simple explanation
 
-compatibility/history/learning evidence — yes
-new operational accounting platform — no
+Inside the frozen kernel, **Economics** is a traceable calculation/lineage capability: cost and revenue entries can be summed into a deterministic gross-margin result.
 
-At mature stage:
+That model is retained for compatibility and history.
 
-Bitrix24 → live commercial state and economics
+But it must not be mistaken for:
+- accounting;
+- tax accounting;
+- payment reconciliation;
+- payroll;
+- authoritative profitability reporting;
+- operational cost allocation.
 
-Shema → evidence that helps improve future decisions
+Bitrix24, or a connected finance/ERP/EDO/accounting system, owns those live business meanings once the transaction crosses the handoff boundary.
 
-This is the correct separation between an intelligence system and a transaction-control system.
+Shema should receive only the **minimum outcome features** needed to learn:
+- won/lost/completed;
+- repeat demand;
+- optional coarse revenue/cost/margin bands or normalized outcome classes;
+- source/provider quality;
+- operator corrections.
+
+Exact financial ledgers do not need to be mirrored into Shema by default.
+
+### Critical rule
+
+If a future feature requires Shema to calculate an authoritative live price, margin, invoice, payment state or fulfillment cost, that feature is **outside the current product boundary** and requires a separate architecture decision.
 
 ## 10. Learning without importing confidential business machinery
 
@@ -354,8 +426,8 @@ Detailed financial or personnel data enters Shema only if a separate business ca
 3. Keep ГосПлан as the first real procurement activation.
 4. Add TenderGuru only after measured source-coverage evidence shows a gap.
 5. Complete contact preparation.
-6. Implement the Repeat Customer Order Engine only as preparation/orchestration; do not turn Shema into the accounting owner.
-7. Complete document configuration.
+6. Implement Repeat Business Preparation only; do not reimplement Bitrix recurring deals.
+7. Implement Document Configuration & Handoff Preparation; final issuance/signing/storage stays in the business/EDO plane.
 8. Build Web/PWA over the proven workflows.
 9. Deploy the modular monolith to Yandex Cloud with Managed PostgreSQL as the production canonical database.
 10. Activate YandexGPT through the existing provider-neutral gateway and cloud secret boundary.
