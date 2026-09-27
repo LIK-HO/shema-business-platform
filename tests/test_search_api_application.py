@@ -4,10 +4,13 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from shema_platform.application.operator_search import OperatorSearchService
-from shema_platform.application.search_planning import RegistryBackedSearchPlanner, SearchSourceRegistry
+from shema_platform.application.search_planning import (
+    RegistryBackedSearchPlanner,
+    SearchSourceRegistry,
+)
 from shema_platform.application.search_run import SearchRunService
 from shema_platform.domain.search import SearchHit
-from shema_platform.experience.api import RequestContext, create_app
+from shema_platform.experience.api import create_app
 from shema_platform.experience.search_application import SearchOnlyAPIApplication
 from shema_platform.foundation.authentication import AuthenticatedActor, AuthenticationPort
 
@@ -35,8 +38,11 @@ class FakeProvider:
 
 def application() -> SearchOnlyAPIApplication:
     contract = json.loads(
-        (Path(__file__).parents[1] / "architecture" / "intelligence_source_registry_contract.json").read_text()
-    )
+        (
+            Path(__file__).parents[1]
+            / "architecture"
+            / "intelligence_source_registry_contract.json"
+        ).read_text()    )
     planner = RegistryBackedSearchPlanner(SearchSourceRegistry.from_contract(contract))
     service = OperatorSearchService(
         planner,
