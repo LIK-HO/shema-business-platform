@@ -2,7 +2,7 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold
-**Active development boundary:** Phase 1-A — Manual authoritative counterparty evidence check (implementation complete; verification pending)
+**Active development boundary:** Phase 1-B — Intelligence benchmark and source registry (ready; implementation not started)
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -62,6 +62,12 @@ Shema — это **личная операционная система влад
 Эти уровни являются progressive disclosure, а не тремя разными системами.
 
 ## Current stage synchronization — 2026-09-26
+
+- **Phase 1-A closure:** manual authoritative counterparty evidence check is CLOSED / VERIFIED.
+- Verified implementation commit: `363eb19043e280585fae1d3a2e7c78e2d387ab02`.
+- Verification CI run #1297 (`36284386157`) passed all seven release-gate jobs.
+- MAX readiness remains BLOCKED; Phase 1 work did not alter the MAX evidence hold or frozen kernel.
+- Next selected boundary: **Phase 1-B — Intelligence benchmark and source registry**; implementation has not started.
 
 - P46 MAX provider evidence revalidation is **CLOSED / VERIFIED**.
 - Final verified P46 commit: `b4c404404b7d0cf9317caf765723a3bc2003cd46`.
