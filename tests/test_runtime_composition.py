@@ -5,8 +5,8 @@ from shema_platform.experience.runtime_composition import (
     YandexGPTRuntimeAssembly,
     compose_yandexgpt_runtime,
 )
-from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
+from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
@@ -25,7 +25,8 @@ class MockSearchApplication:
         raise AssertionError("search application must not execute during composition")
 
 
-def snapshot() -> ConfigurationSnapshot:    return ConfigurationSnapshot(
+def snapshot() -> ConfigurationSnapshot:
+    return ConfigurationSnapshot(
         version="runtime:v1",
         environment="production",
         values={
@@ -62,6 +63,16 @@ def test_runtime_assembly_is_explicit_and_does_not_activate_provider() -> None:
     assert assembly.ai.gate.state.enabled is False
     with pytest.raises(Exception, match="not activated"):
         assembly.ai.configuration_version()
+
+
+def test_runtime_assembly_can_compose_search_without_provider_activation() -> None:
+    assembly = build()
+    search_application = MockSearchApplication()
+
+    composed = assembly.api_application(search_application=search_application)
+
+    assert isinstance(composed, SearchAugmentedAPIApplication)
+    assert assembly.ai.gate.state.enabled is False
 
 
 def test_runtime_assembly_activation_is_explicit() -> None:
