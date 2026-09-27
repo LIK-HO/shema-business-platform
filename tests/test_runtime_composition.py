@@ -1,12 +1,12 @@
 import pytest
 
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
-from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
 from shema_platform.experience.runtime_composition import (
     YandexGPTRuntimeAssembly,
     compose_yandexgpt_runtime,
 )
 from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 

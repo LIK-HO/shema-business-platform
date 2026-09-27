@@ -22,7 +22,11 @@ class YandexGPTRuntimeAssembly:
 
     ai: YandexGPTApplicationComposition
 
-    def api_application(self, *, search_application: APIApplication | None = None) -> APIApplication:
+    def api_application(
+        self,
+        *,
+        search_application: APIApplication | None = None,
+    ) -> APIApplication:
         base = AIOnlyAPIApplication(self.ai.service())
         if search_application is None:
             return base

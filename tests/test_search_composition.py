@@ -2,7 +2,6 @@ from unittest.mock import Mock
 
 from shema_platform.experience.api import APIApplication, RequestContext
 from shema_platform.experience.api_models import (
-    AIRunResponse,
     DiagnosticsResponse,
     SearchResponse,
 )
