@@ -85,6 +85,25 @@ paths:
               schema: { $ref: '#/components/schemas/ResearchResponse' }
         '423': { $ref: '#/components/responses/ReviewRequired' }
         '429': { $ref: '#/components/responses/RateLimitError' }
+  /v1/intelligence/counterparty-check:
+    post:
+      operationId: checkCounterparty
+      summary: Record a manual authoritative counterparty check
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CounterpartyCheckRequest' }
+      responses:
+        '200':
+          description: Counterparty evidence snapshot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CounterpartyCheckResponse' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ApplicationUnavailableError' }
   /v1/commercial-actions:
     post:
       operationId: createCommercialAction
@@ -342,6 +361,44 @@ components:
         sourceRef: { type: string }
         trustLevel: { type: string }
         confidence: { type: number, minimum: 0, maximum: 1 }
+    CounterpartyCheckRequest:
+      type: object
+      additionalProperties: false
+      required: [identifierType, identifier, canonicalName, sourceRef, sourceReliability, claimConfidence, observedAt, expiresAt]
+      properties:
+        identifierType: { type: string, enum: [INN, OGRN, OGRNIP] }
+        identifier: { type: string, minLength: 1, maxLength: 32 }
+        canonicalName: { type: string, minLength: 1 }
+        taxId: { type: [string, 'null'] }
+        registrationId: { type: [string, 'null'] }
+        legalStatus: { type: [string, 'null'] }
+        sourceRef: { type: string, minLength: 1 }
+        sourceReliability: { type: string, enum: [authoritative] }
+        claimConfidence: { type: number, minimum: 0, maximum: 1 }
+        observedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+    CounterpartyContradiction:
+      type: object
+      required: [field, existingValue, observedValue]
+      properties:
+        field: { type: string }
+        existingValue: { type: string }
+        observedValue: { type: string }
+    CounterpartyCheckResponse:
+      type: object
+      required: [subjectRef, freshness, evidenceIds, contradictions, quarantined, operatorBrief, correlationId]
+      properties:
+        subjectRef: { type: string }
+        identityRef: { type: [string, 'null'] }
+        identityState: { type: [string, 'null'] }
+        freshness: { type: string, enum: [fresh, expired] }
+        evidenceIds: { type: array, items: { type: string } }
+        contradictions:
+          type: array
+          items: { $ref: '#/components/schemas/CounterpartyContradiction' }
+        quarantined: { type: boolean }
+        operatorBrief: { type: string }
+        correlationId: { type: string }
     CommercialActionCreateRequest:
       type: object
       required: [identityId, contactRef, channel, evidenceRefs]
