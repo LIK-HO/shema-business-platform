@@ -79,7 +79,7 @@ DaData also documents multiple underlying data sources, including EGRUL/EGRIP an
 ## 7. Direction decision
 Current development vector is correct, with one required correction now applied.
 
-Recommended order: Phase 2-H → DaData adapter contract implementation → deterministic failure matrix → runtime integration → controlled activation gate → evidence/quality benchmark → broader provider expansion.
+Recommended order: Phase 2-H → DaData provider-neutral counterparty-lookup adapter → deterministic failure matrix → evidence pipeline integration → controlled activation gate → identity/search quality benchmark → broader provider expansion.
 
 FNS remains a parallel authoritative-source track, but becomes automatable only when its own provider-specific contract is evidenced.
 
