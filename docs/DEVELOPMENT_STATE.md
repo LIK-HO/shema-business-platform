@@ -1,5 +1,5 @@
 # Development State Ledger
-## Current development-session synchronization — 2026-09-26
+## Current development-session synchronization — 2026-09-27
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
 - HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
@@ -13,13 +13,14 @@
 - Verification CI: run #1297 (`36284386157`) — all seven required jobs passed.
 - Phase 1-A completed sub-boundaries: authoritative-source validation, INN/OGRN/OGRNIP observation contract, identity resolution by tax ID when available, traceable evidence, freshness, contradiction quarantine, append-only audit, compact operator brief, API/OpenAPI boundary.
 - Phase 1-A exit: full CI/release verification passed; frozen kernel unchanged; no database migration or external FNS network execution introduced.
-- Completed sub-boundary for Phase 1-B: entry synchronization and integrity boundary defined.
-- Active sub-boundary: define the machine-readable source registry, permanent synthetic benchmark corpus and pure metric evaluator; no network lookup or persistence migration.
+- Phase 1-B entry synchronization and integrity boundary: completed.
+- Phase 1-B is CLOSED / VERIFIED; the active boundary is now Phase 2 and no Phase 2 implementation has started.
 - Phase 1-B implementation complete: source registry contract, ten-case synthetic benchmark corpus, pure resolution/quality metric evaluator, operator documentation and negative-path tests.
 - Phase 1-B verification complete: CI run #1307 (`36302695693`) on `6172bb4dfd2fda1d75a766368bf669ce1e57ed39`; all seven required jobs passed.
 - Phase 1-B exit: no database schema, network automation, canonical identity semantic change or frozen-kernel change.
 - Safest next action: define the Phase 2 search/research integrity boundary, then implement only its smallest vertical slice.
-- Prohibited in Phase 1-B until benchmark evidence exists: mass source integration, hidden ranking gates, automatic qualification/promotion, new source-of-truth tables, kernel semantic changes, provider activation or MAX changes.
+- Historical Phase 1-B guardrail: mass source integration, hidden ranking gates, automatic qualification/promotion, new source-of-truth tables, kernel semantic changes, provider activation and MAX changes were prohibited until the benchmark boundary was closed.
+- Current Phase 2 guardrail: do not broaden into mass source orchestration or ranking authority before the smallest search/research vertical slice is contracted and measured.
 - Prior P46 full CI verification remains run #1265 (`36283673042`) on commit `b4c404404b7d0cf9317caf765723a3bc2003cd46`; all seven required jobs passed.
 
 
