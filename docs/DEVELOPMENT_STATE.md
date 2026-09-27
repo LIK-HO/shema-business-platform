@@ -2,7 +2,7 @@
 ## Current development-session synchronization — 2026-09-27
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-- HEAD: `758690225996c1c2cca95cbbd3b1c56638d69db8`.
+- HEAD: `6779e38578e35a5e8081ce8894b404c2fdfbe3de`.
 - PR: #56 — open, draft, mergeable.
 - Phase 2-H lookup→retry→evidence composition and synchronized documentation are CLOSED / VERIFIED by full CI #1383 (`36315401510`) with all seven release-gate jobs GREEN.
 - Phase 2-H controlled activation operation: **CLOSED / VERIFIED by CI #1392 (`36316219807`) on `de99fd3e30514c140464947099a03fa9399809f9`.**
@@ -27,7 +27,8 @@
 
 - Negative/recovery test file: `tests/test_counterparty_provider_runtime_negative.py`.
 - Exit document: `docs/RUNTIME_NEGATIVE_PROVIDER_OUTCOMES_2026_09_27.md`.
-- Full seven-job release gate: CI #1404 (`36317178100`) — all seven jobs GREEN.
+- Full seven-job release gate for the negative/recovery implementation: CI #1404 (`36317178100`) — all seven jobs GREEN.
+- Final post-closure regression gate: CI #1408 (`36320629569`) on `6779e38578e35a5e8081ce8894b404c2fdfbe3de` — all seven jobs GREEN.
 - Runtime boundary remains disabled by default; live DaData traffic did not occur.
 
 ## Historical core-certification baseline
