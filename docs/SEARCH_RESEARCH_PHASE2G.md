@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2-G is **IN PROGRESS**: one registry-declared source is selected, authoritative evidence is captured, and activation remains blocked.
+Phase 2-G is **IN PROGRESS**: the source-selection/evidence sub-boundary is CLOSED / VERIFIED by CI #1348, while live/automated activation remains blocked.
 
 ## Selected source
 
@@ -20,7 +20,7 @@ The source-specific adapter boundary is:
 
 `architecture/fns_transparent_business_adapter_contract.json`
 
-The evidence establishes the public FNS service, its official domain, manual operator access, published availability/data-refresh facts, and the existence of an open-data context.
+The evidence establishes the public FNS service, its official domain, manual operator access, published availability/data-refresh facts, and the open-data context. The FNS-hosted standard open-data terms also establish lawful-use and source-attribution conditions for open-data reuse.
 
 ## Explicit evidence gaps
 
@@ -71,3 +71,7 @@ No network call is performed by the repository code. No background polling, scra
 - automatic qualification;
 - MAX activation;
 - frozen-kernel change.
+
+## Verification
+
+Full CI #1348 (`36312176697`) passed all seven release-gate jobs on `3625d0e30309b64ebfb6eada4a2a75a4b619fa52` after the final evidence-record update.

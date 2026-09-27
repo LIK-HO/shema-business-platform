@@ -2,23 +2,30 @@
 ## Current development-session synchronization — 2026-09-27
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-- HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
+- HEAD: `3625d0e30309b64ebfb6eada4a2a75a4b619fa52` — latest verified implementation/evidence commit after full CI #1348.
 - PR: #56 — open, draft, mergeable.
-- Current boundary: Phase 2-G — First Source Selection and Evidence Capture — READY / implementation not started.
+- Current boundary: **Phase 2-G — First Source Selection and Evidence Capture — IN PROGRESS; source-selection/evidence sub-boundary CLOSED / VERIFIED; activation BLOCKED.**
 - Phase 2-A — Search Run Integrity Boundary: CLOSED / VERIFIED by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
 - Phase 2-B — Source-Registry-Backed Search Planning: CLOSED / VERIFIED by CI #1324 (`36308069460`) on `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
 - Phase 2-C — Registry-Backed Operator Search Composition: CLOSED / VERIFIED by CI #1330 (`36308647549`) on `16c08111e025bd267787eaa5de36c4dd53f70609`.
 - Phase 2-D — Generic Runtime Composition: CLOSED / VERIFIED by CI #1336 (`36309294705`) on `7637871b3cac379fdff056aed90ddc73aacf760f`.
 - Phase 2-E — Search Adapter Compliance Boundary: CLOSED / VERIFIED by CI #1340 (`36310957082`) on `abca1b26e32498105b4ea855474aab387091218c`.
 - Phase 2-F — First Approved Source Adapter Readiness: CLOSED / VERIFIED by CI #1343 (`36311263929`) on `9e49e79c3825703117ad6b587e9cee5160feaca9`.
-- Phase 2-F evidence: provider-neutral readiness gate with explicit NOT_READY, EVIDENCE_REQUIRED, READY_FOR_CONTROLLED_ACTIVATION and BLOCKED states; no provider selected and no live network execution.
-- Phase 2-G selected boundary: select exactly one registry-declared source, capture authoritative provider/access evidence, and define its source-specific adapter contract before any live execution.
+- Phase 2-G selection/evidence sub-boundary: CLOSED / VERIFIED by CI #1348 (`36312176697`) on `3625d0e30309b64ebfb6eada4a2a75a4b619fa52`.
+- Selected source: `fns_transparent_business` / FNS Transparent Business.
+- Phase 2-G contract: `architecture/fns_transparent_business_adapter_contract.json`.
+- Phase 2-G authoritative evidence record: `architecture/fns_transparent_business_evidence_2026_09_27.json`.
+- Phase 2-G deterministic fixture coverage: `tests/test_fns_transparent_business_contract.py`.
+- Lawful-use evidence is established for the FNS open-data context, with source attribution and lawful-use conditions preserved; this does not establish a provider-specific automation API contract.
+- Remaining evidence gaps: authoritative provider-side automation rate limits, timeout semantics and machine-error contract for an automated Transparent Business path remain unestablished.
 - Phase 2-G guardrail: no provider activation, automatic retry/fallback, new persistence authority, ranking authority, automatic qualification, MAX activation or frozen-kernel change.
-- Full documentation synchronization CI: run #1344 (`36311389471`) passed all seven release-gate jobs on HEAD `bee36a83bb69c088e4dadb0be5bde554c3c094da`.
+- Full CI #1347 (`36312001643`) passed all seven release-gate jobs on `88ae48ebda7b09bc525e8f6c29b911af7ccf0b60` before the final evidence-record update.
+- Full CI #1348 (`36312176697`) passed all seven release-gate jobs on `3625d0e30309b64ebfb6eada4a2a75a4b619fa52` after the final evidence-record update.
 - P46 MAX provider evidence hold: CLOSED / VERIFIED.
 - Frozen kernel: unchanged.
-- No database schema, canonical identity semantic change, MAX activation or external network execution was introduced by Phase 2-A through Phase 2-F.
-- Safest next action: begin Phase 2-G with source selection and authoritative evidence capture; do not activate the provider.
+- No database schema, canonical identity semantic change, network automation, MAX activation or external network execution was introduced by Phase 2-A through this Phase 2-G boundary.
+- No formal Phase 2-H is defined in the current roadmap. The next development step must therefore remain within the Phase 2 work already authorized by the roadmap and must establish a new durable boundary before any provider activation or broader capability expansion.
+- Safest next action: keep FNS live/automated traffic disabled; only proceed with a separately recorded controlled-execution boundary after the remaining provider-contract evidence is established, or continue non-network application work that does not require provider activation.
 
 ## Historical core-certification baseline
 

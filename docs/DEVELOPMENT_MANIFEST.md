@@ -1,8 +1,8 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold
-**Active development boundary:** Phase 2-G — First Source Selection and Evidence Capture (selected; implementation not started)
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold / Phase 2-G Evidence Boundary Verified
+**Active development boundary:** Phase 2-G — First Source Selection and Evidence Capture (source selected; evidence boundary verified; activation blocked)
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -72,21 +72,25 @@ Shema — это **личная операционная система влад
 - **Phase 2-C closure:** Registry-Backed Operator Search Composition is CLOSED / VERIFIED.
 - Implementation HEAD: `16c08111e025bd267787eaa5de36c4dd53f70609`.
 - Full verification CI run #1330 (`36308647549`) passed all seven release-gate jobs.
-- Phase 2-C exposes bounded completeness, plan version and registry provenance through the canonical search application edge while keeping adapters injected and network-disabled. It does not alter provider-specific runtime semantics.
-- No database schema, network automation, ranking authority, automatic qualification, canonical identity semantic change, MAX activation or frozen-kernel change was introduced in Phase 2-A, Phase 2-B, Phase 2-C or Phase 2-D.
 - **Phase 2-D closure:** Generic Runtime Composition is CLOSED / VERIFIED.
 - Verified HEAD: `7637871b3cac379fdff056aed90ddc73aacf760f`.
 - Full CI #1336 (`36309294705`) passed all seven release-gate jobs.
-- Phase 2-D proves the verified search capability crosses the real runtime HTTP composition boundary through provider-neutral injection while the existing AI/provider activation lifecycle remains unchanged.
 - **Phase 2-E closure:** Search Adapter Compliance Boundary is CLOSED / VERIFIED.
 - Verified HEAD: `abca1b26e32498105b4ea855474aab387091218c`.
 - Full CI #1340 (`36310957082`) passed all seven release-gate jobs.
-- Phase 2-E establishes registry-to-adapter compliance validation for source identity, metadata, lawful access and network-disabled state; no provider traffic is enabled.
 - **Phase 2-F closure:** First Approved Source Adapter Readiness Gate is CLOSED / VERIFIED.
 - Verified HEAD: `9e49e79c3825703117ad6b587e9cee5160feaca9`.
 - Full CI #1343 (`36311263929`) passed all seven release-gate jobs.
-- Phase 2-F proves a provider-neutral readiness gate with explicit NOT_READY, EVIDENCE_REQUIRED, READY_FOR_CONTROLLED_ACTIVATION and BLOCKED states. It does not select or activate a provider.
-- **Next selected boundary:** Phase 2-G — First Source Selection and Evidence Capture. The source must be chosen from the registry and its authoritative provider/access evidence captured before any controlled activation.
+- **Phase 2-G source-selection/evidence sub-boundary:** CLOSED / VERIFIED by full CI #1348 (`36312176697`) on `3625d0e30309b64ebfb6eada4a2a75a4b619fa52`.
+- Selected source: `fns_transparent_business` (FNS Transparent Business), already declared in the registry and already used by the Phase 1-A manual counterparty-check vertical slice.
+- Source-specific adapter contract: `architecture/fns_transparent_business_adapter_contract.json`.
+- Authoritative evidence record: `architecture/fns_transparent_business_evidence_2026_09_27.json`.
+- Deterministic fixtures: `tests/test_fns_transparent_business_contract.py`.
+- Lawful-use evidence is established for the FNS open-data context, including the requirement for lawful use and source attribution. This still does not establish a provider-specific automation API, rate-limit, timeout or machine-error contract.
+- **Phase 2-G overall remains IN PROGRESS / activation BLOCKED.** The repository does not infer missing provider automation facts.
+- No live provider traffic, automatic retry/fallback, new persistence authority, ranking authority, automatic qualification, MAX activation or frozen-kernel change is authorized by this boundary.
+- No formal Phase 2-H is defined in the current roadmap. Further Phase 2 work must remain capability-bounded and must create an explicit durable boundary before entering provider execution.
+- **Safest continuation:** keep provider execution disabled and either close the remaining provider-contract evidence gaps through authoritative documentation or define a separate controlled-execution boundary with its own contract, negative tests, rollback and release gate.
 
 ### Критерий допуска новой capability
 

@@ -251,11 +251,16 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - No provider was selected, no live network execution occurred, and no automatic activation/retry/fallback semantics were introduced.
 
 ### Phase 2-G — First Source Selection and Evidence Capture
-- **Status:** READY / implementation not started.
-- Select exactly one registry-declared source for the first controlled adapter path.
-- Capture authoritative provider contract, access/lawful-use evidence, rate/timeout behavior, provenance requirements, error semantics, kill-switch/rollback expectations and current provider-side idempotency/reconciliation facts where external effects are involved.
-- Keep live provider traffic disabled during evidence capture unless a separately approved controlled-execution boundary is created.
-- Exit evidence: source-specific adapter contract plus authoritative evidence record and deterministic fixture tests before any activation decision.
+- **Status:** IN PROGRESS / source-selection and evidence sub-boundary CLOSED / VERIFIED; activation BLOCKED.
+- Selected exactly one registry-declared source: `fns_transparent_business` / FNS Transparent Business.
+- Captured the source-specific adapter contract, authoritative evidence record and deterministic fixture tests.
+- Verified the official FNS public-service and open-data context, including lawful-use/source-attribution conditions.
+- Explicitly preserved the distinction between public/open-data reuse rights and a provider-specific automation contract.
+- Remaining automation evidence gaps: provider-side rate limits, timeout semantics and machine-error contract are not authoritatively established for an automated Transparent Business path.
+- Full CI #1348 (`36312176697`) passed all seven release-gate jobs on `3625d0e30309b64ebfb6eada4a2a75a4b619fa52`.
+- Live provider traffic remains disabled; no automatic retry/fallback, production activation, new persistence authority, ranking authority, automatic qualification or frozen-kernel change is permitted.
+- **Sub-boundary exit evidence:** source selection + evidence record + source-specific adapter contract + deterministic fixtures are verified before any activation decision.
+- **Next boundary:** none is numbered after 2-G in the current roadmap. Any provider execution must therefore be introduced as a separately named, explicitly approved controlled-execution boundary rather than inferred as an automatic Phase 2-H.
 
 ### Work
 - multi-source search orchestration;
