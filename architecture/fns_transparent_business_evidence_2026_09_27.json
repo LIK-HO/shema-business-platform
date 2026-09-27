@@ -39,6 +39,16 @@
         "Transparent Business states that it operates with open FNS data",
         "the service points users to the FNS open-data resource and electronic data formats"
       ]
+    },
+    {
+      "evidence_id": "fns-open-data-terms",
+      "url": "https://www.nalog.gov.ru/files/tipovye_usloviya_od.pdf",
+      "claims": [
+        "FNS-hosted standard open-data terms define open data as machine-processable information",
+        "the terms allow users to freely search, obtain, transfer and disseminate open data",
+        "the terms require lawful use and attribution to the source",
+        "the terms do not by themselves establish a provider-specific automation API, rate-limit or timeout contract for Transparent Business"
+      ]
     }
   ],
   "verified_provider_contract": {
@@ -59,8 +69,14 @@
   },
   "lawful_access_evidence": {
     "manual_operator_path": "official public FNS service",
-    "automated_access_authorization": "NOT_ESTABLISHED",
-    "policy": "Do not infer automated access rights or operational limits from the existence of the public web service."
+    "open_data_reuse_basis": "FNS-hosted standard open-data terms",
+    "automated_access_authorization": "PARTIALLY_ESTABLISHED_FOR_OPEN_DATA_REUSE; NOT_ESTABLISHED_FOR_A_TRANSPARENT_BUSINESS_AUTOMATION_ENDPOINT",
+    "conditions": [
+      "use only for lawful purposes",
+      "preserve source attribution",
+      "do not infer service-specific API permissions or operational limits from generic open-data terms"
+    ],
+    "policy": "Public availability and open-data reuse rights do not substitute for a provider-specific automation contract."
   },
   "provenance_requirements": {
     "source_ref": "https://pb.nalog.ru/",
