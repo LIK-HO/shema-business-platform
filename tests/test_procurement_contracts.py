@@ -16,7 +16,7 @@ def test_gosplan_contract_keeps_live_execution_disabled_and_source_observation_s
     assert payload["application_controls"]["no_html_scraping_fallback"] is True
 
 
-def test_monitoring_contract_is_cursor_based_and_deduplicated():
+def test_monitoring_contract_is_offset_based_and_deduplicated():
     payload = load("procurement_monitoring_contract.json")
     assert payload["requirements"]["cursor_based"] is False
     assert payload["requirements"]["page_offset_polling"] is True
