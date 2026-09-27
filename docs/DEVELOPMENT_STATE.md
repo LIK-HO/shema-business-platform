@@ -4,10 +4,12 @@
 - Branch: `v1.5/p46-max-provider-evidence-hold`
 - HEAD: resolved live from GitHub for every development session; the state ledger intentionally does not self-reference its own commit SHA.
 - PR: #56 — open, draft, mergeable.
-- Current boundary: Phase 2 — Mature Search and Research — READY / Phase 2-B source-registry-backed search planning; Phase 2-A CLOSED / VERIFIED.
+- Current boundary: Phase 2 — Mature Search and Research — IN_PROGRESS / Phase 2-B source-registry-backed search planning.
 - Phase 2-A implementation: bounded search-run orchestration, explicit completeness states, source/candidate budgets, deterministic source order, canonical candidate normalization and benchmark search-quality metrics.
 - Phase 2-A implementation commits: cfb48dd9dbccee426403834f1e153ac4440ed11b (initial slice) and a94573ad8c5ab83b6f44ceb5281b9f7c9d045182 (test-contract correction).
 - Phase 2-A verification: CLOSED / VERIFIED by full CI #1316 (36304414654) on HEAD af813ff79802aa358eafcb68586d3bf0b105aa7d; supply-chain, quality 3.12/3.13, integration 3.12/3.13, backup-recovery and release-contract all passed.
+- Phase 2-B scope: validate registry source references, reliability/access metadata and lawful-access policy before a source enters a search plan; no network automation or ranking authority.
+- Phase 2-B verification is NOT YET CLOSED; full CI verification is required after implementation.
 - CI #1314 and #1315 were cancelled by GitHub concurrency after the corrected run was superseded; they are not authoritative verification evidence.
 - No database schema, network automation, ranking authority, automatic qualification, canonical identity semantic change, MAX activation or frozen-kernel change was introduced in Phase 2-A.
 - P46 MAX provider evidence hold: CLOSED / VERIFIED.
