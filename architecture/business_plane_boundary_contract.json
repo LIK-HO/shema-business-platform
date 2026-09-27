@@ -1,0 +1,123 @@
+{
+  "version": "1.0",
+  "status": "strategic_boundary_contract",
+  "purpose": "Safe handoff from Shema intelligence and preparation into a mature external business control plane.",
+  "frozen_kernel_impact": false,
+  "domain_ownership": {
+    "shema": [
+      "identity_resolution",
+      "evidence",
+      "provenance",
+      "freshness",
+      "qualification",
+      "procurement_observations",
+      "contact_preparation",
+      "repeat_business_preparation",
+      "document_requirement_configuration",
+      "ai_run_lineage",
+      "learning_context"
+    ],
+    "bitrix24_after_handoff": [
+      "live_crm_state",
+      "deal_and_order_lifecycle",
+      "transaction_price",
+      "invoice_and_payment_state",
+      "business_economics",
+      "customer_communication_history",
+      "assignment_and_team_processes",
+      "final_business_document_execution_where_configured"
+    ],
+    "forbidden_dual_ownership": [
+      "transaction_price",
+      "live_deal_stage",
+      "live_order_status",
+      "invoice_state",
+      "payment_state",
+      "business_margin",
+      "customer_communication_history"
+    ]
+  },
+  "handoff_state_machine": [
+    "PREPARED",
+    "OUTBOX_RESERVED",
+    "SENT_UNKNOWN",
+    "ACKNOWLEDGED",
+    "RECONCILIATION_REQUIRED",
+    "HANDOFF_FAILED",
+    "CANCELLED"
+  ],
+  "handoff_identity": {
+    "stable_handoff_id_required": true,
+    "stable_idempotency_key_pattern": "bitrix-handoff:{handoff_id}",
+    "mapping_version_required": true,
+    "payload_hash_required": true,
+    "correlation_id_required": true,
+    "shema_identity_reference_required": true,
+    "external_entity_reference_required_after_ack": true
+  },
+  "delivery": {
+    "outbox_required": true,
+    "external_call_outside_core_transaction": true,
+    "at_least_once_delivery": true,
+    "duplicate_safe_consumer_required": true,
+    "same_key_different_payload_must_fail_closed": true,
+    "lost_response_requires_reconciliation_before_retry": true,
+    "no_blind_replay_of_unknown_business_effect": true
+  },
+  "ownership_transfer": {
+    "handoff_does_not_delete_shema_history": true,
+    "bitrix_becomes_live_business_authority_only_after_acknowledged_handoff": true,
+    "shema_stores_reference_and_minimal_outcome_lineage": true,
+    "same_live_field_is_never_written_by_both_systems": true,
+    "reconciliation_can_quarantine_inconsistent_mapping": true
+  },
+  "minimum_handoff_payload": [
+    "identity_reference",
+    "company_or_contact_reference",
+    "qualification_state",
+    "evidence_references",
+    "procurement_context_if_any",
+    "contact_preparation",
+    "repeat_business_preparation_if_any",
+    "document_requirement_snapshot_if_any",
+    "correlation_reference"
+  ],
+  "data_minimization": {
+    "no_full_crm_mirror": true,
+    "no_full_finance_mirror": true,
+    "no_executor_personnel_dataset_by_default": true,
+    "no_raw_secret_transfer": true,
+    "only_outcome_features_return_to_shema_by_default": true
+  },
+  "learning_return": {
+    "stable_external_event_id_required": true,
+    "mapping_version_required": true,
+    "outcome_semantics_versioned": true,
+    "historical_outcomes_are_append_only": true,
+    "corrections_are_events_not_overwrites": true,
+    "full_crm_replication_disabled_by_default": true
+  },
+  "repeat_business": {
+    "shema_role": "detect_and_prepare_repeat_business",
+    "bitrix_role_after_handoff": "execute_recurring_or_repeat_business_process",
+    "shema_must_not_reimplement_bitrix_recurring_deal_engine": true
+  },
+  "documents": {
+    "shema_role": "requirements_and_configuration_snapshot",
+    "bitrix_or_dedicated_business_system_role": "final_issuance_signing_storage_and_business_record_where_configured",
+    "legal_truth_is_not_created_by_ai_or_template_engine": true
+  },
+  "economics": {
+    "shema_role": "optional_coarse_outcome_features_for_learning",
+    "bitrix_role_after_handoff": "live_transaction_economics",
+    "frozen_shema_economics_role": "compatibility_and_historical_lineage_only",
+    "no_new_live_accounting_subsystem_in_shema": true
+  },
+  "failure_policy": {
+    "provider_or_crm_unavailable": "retain_prepared_handoff_and_retry_boundedly",
+    "unknown_external_effect": "reconciliation_required",
+    "mapping_drift": "fail_closed_and_manual_review",
+    "permission_failure": "fail_closed",
+    "schema_or_contract_mismatch": "fail_closed"
+  }
+}
