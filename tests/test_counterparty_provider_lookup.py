@@ -15,7 +15,52 @@ from shema_platform.application.counterparty_provider_lookup import (
     CounterpartyProviderLookupService,
 )
 from shema_platform.domain.identity import Identity, IdentityState
-from tests.test_counterparty_provider_evidence import UOW, Identities
+
+
+class Identities:
+    def __init__(self, records=None):
+        self.records = list(records or [])
+
+    def find_by_tax_id(self, tax_id: str):
+        return next((item for item in self.records if item.tax_id == tax_id), None)
+
+
+class Evidence:
+    def __init__(self):
+        self.records = []
+
+    def add(self, value):
+        self.records.append(value)
+
+
+class Quarantine:
+    def __init__(self):
+        self.records = []
+
+    def add(self, **value):
+        self.records.append(value)
+
+
+class Audits:
+    def __init__(self):
+        self.records = []
+
+    def append(self, value):
+        self.records.append(value)
+
+
+class UOW:
+    def __init__(self, identities):
+        self.identities = identities
+        self.evidence = Evidence()
+        self.quarantine = Quarantine()
+        self.audits = Audits()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
 
 
 class StubProvider:
