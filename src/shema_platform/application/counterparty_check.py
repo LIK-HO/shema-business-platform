@@ -312,7 +312,7 @@ class CounterpartyCheckService:
         next_step = (
             " Требуется ручная сверка конфликта до квалификации."
             if quarantined
-            else " Следующий безопасный шаг: независимая корроборация материала."
+            else " Следующий безопасный шаг: независимая проверка материала по другому источнику."
         )
         brief = (
             f"{identity_line} Источник: {observation.source_ref}. "
