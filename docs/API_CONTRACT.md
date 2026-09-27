@@ -29,6 +29,17 @@ All clients share the same command/query semantics, authorization and policy gat
 | GET /v1/economics/{entityRef} | Read economic lineage |
 | GET /v1/diagnostics | Read operator-safe diagnostics |
 
+## Search boundary
+
+POST /v1/search is the canonical operator search edge.
+
+- sourceIds is optional; when omitted, the composed application may use its configured default registry source set.
+- maxSources and maxCandidates are explicit bounded search budgets.
+- The response reports completeness so NOT_SEARCHED, SEARCHED_NOT_FOUND, SOURCE_UNAVAILABLE, BUDGET_LIMITED and COMPLETE are never collapsed.
+- planVersion identifies the reproducible registry-backed search plan.
+- sourceAttempts expose source class, reliability, access mode and attempt state; source reliability is metadata, not a ranking score.
+- The first operator composition uses injected adapters and does not activate provider network traffic automatically.
+- Search remains open to the operator; there is no mandatory ranking or automatic qualification gate in this boundary.
 ## Counterparty check boundary
 
 - The endpoint accepts a manual observation obtained from an authoritative FNS source; it does not perform provider network traffic.

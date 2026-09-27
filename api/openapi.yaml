@@ -304,12 +304,35 @@ components:
         industries: { type: array, minItems: 1, items: { type: string } }
         limit: { type: integer, minimum: 1, maximum: 500, default: 50 }
         selectionLevel: { type: string, enum: [candidate, identified, verified] }
+        sourceIds: { type: array, maxItems: 50, items: { type: string } }
+        maxSources: { type: integer, minimum: 1, maximum: 50, default: 8 }
+        maxCandidates: { type: integer, minimum: 1, maximum: 5000, default: 500 }
     SearchResponse:
       type: object
       required: [results, correlationId]
       properties:
         results: { type: array, items: { $ref: '#/components/schemas/SearchHit' } }
         correlationId: { type: string }
+        completeness:
+          type: string
+          enum: [NOT_SEARCHED, SEARCHED_NOT_FOUND, SOURCE_UNAVAILABLE, BUDGET_LIMITED, COMPLETE]
+        planVersion: { type: string }
+        sourceAttempts:
+          type: array
+          items: { $ref: '#/components/schemas/SearchSourceAttempt' }
+    SearchSourceAttempt:
+      type: object
+      required: [sourceId, sourceClass, reliability, accessMode, status, candidateCount]
+      properties:
+        sourceId: { type: string }
+        sourceClass: { type: string }
+        reliability: { type: string }
+        accessMode: { type: string }
+        status:
+          type: string
+          enum: [SEARCHED, SEARCHED_NOT_FOUND, SOURCE_UNAVAILABLE, BUDGET_LIMITED]
+        candidateCount: { type: integer, minimum: 0 }
+        errorCode: { type: [string, 'null'] }
     SearchHit:
       type: object
       required: [candidateRef, name, region, industries, sourceRef, selectionLevel]

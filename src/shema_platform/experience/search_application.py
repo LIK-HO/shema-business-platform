@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from shema_platform.application.operator_search import OperatorSearchService
+from shema_platform.application.search_run import SearchBudget
 from shema_platform.domain.search import SearchCriteria, SelectionLevel
 from shema_platform.experience.api import ApplicationUnavailable, RequestContext
 from shema_platform.experience.api_models import (
@@ -12,6 +13,7 @@ from shema_platform.experience.api_models import (
     CommunicationResult,
     DiscoveryRequest,
     DiscoveryResponse,
+    DiagnosticsResponse,
     EconomicResponse,
     OrderCreateRequest,
     OrderResponse,
@@ -77,9 +79,7 @@ class SearchOnlyAPIApplication:
         )
 
     @staticmethod
-    def _service_budget(request: SearchRequest):
-        from shema_platform.application.search_run import SearchBudget
-
+    def _service_budget(request: SearchRequest) -> SearchBudget:
         return SearchBudget(
             max_sources=request.max_sources,
             max_candidates=request.max_candidates,
@@ -128,5 +128,5 @@ class SearchOnlyAPIApplication:
     def get_economics(self, entity_ref: str, context: RequestContext) -> EconomicResponse:
         self._unsupported()
 
-    def get_diagnostics(self, context: RequestContext) -> EconomicResponse:
+    def get_diagnostics(self, context: RequestContext) -> DiagnosticsResponse:
         self._unsupported()
