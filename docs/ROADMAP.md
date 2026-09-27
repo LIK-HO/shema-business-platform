@@ -273,7 +273,7 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - **Required evidence discipline:** only documented provider semantics may be encoded as facts; unknown provider behavior remains explicitly unknown.
 - **Safety:** read-only lookup permits retries from an external-effect perspective, but not unbounded retries or quota amplification. Retry/backoff/jitter and application budgets must be bounded and observable.
 - **Activation:** no CI live traffic, no credentials in source control, no automatic activation and no implicit fallback to FNS or another provider. Live execution is a separate authorized operation after the complete gate.
-- **Exit evidence:** source registry entry; provider contract; authoritative evidence record; adapter implementation; deterministic positive/negative/rate-limit/timeout fixtures; budget/retry tests; secret-boundary tests; observability/correlation evidence; kill-switch/rollback proof; full seven-job release gate.
+- **Verified implementation evidence:** source registry entry; provider contract; authoritative evidence record; provider-neutral lookup port; DaData adapter; deterministic positive/negative/rate-limit/timeout/size fixtures; bounded retry tests; secret-boundary tests; activation contract; conservative secondary-evidence intake; lookup→retry→evidence composition; full seven-job release-gate CI #1377 (`36315266092`) GREEN. Controlled live activation remains a separate gate.
 - **No changes to:** v1.4 semantics, DB schema, canonical identity semantics or frozen kernel.
 
 ### Work
