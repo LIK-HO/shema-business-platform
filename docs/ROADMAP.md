@@ -260,7 +260,20 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - Full CI #1348 (`36312176697`) passed all seven release-gate jobs on `3625d0e30309b64ebfb6eada4a2a75a4b619fa52`.
 - Live provider traffic remains disabled; no automatic retry/fallback, production activation, new persistence authority, ranking authority, automatic qualification or frozen-kernel change is permitted.
 - **Sub-boundary exit evidence:** source selection + evidence record + source-specific adapter contract + deterministic fixtures are verified before any activation decision.
-- **Next boundary:** none is numbered after 2-G in the current roadmap. Any provider execution must therefore be introduced as a separately named, explicitly approved controlled-execution boundary rather than inferred as an automatic Phase 2-H.
+- **Next boundary:** Phase 2-H — controlled provider execution with DaData as the parallel alternative; FNS remains a separately gated evidence hold.
+
+### Phase 2-H — Controlled Provider Execution Boundary (DaData parallel alternative)
+- **Status:** DEFINED / IMPLEMENTATION BOUNDARY OPEN; live activation remains OFF.
+- **Purpose:** introduce the first provider-specific execution path without weakening the provider-neutral search contracts or frozen kernel.
+- **Primary alternative:** `dadata_organization_api` using the documented DaData organization-by-INN/OGRN API.
+- **Parallel hold:** `fns_transparent_business` remains independently governed and BLOCKED for automation.
+- **Classification:** `trusted_structured_dataset` / `trusted_secondary`; DaData is a provider/service aggregation layer, not the canonical authoritative source.
+- **Required provider facts:** endpoint/authentication, query/count constraints, daily quota, 30 requests/second and 60 new connections/minute, HTTP 400/401/403/405/413/429/5xx mapping, application timeout policy, bounded retry classification, provenance, correlation, kill-switch, credential isolation and rollback.
+- **Required evidence discipline:** only documented provider semantics may be encoded as facts; unknown provider behavior remains explicitly unknown.
+- **Safety:** read-only lookup permits retries from an external-effect perspective, but not unbounded retries or quota amplification. Retry/backoff/jitter and application budgets must be bounded and observable.
+- **Activation:** no CI live traffic, no credentials in source control, no automatic activation and no implicit fallback to FNS or another provider. Live execution is a separate authorized operation after the complete gate.
+- **Exit evidence:** source registry entry; provider contract; authoritative evidence record; adapter implementation; deterministic positive/negative/rate-limit/timeout fixtures; budget/retry tests; secret-boundary tests; observability/correlation evidence; kill-switch/rollback proof; full seven-job release gate.
+- **No changes to:** v1.4 semantics, DB schema, canonical identity semantics or frozen kernel.
 
 ### Work
 - multi-source search orchestration;
