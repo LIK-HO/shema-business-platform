@@ -205,7 +205,7 @@ The first operator slice can search/check a counterparty, inspect the compact re
 
 ### Status synchronization — 2026-09-27
 - Phase 2-A — Search Run Integrity Boundary: **CLOSED / VERIFIED** by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
-- Phase 2-B — Source-Registry-Backed Search Planning: **CLOSED / VERIFIED** by CI #1324 (`36308069460`) on `ee549cada95a0a7647b2b01eec51fa0bdd9bc`.
+- Phase 2-B — Source-Registry-Backed Search Planning: **CLOSED / VERIFIED** by CI #1324 (`36308069460`) on `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
 - Phase 2-C — Registry-Backed Operator Search Composition: **CLOSED / VERIFIED** by CI #1330 (`36308647549`) on `16c08111e025bd267787eaa5de36c4dd53f70609`.
 - Next active sub-boundary: **Phase 2-D — generic runtime composition** for the verified search capability, provider-neutral and network-disabled.
 
