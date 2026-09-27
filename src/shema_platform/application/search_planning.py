@@ -34,7 +34,12 @@ class RegistrySearchPlan:
 class SearchSourceRegistry:
     """Validated in-memory view of the machine-readable intelligence source registry."""
 
-    def __init__(self, sources: Sequence[SearchRegistrySource], *, lawful_access_required: bool) -> None:
+    def __init__(
+        self,
+        sources: Sequence[SearchRegistrySource],
+        *,
+        lawful_access_required: bool,
+    ) -> None:
         items = tuple(sources)
         ids = tuple(item.source_id for item in items)
         if len(ids) != len(set(ids)):
@@ -50,7 +55,11 @@ class SearchSourceRegistry:
     def from_contract(cls, contract: Mapping[str, Any]) -> SearchSourceRegistry:
         policy = contract.get("policy")
         sources = contract.get("sources")
-        if not isinstance(policy, Mapping) or not isinstance(sources, Sequence) or isinstance(sources, (str, bytes)):
+        if (
+            not isinstance(policy, Mapping)
+            or not isinstance(sources, Sequence)
+            or isinstance(sources, (str, bytes))
+        ):
             raise ValueError("source registry contract is malformed")
         if policy.get("network_execution_enabled") is not False:
             raise ValueError("registry policy must keep network execution disabled")
