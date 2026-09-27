@@ -93,7 +93,7 @@ Shema — это **личная операционная система влад
 - `fns_transparent_business` remains independently tracked as an evidence-hold alternative and stays BLOCKED for automated activation until its own provider-specific automation contract is authoritatively established.
 - Phase 2-H must preserve provider isolation: one provider adapter cannot inherit another provider's rate limits, errors, timeout semantics, retry policy or authorization assumptions. DaData enters through the provider-neutral counterparty-lookup boundary, not the discovery SearchProvider contract.
 - DaData is classified as `trusted_secondary`, not `authoritative`; its data may support discovery, identity resolution and enrichment, but cannot by itself promote canonical truth without the existing Evidence/identity rules.
-- Live execution remains disabled until the Phase 2-H readiness contract, negative tests, credential boundary, bounded timeout/retry policy, observability, rollback and full release gate are all satisfied.
+- Live execution remains disabled until the Phase 2-H activation contract, negative tests, credential boundary, bounded timeout/retry policy, observability, rollback and full release gate are all satisfied. Provider lookup observations may enter Evidence, but trusted-secondary data cannot promote canonical Identity by itself.
 
 ### Критерий допуска новой capability
 
