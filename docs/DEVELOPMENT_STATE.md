@@ -6,12 +6,12 @@
 - PR: #58 — open, draft, mergeable state subject to current CI; head resolved live.
 - Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED; live DaData remains OFF.
 - Active implementation sub-boundary: **Phase 2-I procurement foundation** — CLOSED / VERIFIED by full CI #1417 (`36351981305`) on the verified branch head before this documentation synchronization.
-- Verified implementation: provider-neutral procurement contracts; ГосПлан API v2 adapter boundary; 44-FZ/223-FZ purchase/plan collections; bounded timeout/response/retry/error mapping; cursor-based watch state; new/changed fingerprint detection; deterministic adapter, contract and monitoring tests.
+- Verified implementation: provider-neutral procurement contracts; ГосПлан API v2 adapter boundary; 44-FZ/223-FZ purchase/plan collections; bounded timeout/response/retry/error mapping; page-offset watch state; provider/external-ID deduplication; new/changed fingerprint detection; deterministic adapter, contract and monitoring tests.
 - Procurement provider execution remains disabled by default; no production credentials in Git; no live CI provider traffic; no tender submission/participation automation; no scraping fallback.
 - Procurement observation remains external evidence input and does not create canonical Identity or a second system of record.
 - Product flow is fixed as: procurement observation → identity/evidence → qualification → contact preparation → commercial action → order → document pack → result/learning.
-- Repeat Customer Order Engine is fixed in Phase 3A between Contact Preparation and Legal/Document Configuration; runtime implementation is not part of the closed procurement foundation boundary.
-- Documents are fixed in Phase 4 as a complete configurable registry for contracts, work orders/specifications, offers, invoices/payment requests, acts, tax documents where applicable, addenda/change orders, reconciliation, confidentiality/authority/termination and procurement packs.
+- Phase 3A is fixed as Repeat Business Preparation between Contact Preparation and Document Configuration; runtime implementation is not part of the closed procurement foundation boundary.
+- Phase 4 is fixed as Document Configuration & Handoff Preparation; final issuance/signing/storage remains in the mature business/EDO plane.
 - Web + PWA are the only approved experience surfaces; Android is removed from the target roadmap.
 - Multi-operator collaboration is a permanent architecture requirement: explicit actor, ownership/assignment/team queues, server-side authorization, audited handoff, revision/concurrency protection and explicit conflict resolution.
 - Remaining Phase 2-I work is not implicitly opened: production activation, durable server-side monitoring state/scheduling, canonical API/runtime exposure, Evidence/Identity intake composition and operational monitoring require a separately selected bounded sub-boundary.
