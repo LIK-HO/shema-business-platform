@@ -2,7 +2,7 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold
-**Active development boundary:** Phase 2 — Mature Search and Research / Phase 2-D runtime composition of the verified search capability (ready)
+**Active development boundary:** Phase 2-E — Search Adapter Compliance Boundary (selected; implementation not started)
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -73,8 +73,12 @@ Shema — это **личная операционная система влад
 - Implementation HEAD: `16c08111e025bd267787eaa5de36c4dd53f70609`.
 - Full verification CI run #1330 (`36308647549`) passed all seven release-gate jobs.
 - Phase 2-C exposes bounded completeness, plan version and registry provenance through the canonical search application edge while keeping adapters injected and network-disabled. It does not alter provider-specific runtime semantics.
-- No database schema, network automation, ranking authority, automatic qualification, canonical identity semantic change, MAX activation or frozen-kernel change was introduced in Phase 2-A, Phase 2-B or Phase 2-C.
-- **Next selected boundary:** Phase 2-D — generic runtime composition of the verified search capability without provider-specific semantics or provider activation.
+- No database schema, network automation, ranking authority, automatic qualification, canonical identity semantic change, MAX activation or frozen-kernel change was introduced in Phase 2-A, Phase 2-B, Phase 2-C or Phase 2-D.
+- **Phase 2-D closure:** Generic Runtime Composition is CLOSED / VERIFIED.
+- Verified HEAD: `7637871b3cac379fdff056aed90ddc73aacf760f`.
+- Full CI #1336 (`36309294705`) passed all seven release-gate jobs.
+- Phase 2-D proves the verified search capability crosses the real runtime HTTP composition boundary through provider-neutral injection while the existing AI/provider activation lifecycle remains unchanged.
+- **Next selected boundary:** Phase 2-E — Search Adapter Compliance Boundary; provider-specific network execution remains disabled.
 
 ### Критерий допуска новой capability
 

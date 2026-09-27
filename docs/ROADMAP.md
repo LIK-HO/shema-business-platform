@@ -207,7 +207,8 @@ The first operator slice can search/check a counterparty, inspect the compact re
 - Phase 2-A — Search Run Integrity Boundary: **CLOSED / VERIFIED** by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
 - Phase 2-B — Source-Registry-Backed Search Planning: **CLOSED / VERIFIED** by CI #1324 (`36308069460`) on `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
 - Phase 2-C — Registry-Backed Operator Search Composition: **CLOSED / VERIFIED** by CI #1330 (`36308647549`) on `16c08111e025bd267787eaa5de36c4dd53f70609`.
-- Next active sub-boundary: **Phase 2-D — generic runtime composition** for the verified search capability, provider-neutral and network-disabled.
+- Phase 2-D — Generic Runtime Composition: **CLOSED / VERIFIED** by CI #1336 (`36309294705`) on `7637871b3cac379fdff056aed90ddc73aacf760f`.
+- Next active sub-boundary: **Phase 2-E — Search Adapter Compliance Boundary**, provider-neutral and network-disabled.
 
 ### Objective
 Scale from deterministic checks to repeatable customer discovery and deep intelligence.
@@ -232,11 +233,17 @@ Scale from deterministic checks to repeatable customer discovery and deep intell
 - This boundary deliberately stops short of wiring the search capability into the provider-specific runtime composition.
 
 ### Phase 2-D — Generic runtime composition
-- **Status:** READY / not started.
-- Wire the verified search application capability into a generic runtime composition layer without changing the existing AI/provider activation semantics.
-- Keep search adapters injected and provider-neutral; provider traffic remains disabled by default.
-- Preserve the existing `APIApplication` edge and all previously verified AI/runtime tests.
-- Add an end-to-end runtime smoke path proving `/v1/search` works through the real composition boundary while `/v1/ai/run` retains its current behavior.
+- **Status:** CLOSED / VERIFIED by CI #1336 (`36309294705`).
+- The verified search application capability is wired into the existing generic runtime composition through provider-neutral injection.
+- A real runtime HTTP smoke path proves `/v1/search` works through the composition boundary while the existing AI/provider activation lifecycle remains unchanged.
+- No provider-specific runtime semantics or network activation were introduced.
+
+### Phase 2-E — Search Adapter Compliance Boundary
+- **Status:** READY / implementation not started.
+- Define the smallest reusable compliance contract for a search adapter to enter a registry-backed search plan.
+- Validate stable source identity, declared source class/reliability/access metadata, explicit network-automation state, bounded error mapping and provenance preservation.
+- Keep adapter execution provider-neutral and network-disabled; no live provider call is part of this substage.
+- Exit evidence: declarative contract, deterministic negative-path tests, no new persistence authority, and full seven-job CI gate.
 
 ### Work
 - multi-source search orchestration;
