@@ -6,6 +6,15 @@ from dataclasses import dataclass
 from shema_platform.adapters.ai.application_composition import (
     YandexGPTApplicationComposition,
 )
+from shema_platform.adapters.intelligence.dadata import DaDataConfiguration
+from shema_platform.adapters.intelligence.dadata_activation import (
+    DaDataActivationReadiness,
+    DaDataControlledActivationGate,
+)
+from shema_platform.application.counterparty_lookup import CounterpartyLookupProvider
+from shema_platform.application.counterparty_provider_activation import (
+    CounterpartyProviderActivationService,
+)
 from shema_platform.application.ai_runtime import AIExecutionTrustResolver
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
@@ -70,6 +79,33 @@ class YandexGPTRuntimeAssembly:
         )
 
 
+
+@dataclass(frozen=True, slots=True)
+class CounterpartyProviderRuntimeAssembly:
+    """Explicit counterparty-provider control-plane composition; traffic stays gated."""
+
+    activation: CounterpartyProviderActivationService
+
+    def create_http_app(
+        self,
+        *,
+        application: APIApplication | None = None,
+        authenticator=None,
+        enable_docs: bool = True,
+        telemetry: TelemetrySink | None = None,
+    ):
+        return create_app(
+            application=application,
+            authenticator=authenticator,
+            enable_docs=enable_docs,
+            telemetry=telemetry,
+            counterparty_provider_activation=self.activation,
+        )
+
+    def provider(self):
+        return self.activation.provider()
+
+
 def compose_yandexgpt_runtime(
     *,
     snapshot: ConfigurationSnapshot,
@@ -92,3 +128,24 @@ def compose_yandexgpt_runtime(
             policy=policy,
         )
     )
+
+
+
+def compose_counterparty_provider_runtime(
+    *,
+    configuration: DaDataConfiguration,
+    readiness: DaDataActivationReadiness,
+    telemetry: TelemetrySink,
+    provider_factory: Callable[[DaDataConfiguration], CounterpartyLookupProvider] | None = None,
+) -> CounterpartyProviderRuntimeAssembly:
+    """Compose the control-plane without activating or connecting to DaData."""
+    gate = DaDataControlledActivationGate(
+        telemetry=telemetry,
+        provider_factory=provider_factory,
+    )
+    activation = CounterpartyProviderActivationService(
+        gate=gate,
+        configuration=configuration,
+        readiness=readiness,
+    )
+    return CounterpartyProviderRuntimeAssembly(activation=activation)

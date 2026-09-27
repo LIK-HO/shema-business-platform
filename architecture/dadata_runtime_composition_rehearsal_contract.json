@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "status": "runtime_activation_rehearsal_implementation_in_progress_live_off",
+  "provider_id": "dadata_organization_api",
+  "composition": {
+    "runtime_assembly": "CounterpartyProviderRuntimeAssembly",
+    "activation_service": "CounterpartyProviderActivationService",
+    "provider_binding": "DaDataControlledActivationGate"
+  },
+  "requirements": {
+    "readiness_witness": "explicit_injected_value",
+    "configuration": "explicit_injected_value",
+    "default_activation_state": "disabled",
+    "real_network_on_assembly": false,
+    "real_network_on_startup": false,
+    "fake_provider_allowed": "rehearsal_tests_only"
+  },
+  "rehearsal": {
+    "authentication_required": true,
+    "activation_permission_required": true,
+    "explicit_operator_confirmation_required": true,
+    "complete_readiness_required": true,
+    "enabled_configuration_required": true,
+    "rollback_must_disable_binding": true,
+    "post_rollback_lookup_must_fail_closed": true
+  },
+  "non_goals": [
+    "live_dadata_traffic",
+    "automatic_activation",
+    "provider_fallback",
+    "database_schema_change",
+    "canonical_identity_authority",
+    "fns_automation"
+  ]
+}
