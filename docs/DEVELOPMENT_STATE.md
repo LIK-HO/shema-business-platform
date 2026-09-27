@@ -9,7 +9,7 @@
 - Phase 1-A implementation is bounded to application service, canonical API adapter, OpenAPI contract and tests; no external provider automation is enabled.
 - Frozen kernel: unchanged.
 - No database schema, canonical identity semantics, MAX activation or external network execution was introduced.
-- Current implementation HEAD: `34453066a1c9ebc3163d5c3afcdb98edc72bd8cb`.
+- Current implementation HEAD: `bc6652c63f53f37dc4e405c938ba6b1c402cbbd4`.
 - Completed sub-boundaries: authoritative-source validation, INN/OGRN/OGRNIP observation contract, identity resolution by tax ID, traceable evidence, freshness, contradiction quarantine, append-only audit, compact operator brief, API/OpenAPI boundary.
 - Unfinished sub-boundary: final full CI/release verification and closure record.
 - Safest next action: run the full CI matrix on the current HEAD and inspect every required job.
