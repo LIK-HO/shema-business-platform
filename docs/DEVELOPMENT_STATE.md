@@ -2,9 +2,9 @@
 ## Current development-session synchronization — 2026-09-27
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-NaN
+- HEAD: `69c0a4d02bc674b2d77f51468884700a37835956` — latest development commit; Phase 2-H design artifacts are added after verified CI #1348, but the new boundary has not yet completed its release-gate CI.
 - PR: #56 — open, draft, mergeable.
-- Current boundary: **Phase 2-G — First Source Selection and Evidence Capture — IN PROGRESS; source-selection/evidence sub-boundary CLOSED / VERIFIED; activation BLOCKED.**
+- Current boundary: **Phase 2-H — Controlled Provider Execution Boundary (DaData parallel alternative) — DEFINED / IMPLEMENTATION OPEN; live activation OFF. Phase 2-G FNS evidence hold remains independently BLOCKED for automation.**
 - Phase 2-A — Search Run Integrity Boundary: CLOSED / VERIFIED by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
 - Phase 2-B — Source-Registry-Backed Search Planning: CLOSED / VERIFIED by CI #1324 (`36308069460`) on `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
 - Phase 2-C — Registry-Backed Operator Search Composition: CLOSED / VERIFIED by CI #1330 (`36308647549`) on `16c08111e025bd267787eaa5de36c4dd53f70609`.
@@ -24,8 +24,9 @@ NaN
 - P46 MAX provider evidence hold: CLOSED / VERIFIED.
 - Frozen kernel: unchanged.
 - No database schema, canonical identity semantic change, network automation, MAX activation or external network execution was introduced by Phase 2-A through this Phase 2-G boundary.
-- No formal Phase 2-H is defined in the current roadmap. The next development step must therefore remain within the Phase 2 work already authorized by the roadmap and must establish a new durable boundary before any provider activation or broader capability expansion.
-- Safest next action: keep FNS live/automated traffic disabled; only proceed with a separately recorded controlled-execution boundary after the remaining provider-contract evidence is established, or continue non-network application work that does not require provider activation.
+- Phase 2-H artifacts now present: `architecture/dadata_adapter_contract.json`, `architecture/dadata_provider_evidence_2026_09_27.json`, `docs/SEARCH_RESEARCH_PHASE2H.md`, `tests/test_dadata_contract.py`, and `docs/CODEBASE_DIRECTION_AUDIT_2026_09_27.md`.
+- DaData is registered as `trusted_structured_dataset` / `trusted_secondary`; provider output remains evidence input rather than canonical truth.
+- Safest next action: implement the DaData adapter and its deterministic failure matrix behind the generic SearchProvider boundary, with live network execution still disabled until the full Phase 2-H release gate passes.
 
 ## Historical core-certification baseline
 
