@@ -37,8 +37,9 @@
 - New Shema development must not expand into a second CRM, accounting, finance or personnel system. Existing frozen Order/Economics semantics remain only for compatibility, lineage and learning.
 - Existing YandexGPT and MAX provider boundaries remain in force. YandexGPT is the bounded AI processing path; MAX live outbound remains fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
 - This synchronization is documentation/contract/test scope only. No procurement production runtime, Bitrix24 runtime, MAX activation or new persistence authority has been opened.
-- New strategy contracts: architecture/procurement_source_registry_contract.json and architecture/platform_growth_strategy_contract.json.
-- New executable guard: tests/test_platform_growth_strategy_contract.py.
+- New strategy contracts: architecture/procurement_source_registry_contract.json, architecture/platform_growth_strategy_contract.json and architecture/business_plane_boundary_contract.json.
+- New executable guards: tests/test_platform_growth_strategy_contract.py and tests/test_business_plane_boundary_contract.py.
+- Adversarial review: docs/ADVERSARIAL_ARCHITECTURE_REVIEW_2026_09_28.md.
 
 ## Stage verification — 2026-09-28
 
