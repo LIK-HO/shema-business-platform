@@ -71,6 +71,8 @@ This mirrors mature remote-call practice: retries belong to the reliability laye
 8. rollback without schema mutation;
 9. full release-gate CI.
 
+The activation contract is `architecture/dadata_activation_contract.json`; it is fail-closed and activation remains off until every listed gate and explicit operator authorization are present.
+
 ## Explicit non-goals
 
 - no automatic qualification;
