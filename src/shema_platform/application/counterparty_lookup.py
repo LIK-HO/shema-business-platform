@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 from time import sleep
-from typing import Protocol
+from collections.abc import Callable\nfrom typing import Protocol
 
 
 class CounterpartyLookupProviderError(RuntimeError):
@@ -69,7 +69,7 @@ class BoundedCounterpartyLookup:
     provider: CounterpartyLookupProvider
     max_attempts: int = 3
     backoff_seconds: float = 0.25
-    sleeper: object = sleep
+    sleeper: Callable[[float], None] = sleep
 
     def __post_init__(self) -> None:
         if self.max_attempts < 1 or self.max_attempts > 3:
