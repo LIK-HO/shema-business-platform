@@ -69,7 +69,7 @@ The product is one system with four planes:
 
 **Execution & Reliability** → jobs, outbox, idempotency, reconciliation, audit, recovery, observability.
 
-**Experience & Control** → Web/PWA/Android, search center, dossiers, evidence, actions, system control plane.
+**Experience & Control** → Web/PWA, search center, dossiers, evidence, actions, system control plane.
 
 The planes share one canonical API/domain boundary. None may create an alternate business truth.
 
@@ -308,6 +308,50 @@ Do not collapse these three tasks into one score.
 ### Exit criteria
 A search run produces a reproducible, evidence-backed candidate set and a compact intelligence brief without flooding the operator with raw source noise.
 
+## 6A. Phase 2-I — Procurement Intelligence & Tender Monitoring API
+
+### Status
+**IN PROGRESS — bounded foundation and provider contract.** This is the only active capability boundary in this development slice.
+
+### Objective
+Add a provider-neutral procurement intelligence path for discovering, tracking and monitoring future procurements without making a tender provider a second business system of record.
+
+### Selected initial integration
+**ГосПлан API v2**, an API integration layer over ЕИС procurement data. Current documentation exposes REST endpoints for 44-ФЗ, 223-ФЗ and PP RF 615, including purchase plans, procurements, procedures and contracts. The production API is API-key based and tariff-limited; the test server is available without an API key but rate-limited.
+
+### Required flow
+TENDER SOURCE → PROCUREMENT OBSERVATION → IDENTITY/EVIDENCE → QUALIFICATION → CONTACT PREPARATION → COMMERCIAL ACTION → ORDER → DOCUMENT PACK → RESULT/LEARNING.
+
+### Rules
+- procurement data is an external observation, never canonical identity;
+- customer identifiers may resolve to an existing Identity, but a tender observation cannot create or promote canonical identity by itself;
+- future procurement plans, published notices, active procedures and completed procedures remain distinguishable;
+- monitoring is cursor-based, idempotent and bounded; repeated polling cannot create duplicate business signals;
+- source freshness, provider availability, rate limits and API lag remain visible;
+- provider credentials remain deployment configuration only;
+- no HTML scraping is introduced as a substitute for an unavailable API contract;
+- no automatic tender submission/participation is included in this boundary;
+- live traffic remains OFF until provider contract, negative paths, budgets, observability and activation gate are verified.
+
+### Integration with other capabilities
+- procurement signals can provide an evidence-backed reason for contact;
+- a procurement watch can attach to an existing client/candidate without creating a duplicate company;
+- a completed order originating from a procurement opportunity may seed the Repeat Customer Order Engine;
+- procurement-specific document requirements flow through the same Legal/Document Configuration Engine.
+
+### Exit criteria
+- provider-neutral procurement contract;
+- deterministic ГосПлан adapter fixture set;
+- bounded timeout/error mapping;
+- search + future-plan + monitoring semantics proven without live credentials;
+- repeated polls deduplicated;
+- conservative Identity/Evidence linking;
+- full seven-job CI GREEN;
+- Development State updated with the verified boundary.
+
+### Deferred provider expansion
+B2B-Center is a later commercial-ETP adapter candidate. Its official site documents API integration with corporate systems, but production API access is plan-dependent; it therefore remains a separately gated provider boundary.
+
 ## 7. Phase 3 — Contact Preparation
 
 ### Objective
@@ -341,6 +385,33 @@ Build a contact-script test set covering:
 ### Exit criteria
 The operator can open a verified client dossier and receive a usable, evidence-grounded first-contact script without manually reconstructing the research.
 
+## 7A. Phase 3A — Repeat Customer Order Engine
+
+### Placement
+This capability is deliberately between Contact Preparation and Legal/Document Configuration: contact preparation creates commercial intent; repeat-order orchestration creates the next order; document configuration produces the exact legal/document pack for that order.
+
+### Objective
+Make repeat business a first-class operator workflow for established customers without cloning old orders or silently reusing obsolete prices, terms or document versions.
+
+### Chosen pattern
+Use a reusable **Repeat Order Rule / Customer Order Template** attached to the canonical customer. The rule stores recurrence and next-due information plus references to pricing/document configuration. Each repetition creates a **fresh draft order snapshot**; the historical order remains immutable.
+
+### Operator workflow
+- show **Next repeat order** prominently on the customer/work queue;
+- one compact rule exposes recurrence, next due date/window, last order, owner and current pricing/document state;
+- primary actions: **Create next order**, **Skip once**, **Pause**, **Resume**, **Change pattern**;
+- new order is a fresh draft for operator review before confirmation;
+- changed/expired prices, terms or document versions are surfaced explicitly;
+- prevent duplicate generation when an open repeat order already exists;
+- support one-time, fixed-count, end-date and until-paused recurrence;
+- reminders use a preparation window and do not silently create commercial effects.
+
+### Research basis
+This combines mature recurring-deal/subscription/renewal/scheduling-agreement patterns observed in Bitrix24, HubSpot/Pipedrive, SAP, Salesforce and ServiceNow.
+
+### Exit criteria
+The operator can see customers requiring repeat attention, create the next order in one controlled action, review changes, and retain full lineage to the originating rule and previous order.
+
 ## 8. Phase 4 — Legal / Document Configuration Engine
 
 ### Objective
@@ -353,6 +424,7 @@ Turn a verified client and transaction configuration into a correct selectable d
 - payment/acceptance configuration;
 - EDO/e-signature configuration;
 - document applicability rules;
+- complete baseline document registry: master service contract, one-off service/work order, contractor/subcontractor forms, specifications/technical statements, commercial offers/quotations, invoices/payment requests, acceptance/service acts, UПД or equivalent tax documents where applicable, addenda/change orders, reconciliation acts, NDA/confidentiality forms, authority/power-of-attorney forms, termination documents, applications/requests and procurement/tender document packs;
 - template registry;
 - effective dates;
 - legal-source references;
@@ -374,6 +446,8 @@ Create the primary human operating surface over proven workflows and consolidate
 Build only the workflows already proven in Phases 1–4:
 - command/search center;
 - counterparty check;
+- procurement/tender watchlist and monitoring queue;
+- repeat-order work queue;
 - client dossier;
 - intelligence/evidence view;
 - qualification;
@@ -416,29 +490,48 @@ Provide installable mobile-capable access without creating a second system.
 ### Exit criteria
 Temporary network loss does not corrupt canonical state or create duplicate effects.
 
-## 11. Phase 7 — Android
+## 11. Phase 7 — Production Web/PWA Consolidation
 
 ### Objective
-Add native Android capability only where it provides material value beyond PWA.
-
-### Native-first candidates
-- notifications;
-- background execution;
-- secure device storage;
-- camera/photo evidence;
-- fast field workflows;
-- network-aware operation;
-- device-specific integrations.
+Finish the primary operator experience on Web and PWA. Native Android is explicitly removed from the approved roadmap.
 
 ### Rules
-- same canonical API;
-- same domain semantics;
-- same idempotency;
-- no duplicated business rules;
-- local data remains cache/read model or bounded offline queue.
+- Web and PWA use the same canonical API/domain semantics;
+- no Android-specific business layer is created;
+- mobile-specific requirements must be proven within PWA before another surface is considered;
+- offline/read-cache and idempotent pending mutations remain bounded and server-authoritative.
 
 ### Exit criteria
-Web/PWA/Android remain one system with different interaction surfaces.
+Web and PWA provide the complete proven operator workflow without a second business-rule implementation.
+
+## 11A. Operator Interface & Multi-Operator Doctrine
+
+### Interface principles
+The operator interface is an operational safety mechanism, not decoration. The adopted pattern is:
+- compact summary/highlights at the top;
+- Details, Related records and Activity/History as predictable information groups;
+- list views as work queues with saved filters/sorts and quick actions;
+- quick/contextual views for inspection without losing the current work context;
+- process stages/checklists as guidance, while server-side contracts remain authoritative;
+- progressive disclosure: evidence and technical diagnostics one level deeper;
+- personal view preferences without changing canonical business logic;
+- keyboard-friendly desktop, responsive Web, touch-friendly PWA, accessibility baseline;
+- clear loading/empty/degraded/error/offline/pending states;
+- destructive/irreversible actions require deliberate confirmation.
+
+### Multi-operator foundation
+From the beginning the system supports growth from one operator to several without duplicating business truth:
+- explicit actor identity on actions;
+- owner/assignee/team queue separated from customer identity;
+- audited assignment/reassignment and handoff;
+- revision/concurrency protection so stale writes fail rather than overwrite newer work;
+- role/permission enforcement on the server;
+- shared records without shadow copies;
+- explicit conflict outcomes: reload, accept current, merge supported fields, or manual review;
+- durable work state instead of chat/private UI state;
+- notifications derived from durable server state.
+
+This is a bounded extension around the frozen core, not a new system-of-record or a premature multi-tenant architecture.
 
 ## 12. Phase 8 — Production Operations
 
@@ -573,9 +666,9 @@ The practical priority is:
 2. Search/Research maturity
 3. Contact preparation
 4. Legal/Document engine
-5. Web operator system
+5. Web operator system + repeat-order/procurement workspaces
 6. PWA
-7. Android
+7. Production Web/PWA consolidation
 8. Production operations
 9. External provider activation / MAX
 10. Learning loop
