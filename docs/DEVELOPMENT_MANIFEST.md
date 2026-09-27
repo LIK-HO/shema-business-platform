@@ -118,9 +118,22 @@ Shema — это **личная операционная система влад
 
 ### Research basis
 Recurring work: https://helpdesk.bitrix24.com/open/25850555/ ; https://knowledge.hubspot.com/payments/manage-subscriptions-for-recurring-payments ; https://support.pipedrive.com/en/article/recurring-products ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/22eca60c150344f89bcee6255485f8c7.html ; https://help.salesforce.com/s/articleView?id=sf.order_overview.htm&language=en_US&type=5
-Interface/workspace: https://help.salesforce.com/s/articleView?id=sf.lightning_page_components.htm&language=en_US&type=5 ; https://learn.microsoft.com/en-us/power-apps/user/use-model-driven-apps ; https://learn.microsoft.com/en-us/power-automate/business-process-flows-overview ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/a630d57fc5004c6383e7a81efee7a8bb/f7b3e498c30a4f9aad381062cc9d8b09.html ; https://www.b2b-center.ru/plus/
+Interface/workspace: https://help.salesforce.com/s/articleView?id=sf.lightning_page_components.htm&language=en_US&type=5 ; https://learn.microsoft.com/en-us/power-apps/user/use-model-driven-apps ; https://learn.microsoft.com/en-us/power-automate/business-process-flows-overview ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/a630d57fc5004c6383e7a81efee7a8bb/f7b3e498c30a4f9aad381062cc9d8b09.html
 Multi-operator: https://learn.microsoft.com/en-us/power-platform/admin/how-record-access-determined ; https://learn.microsoft.com/en-us/power-platform/admin/security-roles-privileges
-Procurement API: https://gosplan.info/docs/guides/purchases/ ; https://gosplan.info/docs/getting-started/quickstart-curl/ ; https://www.b2b-center.ru/plus/
+Procurement API: https://gosplan.info/docs/guides/purchases/ ; https://gosplan.info/docs/getting-started/quickstart-curl/
+### Strategic product-boundary correction added 2026-09-28
+
+- **Core role:** Shema is the intelligence, evidence and decision-support system. New development must not turn it into a second CRM/ERP/accounting/personnel platform.
+- **Runtime:** Yandex Cloud is the target deployment environment. Start with serverless components where practical; PostgreSQL remains the canonical production database because the frozen kernel already establishes it as the transaction authority.
+- **Procurement:** B2B-Center is removed as a named strategic provider. Procurement is now governed by the provider-neutral ProcurementSourceRegistry contract. ГосПлан is the official-origin baseline; TenderGuru is the first aggregation candidate only after measured coverage evidence.
+- **Business-plane ownership:** When the business becomes mature enough to require expanded transaction control, Bitrix24 becomes the live business-process/CRM/communication/calculation/economics control plane. Shema hands over a verified context package and later consumes minimal outcome signals for learning.
+- **Economics boundary:** existing frozen Order/Economics semantics remain for compatibility, lineage and learning; no new Shema accounting subsystem is to be developed unless a separately justified architectural exception is approved.
+- **AI:** the existing YandexGPT adapter remains the primary AI path in Yandex Cloud. AI may summarize, classify and prepare; it cannot become canonical identity, legal or economic truth.
+- **MAX:** the adapter remains, but live outbound effects stay fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
+- **Cloud observability:** new Yandex Cloud deployment documentation must target Monium rather than Cloud Logging because Yandex Cloud states Cloud Logging is scheduled for shutdown in Q2 2027.
+- **Integration principle:** external systems are connected by explicit field ownership. The same live field must never have competing authorities.
+- **Implementation order:** procurement durable runtime → contact preparation → repeat-order preparation → documents → Web/PWA → Yandex Cloud production → Bitrix24 business-plane integration → guarded external communication → learning → measured scale.
+
 ### Критерий допуска новой capability
 
 Перед разработкой capability должны быть даны ответы:
@@ -1023,7 +1036,7 @@ Ranking может менять порядок показа, но не долж�
 The required chain is:
 **plan/notice → procurement observation → identity/evidence → qualification → contact reason → commercial action → order → document pack → result/learning.**
 
-The system must distinguish planned procurement, published notice, active procedure, completed procedure and cancellation/change events. Monitoring is cursor-based and deduplicated. Provider identifiers remain provider references, not canonical business IDs. No tender submission automation is part of this boundary. B2B-Center remains a later separately gated commercial ETP adapter because its official materials document API integration but production access is plan-dependent.
+The system must distinguish planned procurement, published notice, active procedure, completed procedure and cancellation/change events. Monitoring is cursor-based and deduplicated. Provider identifiers remain provider references, not canonical business IDs. No tender submission automation is part of this boundary. The next procurement runtime boundary is a provider-neutral ProcurementSourceRegistry with per-source capability declarations. ГосПлан remains the official-origin baseline; TenderGuru is the first commercial aggregation candidate only after a measured coverage gap. No single commercial ETP is a strategic dependency.
 
 # 5C. Контур подготовки первого контакта
 
