@@ -311,7 +311,7 @@ A search run produces a reproducible, evidence-backed candidate set and a compac
 ## 6A. Phase 2-I — Procurement Intelligence & Tender Monitoring API
 
 ### Status
-**IN PROGRESS — bounded foundation and provider contract.** This is the only active capability boundary in this development slice.
+**IN PROGRESS — foundation sub-boundary CLOSED / VERIFIED by CI #1417; live provider execution and durable runtime monitoring remain separate bounded steps.**
 
 ### Objective
 Add a provider-neutral procurement intelligence path for discovering, tracking and monitoring future procurements without making a tender provider a second business system of record.
@@ -339,7 +339,17 @@ TENDER SOURCE → PROCUREMENT OBSERVATION → IDENTITY/EVIDENCE → QUALIFICATIO
 - a completed order originating from a procurement opportunity may seed the Repeat Customer Order Engine;
 - procurement-specific document requirements flow through the same Legal/Document Configuration Engine.
 
-### Exit criteria
+### Current verified boundary exit
+The provider-neutral contract, deterministic GosPlan adapter boundary, bounded error/retry handling, cursor/fingerprint monitoring logic and deterministic tests are verified by full CI #1417. Live activation remains OFF.
+
+### Remaining Phase 2-I work
+- authenticated production provider activation;
+- durable server-side monitoring schedule/state;
+- canonical API/runtime exposure for procurement search/watch;
+- Evidence/Identity intake composition for procurement observations;
+- operational alerting/revalidation and cost controls.
+
+### Original exit criteria
 - provider-neutral procurement contract;
 - deterministic ГосПлан adapter fixture set;
 - bounded timeout/error mapping;
