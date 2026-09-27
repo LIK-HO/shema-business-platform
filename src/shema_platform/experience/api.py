@@ -11,6 +11,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from shema_platform.adapters.ai.composition import AIProviderCompositionError
 from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
+from shema_platform.adapters.intelligence.dadata_activation import DaDataActivationError
 from shema_platform.application.counterparty_provider_activation import (
     CounterpartyProviderActivationRequest,
     CounterpartyProviderActivationService,
@@ -366,6 +367,18 @@ def create_app(
             message=str(exc),
         )
 
+    @app.exception_handler(DaDataActivationError)
+    async def dadata_activation_error(
+        request: Request,
+        exc: DaDataActivationError,
+    ) -> JSONResponse:
+        return _error(
+            request,
+            status_code=409,
+            code="provider_activation_blocked",
+            message=str(exc),
+        )
+
     @app.exception_handler(AIProviderCompositionError)
     async def ai_provider_composition_error(
         request: Request,
@@ -513,6 +526,7 @@ def create_app(
     async def activate_counterparty_provider(
         request: Request,
         payload: CounterpartyProviderActivationRequestModel,
+        provider_id: str = Path(alias="providerId"),
     ) -> CounterpartyProviderActivationResponseModel:
         service: CounterpartyProviderActivationService | None = (
             request.app.state.counterparty_provider_activation
@@ -524,7 +538,7 @@ def create_app(
         context = _context(request, None)
         result = service.activate(
             CounterpartyProviderActivationRequest(
-                provider_id=payload.provider_id,
+                provider_id=provider_id,
                 actor_id=context.actor_id,
                 reason=payload.reason,
                 operator_authorized=payload.operator_authorized,
@@ -549,6 +563,7 @@ def create_app(
     async def rollback_counterparty_provider(
         request: Request,
         payload: CounterpartyProviderRollbackRequest,
+        provider_id: str = Path(alias="providerId"),
     ) -> CounterpartyProviderActivationResponseModel:
         service: CounterpartyProviderActivationService | None = (
             request.app.state.counterparty_provider_activation
@@ -559,7 +574,7 @@ def create_app(
             )
         context = _context(request, None)
         result = service.rollback(
-            provider_id=payload.provider_id,
+            provider_id=provider_id,
             actor_id=context.actor_id,
             reason=payload.reason,
             operator_authorized=payload.operator_authorized,
