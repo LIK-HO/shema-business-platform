@@ -123,11 +123,16 @@ Close P46 cleanly before starting new implementation.
 - verify that manifest, development state, P46 contract and branch state agree.
 
 ### Exit criteria
-- full P46 CI green;
-- no production code change;
-- no live MAX traffic;
-- frozen core unchanged;
-- state ledger synchronized.
+- full P46 CI green — **satisfied by CI #1265 (`36283673042`) on verified commit `b4c404404b7d0cf9317caf765723a3bc2003cd46`**;
+- no production code change — **verified**;
+- no live MAX traffic — **verified**;
+- frozen core unchanged — **verified**;
+- state ledger synchronized — **completed in the P46 closure synchronization**.
+
+### Phase 0 result
+**CLOSED / VERIFIED.** P46 is complete as an evidence-revalidation boundary. MAX readiness remains blocked until authoritative provider-side idempotency and provider-side reconciliation evidence becomes available. No implementation workaround, fallback provider or kernel change is permitted.
+
+**Next selected boundary:** Phase 1 — Intelligence Quality Foundation. Implementation has not started.
 
 ## 5. Phase 1 — Intelligence Quality Foundation
 
