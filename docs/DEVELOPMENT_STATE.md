@@ -2,7 +2,7 @@
 ## Current development-session synchronization — 2026-09-27
 
 - Branch: `v1.5/p46-max-provider-evidence-hold`
-- HEAD: `69c0a4d02bc674b2d77f51468884700a37835956` — latest development commit; Phase 2-H design artifacts are added after verified CI #1348, but the new boundary has not yet completed its release-gate CI.
+- HEAD: `8049981d06b69029e5064b3c9898d9ba739b0df4` — latest development commit; Phase 2-H design artifacts are added after verified CI #1348, but the new boundary has not yet completed its release-gate CI.
 - PR: #56 — open, draft, mergeable.
 - Current boundary: **Phase 2-H — Controlled Provider Execution Boundary (DaData parallel alternative) — DEFINED / IMPLEMENTATION OPEN; live activation OFF. Phase 2-G FNS evidence hold remains independently BLOCKED for automation.**
 - Phase 2-A — Search Run Integrity Boundary: CLOSED / VERIFIED by CI #1316 (`36304414654`) on `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
