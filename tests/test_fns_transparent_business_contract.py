@@ -33,12 +33,13 @@ def test_selected_source_matches_registry_and_preserves_disabled_network() -> No
         for item in registry_contract["sources"]
         if item["source_id"] == source_contract["source_id"]
     )
+    binding = source_contract["registry_binding"]
 
     assert source["source_id"] == "fns_transparent_business"
-    assert source_contract["registry_binding"]["source_class"] == source["source_class"]
-    assert source_contract["registry_binding"]["reliability"] == source["default_reliability"]
-    assert source_contract["registry_binding"]["access_mode"] == source["access_mode"]
-    assert source_contract["registry_binding"]["network_automation"] is False
+    assert binding["source_class"] == source["source_class"]
+    assert binding["reliability"] == source["default_reliability"]
+    assert binding["access_mode"] == source["access_mode"]
+    assert binding["network_automation"] is False
     assert source_contract["adapter_boundary"]["network_execution_enabled"] is False
 
 
@@ -61,7 +62,8 @@ def test_authoritative_evidence_records_only_supported_provider_facts() -> None:
 
     urls = [item["url"] for item in evidence["authoritative_evidence"]]
     assert all(
-        url.startswith("https://www.nalog.gov.ru/") or url == "https://pb.nalog.ru/od.html"
+        url.startswith("https://www.nalog.gov.ru/")
+        or url == "https://pb.nalog.ru/od.html"
         for url in urls
     )
 
@@ -80,8 +82,9 @@ def test_activation_remains_blocked_when_provider_automation_evidence_is_missing
     contract = load_json(
         "architecture/fns_transparent_business_adapter_contract.json"
     )
+    boundary = contract["adapter_boundary"]
     assert contract["activation_decision"] == "BLOCKED"
-    assert contract["adapter_boundary"]["network_execution_enabled"] is False
+    assert boundary["network_execution_enabled"] is False
     assert contract["limits"]["provider_rate_limit"]["status"] == "NOT_ESTABLISHED"
     assert contract["limits"]["provider_timeout_contract"]["status"] == "NOT_ESTABLISHED"
 
@@ -116,10 +119,11 @@ def test_contract_has_no_hidden_activation_or_fallback_path() -> None:
     contract = load_json(
         "architecture/fns_transparent_business_adapter_contract.json"
     )
+    boundary = contract["adapter_boundary"]
 
-    assert contract["adapter_boundary"]["automatic_activation"] is False
-    assert contract["adapter_boundary"]["automatic_retry"] is False
-    assert contract["adapter_boundary"]["fallback_provider"] is False
-    assert contract["adapter_boundary"]["ranking_authority"] is False
-    assert contract["adapter_boundary"]["qualification_authority"] is False
+    assert boundary["automatic_activation"] is False
+    assert boundary["automatic_retry"] is False
+    assert boundary["fallback_provider"] is False
+    assert boundary["ranking_authority"] is False
+    assert boundary["qualification_authority"] is False
     assert contract["kill_switch"]["activation_path_present"] is False
