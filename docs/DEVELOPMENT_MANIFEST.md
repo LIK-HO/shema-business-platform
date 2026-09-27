@@ -1,8 +1,8 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 MAX Evidence Hold
-**Active development boundary:** P46 — MAX provider evidence revalidation
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold
+**Active development boundary:** Phase 1 — Intelligence Quality Foundation (ready; implementation not started)
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -60,6 +60,16 @@ Shema — это **личная операционная система влад
 **TECHNICAL / CONTROL** — эксплуатационный слой: jobs, leases, retries, provider state, correlation, audit, policy/configuration, release/recovery.
 
 Эти уровни являются progressive disclosure, а не тремя разными системами.
+
+## Current stage synchronization — 2026-09-26
+
+- P46 MAX provider evidence revalidation is **CLOSED / VERIFIED**.
+- Final verified P46 commit: `b4c404404b7d0cf9317caf765723a3bc2003cd46`.
+- Full CI run #1265 (`36283673042`) passed all seven release-gate jobs: quality 3.12, quality 3.13, integration 3.12, integration 3.13, supply-chain, backup-recovery and release-contract.
+- The P46 change is test-only formatting; no production code, database schema, API semantics, frozen-kernel semantics, credentials, live MAX traffic or production activation were introduced.
+- MAX readiness remains **BLOCKED** because provider-side idempotency and provider-side reconciliation by client operation key remain undocumented/unverified in the authoritative evidence set.
+- Phase 0 exit criteria are therefore satisfied after this documentation synchronization.
+- Next selected capability boundary: **Phase 1 — Intelligence Quality Foundation**. Implementation has not started in this synchronization step.
 
 ### Критерий допуска новой capability
 
