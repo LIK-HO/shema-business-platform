@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timedelta
 
 from shema_platform.application.public_intake import (
+    PublicIdempotencyReservation,
     CounterpartyPreflightSnapshot,
     IdentityMatch,
     IntakeStatus,
@@ -97,6 +98,119 @@ class PostgresPublicIntakeRepository:
         ).fetchone()
         if not released or not bool(released[0]):
             raise IntegrityViolation("public intake idempotency lock was not held")
+
+    def reserve_idempotency(
+        self,
+        *,
+        key: str,
+        request_hash: str,
+        request_id: str,
+        now: datetime,
+        lease_seconds: int,
+    ) -> PublicIdempotencyReservation:
+        if not key.strip() or not request_hash.strip() or not request_id.strip():
+            raise ValueError("idempotency reservation identifiers are required")
+        if lease_seconds <= 0:
+            raise ValueError("lease_seconds must be positive")
+        if now.tzinfo is None:
+            raise ValueError("reservation timestamp must be timezone-aware")
+        lease_until = now + timedelta(seconds=lease_seconds)
+        cursor = self.connection.execute(
+            """
+            insert into intake_idempotency_reservation (
+                idempotency_key,
+                request_hash,
+                request_id,
+                leased_until
+            )
+            values (%s, %s, %s, %s)
+            on conflict (idempotency_key) do update
+            set request_hash = excluded.request_hash,
+                request_id = excluded.request_id,
+                leased_until = excluded.leased_until,
+                completed_at = null
+            where intake_idempotency_reservation.completed_at is null
+              and intake_idempotency_reservation.leased_until <= %s
+            returning request_id
+            """,
+            (key, request_hash, request_id, lease_until, now),
+        )
+        row = cursor.fetchone()
+        if row is not None:
+            return PublicIdempotencyReservation(
+                request_id=str(row[0]),
+                state="PENDING",
+            )
+
+        existing = self.connection.execute(
+            """
+            select request_hash, request_id, leased_until, completed_at
+            from intake_idempotency_reservation
+            where idempotency_key = %s
+            """,
+            (key,),
+        ).fetchone()
+        if existing is None:
+            raise IntegrityViolation(
+                "public intake idempotency reservation disappeared"
+            )
+        existing_hash, existing_request_id, leased_until, completed_at = existing
+        if str(existing_hash) != request_hash:
+            raise IdempotencyConflict(
+                "idempotency key reused with different payload"
+            )
+        if completed_at is not None:
+            return PublicIdempotencyReservation(
+                request_id=str(existing_request_id),
+                state="COMPLETE",
+            )
+        if leased_until is not None and leased_until > now:
+            return PublicIdempotencyReservation(
+                request_id=str(existing_request_id),
+                state="IN_PROGRESS",
+            )
+        raise IntegrityViolation(
+            "expired public intake reservation could not be acquired"
+        )
+
+    def complete_idempotency(
+        self,
+        *,
+        key: str,
+        request_id: str,
+        now: datetime,
+    ) -> None:
+        if now.tzinfo is None:
+            raise ValueError("completion timestamp must be timezone-aware")
+        updated = self.connection.execute(
+            """
+            update intake_idempotency_reservation
+            set completed_at = %s
+            where idempotency_key = %s
+              and request_id = %s
+              and completed_at is null
+            returning idempotency_key
+            """,
+            (now, key, request_id),
+        ).fetchone()
+        if updated is None:
+            existing = self.connection.execute(
+                """
+                select completed_at, request_id
+                from intake_idempotency_reservation
+                where idempotency_key = %s
+                """,
+                (key,),
+            ).fetchone()
+            if existing is None or str(existing[1]) != request_id:
+                raise IntegrityViolation(
+                    "public intake idempotency completion rejected"
+                )
+            if existing[0] is not None:
+                return
+            raise IntegrityViolation(
+                "public intake idempotency completion lost"
+            )
 
     def get_by_idempotency_key(self, key: str) -> PublicIntakeRecord | None:
         row = self.connection.execute(
