@@ -31,7 +31,7 @@ def yandex_snapshot() -> ConfigurationSnapshot:
         environment="production",
         values={
             "ai.yandexgpt.model_uri": "gpt://p40/yandexgpt/latest",
-            "ai.yandexgpt.base_url": "https://ai.example.test/v1",
+            "ai.yandexgpt.base_url": "https://ai.api.cloud.yandex.net/v1",
             "ai.yandexgpt.timeout_seconds": 10,
             "ai.yandexgpt.max_response_bytes": 1_048_576,
             "ai.yandexgpt.max_input_chars": 32_768,
