@@ -414,7 +414,7 @@ def test_yandex_selected_runtime_executes_end_to_end(monkeypatch) -> None:
                 "yandexgpt",
                 "gpt://p37/yandexgpt/latest",
                 "prompt:p37",
-                f"P37 yandex result:{correlation_id}",
+                f"P37 yandex result:{body['correlationId']}",
                 12,
                 Decimal("0.02000000"),
             )
