@@ -16,7 +16,16 @@ def test_operator_shell_uses_bounded_bitrix_aligned_workspaces() -> None:
     payload = load()
     sections = payload["shell"]["left_navigation"]["primary_sections"]
     ids = {item["id"] for item in sections}
-    assert {"workbench", "search", "clients", "counterparties", "requests", "research", "handoffs", "control"} <= ids
+    assert {
+        "workbench",
+        "search",
+        "clients",
+        "counterparties",
+        "requests",
+        "research",
+        "handoffs",
+        "control",
+    } <= ids
     forbidden = payload["shell"]["left_navigation"]["forbidden_primary_sections"]
     assert "Сделки" in forbidden
     assert "Тендеры" in forbidden
@@ -39,7 +48,10 @@ def test_counterparty_monitoring_and_favorites_are_distinct() -> None:
     counterparty = payload["specialized_workspaces"]["counterparties"]
     assert counterparty["monitoring_is_not_favorites"] is True
     assert counterparty["favorites_are_personal_shortcuts"] is True
-    assert counterparty["monitoring_creates_durable_change_checks_and_notifications"] is True
+    assert (
+        counterparty["monitoring_creates_durable_change_checks_and_notifications"]
+        is True
+    )
 
 
 def test_repeat_orders_use_frozen_semantics_and_hide_cleanly_after_bitrix_cutover() -> None:
@@ -50,7 +62,12 @@ def test_repeat_orders_use_frozen_semantics_and_hide_cleanly_after_bitrix_cutove
     assert repeat["bitrix_recurring_engine_is_not_reimplemented"] is True
     after = repeat["after_cutover"]
     assert after["hide_without_layout_reflow"] is True
-    assert payload["capability_visibility"]["old_deep_links_show_authorized_destination_or_explicit_moved_state"] is True
+    assert (
+        payload["capability_visibility"][
+            "old_deep_links_show_authorized_destination_or_explicit_moved_state"
+        ]
+        is True
+    )
 
 
 def test_ui_never_becomes_a_second_authority() -> None:
