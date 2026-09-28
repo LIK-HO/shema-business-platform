@@ -76,6 +76,43 @@ def test_oidc_authentication_verifies_signature_issuer_audience_and_claims(authe
     )
 
 
+def test_oidc_rejects_unsupported_critical_header(authenticator) -> None:
+    verifier, private_key = authenticator
+    now = datetime.now(UTC)
+    claims = {
+        "iss": "https://issuer.example.test",
+        "aud": "shema-business-platform",
+        "sub": "operator-1",
+        "trust_level": 2,
+        "permissions": [Permission.ORDER_CREATE.value],
+        "iat": now,
+        "exp": now + timedelta(minutes=5),
+    }
+    critical_token = jwt.encode(
+        claims,
+        private_key,
+        algorithm="RS256",
+        headers={"crit": ["example"], "example": "unsupported"},
+    )
+
+    with pytest.raises(AuthenticationRequired):
+        verifier.authenticate(f"Bearer {critical_token}")
+
+
+def test_oidc_rejects_oversized_bearer_token(authenticator) -> None:
+    verifier, _ = authenticator
+
+    with pytest.raises(AuthenticationRequired):
+        verifier.authenticate("Bearer " + ("A" * 16_385))
+
+
+def test_oidc_requires_patched_pyjwt_version() -> None:
+    from importlib.metadata import version
+    from packaging.version import Version
+
+    assert Version(version("PyJWT")) >= Version("2.13.0")
+
+
 def test_oidc_rejects_missing_bearer_token(authenticator) -> None:
     verifier, _ = authenticator
 
