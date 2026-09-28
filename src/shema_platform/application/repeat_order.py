@@ -320,7 +320,8 @@ class RepeatOrderService:
 
             if tuple(validation.resolved_lines) != tuple(order.lines):
                 raise QuarantineRequired(
-                    "current pricing or repeat context changed; recreate the draft before confirmation"
+                    "current pricing or repeat context changed; "
+                    "recreate the draft before confirmation"
                 )
 
             reservation = uow.idempotency.reserve(
