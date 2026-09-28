@@ -10,8 +10,10 @@ from datetime import UTC, datetime
 from math import isfinite
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit, urlencode
-from urllib.request import Request, urlopen
+from urllib.request import Request
 from uuid import uuid4
+
+from shema_platform.foundation.secure_http import secure_urlopen
 
 from shema_platform.adapters.ai.contracts import (
     AIModelProvenance,
@@ -214,7 +216,7 @@ def _request(
         method=method,
     )
     try:
-        with urlopen(request, timeout=timeout_seconds) as response:
+        with secure_urlopen(request, timeout=timeout_seconds) as response:
             return response.status, _read_bounded(
                 response,
                 max_bytes=max_response_bytes,
