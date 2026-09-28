@@ -444,7 +444,7 @@ Finish the primary operator experience on Web and PWA. Android is explicitly rem
 ### Exit criteria
 Web and PWA provide the complete proven operator workflow without a second business-rule implementation.
 
-## 11A. Operator Interface & Multi-Operator Doctrine
+## 6A. Operator Interface & Multi-Operator Doctrine
 
 ### Interface principles
 The operator interface is an operational safety mechanism, not decoration. The adopted pattern is:
