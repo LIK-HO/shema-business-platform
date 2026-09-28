@@ -13,12 +13,15 @@
       "operator_confirmation_required_for_critical_action": true,
       "preflight": "deterministic_counterparty_preflight_before_operator_queue",
       "public_submission_is_untrusted": true,
-      "server_authoritative": true
+      "server_authoritative": true,
+      "request_storage": "dedicated_public_intake_database_via_canonical_api",
+      "notification_flow": "intake_outbox_to_operator_notification_center"
     },
     "operator_web": {
       "role": "protected_work_surface",
       "uses_canonical_api": true,
-      "shares_business_semantics_with_pwa": true
+      "shares_business_semantics_with_pwa": true,
+      "notification_center": true
     },
     "pwa": {
       "role": "installable_operator_and_client_capable_web_surface",
@@ -35,7 +38,8 @@
       "uses_same_canonical_api": true,
       "no_separate_business_database": true,
       "no_authoritative_live_transaction_state": true,
-      "start_parameters_supported": true
+      "start_parameters_supported": true,
+      "uses_same_intake_database_via_canonical_api": true
     }
   },
   "public_request_flow": [
@@ -45,8 +49,9 @@
     "edge_security_gate",
     "deterministic_identifier_validation",
     "counterparty_preflight_without_gpt",
-    "idempotent_request_submission",
-    "persisted_client_request_observation",
+    "atomic_intake_db_submission_and_outbox",
+    "operator_notification_projection",
+    "shema_request_context_projection",
     "operator_review",
     "qualification",
     "business_handoff_when_ready"
@@ -117,7 +122,8 @@
     "public_client_business_authority",
     "direct_live_order_creation_without_server_validation",
     "separate_max_backend",
-    "separate_pwa_business_logic"
+    "separate_pwa_business_logic",
+    "direct_public_access_to_intake_database"
   ],
   "acquisition_channels": [
     "yandex_advertising_where_available",
@@ -127,5 +133,14 @@
     "partner_or_referral"
   ],
   "evolution_contract": "architecture/platform_evolution_contract.json",
-  "counterparty_preflight_contract": "architecture/public_intake_counterparty_preflight_contract.json"
+  "counterparty_preflight_contract": "architecture/public_intake_counterparty_preflight_contract.json",
+  "counterparty_operator_workspace": {
+    "search_mode": "exact_identifier_detection_inside_existing_lead_search",
+    "separate_saved_workspace": "Контрагенты",
+    "tabs": [
+      "Проверка",
+      "Мониторинг",
+      "Избранные"
+    ]
+  }
 }
