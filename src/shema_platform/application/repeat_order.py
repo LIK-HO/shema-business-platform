@@ -163,6 +163,7 @@ class RepeatOrderService:
                     "interval": plan.cadence.interval,
                 },
                 correlation_id=correlation_id,
+                idempotency_key=idempotency_key,
             )
             self._event(
                 uow,
@@ -174,6 +175,7 @@ class RepeatOrderService:
                     "source_order_id": plan.source_order_id,
                     "identity_id": plan.identity_id,
                 },
+                idempotency_key=idempotency_key,
             )
             return plan
 
@@ -260,6 +262,7 @@ class RepeatOrderService:
                     "identity_id": order.identity_id,
                 },
                 correlation_id=correlation_id,
+                idempotency_key=idempotency_key,
             )
             self._event(
                 uow,
@@ -272,6 +275,7 @@ class RepeatOrderService:
                     "source_order_id": plan.source_order_id,
                     "status": order.status.value,
                 },
+                idempotency_key=idempotency_key,
             )
             return order
 
@@ -368,6 +372,7 @@ class RepeatOrderService:
                     "revenue": str(confirmed.total.amount),
                 },
                 correlation_id=correlation_id,
+                idempotency_key=idempotency_key,
             )
             self._event(
                 uow,
@@ -380,6 +385,7 @@ class RepeatOrderService:
                     "status": confirmed.status.value,
                     "revenue": str(confirmed.total.amount),
                 },
+                idempotency_key=idempotency_key,
             )
             return confirmed
 
@@ -524,8 +530,10 @@ class RepeatOrderService:
                     "previous_revision": plan.revision,
                     "new_status": updated.status.value,
                     "pending_order_id": updated.pending_order_id,
+                    "new_revision": updated.revision,
                 },
                 correlation_id=correlation_id,
+                idempotency_key=idempotency_key,
             )
             self._event(
                 uow,
@@ -537,6 +545,7 @@ class RepeatOrderService:
                     "status": updated.status.value,
                     "revision": updated.revision,
                 },
+                idempotency_key=idempotency_key,
             )
             return updated
 
@@ -632,10 +641,16 @@ class RepeatOrderService:
         resource_id: str,
         metadata: dict[str, object],
         correlation_id: str | None,
+        idempotency_key: str,
     ) -> None:
         uow.audits.append(
             AuditRecord(
-                audit_id=str(uuid5(NAMESPACE_URL, f"{action}:{resource_id}")),
+                audit_id=str(
+                    uuid5(
+                        NAMESPACE_URL,
+                        f"audit:{action}:{resource_id}:{idempotency_key}",
+                    )
+                ),
                 actor_id=actor.actor_id,
                 action=action,
                 resource_type=resource_type,
@@ -655,8 +670,9 @@ class RepeatOrderService:
         aggregate_type: str,
         aggregate_id: str,
         payload: dict[str, object],
+        idempotency_key: str,
     ) -> None:
-        event_key = f"{event_type}:{aggregate_id}"
+        event_key = f"{event_type}:{aggregate_type}:{aggregate_id}:{idempotency_key}"
         uow.outbox.append(
             OutboxEvent(
                 event_id=str(uuid5(NAMESPACE_URL, event_key)),
