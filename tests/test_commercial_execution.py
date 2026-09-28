@@ -337,7 +337,7 @@ def test_permission_is_required_before_external_effect() -> None:
     workflow, _, adapter = workflow_parts()
     with pytest.raises(AuthorizationError, match="permission denied"):
         workflow.execute(
-            actor=Actor("operator-2", trust_level=2),
+            actor=Actor("operator-3", trust_level=2),
             action_id="action-1",
             body="Здравствуйте",
             idempotency_key="send-key-2",
