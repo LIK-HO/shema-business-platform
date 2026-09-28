@@ -1,8 +1,10 @@
 from datetime import UTC, datetime, timedelta
+from importlib.metadata import version
 
 import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
+from packaging.version import Version
 
 from shema_platform.adapters.iam.oidc import (
     OIDCConfiguration,
@@ -107,9 +109,6 @@ def test_oidc_rejects_oversized_bearer_token(authenticator) -> None:
 
 
 def test_oidc_requires_patched_pyjwt_version() -> None:
-    from importlib.metadata import version
-    from packaging.version import Version
-
     assert Version(version("PyJWT")) >= Version("2.13.0")
 
 
