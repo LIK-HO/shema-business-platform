@@ -15,6 +15,7 @@ class Permission(StrEnum):
     INTELLIGENCE_PROVIDER_LOOKUP = "intelligence.provider.lookup"
     INTELLIGENCE_PROVIDER_ROLLBACK = "intelligence.provider.rollback"
     AI_RUN = "ai.run"
+    PUBLIC_INTAKE_REVIEW = "public_intake.review"
 
 
 @dataclass(frozen=True, slots=True)
