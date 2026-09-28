@@ -7,7 +7,8 @@
     "path": "/v1/ai/run",
     "authentication": "existing_API_authentication_middleware",
     "authorization": "application_boundary",
-    "correlation_id": "existing_X-Correlation-Id_boundary",
+    "correlation_id": "server_generated_correlation_id",
+    "idempotency": "required_Idempotency-Key_before_provider_call",
     "client_controls": [
       "task_type",
       "prompt_version",
@@ -17,7 +18,8 @@
       "evidence_required",
       "max_tokens",
       "max_cost",
-      "max_duration_seconds"
+      "max_duration_seconds",
+      "idempotency_key"
     ],
     "client_cannot_control": [
       "provider_id",
@@ -27,7 +29,8 @@
       "resource_trust_level",
       "evidence_level",
       "production_activation_state",
-      "provider_credentials"
+      "provider_credentials",
+      "correlation_id"
     ]
   },
   "composition_boundary": {
@@ -35,7 +38,8 @@
     "frozen_AIGateway_semantics_unchanged": true,
     "HTTP_layer_does_not_select_provider": true,
     "HTTP_layer_does_not_persist_AI_runs": true,
-    "HTTP_layer_does_not_materialize_provider_payloads": true
+    "HTTP_layer_does_not_materialize_provider_payloads": true,
+    "external_effect_requires_durable_idempotency_reservation": true
   },
   "production_behavior": {
     "route_is_exposed_by_canonical_api": true,
