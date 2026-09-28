@@ -367,7 +367,7 @@ Mature CRM/ERP products treat recurrence as a reusable rule/template that genera
 ### Exit criteria
 The operator can identify upcoming repeat demand, review changed evidence/configuration, and generate a traceable handoff package without creating a live transaction or calculating authoritative business economics in Shema.
 
-## 4. Phase 4 — Web Operator System
+## 8. Phase 4 — Web Operator System
 
 ### Objective
 Create the primary human operating surface over proven B2B workflows and consolidate the vertical slices into one coherent operator system. This is not the first appearance of UI; earlier phases already include minimal operator surfaces for validation.
@@ -412,7 +412,7 @@ Build the public and operator surfaces from the same canonical API:
 ### Exit criteria
 The complete public-client + operator path works in one Web surface without bypassing server contracts, while direct search, evidence drill-down, technical diagnostics and safe operator overrides remain available without forcing the operator through a hidden ranking/qualification pipeline.
 
-## 5. Phase 5 — PWA
+## 9. Phase 5 — PWA
 
 ### Objective
 Provide installable mobile-capable access without creating a second system.
@@ -430,7 +430,7 @@ Provide installable mobile-capable access without creating a second system.
 ### Exit criteria
 Temporary network loss does not corrupt canonical state or create duplicate effects.
 
-## 6. Phase 6 — Production Web/PWA Consolidation
+## 10. Phase 6 — Production Web/PWA Consolidation
 
 ### Objective
 Finish the primary operator experience on Web and PWA. Android is explicitly removed from the approved roadmap.
@@ -444,7 +444,7 @@ Finish the primary operator experience on Web and PWA. Android is explicitly rem
 ### Exit criteria
 Web and PWA provide the complete proven operator workflow without a second business-rule implementation.
 
-## 6A. Operator Interface & Multi-Operator Doctrine
+## 10A. Operator Interface & Multi-Operator Doctrine
 
 ### Interface principles
 The operator interface is an operational safety mechanism, not decoration. The adopted pattern is:
@@ -473,7 +473,7 @@ From the beginning the system supports growth from one operator to several witho
 
 This is a bounded extension around the frozen core, not a new system-of-record or a premature multi-tenant architecture.
 
-## 7. Phase 7 — Yandex Cloud Production Foundation
+## 11. Phase 7 — Yandex Cloud Production Foundation
 
 ### Objective
 Move the proven modular monolith into Yandex Cloud without changing domain semantics or creating a second persistence authority.
@@ -499,7 +499,7 @@ The existing PostgreSQL job/outbox model remains the business reliability author
 ### Exit criteria
 The same frozen kernel and canonical API run in Yandex Cloud with verified secrets, database connectivity, backup/recovery, health checks, observability and rollback, without introducing duplicate business state.
 
-## 8. Phase 8 — Production Operations
+## 12. Phase 8 — Production Operations
 
 ### Objective
 Turn the developed system into a safely operated long-lived system.
@@ -525,7 +525,7 @@ Roll out gradually, observe, and roll back first when a release is unhealthy. Th
 ### Exit criteria
 A release can be deployed, observed, rolled back and reconstructed without ad hoc manual intervention.
 
-## 9. Phase 9 — Bitrix24 Business Control Plane Integration
+## 13. Phase 9 — Bitrix24 Business Control Plane Integration
 
 ### Objective
 Introduce Bitrix24 as the mature external business-process and transaction-control plane, without rebuilding CRM or finance inside Shema.
@@ -566,7 +566,7 @@ Bitrix24 becomes authoritative after handoff for:
 ### Exit criteria
 A qualified opportunity can be handed from Shema to Bitrix24 with traceable identity and evidence references, and the resulting business outcome can return to Shema without creating competing truth.
 
-## 10. Phase 10 — External Provider Activation and MAX
+## 14. Phase 10 — External Provider Activation and MAX
 
 ### Objective
 Activate external effects only after their safety contracts are proven.
@@ -589,7 +589,7 @@ No workaround provider or implicit fallback is introduced merely to bypass the b
 ### Exit criteria
 A real external effect is safe under timeout, lost-response, retry, duplicate and recovery scenarios.
 
-## 11. Phase 11 — Learning Loop
+## 15. Phase 11 — Learning Loop
 
 ### Objective
 Close the loop from outcomes back into intelligence and operator decisions without importing the complete CRM/finance database into Shema.
@@ -619,7 +619,7 @@ Close the loop from outcomes back into intelligence and operator decisions witho
 ### Rule
 Learning changes controlled application policy, not canonical historical truth.
 
-## 12. Phase 12 — Measured scalability and team mode
+## 16. Phase 12 — Measured scalability and team mode
 
 ### Objective
 Scale only where actual use creates a measured constraint.
@@ -637,7 +637,7 @@ Scale only where actual use creates a measured constraint.
 ### Trigger
 A real bottleneck or isolation/security requirement must exist before introducing structural complexity.
 
-## 12A. Operator freedom and complexity guardrails
+## 16A. Operator freedom and complexity guardrails
 
 These are permanent roadmap rules, not optional UX preferences:
 
@@ -649,7 +649,7 @@ These are permanent roadmap rules, not optional UX preferences:
 - UI complexity must not increase unless operator value is demonstrated;
 - mature-system patterns are adopted by principle, not copied wholesale by subsystem count.
 
-## 13. What must NOT happen
+## 17. What must NOT happen
 
 - no v1.6/v1.7 kernel expansion for UI convenience;
 - no parallel client business-rule implementations;
@@ -665,7 +665,7 @@ These are permanent roadmap rules, not optional UX preferences:
 - no scale claims without measurements;
 - no release without full gate evidence.
 
-## 14. Priority order
+## 18. Priority order
 
 The practical priority is:
 
@@ -683,7 +683,7 @@ The practical priority is:
 
 Where two capabilities are tightly coupled, build them as one vertical slice rather than separate half-finished layers.
 
-## 15. Final target state
+## 19. Final target state
 
 The mature Shema system should allow the owner to move through one coherent loop:
 
