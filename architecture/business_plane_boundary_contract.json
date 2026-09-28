@@ -101,7 +101,8 @@
     "bitrix_role_after_handoff": "live_repeat_and_recurring_transaction_execution",
     "temporary_local_mode_is_allowed": true,
     "local_mode_uses_frozen_order_economics_semantics": true,
-    "no_dual_live_ownership": true
+    "no_dual_live_ownership": true,
+    "shema_must_not_reimplement_bitrix_recurring_deal_engine": true
   },
   "economics": {
     "shema_role": "optional_coarse_outcome_features_for_learning",
