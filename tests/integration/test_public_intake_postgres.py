@@ -127,6 +127,7 @@ def test_public_intake_database_is_isolated_durable_and_idempotent() -> None:
             preflight=NeverCalledPreflight(),
             projector=projector,
             clock=lambda: datetime(2026, 9, 28, 12, tzinfo=UTC),
+            enforce_edge_proof=False,
         )
 
         first = service.submit(
