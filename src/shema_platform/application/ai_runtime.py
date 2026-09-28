@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Callable
-from hashlib import sha256
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
+from hashlib import sha256
 from typing import Protocol
 from uuid import uuid4
 
