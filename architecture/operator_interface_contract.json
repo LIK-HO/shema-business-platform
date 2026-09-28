@@ -58,11 +58,6 @@
           "role": "today_queue_summary_and_attention"
         },
         {
-          "id": "search",
-          "label": "Поиск",
-          "role": "canonical_lead_and_counterparty_search"
-        },
-        {
           "id": "clients",
           "label": "Клиенты",
           "role": "verified_clients_and_client_context"
@@ -120,7 +115,17 @@
         "notifications",
         "operator_menu"
       ],
-      "notification_behavior": "counter_badge_plus_persistent_center; low_severity_does_not_force_navigation"
+      "notification_behavior": "counter_badge_plus_persistent_center; low_severity_does_not_force_navigation",
+      "global_search": {
+        "exact_identifier_detection": [
+          "INN",
+          "OGRN",
+          "OGRNIP"
+        ],
+        "switches_to": "COUNTERPARTY_CHECK",
+        "otherwise": "canonical_lead_discovery",
+        "no_ai_before_identifier_validation": true
+      }
     }
   },
   "work_queue": {
