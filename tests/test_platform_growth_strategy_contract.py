@@ -109,3 +109,25 @@ def test_intelligence_source_policy_is_bounded_and_question_driven() -> None:
     assert payload["operator_modes"]["VERIFY"]
     assert payload["operator_modes"]["DEEP"]
     assert payload["operator_modes"]["MANUAL"]
+
+
+def test_bitrix_setup_agent_is_bounded_to_discovery_plan_apply_verify() -> None:
+    agent = json.loads(
+        (
+            ROOT / "architecture" / "bitrix24_configuration_agent_contract.json"
+        ).read_text(encoding="utf-8")
+    )
+
+    assert agent["placement"] == "integration_business_plane_boundary"
+    assert agent["core_impact"] is False
+    assert agent["phases"] == [
+        "DISCOVER",
+        "PLAN",
+        "DRY_RUN",
+        "APPLY",
+        "VERIFY",
+        "RECONCILE",
+    ]
+    assert "read_only_discovery_before_mutation" in agent["safety_rules"]
+    assert "direct_unreviewed_rest_mutations" in agent["ai_role"]["forbidden"]
+    assert "tender_or_document_subsystem_configuration" in agent["non_goals"]
