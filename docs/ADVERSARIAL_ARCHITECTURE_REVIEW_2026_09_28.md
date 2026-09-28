@@ -480,6 +480,22 @@ The causal chain remains:
 
 Stable references preserve continuity across the two systems.
 
+## 15D. Destructive Review — Operator Interface
+
+The interface is treated as a controlled projection of server-authoritative state, not as a business-rule or permission authority.
+
+| Hypothesis | Severity | Required control |
+|---|---|---|
+| Navigation exposes a domain Shema does not own | P1 | Explicit owned-navigation whitelist; CRM/finance/document/tender/personnel modules are absent from primary navigation |
+| A stale deep link resurrects transferred Order/Economics data | P0 | Server-side capability check, route guard, explicit Bitrix24 destination state, no stale cached record payload |
+| Kanban drag/drop overwrites newer state | P1 | Stage change is an authorized server command with revision/concurrency protection; UI failure leaves canonical state unchanged |
+| Saved filters or personal views bypass access control | P1 | Preferences affect presentation only; authorization is server-side and independent of saved view state |
+| Quick-create omits mandatory evidence/identity gates | P1 | Quick form is only a presentation shortcut; server validation and policy/evidence gates remain mandatory |
+| Activity/timeline renders client text as trusted HTML | P1 | Untrusted text is escaped/structured; no trusted HTML from public intake or external providers |
+| Responsive/offline mode creates duplicate mutation | P1 | Read cache by default; mutations only with proven idempotency and explicit pending state |
+
+Disposition: no new business authority is introduced by the operator interface. The UI blueprint is bounded by architecture/operator_interface_contract.json, and every state-changing action remains server-authoritative.
+
 # 17. Release verdict
 
 The **global strategy now passes the conceptual adversarial review** with the corrected boundaries.
