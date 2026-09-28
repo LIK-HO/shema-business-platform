@@ -1070,14 +1070,17 @@ Ranking может менять порядок показа, но не долж�
 
 Это делает результат воспроизводимым и предотвращает ошибочное толкование ограниченного поиска как полного отсутствия данных.
 
-# 5B.20. Procurement Intelligence & Tender Monitoring
+# 5B.20. Procurement / B2G — deferred business-plane capability
 
-**Status: Phase 2-I IN PROGRESS — foundation sub-boundary CLOSED / VERIFIED by CI #1417; live/runtime sub-boundaries remain separately gated.** Procurement intelligence is a bounded extension of the search/research system. The first provider is ГосПлан API v2 over ЕИС. The adapter consumes plans, procurements, procedures and contracts through REST; procurement records remain external observations and do not become canonical Identity.
+**Status: Phase 2-I technical foundation CLOSED / VERIFIED. Further procurement/tender development inside Shema is DEFERRED.**
 
-The required chain is:
-**plan/notice → procurement observation → identity/evidence → qualification → contact reason → commercial action → order → document pack → result/learning.**
+The project deliberately develops **B2B first** and proves the complete commercial loop before introducing B2G/tender complexity.
 
-The system must distinguish planned procurement, published notice, active procedure, completed procedure and cancellation/change events. Monitoring uses bounded page-offset polling in the current foundation; production incremental monitoring requires stable ordering plus watermark/overlap-window semantics and durable checkpointing. Provider identifiers remain provider references, not canonical business IDs. No tender submission automation is part of this boundary. The next procurement runtime boundary is a provider-neutral ProcurementSourceRegistry with per-source capability declarations. ГосПлан remains the official-origin baseline; TenderGuru is the first commercial aggregation candidate only after a measured coverage gap. No single commercial ETP is a strategic dependency.
+The existing ГосПлан/provider-neutral foundation is retained as a dormant technical asset. Procurement records remain external observations and never become canonical Identity. No tender runtime, tender workspace or tender submission/participation automation is developed in Shema at this stage.
+
+The later B2G path belongs to the **Bitrix24 business-plane stage** or a mature tender capability integrated with that plane. Shema may later supply intelligence/context to that process, but it does not become a tender system of record.
+
+Historical procurement contracts and deterministic fixtures remain valuable for migration/reuse and are not evidence that procurement activation is currently approved.
 
 # 5C. Контур подготовки первого контакта
 
