@@ -98,6 +98,9 @@ def test_strategy_preserves_two_domains_without_split_brain() -> None:
     )
     assert payload["operator_continuity"]["no_shadow_copy_of_live_business_state"] is True
     assert "handoff_id" in payload["operator_continuity"]["stable_context_keys"]
+    assert payload["operator_continuity"]["shema_pre_handoff_assignment"].startswith(
+        "Shema_may_own_preparation_assignment"
+    )
 
 
 def test_document_change_is_versioned_and_recoverable() -> None:
