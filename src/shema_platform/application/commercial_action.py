@@ -53,6 +53,7 @@ class CommercialActionService:
         action = CommercialAction(
             action_id=action_id,
             identity_id=identity.identity_id,
+            owner_actor_id=actor.actor_id,
             contact_ref=contact_ref,
             channel=channel,
             evidence_refs=evidence_refs,
