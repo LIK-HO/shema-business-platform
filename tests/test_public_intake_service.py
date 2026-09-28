@@ -15,6 +15,7 @@ from shema_platform.application.public_intake import (
     PreflightDecision,
     PublicIdempotencyReservation,
     PublicIntakePayload,
+    PublicIntakeRateLimited,
     PublicIntakeService,
 )
 from shema_platform.application.public_preflight import PublicCounterpartyPreflightService
