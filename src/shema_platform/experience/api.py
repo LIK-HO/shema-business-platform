@@ -586,7 +586,8 @@ def create_app(
                 entry_surface=payload.entry_surface,
             ),
             idempotency_key=idempotency_key,
-            public_client_key=rate_limit_key,            origin=origin,
+            public_client_key=rate_limit_key,
+            origin=origin,
             bot_challenge_passed=(
                 (bot_challenge or "").strip().lower() == "passed"
             ),
