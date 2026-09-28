@@ -1146,6 +1146,7 @@ class PostgresOrderRepository(OrderRepository):
                 order.identity_id,
                 order.source_action_id,
                 order.status.value,
+                order.owner_actor_id,
             ),
         )
         self._insert_lines(order)
