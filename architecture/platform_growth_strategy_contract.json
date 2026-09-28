@@ -3,7 +3,7 @@
   "status": "strategic_boundary_contract",
   "frozen_kernel_impact": false,
   "product_boundary": {
-    "shema_role": "search_intelligence_evidence_qualification_contact_preparation_learning",
+    "shema_role": "search_intelligence_evidence_qualification_contact_preparation_public_request_preflight_learning",
     "yandex_cloud_role": "primary_runtime_and_infrastructure_environment",
     "bitrix24_role_after_maturity": "transaction_business_process_communication_calculation_and_economics_control_plane"
   },
@@ -57,13 +57,15 @@
       "classification",
       "evidence_summarization",
       "contact_preparation",
-      "operator_assistance"
+      "operator_assistance",
+      "operator_briefing_after_deterministic_counterparty_preflight"
     ],
     "not_authoritative_for": [
       "identity_truth",
       "legal_truth",
       "transaction_price",
-      "business_economics"
+      "business_economics",
+      "counterparty_acceptance_decision"
     ]
   },
   "max": {
@@ -139,7 +141,10 @@
       "canonical_domain": "схемагрупп.рф",
       "role": "public_site_and_advanced_client_request_intake",
       "canonical_api": true,
-      "no_live_business_authority": true
+      "no_live_business_authority": true,
+      "counterparty_preflight": "deterministic_registry_preflight_without_gpt",
+      "public_submission_is_untrusted": true,
+      "server_authoritative": true
     },
     "operator_web": "protected_operator_workspace_on_same_canonical_api",
     "pwa": "same_web_semantics_with_bounded_offline_behavior",
@@ -150,5 +155,6 @@
       "entry_surface"
     ],
     "domain_cutover": "controlled_dns_cutover_from_inSales_after_https_and_health_validation"
-  }
+  },
+  "evolution_contract": "architecture/platform_evolution_contract.json"
 }
