@@ -192,7 +192,7 @@ class AIGateway:
                 )
             uow.audits.append(
                 AuditRecord(
-                audit_id=str(uuid4()),
+                    audit_id=str(uuid4()),
                 actor_id=context.actor_id,
                 action="ai.run",
                 resource_type="ai_task",
@@ -211,7 +211,7 @@ class AIGateway:
                     "input_ref_count": len(run.input_refs),
                     "evidence_ref_count": len(run.evidence_refs),
                 },
-                correlation_id=context.correlation_id,
+                    correlation_id=context.correlation_id,
                     configuration_version=context.configuration_version,
                 )
             )
