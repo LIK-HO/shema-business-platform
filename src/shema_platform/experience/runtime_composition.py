@@ -23,12 +23,109 @@ from shema_platform.application.counterparty_provider_runtime_lookup import (
     CounterpartyProviderRuntimeLookupService,
 )
 from shema_platform.application.ports import UnitOfWork
+from shema_platform.application.public_intake import PublicIntakeService
+from shema_platform.application.public_preflight import PublicCounterpartyPreflightService
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api import APIApplication, create_app
 from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.foundation.telemetry import TelemetrySink
+from shema_platform.platform.public_intake_postgres import (
+    PostgresOperatorNotificationReader,
+    PostgresPublicIntakeRepository,
+    PostgresPublicRequestProjection,
+)
+
+
+
+
+@dataclass(frozen=True, slots=True)
+class PublicIntakeRuntimeAssembly:
+    """Bounded public-intake runtime; raw intake stays in its own database."""
+
+    service: PublicIntakeService
+    notification_reader: PostgresOperatorNotificationReader
+
+    def create_http_app(
+        self,
+        *,
+        application: APIApplication | None = None,
+        authenticator=None,
+        enable_docs: bool = True,
+        telemetry: TelemetrySink | None = None,
+        provider_health=None,
+    ):
+        return create_app(
+            application=application,
+            authenticator=authenticator,
+            enable_docs=enable_docs,
+            telemetry=telemetry,
+            provider_health=provider_health,
+            public_intake=self.service,
+            operator_notification_reader=self.notification_reader,
+        )
+
+
+def compose_public_intake_runtime(
+    *,
+    intake_connection_factory: Callable,
+    shema_unit_of_work_factory: Callable[[], UnitOfWork],
+    counterparty_provider: CounterpartyLookupProvider | None = None,
+    allowed_origins: frozenset[str] = frozenset(),
+    require_bot_challenge: bool = False,
+    submission_limit: int = 5,
+    lookup_limit: int = 20,
+    window_seconds: int = 600,
+    telemetry: TelemetrySink | None = None,
+    provider_sleeper: Callable[[float], None] | None = None,
+) -> PublicIntakeRuntimeAssembly:
+    def repository_factory():
+        return PostgresPublicIntakeRepository(intake_connection_factory)
+
+    def cache_lookup(cache_key: str, now):
+        with repository_factory() as repository:
+            return repository.get_preflight_cache(cache_key, now=now)
+
+    def consume_lookup_budget(public_client_key: str, now):
+        with repository_factory() as repository:
+            repository.consume_budget(
+                public_client_key=public_client_key,
+                budget="registry_lookup",
+                limit=lookup_limit,
+                window_seconds=window_seconds,
+                now=now,
+            )
+
+    def cache_store(cache_key: str, snapshot):
+        with repository_factory() as repository:
+            repository.save_preflight_cache(cache_key, snapshot)
+
+    preflight = PublicCounterpartyPreflightService(
+        provider=counterparty_provider,
+        cache_lookup=cache_lookup,
+        consume_lookup_budget=consume_lookup_budget,
+        cache_store=cache_store,
+        sleeper=provider_sleeper,
+    )
+    projector = PostgresPublicRequestProjection(shema_unit_of_work_factory)
+    service = PublicIntakeService(
+        repository_factory,
+        preflight=preflight,
+        projector=projector,
+        submission_limit=submission_limit,
+        lookup_limit=lookup_limit,
+        window_seconds=window_seconds,
+        require_bot_challenge=require_bot_challenge,
+        allowed_origins=allowed_origins,
+    )
+    reader = PostgresOperatorNotificationReader(
+        lambda: intake_connection_factory(),
+    )
+    return PublicIntakeRuntimeAssembly(
+        service=service,
+        notification_reader=reader,
+    )
 
 
 @dataclass(frozen=True, slots=True)
