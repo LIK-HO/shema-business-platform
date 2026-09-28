@@ -31,6 +31,7 @@ from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api import APIApplication, create_app
 from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
 from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.http_security import BotChallengeVerifier
 from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.foundation.telemetry import TelemetrySink
 from shema_platform.platform.public_intake_postgres import (
@@ -55,6 +56,7 @@ class PublicIntakeRuntimeAssembly:
         enable_docs: bool = True,
         telemetry: TelemetrySink | None = None,
         provider_health=None,
+        bot_challenge_verifier: BotChallengeVerifier | None = None,
     ):
         return create_app(
             application=application,
@@ -64,6 +66,7 @@ class PublicIntakeRuntimeAssembly:
             provider_health=provider_health,
             public_intake=self.service,
             operator_notification_reader=self.notification_reader,
+            bot_challenge_verifier=bot_challenge_verifier,
         )
 
 
@@ -73,7 +76,7 @@ def compose_public_intake_runtime(
     shema_unit_of_work_factory: Callable[[], UnitOfWork],
     counterparty_provider: CounterpartyLookupProvider | None = None,
     allowed_origins: frozenset[str] = frozenset(),
-    require_bot_challenge: bool = True,
+    bot_challenge_verifier: BotChallengeVerifier | None = None,
     submission_limit: int = 5,
     lookup_limit: int = 20,
     window_seconds: int = 600,
@@ -116,7 +119,7 @@ def compose_public_intake_runtime(
         submission_limit=submission_limit,
         lookup_limit=lookup_limit,
         window_seconds=window_seconds,
-        require_bot_challenge=require_bot_challenge,
+        require_bot_challenge=True,
         allowed_origins=allowed_origins,
     )
     reader = PostgresOperatorNotificationReader(
