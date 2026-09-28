@@ -1627,6 +1627,30 @@ class PostgresAIRunRepository(AIRunRepository):
             ),
         )
 
+    def get_by_task_id(self, task_id: str) -> AIRun | None:
+        cursor = self._connection.execute(
+            """
+            select
+                run_id,
+                task_id,
+                provider_id,
+                model,
+                model_version,
+                prompt_version,
+                input_refs,
+                evidence_refs,
+                output,
+                tokens,
+                cost,
+                duration_seconds
+            from ai_run
+            where task_id = %s
+            """,
+            (task_id,),
+        )
+        row = cursor.fetchone()
+        return None if row is None else self._to_run(row)
+
     def get(self, run_id: str) -> AIRun | None:
         cursor = self._connection.execute(
             """
