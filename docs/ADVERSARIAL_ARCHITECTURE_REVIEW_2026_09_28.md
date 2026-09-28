@@ -484,11 +484,12 @@ Stable references preserve continuity across the two systems.
 
 The **global strategy now passes the conceptual adversarial review** with the corrected boundaries.
 
-The **current implementation does not yet pass final release review**, because the latest HEAD still requires the complete release-gate CI to close after the new corrections.
+The **current contract/test boundary passes final architectural release review**: the complete seven-job release gate is green, including quality, integration, supply-chain, backup/recovery and release-contract. The visual Web/PWA runtime remains the separately scoped Phase 4 implementation and is not falsely declared implemented here.
 
-The three most important next executable boundaries are:
+The next executable boundaries are:
 
-1. **Business-plane handoff runtime** — Bitrix24 adapter, idempotent outbox, reconciliation and field-ownership enforcement.
+1. **Phase 4 Web/PWA runtime** — implement the approved operator/public experience contract as the actual visual surface.
+2. **Business-plane handoff runtime** — Bitrix24 adapter, idempotent outbox, reconciliation and field-ownership enforcement.
 3. **Outcome learning vertical slice** — minimal, versioned, privacy-preserving result feedback.
 
 No additional CRM/ERP/economics/HR subsystem should be added to Shema.
