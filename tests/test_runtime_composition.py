@@ -117,5 +117,6 @@ def test_runtime_http_composes_search_without_changing_provider_activation() -> 
 
     assert response.status_code == 200
     assert response.json()["results"] == []
-    assert response.json()["correlationId"] == "corr-runtime-search"
+    assert response.json()["correlationId"]
+    assert response.json()["correlationId"] != "corr-runtime-search"
     assert assembly.ai.gate.state.enabled is False
