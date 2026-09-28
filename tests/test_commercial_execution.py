@@ -173,6 +173,7 @@ def workflow_parts() -> tuple[CommercialActionSendWorkflow, MemoryUow, MemoryAda
         CommercialAction(
             action_id="action-1",
             identity_id="identity-1",
+            owner_actor_id="operator-1",
             contact_ref="chat:1",
             channel="max",
             evidence_refs=("evidence:1",),
