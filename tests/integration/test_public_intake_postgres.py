@@ -12,7 +12,6 @@ from shema_platform.application.public_intake import (
     PublicIntakePayload,
     PublicIntakeService,
 )
-from shema_platform.application.public_preflight import PublicCounterpartyPreflightService
 from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
 from shema_platform.platform.public_intake_postgres import (
     PostgresPublicIntakeRepository,
@@ -56,7 +55,10 @@ def drop_database(database: str) -> None:
 
 
 def intake_factory(database: str):
-    return lambda: psycopg.connect(admin_dsn(database))
+    def connect():
+        return psycopg.connect(admin_dsn(database))
+
+    return connect
 
 
 class NeverCalledPreflight:
@@ -117,9 +119,8 @@ def test_public_intake_database_is_isolated_durable_and_idempotent() -> None:
     try:
         create_database(database)
         migrate(database)
-        repository_factory = lambda: PostgresPublicIntakeRepository(
-            intake_factory(database)
-        )
+        def repository_factory():
+            return PostgresPublicIntakeRepository(intake_factory(database))
         projector = Projector()
         service = PublicIntakeService(
             repository_factory,
