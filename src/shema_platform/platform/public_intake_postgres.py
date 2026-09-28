@@ -773,7 +773,7 @@ class PublicIntakeOutboxDispatcher:
         intake_repository_factory,
         projector,
         *,
-        clock=lambda: datetime.now(timezone.utc),
+        clock=lambda: datetime.now(UTC),
     ):
         self._intake_repository_factory = intake_repository_factory
         self._projector = projector
