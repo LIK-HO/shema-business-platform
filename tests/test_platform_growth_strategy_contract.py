@@ -61,6 +61,7 @@ def test_no_strategic_b2b_center_dependency_remains_in_manifest_or_roadmap() -> 
         assert "B2B-Center is a later" not in content
         assert "B2B-Center is removed" in content
 
+
 def test_strategy_is_b2b_first_and_defers_tender_work_to_bitrix24() -> None:
     payload = load("platform_growth_strategy_contract.json")
 
@@ -75,6 +76,14 @@ def test_strategy_is_b2b_first_and_defers_tender_work_to_bitrix24() -> None:
     assert payload["procurement_strategy"]["execution_owner"].startswith(
         "Bitrix24"
     )
+
+    for relative_path in (
+        "docs/DEVELOPMENT_MANIFEST.md",
+        "docs/ROADMAP.md",
+        "docs/DEVELOPMENT_STATE.md",
+    ):
+        content = (ROOT / relative_path).read_text(encoding="utf-8")
+        assert "TenderGuru" not in content
 
 
 def test_strategy_preserves_two_domains_without_split_brain() -> None:
