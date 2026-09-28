@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from shema_platform.application.public_intake import (
     CounterpartyPreflightSnapshot,
@@ -259,22 +259,50 @@ class PostgresPublicIntakeRepository:
             ),
         )
 
-    def pending_outbox(self, *, limit: int = 100) -> tuple[PublicIntakeOutboxEvent, ...]:
+    def claim_pending(
+        self,
+        worker_id: str,
+        *,
+        lease_seconds: int,
+        now: datetime,
+        limit: int = 100,
+    ) -> tuple[PublicIntakeOutboxEvent, ...]:
+        if not worker_id.strip():
+            raise ValueError("worker_id is required")
+        if lease_seconds <= 0:
+            raise ValueError("lease_seconds must be positive")
+        if limit < 1:
+            raise ValueError("limit must be positive")
+        lease_until = now + timedelta(seconds=lease_seconds)
         rows = self.connection.execute(
             """
-            select
-                event_id,
-                request_id,
-                event_type,
-                payload,
-                occurred_at,
-                notify_operator
-            from intake_outbox_event
-            where published_at is null
-            order by occurred_at, event_id
-            limit %s
+            with claimed as (
+                select event_id
+                from intake_outbox_event
+                where published_at is null
+                  and (
+                      delivery_lease_until is null
+                      or delivery_lease_until <= %s
+                  )
+                order by occurred_at, event_id
+                for update skip locked
+                limit %s
+            )
+            update intake_outbox_event as event
+            set delivery_worker_id = %s,
+                delivery_lease_until = %s,
+                delivery_attempt = delivery_attempt + 1
+            from claimed
+            where event.event_id = claimed.event_id
+            returning
+                event.event_id,
+                event.request_id,
+                event.event_type,
+                event.payload,
+                event.occurred_at,
+                event.notify_operator
             """,
-            (limit,),
+            (now, limit, worker_id, lease_until),
         ).fetchall()
         return tuple(
             PublicIntakeOutboxEvent(
@@ -288,17 +316,25 @@ class PostgresPublicIntakeRepository:
             for row in rows
         )
 
-    def mark_outbox_published(self, event_id: str, *, now: datetime) -> None:
+    def mark_outbox_published(
+        self,
+        event_id: str,
+        *,
+        worker_id: str,
+        now: datetime,
+    ) -> None:
         updated = self.connection.execute(
             """
             update intake_outbox_event
             set published_at = %s,
-                delivery_attempt = delivery_attempt + 1
+                delivery_worker_id = null,
+                delivery_lease_until = null
             where event_id = %s
               and published_at is null
+              and delivery_worker_id = %s
             returning event_id
             """,
-            (now, event_id),
+            (now, event_id, worker_id),
         ).fetchone()
         if updated is None:
             raise IntegrityViolation("intake outbox publication rejected")
