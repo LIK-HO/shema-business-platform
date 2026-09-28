@@ -266,7 +266,6 @@ class PublicIntakeService:
         bot_challenge_passed: bool,
         correlation_id: str,
         honeypot_value: str = "",
-        request_id: str,
     ) -> PublicIntakeResult:
         normalized_idempotency_key = idempotency_key.strip()
         self._validate_edge_proof(
@@ -328,6 +327,7 @@ class PublicIntakeService:
         bot_challenge_passed: bool,
         correlation_id: str,
         honeypot_value: str = "",
+        request_id: str,
     ) -> PublicIntakeResult:
         self._validate_edge_proof(
             idempotency_key=idempotency_key,
