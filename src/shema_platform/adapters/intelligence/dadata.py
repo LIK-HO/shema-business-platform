@@ -16,8 +16,6 @@ from shema_platform.application.counterparty_lookup import (
     CounterpartyLookupQuery,
     CounterpartyProviderRecord,
 )
-
-
 from shema_platform.foundation.secure_http import secure_urlopen
 
 DEFAULT_ENDPOINT = "https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party"
