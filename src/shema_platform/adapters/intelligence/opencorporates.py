@@ -11,6 +11,7 @@ from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, urlopen
 
 DEFAULT_MAX_RESPONSE_BYTES = 1_048_576
+_ALLOWED_BASE_HOST = "api.opencorporates.com"
 MAX_MAX_RESPONSE_BYTES = 4_194_304
 DEFAULT_MAX_QUERY_CHARS = 1_024
 MAX_MAX_QUERY_CHARS = 4_096
@@ -200,8 +201,15 @@ class OpenCorporatesConfiguration:
             raise ValueError("api_token is required")
         if not self.api_version.strip():
             raise ValueError("api_version is required")
-        if not self.base_url.startswith("https://"):
-            raise ValueError("OpenCorporates base_url must use HTTPS")
+        parsed_base = urlsplit(self.base_url)
+        if (
+            parsed_base.scheme != "https"
+            or parsed_base.hostname != _ALLOWED_BASE_HOST
+            or parsed_base.port is not None
+            or parsed_base.query
+            or parsed_base.fragment
+        ):
+            raise ValueError("OpenCorporates base_url must target the pinned official host")
         if self.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive")
         if self.timeout_seconds > 30.0:
