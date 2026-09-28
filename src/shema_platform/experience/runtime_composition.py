@@ -120,6 +120,7 @@ def compose_public_intake_runtime(
         lookup_limit=lookup_limit,
         window_seconds=window_seconds,
         require_bot_challenge=True,
+        enforce_edge_proof=True,
         allowed_origins=allowed_origins,
     )
     reader = PostgresOperatorNotificationReader(
