@@ -48,6 +48,7 @@ class AIOnlyAPIApplication:
                 actor_trust_level=context.trust_level,
                 permissions=context.permissions,
                 correlation_id=context.correlation_id,
+                idempotency_key=context.idempotency_key or "",
             )
         )
         return AIRunResponse(
