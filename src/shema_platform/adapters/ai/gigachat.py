@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from math import isfinite
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlsplit, urlencode
+from urllib.parse import urlencode, urlsplit
 from urllib.request import Request
 from uuid import uuid4
 
@@ -30,8 +30,6 @@ from shema_platform.adapters.ai.contracts import (
     validate_provider_response,
 )
 from shema_platform.application.ai import AIRun
-
-
 from shema_platform.foundation.secure_http import secure_urlopen
 
 DEFAULT_BASE_URL = "https://api.giga.chat/v1"
