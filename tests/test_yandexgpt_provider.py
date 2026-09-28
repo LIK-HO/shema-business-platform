@@ -249,6 +249,13 @@ def test_model_response_must_fit_output_budget() -> None:
     assert exc.value.failure.code is AIProviderFailureCode.RESOURCE_EXHAUSTED
 
 
+def test_configuration_rejects_untrusted_https_base_url() -> None:
+    with pytest.raises(ValueError, match="pinned official host"):
+        default_configuration(
+            base_url="https://attacker.example/yandex",
+        )
+
+
 def test_from_environment_requires_explicit_positive_cost_ceiling(monkeypatch):
     monkeypatch.setenv("YANDEXGPT_API_KEY", "secret")
     monkeypatch.delenv("YANDEXGPT_MAX_COST", raising=False)
