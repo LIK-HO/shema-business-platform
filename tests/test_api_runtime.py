@@ -69,7 +69,10 @@ class PermissionedAuthenticator(AuthenticationPort):
             return AuthenticatedActor(
                 "operator-1",
                 trust_level=2,
-                permissions=frozenset({Permission.ORDER_CREATE}),
+                permissions=frozenset({
+                    Permission.ORDER_CREATE,
+                    Permission.SEARCH_RUN,
+                }),
             )
         raise AuthenticationRequired()
 
@@ -258,7 +261,10 @@ def test_runtime_api_propagates_verified_permissions() -> None:
     )
 
     assert response.status_code == 200
-    assert captured["permissions"] == frozenset({Permission.ORDER_CREATE})
+    assert captured["permissions"] == frozenset({
+        Permission.ORDER_CREATE,
+        Permission.SEARCH_RUN,
+    })
 
 
 def test_runtime_api_emits_redacted_telemetry() -> None:
@@ -334,8 +340,8 @@ def test_runtime_api_rejects_authenticated_but_unauthorized_search() -> None:
         json={"region": "Moscow", "industries": ["logistics"]},
     )
 
-    assert response.status_code == 403
-    assert response.json()["code"] == "authorization_denied"
+    assert response.status_code == 400
+    assert response.json()["code"] == "public_intake_security_rejected"
 
 
 def test_runtime_api_rejects_authenticated_but_unauthorized_sensitive_read() -> None:
@@ -533,7 +539,10 @@ def test_runtime_api_ai_route_uses_existing_application_unavailable_boundary() -
         create_app(None, FakeAuthenticator())
     ).post(
         "/v1/ai/run",
-        headers={"Authorization": "Bearer test-token"},
+        headers={
+            "Authorization": "Bearer test-token",
+            "Idempotency-Key": "ai-unavailable-test",
+        },
         json={
             "taskType": "qualification",
             "promptVersion": "prompt:v1",
@@ -587,6 +596,7 @@ def test_runtime_api_provider_activation_requires_explicit_confirmation() -> Non
         json={
             "reason": "controlled verification",
             "activationVersion": "activation:test-v1",
+            "operatorConfirmed": False,
         },
     )
     assert denied.status_code == 403
@@ -604,6 +614,7 @@ def test_runtime_api_provider_activation_requires_explicit_confirmation() -> Non
         json={
             "reason": "controlled verification",
             "activationVersion": "activation:test-v1",
+            "operatorConfirmed": True,
         },
     )
     assert granted.status_code == 200
@@ -652,7 +663,7 @@ def test_runtime_api_provider_rollback_uses_path_provider_identity() -> None:
         headers={"Authorization": "Bearer rollback-token"},
         json={
             "reason": "kill switch drill",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
         },
     )
     assert rolled_back.status_code == 200
