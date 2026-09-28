@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from threading import Lock
+from time import monotonic
 from typing import Any, NoReturn, Protocol
 
 import jwt
@@ -83,7 +85,9 @@ class OIDCConfiguration:
 
 
 class PyJWTSigningKeyProvider:
-    """Production JWKS resolver with bounded in-process key caching."""
+    """Production JWKS resolver with bounded cache and unknown-kid refresh rate limiting."""
+
+    UNKNOWN_KID_REFRESH_COOLDOWN_SECONDS = 5.0
 
     def __init__(self, jwks_url: str, cache_seconds: int) -> None:
         self._client = jwt.PyJWKClient(
@@ -93,9 +97,40 @@ class PyJWTSigningKeyProvider:
             cache_keys=True,
             max_cached_keys=16,
         )
+        self._refresh_lock = Lock()
+        self._last_unknown_kid_refresh_at = 0.0
 
     def signing_key(self, token: str) -> Any:
-        return self._client.get_signing_key_from_jwt(token)
+        header = jwt.get_unverified_header(token)
+        kid = header.get("kid")
+        if not isinstance(kid, str) or not kid.strip() or len(kid) > 256:
+            raise jwt.PyJWKClientError("JWT signing key id is invalid")
+
+        try:
+            signing_keys = self._client.get_signing_keys(refresh=False)
+            matched = next(
+                (key for key in signing_keys if key.key_id == kid),
+                None,
+            )
+            if matched is not None:
+                return matched
+        except jwt.PyJWTError:
+            # Fall through to the bounded refresh path.
+            pass
+
+        now = monotonic()
+        with self._refresh_lock:
+            now = monotonic()
+            if (
+                now - self._last_unknown_kid_refresh_at
+                < self.UNKNOWN_KID_REFRESH_COOLDOWN_SECONDS
+            ):
+                raise jwt.PyJWKClientError(
+                    "unknown JWT key id refresh is rate limited"
+                )
+
+            self._last_unknown_kid_refresh_at = now
+            return self._client.get_signing_key_from_jwt(token)
 
 
 @dataclass(frozen=True, slots=True)
