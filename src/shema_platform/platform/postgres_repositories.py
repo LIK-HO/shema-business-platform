@@ -17,6 +17,7 @@ from shema_platform.application.ports import (
     OrderRepository,
     OutboxRepository,
     QuarantineRepository,
+    RepeatOrderRepository,
     SearchCandidateRepository,
 )
 from shema_platform.domain.commercial_action import CommercialAction, CommercialActionStatus
@@ -24,6 +25,13 @@ from shema_platform.domain.economics import EconomicEntry, EconomicKind
 from shema_platform.domain.identity import Identity, IdentityState
 from shema_platform.domain.money import Money
 from shema_platform.domain.order import Order, OrderLine, OrderStatus
+from shema_platform.domain.repeat_order import (
+    RepeatCadence,
+    RepeatCadenceUnit,
+    RepeatOrderContext,
+    RepeatOrderPlan,
+    RepeatPlanStatus,
+)
 from shema_platform.domain.search import SearchHit
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.errors import (
@@ -1279,6 +1287,219 @@ class PostgresOrderRepository(OrderRepository):
                     line.unit_price.currency,
                 ),
             )
+
+
+
+class PostgresRepeatOrderRepository(RepeatOrderRepository):
+    """Durable repeat-plan state with optimistic concurrency."""
+
+    def __init__(self, connection: DBConnection) -> None:
+        self._connection = connection
+
+    def add(self, plan: RepeatOrderPlan) -> None:
+        self._connection.execute(
+            """
+            insert into repeat_order_plan (
+                plan_id,
+                source_order_id,
+                identity_id,
+                status,
+                cadence_unit,
+                cadence_interval,
+                scheduled_for,
+                service_scope,
+                capacity_units,
+                last_order_id,
+                pending_order_id,
+                skipped_occurrences,
+                revision
+            )
+            values (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s
+            )
+            """,
+            (
+                plan.plan_id,
+                plan.source_order_id,
+                plan.identity_id,
+                plan.status.value,
+                plan.cadence.unit.value,
+                plan.cadence.interval,
+                plan.context.scheduled_for,
+                plan.context.service_scope,
+                plan.context.capacity_units,
+                plan.last_order_id,
+                plan.pending_order_id,
+                plan.skipped_occurrences,
+                plan.revision,
+            ),
+        )
+
+    def get(self, plan_id: str) -> RepeatOrderPlan | None:
+        cursor = self._connection.execute(
+            """
+            select
+                plan_id,
+                source_order_id,
+                identity_id,
+                status,
+                cadence_unit,
+                cadence_interval,
+                scheduled_for,
+                service_scope,
+                capacity_units,
+                last_order_id,
+                pending_order_id,
+                skipped_occurrences,
+                revision
+            from repeat_order_plan
+            where plan_id = %s
+            """,
+            (plan_id,),
+        )
+        row = cursor.fetchone()
+        return None if row is None else self._to_plan(row)
+
+    def save(
+        self,
+        plan: RepeatOrderPlan,
+        *,
+        expected_revision: int,
+    ) -> RepeatOrderPlan:
+        if expected_revision < 1:
+            raise ValueError("expected_revision must be >= 1")
+
+        cursor = self._connection.execute(
+            """
+            select
+                plan_id,
+                source_order_id,
+                identity_id,
+                status,
+                cadence_unit,
+                cadence_interval,
+                scheduled_for,
+                service_scope,
+                capacity_units,
+                last_order_id,
+                pending_order_id,
+                skipped_occurrences,
+                revision
+            from repeat_order_plan
+            where plan_id = %s
+            for update
+            """,
+            (plan.plan_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise KeyError(f"unknown repeat plan: {plan.plan_id}")
+
+        current = self._to_plan(row)
+        if current.revision != expected_revision:
+            raise IntegrityViolation(
+                "repeat plan revision conflict: stale operator state"
+            )
+        if (
+            current.source_order_id != plan.source_order_id
+            or current.identity_id != plan.identity_id
+            or current.cadence != plan.cadence
+        ):
+            raise IntegrityViolation(
+                "repeat plan lineage and cadence are immutable"
+            )
+
+        next_revision = current.revision + 1
+        cursor = self._connection.execute(
+            """
+            update repeat_order_plan
+            set status = %s,
+                scheduled_for = %s,
+                service_scope = %s,
+                capacity_units = %s,
+                last_order_id = %s,
+                pending_order_id = %s,
+                skipped_occurrences = %s,
+                revision = %s,
+                updated_at = now()
+            where plan_id = %s
+              and revision = %s
+            returning
+                plan_id,
+                source_order_id,
+                identity_id,
+                status,
+                cadence_unit,
+                cadence_interval,
+                scheduled_for,
+                service_scope,
+                capacity_units,
+                last_order_id,
+                pending_order_id,
+                skipped_occurrences,
+                revision
+            """,
+            (
+                plan.status.value,
+                plan.context.scheduled_for,
+                plan.context.service_scope,
+                plan.context.capacity_units,
+                plan.last_order_id,
+                plan.pending_order_id,
+                plan.skipped_occurrences,
+                next_revision,
+                plan.plan_id,
+                expected_revision,
+            ),
+        )
+        saved = cursor.fetchone()
+        if saved is None:
+            raise IntegrityViolation(
+                "repeat plan changed concurrently"
+            )
+        return self._to_plan(saved)
+
+    @staticmethod
+    def _to_plan(row: tuple[object, ...]) -> RepeatOrderPlan:
+        (
+            plan_id,
+            source_order_id,
+            identity_id,
+            status,
+            cadence_unit,
+            cadence_interval,
+            scheduled_for,
+            service_scope,
+            capacity_units,
+            last_order_id,
+            pending_order_id,
+            skipped_occurrences,
+            revision,
+        ) = row
+        return RepeatOrderPlan(
+            plan_id=str(plan_id),
+            source_order_id=str(source_order_id),
+            identity_id=str(identity_id),
+            cadence=RepeatCadence(
+                unit=RepeatCadenceUnit(str(cadence_unit)),
+                interval=int(cadence_interval),
+            ),
+            context=RepeatOrderContext(
+                scheduled_for=scheduled_for,
+                service_scope=str(service_scope),
+                capacity_units=capacity_units,
+            ),
+            status=RepeatPlanStatus(str(status)),
+            last_order_id=(
+                str(last_order_id) if last_order_id is not None else None
+            ),
+            pending_order_id=(
+                str(pending_order_id) if pending_order_id is not None else None
+            ),
+            skipped_occurrences=int(skipped_occurrences),
+            revision=int(revision),
+        )
 
 
 class PostgresEconomicEntryRepository(EconomicEntryRepository):
