@@ -46,7 +46,7 @@ def authenticator(key_pair):
     )
 
 
-def token(private_key, **overrides) -> str:
+def token(private_key, *, headers=None, **overrides) -> str:
     now = datetime.now(UTC)
     claims = {
         "iss": "https://issuer.example.test",
@@ -61,7 +61,12 @@ def token(private_key, **overrides) -> str:
         "exp": now + timedelta(minutes=5),
     }
     claims.update(overrides)
-    return jwt.encode(claims, private_key, algorithm="RS256")
+    return jwt.encode(
+        claims,
+        private_key,
+        algorithm="RS256",
+        headers=headers,
+    )
 
 
 def test_unknown_kid_jwks_refresh_is_rate_limited(monkeypatch) -> None:
