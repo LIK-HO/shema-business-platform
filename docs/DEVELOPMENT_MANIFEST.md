@@ -1931,4 +1931,11 @@ The current source-tree HEAD is never copied into this manifest as a permanent v
 - Counterparty preflight is deterministic and registry-driven; GPT is excluded from identifier validation and registry truth lookup.
 - Public responses contain minimal status/match information; the operator sees the evidence-linked preflight summary and can drill down.
 - Public-ingress/provider changes are classified E2 and require abuse, resource/cost, security, rollback/deactivation, provider-exit and global-adversarial gates.
+## 2026-09-28 — Public Intake Data Plane, Repeat Orders, Monitoring and Bitrix Cutover
 
+- Added `architecture/public_intake_data_plane_contract.json`: raw public requests live in a dedicated PostgreSQL database with separate credentials, durable intake outbox and operator notification projection.
+- Added `architecture/repeat_order_transition_contract.json`: temporary live repeat-order mode in Shema until Bitrix24 handoff, followed by completeness-verified migration, purge of live Order/Economics rows and frozen hidden lineage.
+- Added `architecture/counterparty_monitoring_contract.json`: exact INN/OGRN/OGRNIP detection in the existing lead-search field, deterministic preflight, bounded deep research, daily monitoring, change notifications and separate favorites.
+- Bitrix24 remains the mature live business plane; CRM, SPA, tasks, inventory, documents, routing/logistics and executor workflows are configured only where capabilities are actually available. Tender work uses a specialist connector when needed; no tender subsystem is reintroduced into Shema.
+- Public intake data never writes the canonical Shema database directly from the browser and never creates a live Bitrix24 transaction.
+- Order/Economics UI removal after verified Bitrix cutover is a capability-driven hide, not a broken route or empty navigation element.
