@@ -82,7 +82,7 @@ def _ogrnip_valid(identifier: str) -> bool:
 
 
 class PublicCounterpartyPreflightService:
-    """Deterministic intake preflight; only explicitly authoritative sources may establish registry facts.
+    """Deterministic preflight; secondary sources cannot establish registry facts.
 
     Secondary providers never establish authoritative registry facts.
     """
