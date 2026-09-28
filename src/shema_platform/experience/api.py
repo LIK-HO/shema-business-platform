@@ -56,23 +56,23 @@ from shema_platform.experience.api_models import (
     DiscoveryResponse,
     EconomicResponse,
     ErrorEnvelope,
+    OperatorNotificationListResponse,
+    OperatorNotificationResponse,
     OrderCreateRequest,
     OrderResponse,
+    PublicIntakeRequest,
+    PublicIntakeResponse,
     ResearchRequest,
     ResearchResponse,
     SearchRequest,
     SearchResponse,
-    OperatorNotificationListResponse,
-    OperatorNotificationResponse,
-    PublicIntakeRequest,
-    PublicIntakeResponse,
 )
 from shema_platform.foundation.authentication import (
     AuthenticatedActor,
     AuthenticationPort,
     AuthenticationRequired,
 )
-from shema_platform.foundation.authorization import AuthorizationSubject, Permission
+from shema_platform.foundation.authorization import AuthorizationSubject, Permission, RBACAuthorizer
 from shema_platform.foundation.errors import (
     AuthorizationError,
     IdempotencyConflict,
@@ -530,8 +530,6 @@ def create_app(
                 "operator notification center is not composed"
             )
         context = _context(request, None)
-        from shema_platform.foundation.authorization import RBACAuthorizer
-
         RBACAuthorizer(
             (
                 AuthorizationSubject(
