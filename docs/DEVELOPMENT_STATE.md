@@ -199,3 +199,10 @@ Prohibited:
 - Final certification evidence: CI #1036 (`35892865534`) fully green.
 - v1.4 kernel semantics: frozen.
 - v1.5 core maturity: certified.
+
+- Active strategy boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract** — IN PROGRESS; current-head CI is not yet green.
+- Deterministic registry preflight is the first line: GPT is not used for INN/OGRN validation or registry truth lookup.
+- Public form is untrusted ingress; layered edge/application protection, idempotency, anti-enumeration and provider budgets are mandatory.
+- No live FNS automation or public-form Bitrix24 write path is activated by this contract change.
+- Adversarial review of the delta found no new kernel authority or cross-system split-brain; closure remains blocked until executable verification and current-head release-gate CI are green.
+
