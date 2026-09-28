@@ -317,7 +317,7 @@ def test_preflight_matches_counterparty_without_gpt() -> None:
     assert result.record.preflight.identity_match is IdentityMatch.MATCH
     assert result.projection_status == "PROJECTED"
     assert projector.calls == [result.record.request_id]
-    assert len(repository.outbox) == 1
+    assert len(repository.outbox) == 2
     assert provider.calls == 1
 
 
