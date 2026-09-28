@@ -10,10 +10,8 @@
       "provenance",
       "freshness",
       "qualification",
-      "procurement_observations",
       "contact_preparation",
       "repeat_business_preparation",
-      "document_requirement_configuration",
       "ai_run_lineage",
       "learning_context",
       "communication_preparation"
@@ -26,7 +24,6 @@
       "business_economics",
       "customer_communication_history",
       "assignment_and_team_processes",
-      "final_business_document_execution_where_configured",
       "customer_outbound_communication_execution"
     ],
     "forbidden_dual_ownership": [
@@ -79,10 +76,8 @@
     "company_or_contact_reference",
     "qualification_state",
     "evidence_references",
-    "procurement_context_if_any",
     "contact_preparation",
     "repeat_business_preparation_if_any",
-    "document_requirement_snapshot_if_any",
     "correlation_reference"
   ],
   "data_minimization": {
@@ -104,11 +99,6 @@
     "shema_role": "detect_and_prepare_repeat_business",
     "bitrix_role_after_handoff": "execute_recurring_or_repeat_business_process",
     "shema_must_not_reimplement_bitrix_recurring_deal_engine": true
-  },
-  "documents": {
-    "shema_role": "requirements_and_configuration_snapshot",
-    "bitrix_or_dedicated_business_system_role": "final_issuance_signing_storage_and_business_record_where_configured",
-    "legal_truth_is_not_created_by_ai_or_template_engine": true
   },
   "economics": {
     "shema_role": "optional_coarse_outcome_features_for_learning",
