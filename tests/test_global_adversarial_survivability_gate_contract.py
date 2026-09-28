@@ -33,6 +33,7 @@ def test_global_adversarial_gate_covers_the_actual_system_failure_boundaries() -
         "operator_causal_continuity",
         "multi_operator_assignment_permissions_and_concurrency",
         "migration_cutover_backup_restore_and_rollback",
+        "operator_interface_and_capability_visibility",
     }
     assert required.issubset(set(payload["scope"]))
 
@@ -41,6 +42,8 @@ def test_global_adversarial_gate_covers_the_actual_system_failure_boundaries() -
     assert any("two operators" in q for q in questions)
     assert any("legal or EDO rule changes" in q for q in questions)
     assert any("ambiguous external result" in q for q in questions)
+    assert any("operator interface expose" in q for q in questions)
+    assert "operator_interface_authority_and_causal_continuity_check" in payload["required_outputs"]
 
 
 def test_work_protocol_cannot_close_an_element_without_the_global_gate() -> None:
