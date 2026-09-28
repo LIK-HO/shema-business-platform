@@ -263,7 +263,9 @@ Do not mirror the full CRM or finance database.
 
 ### Repeat business
 
-Bitrix24 already provides recurring-deal functionality that can automatically create new deals from a recurring template, with intervals and stop conditions. Therefore Shema must **not** implement a second recurring-deal engine. Shema's Phase 3A is a repeat-business preparation layer that detects, revalidates and prepares the next handoff. citeturn496805search1turn496805search5
+**Operator interface:** `architecture/operator_interface_contract.json` defines the Bitrix24-aligned workbench, list/Kanban queues, saved filters, contextual record inspection, activity/history timeline and capability-aware navigation. It is the UI blueprint; it does not transfer business authority to the interface.
+
+Bitrix24 already provides recurring-deal functionality that can automatically create new deals from a recurring template, with intervals and stop conditions. Therefore Shema must **not** implement a second recurring-deal engine. Shema's Phase 3A is a bounded temporary local repeat-order workflow using the frozen Order/Economics semantics until verified Bitrix24 cutover. citeturn496805search1turn496805search5
 
 ### API / integration strategy
 
@@ -399,7 +401,7 @@ Detailed financial or personnel data enters Shema only if a separate business ca
 ## 11. Revised implementation order
 
 1. Finish intelligence/search/research quality.
-2. Complete contact preparation and Repeat Business Preparation.
+2. Complete contact preparation and Repeat Orders & Business Continuity.
 3. Build the unified Web/PWA surface with public client intake and protected operator workspace.
 4. Put the same public Web application inside a MAX bot as a mini-app projection.
 5. Move the proven modular monolith to Yandex Cloud with Managed PostgreSQL as the canonical Shema database.
