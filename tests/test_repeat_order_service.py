@@ -20,7 +20,6 @@ from shema_platform.domain.repeat_order import (
     RepeatCadenceUnit,
     RepeatOrderContext,
 )
-from shema_platform.foundation.audit import AuditLog
 from shema_platform.foundation.authorization import (
     AuthorizationSubject,
     Permission,
