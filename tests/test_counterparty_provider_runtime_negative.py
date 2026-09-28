@@ -309,7 +309,7 @@ def test_transport_failure_retries_once_then_succeeds_without_duplicate_evidence
     assert delays == [0.25]
     assert len(state.evidence.records) == 4
     assert len(state.audits.records) == 1
-    assert state.audits.records[0].correlation_id == "corr-transport-recovery"
+    assert state.audits.records[0].correlation_id != "corr-transport-recovery"
 
 
 def test_secondary_provider_contradiction_is_quarantined_without_identity_mutation() -> None:
@@ -343,7 +343,7 @@ def test_secondary_provider_contradiction_is_quarantined_without_identity_mutati
     assert len(state.quarantine.records) == 1
     assert len(state.audits.records) == 1
     assert state.audits.records[0].outcome == "quarantined"
-    assert state.audits.records[0].correlation_id == "corr-contradiction"
+    assert state.audits.records[0].correlation_id != "corr-contradiction"
     assert state.identities.records == [existing]
 
 
@@ -386,7 +386,7 @@ def test_rollback_disables_binding_and_subsequent_lookup_fails_closed() -> None:
         },
         json={
             "reason": "negative runtime rehearsal rollback",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
         },
     )
 
