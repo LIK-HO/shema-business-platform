@@ -40,6 +40,7 @@ class OrderLine:
 class Order:
     order_id: str
     identity_id: str
+    owner_actor_id: str | None = None
     source_action_id: str
     lines: tuple[OrderLine, ...]
     status: OrderStatus = OrderStatus.DRAFT
@@ -67,6 +68,7 @@ class Order:
         return Order(
             order_id=self.order_id,
             identity_id=self.identity_id,
+            owner_actor_id=self.owner_actor_id,
             source_action_id=self.source_action_id,
             lines=self.lines,
             status=OrderStatus.CONFIRMED,
