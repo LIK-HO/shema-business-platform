@@ -73,7 +73,7 @@ def compose_public_intake_runtime(
     shema_unit_of_work_factory: Callable[[], UnitOfWork],
     counterparty_provider: CounterpartyLookupProvider | None = None,
     allowed_origins: frozenset[str] = frozenset(),
-    require_bot_challenge: bool = False,
+    require_bot_challenge: bool = True,
     submission_limit: int = 5,
     lookup_limit: int = 20,
     window_seconds: int = 600,
