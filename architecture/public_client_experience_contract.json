@@ -25,11 +25,13 @@
     },
     "max_mini_app": {
       "role": "client_facing_request_and_assistance_projection",
+      "bot_role": "answer_client_questions_clarify_request_and_open_request_flow",
       "requires_max_bot": true,
       "static_https_url_required": true,
       "uses_same_public_web_application": true,
       "uses_same_canonical_api": true,
       "no_separate_business_database": true,
+      "no_authoritative_live_transaction_state": true,
       "start_parameters_supported": true
     }
   },
@@ -98,5 +100,12 @@
     "direct_live_order_creation_without_server_validation",
     "separate_max_backend",
     "separate_pwa_business_logic"
+  ],
+  "acquisition_channels": [
+    "yandex_advertising_where_available",
+    "google_advertising_where_available",
+    "vk_advertising_where_available",
+    "direct",
+    "partner_or_referral"
   ]
 }
