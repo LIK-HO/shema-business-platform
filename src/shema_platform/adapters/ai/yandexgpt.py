@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from math import isfinite
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 from shema_platform.adapters.ai.contracts import (
@@ -27,6 +28,7 @@ from shema_platform.adapters.ai.contracts import (
 )
 
 DEFAULT_BASE_URL = "https://ai.api.cloud.yandex.net/v1"
+_ALLOWED_BASE_HOST = "ai.api.cloud.yandex.net"
 DEFAULT_TIMEOUT_SECONDS = 10.0
 DEFAULT_MAX_RESPONSE_BYTES = 1_048_576
 DEFAULT_MAX_INPUT_CHARS = 32_768
@@ -119,8 +121,15 @@ class YandexGPTConfiguration:
             raise ValueError("model_uri must use the gpt:// scheme")
         if len(self.model_uri.split("/")) < 4:
             raise ValueError("model_uri must identify a folder and model")
-        if not self.base_url.startswith("https://"):
-            raise ValueError("YandexGPT base_url must use HTTPS")
+        parsed_base = urlsplit(self.base_url)
+        if (
+            parsed_base.scheme != "https"
+            or parsed_base.hostname != _ALLOWED_BASE_HOST
+            or parsed_base.port is not None
+            or parsed_base.query
+            or parsed_base.fragment
+        ):
+            raise ValueError("YandexGPT base_url must target the pinned official host")
         if not isfinite(self.timeout_seconds) or self.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be finite and positive")
         if self.timeout_seconds > MAX_TIMEOUT_SECONDS:
