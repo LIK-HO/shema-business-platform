@@ -1,6 +1,16 @@
 # Development State Ledger
 ## Current development-session synchronization — 2026-09-28
 
+- **Phase 3A — Repeat Orders & Business Continuity: CLOSED / VERIFIED.**
+- Exact implementation HEAD at stage verification: `7a766c35c4a2ce8a38d9fbeda268896d6716bd4e`.
+- Full release-gate CI #1628 (`36402645839`) is GREEN across all seven jobs: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract.
+- Implemented bounded local repeat-order runtime over the frozen Order/Economics semantics: repeat plan lifecycle, next-order clone, mandatory pre-confirmation revalidation boundary, idempotency, audit/outbox, optimistic concurrency and transactional rollback.
+- Added durable PostgreSQL repeat-plan migration `0010_repeat_order_plan.sql`; frozen kernel baseline remains unchanged.
+- Added unit + PostgreSQL integration coverage for lifecycle, duplicate protection, current-price revalidation, identity safety, stale-write rejection, transaction rollback and durable lineage.
+- PITR drill now verifies the current post-core schema through migration 10 while preserving the frozen migration-9 baseline semantics.
+- Global adversarial review for 3A found no unresolved P0/P1 blocker inside the implemented boundary. Deferred P1s remain later Bitrix24 handoff/runtime, public Web/PWA runtime, outcome-learning runtime and MAX activation.
+- **Next implementation boundary:** Phase 3B — Public Intake Data Plane + Trust Boundary + Counterparty Preflight.
+
 - Branch: `v1.5/p47-product-expansion`.
 - HEAD: resolved live from GitHub; this ledger does not store a static commit pointer.
 - PR: #58 — open, draft, mergeable state subject to current CI; head resolved live.
