@@ -23,6 +23,7 @@ def test_operator_shell_uses_bounded_bitrix_aligned_workspaces() -> None:
         "counterparties",
         "requests",
         "research",
+        "repeat_orders",
         "handoffs",
         "control",
     } <= ids
