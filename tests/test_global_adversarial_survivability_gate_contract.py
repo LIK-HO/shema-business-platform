@@ -8,7 +8,8 @@ def load(name: str) -> dict:
     return json.loads((ROOT / "architecture" / name).read_text(encoding="utf-8"))
 
 
-def test_global_adversarial_gate_is_mandatory_for_strategy_and_element_changes() -> None:
+def test_global_adversarial_gate_is_mandatory_for_strategy_and_element_changes(
+) -> None:
     payload = load("global_adversarial_survivability_gate_contract.json")
 
     assert payload["core_principle"].startswith(
@@ -43,7 +44,10 @@ def test_global_adversarial_gate_covers_the_actual_system_failure_boundaries() -
     assert any("legal or EDO rule changes" in q for q in questions)
     assert any("ambiguous external result" in q for q in questions)
     assert any("operator interface expose" in q for q in questions)
-    assert "operator_interface_authority_and_causal_continuity_check" in payload["required_outputs"]
+    assert (
+        "operator_interface_authority_and_causal_continuity_check"
+        in payload["required_outputs"]
+    )
 
 
 def test_work_protocol_cannot_close_an_element_without_the_global_gate() -> None:
