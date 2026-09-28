@@ -65,5 +65,27 @@
     "crm_data_migration_of_the_entire_shema_database",
     "tender_or_document_subsystem_configuration",
     "hidden_bidirectional_same_field_writes"
-  ]
+  ],
+  "integration_model": {
+    "authorization": [
+      "prototype_inbound_webhook",
+      "mature_oauth2_application"
+    ],
+    "portal_inspection": [
+      "app.info",
+      "crm.item.fields",
+      "crm.category.list",
+      "crm.status.list",
+      "user.access"
+    ],
+    "mutation_primitives": [
+      "crm.category.add",
+      "crm.deal.userfield.add",
+      "crm.company.userfield.add",
+      "crm.contact.userfield.add",
+      "supported_crm_automation_methods_only_when_application_scope_allows"
+    ],
+    "batching": "use_rest_batch_when_safe_and_idempotent",
+    "capability_detection": "mandatory_before_plan_and_apply"
+  }
 }
