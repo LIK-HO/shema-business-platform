@@ -209,6 +209,7 @@ class PublicIntakeService:
         lookup_limit: int = 20,
         window_seconds: int = 600,
         require_bot_challenge: bool = True,
+        enforce_edge_proof: bool = True,
         allowed_origins: frozenset[str] = frozenset(),
         clock=lambda: datetime.now(UTC),
     ) -> None:
@@ -222,7 +223,10 @@ class PublicIntakeService:
         self._submission_limit = submission_limit
         self._lookup_limit = lookup_limit
         self._window_seconds = window_seconds
-        self._require_bot_challenge = require_bot_challenge
+        if not require_bot_challenge:
+            raise ValueError("public intake bot challenge cannot be disabled")
+        self._require_bot_challenge = True
+        self._enforce_edge_proof = enforce_edge_proof
         self._allowed_origins = frozenset(
             item.rstrip("/") for item in allowed_origins
         )
@@ -409,12 +413,13 @@ class PublicIntakeService:
             raise PublicIntakeSecurityRejected(
                 "public client key must be 8-128 characters"
             )
-        if not self._allowed_origins:
-            raise PublicIntakeSecurityRejected(
-                "public origin allowlist is not configured"
-            )
-        normalized_origin = (origin or "").rstrip("/")
-        if normalized_origin not in self._allowed_origins:
-            raise PublicIntakeSecurityRejected("origin is not allowed")
-        if not bot_challenge_passed:
-            raise PublicIntakeSecurityRejected("bot challenge is required")
+        if self._enforce_edge_proof:
+            if not self._allowed_origins:
+                raise PublicIntakeSecurityRejected(
+                    "public origin allowlist is not configured"
+                )
+            normalized_origin = (origin or "").rstrip("/")
+            if normalized_origin not in self._allowed_origins:
+                raise PublicIntakeSecurityRejected("origin is not allowed")
+            if not bot_challenge_passed:
+                raise PublicIntakeSecurityRejected("bot challenge is required")
