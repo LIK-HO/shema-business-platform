@@ -55,6 +55,8 @@ class AIExecutionContext:
     evidence_level: int
     correlation_id: str | None = None
     configuration_version: str | None = None
+    idempotency_key: str | None = None
+    idempotency_request_hash: str | None = None
 
     def __post_init__(self) -> None:
         if not self.actor_id.strip() or not self.resource_ref.strip():
