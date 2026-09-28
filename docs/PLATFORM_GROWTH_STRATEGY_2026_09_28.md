@@ -431,3 +431,40 @@ MAX = guarded communication adapter
 This preserves the project's strongest property: complexity is concentrated inside reliability and evidence controls, while the operator sees a small number of useful decisions and actions.
 
 No additional CRM/ERP/HR/accounting subsystem is justified inside Shema. No new database authority or microservice split is justified either.
+## 8B. Public Intake and Counterparty Preflight
+
+The public acquisition surface uses a two-speed model:
+
+**fast deterministic preflight** → **deeper operator research when needed**.
+
+At form time, the system collects only the minimum request data and conditionally asks for INN/OGRN/OGRNIP. Identifier syntax is validated locally before any provider call. Official FNS/EGRUL/EGRIP evidence is resolved server-side; GPT is not used as a registry lookup engine or legal-status oracle.
+
+The client receives only minimal actionable feedback: identifier mismatch, registered/active, liquidation/termination/reorganization signal, not found, or provider-unavailable. The operator receives the richer evidence-linked preflight card with source, snapshot date/freshness, contradictions, relevant business fields, attention/blocking facts and unknowns.
+
+The operator's work-acceptance decision remains human-owned. The platform does not replace the decision with an opaque AI score.
+
+## 8C. Public Form Security and Resource Protection
+
+Public form traffic is treated as hostile/untrusted input. The defense is layered:
+
+- edge WAF/rate limiting and bot challenge;
+- server-side schema and size validation;
+- separate submission and registry-lookup budgets;
+- idempotency and duplicate-fingerprint protection;
+- cache reuse for repeated identifier checks;
+- anti-enumeration controls and minimal public responses;
+- bounded provider timeouts/retries and a feature kill switch;
+- attachment upload kept disabled until a private quarantine boundary is verified.
+
+The browser never carries FNS integration credentials, Bitrix24 credentials or AI provider secrets. The browser calls only the canonical Shema API.
+
+## 8D. Controlled Evolution Mechanism
+
+Every new public ingress, provider, external effect, security boundary, material quota/cost change, migration or cross-system ownership change is admitted through `architecture/platform_evolution_contract.json`.
+
+The standard path is:
+
+`OBSERVE → PROBLEM_STATEMENT → BOUNDARY_CONTRACT → GLOBAL_IMPACT_REVIEW → THREAT_AND_ABUSE_MODEL → RESOURCE_AND_COST_MODEL → VERTICAL_SLICE → NEGATIVE/RECOVERY → INTEGRATION/E2E → ADVERSARIAL_GATE → CONTROLLED_RELEASE → MEASURE → LEARN → FREEZE_OR_AMEND`.
+
+Public ingress/provider changes are classified E2; persistence-authority or cross-system ownership changes are E3; frozen-kernel semantic changes are E4 and require the separate core exception process.
+
