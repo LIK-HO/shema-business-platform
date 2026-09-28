@@ -17,11 +17,11 @@ def test_business_plane_contract_prevents_dual_ownership() -> None:
     assert payload["domain_ownership"]["shema"]
     assert "transaction_price" in payload["domain_ownership"]["forbidden_dual_ownership"]
     assert "business_economics" in payload["domain_ownership"]["forbidden_dual_ownership"]
-    assert "customer_outbound_communication_execution" in payload["domain_ownership"]["forbidden_dual_ownership"]
+    assert (\n        "customer_outbound_communication_execution"\n        in payload["domain_ownership"]["forbidden_dual_ownership"]\n    )
     assert "procurement_observations" not in payload["domain_ownership"]["shema"]
     assert "document_requirement_configuration" not in payload["domain_ownership"]["shema"]
     assert "documents" not in payload
-    assert payload["communication"]["max_direct_customer_outbound_from_shema"] == "disabled_by_default"
+    assert (\n        payload["communication"]["max_direct_customer_outbound_from_shema"]\n        == "disabled_by_default"\n    )
 
 
 def test_handoff_is_idempotent_and_reconciliation_safe() -> None:
@@ -40,5 +40,5 @@ def test_handoff_is_idempotent_and_reconciliation_safe() -> None:
 def test_shema_does_not_reimplement_repeat_orders_or_live_economics() -> None:
     payload = load("business_plane_boundary_contract.json")
 
-    assert payload["repeat_business"]["shema_must_not_reimplement_bitrix_recurring_deal_engine"] is True
+    assert (\n        payload["repeat_business"]["shema_must_not_reimplement_bitrix_recurring_deal_engine"]\n        is True\n    )
     assert payload["economics"]["no_new_live_accounting_subsystem_in_shema"] is True
