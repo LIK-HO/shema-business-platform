@@ -104,6 +104,8 @@ class MemoryPublicIntakeRepository:
 
 class FakeProvider:
     provider_id = "fake_registry"
+    source_version = "fake-registry:v1"
+    source_authority = "official_registry"
 
     def __init__(self, record=None, error=None):
         self.record = record
@@ -175,6 +177,7 @@ def make_service(*, provider=None, projector=None, submission_limit=5, lookup_li
         projector=projector or MemoryProjector(),
         submission_limit=submission_limit,
         lookup_limit=lookup_limit,
+        allowed_origins=frozenset({"https://example.test"}),
         clock=lambda: NOW,
     )
     return service, repository
@@ -197,8 +200,8 @@ def test_preflight_rejects_invalid_identifier_without_provider_call() -> None:
         payload=payload(inn="7707083894"),
         idempotency_key="invalid-inn-1",
         public_client_key="public-client-1",
-        origin=None,
-        bot_challenge_passed=False,
+        origin="https://example.test",
+        bot_challenge_passed=True,
         correlation_id="corr-invalid",
     )
 
@@ -373,7 +376,9 @@ def test_public_api_accepts_without_auth_and_preserves_correlation() -> None:
         "/v1/public/intake",
         headers={
             "Idempotency-Key": "api-intake-1",
-            "X-Public-Client-Key": "browser-client-1",
+            "Origin": "https://example.test",
+            "X-Bot-Challenge": "passed",
+            "X-Public-Client-Key": "attacker-controlled-key",
             "X-Correlation-Id": "corr-api-intake",
         },
         json={
@@ -388,8 +393,75 @@ def test_public_api_accepts_without_auth_and_preserves_correlation() -> None:
     )
 
     assert response.status_code == 202
-    assert response.headers["X-Correlation-Id"] == "corr-api-intake"
-    assert response.json()["correlationId"] == "corr-api-intake"
+    assert response.headers["X-Correlation-Id"] != "corr-api-intake"
+    assert response.json()["correlationId"] == response.headers["X-Correlation-Id"]
+
+
+def test_public_api_rate_limit_ignores_caller_supplied_client_key() -> None:
+    service, _ = make_service(provider=None, submission_limit=1)
+
+    app = create_app(
+        application=None,
+        authenticator=PermissionedAuthenticator(),
+        public_intake=service,
+    )
+    first = TestClient(app).post(
+        "/v1/public/intake",
+        headers={
+            "Idempotency-Key": "api-rate-1",
+            "Origin": "https://example.test",
+            "X-Bot-Challenge": "passed",
+            "X-Public-Client-Key": "attacker-key-a",
+        },
+        json={
+            "serviceType": "Погрузка",
+            "location": "Москва",
+            "preferredDateOrPeriod": "2026-10-05",
+            "workOrCargoDescription": "Погрузить оборудование",
+            "contactName": "Иван Петров",
+            "contactChannel": "+79990000000",
+            "entrySurface": "public_web",
+        },
+    )
+    second = TestClient(app).post(
+        "/v1/public/intake",
+        headers={
+            "Idempotency-Key": "api-rate-2",
+            "Origin": "https://example.test",
+            "X-Bot-Challenge": "passed",
+            "X-Public-Client-Key": "attacker-key-b",
+        },
+        json={
+            "serviceType": "Погрузка",
+            "location": "Москва",
+            "preferredDateOrPeriod": "2026-10-05",
+            "workOrCargoDescription": "Погрузить оборудование",
+            "contactName": "Иван Петров",
+            "contactChannel": "+79990000000",
+            "entrySurface": "public_web",
+        },
+    )
+
+    assert first.status_code == 202
+    assert second.status_code == 429
+
+
+def test_public_api_default_edge_policy_rejects_missing_proof() -> None:
+    service, _ = make_service(provider=None)
+    app = create_app(public_intake=service)
+    response = TestClient(app).post(
+        "/v1/public/intake",
+        headers={"Idempotency-Key": "api-default-1"},
+        json={
+            "serviceType": "Погрузка",
+            "location": "Москва",
+            "preferredDateOrPeriod": "2026-10-05",
+            "workOrCargoDescription": "Погрузить оборудование",
+            "contactName": "Иван Петров",
+            "contactChannel": "+79990000000",
+        },
+    )
+    assert response.status_code == 403
 
 
 def test_operator_notification_center_requires_permission() -> None:
