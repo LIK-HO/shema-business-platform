@@ -232,7 +232,6 @@ Bitrix24 owns after handoff:
 - business economics;
 - customer communication history;
 - assignment/team process state;
-- final business-document execution where configured.
 
 The same live field is never written by both systems.
 
