@@ -13,6 +13,7 @@ from shema_platform.application.counterparty_lookup import (
 from shema_platform.application.public_intake import (
     IdentityMatch,
     PreflightDecision,
+    PublicIdempotencyReservation,
     PublicIntakePayload,
     PublicIntakeService,
 )
@@ -37,6 +38,7 @@ class MemoryPublicIntakeRepository:
         self.outbox = []
         self.cache = {}
         self.budgets = {}
+        self.reservations = {}
 
     def __enter__(self):
         return self
@@ -44,14 +46,46 @@ class MemoryPublicIntakeRepository:
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
-    def acquire_idempotency_lock(self, key):
-        self.locked_keys = getattr(self, "locked_keys", set())
-        if key in self.locked_keys:
-            raise AssertionError("duplicate in-memory idempotency lock")
-        self.locked_keys.add(key)
+    def reserve_idempotency(
+        self,
+        *,
+        key,
+        request_hash,
+        request_id,
+        now,
+        lease_seconds,
+    ):
+        from datetime import timedelta
 
-    def release_idempotency_lock(self, key):
-        self.locked_keys.remove(key)
+        existing = self.reservations.get(key)
+        lease_until = now + timedelta(seconds=lease_seconds)
+        if existing is None or (
+            existing["completed_at"] is None and existing["leased_until"] <= now
+        ):
+            self.reservations[key] = {
+                "request_hash": request_hash,
+                "request_id": request_id,
+                "leased_until": lease_until,
+                "completed_at": None,
+            }
+            return PublicIdempotencyReservation(request_id=request_id, state="PENDING")
+        if existing["request_hash"] != request_hash:
+            raise Exception("idempotency key reused with different payload")
+        if existing["completed_at"] is not None:
+            return PublicIdempotencyReservation(
+                request_id=existing["request_id"],
+                state="COMPLETE",
+            )
+        return PublicIdempotencyReservation(
+            request_id=existing["request_id"],
+            state="IN_PROGRESS",
+        )
+
+    def complete_idempotency(self, *, key, request_id, now):
+        existing = self.reservations.get(key)
+        if existing is None or existing["request_id"] != request_id:
+            raise AssertionError("invalid idempotency completion")
+        existing["completed_at"] = now
 
     def get_by_idempotency_key(self, key):
         return self.requests.get(key)
@@ -278,6 +312,39 @@ def test_provider_unavailable_is_unknown_and_request_is_still_accepted() -> None
     assert result.record.preflight.decision is PreflightDecision.UNKNOWN
     assert "PROVIDER_UNAVAILABLE" in result.record.preflight.flags
     assert any(item["event_type"] == "provider_unavailable" for item in repository.outbox)
+
+
+def test_in_progress_idempotency_fails_before_provider_call() -> None:
+    provider = FakeProvider(
+        record=CounterpartyProviderRecord(
+            provider_id="fake_registry",
+            source_ref="https://registry.example.test/party",
+            canonical_name="ООО Альфа",
+            tax_id="7707083893",
+            registration_id="1027700132195",
+            legal_status="ACTIVE",
+        )
+    )
+    service, repository = make_service(provider=provider)
+    repository.reserve_idempotency(
+        key="in-progress-key",
+        request_hash=payload().request_hash,
+        request_id="request-in-progress",
+        now=NOW,
+        lease_seconds=120,
+    )
+
+    with pytest.raises(Exception, match="already in progress"):
+        service.submit(
+            payload=payload(),
+            idempotency_key="in-progress-key",
+            public_client_key="public-client-4",
+            origin=None,
+            bot_challenge_passed=False,
+            correlation_id="corr-in-progress",
+        )
+
+    assert provider.calls == 0
 
 
 def test_same_idempotency_key_converges_and_different_payload_fails_closed() -> None:
