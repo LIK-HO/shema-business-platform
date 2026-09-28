@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from hashlib import sha256
 from typing import Protocol
-from uuid import uuid5, NAMESPACE_URL
+from uuid import NAMESPACE_URL, uuid5
 
 from shema_platform.application.ai import (
     AIBudget,
