@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from shema_platform.application.counterparty_lookup import (
     CounterpartyLookupProvider,
@@ -33,6 +33,8 @@ class CounterpartyProviderRuntimeLookupService:
     max_attempts: int = 3
     backoff_seconds: float = 0.25
     sleeper: Callable[[float], None] | None = None
+    claim_confidence: float = 0.8
+    evidence_ttl_seconds: int = 7 * 24 * 3600
 
     def __post_init__(self) -> None:
         if not self.provider_id.strip():
@@ -41,6 +43,10 @@ class CounterpartyProviderRuntimeLookupService:
             raise ValueError("max_attempts must be between 1 and 3")
         if self.backoff_seconds < 0:
             raise ValueError("backoff_seconds cannot be negative")
+        if not 0.0 <= self.claim_confidence <= 1.0:
+            raise ValueError("claim_confidence must be between 0 and 1")
+        if self.evidence_ttl_seconds <= 0:
+            raise ValueError("evidence_ttl_seconds must be positive")
 
     def execute(
         self,
@@ -48,9 +54,6 @@ class CounterpartyProviderRuntimeLookupService:
         *,
         actor_id: str,
         permissions: frozenset[Permission],
-        claim_confidence: float,
-        expires_at: datetime,
-        observed_at: datetime | None = None,
         correlation_id: str | None = None,
     ) -> CounterpartyProviderLookupResult:
         self._authorize(actor_id, permissions)
@@ -63,10 +66,17 @@ class CounterpartyProviderRuntimeLookupService:
             backoff_seconds=self.backoff_seconds,
             sleeper=self.sleeper,
         )
+        provider_observed_at = (
+            datetime.fromtimestamp(result.provider_record.observed_at_ms / 1000, tz=datetime.now().astimezone().tzinfo)
+            if result.provider_record.observed_at_ms is not None
+            else None
+        )
+        observed_at = provider_observed_at or datetime.now().astimezone()
+        expires_at = observed_at + timedelta(seconds=self.evidence_ttl_seconds)
         result = result_service.execute(
             query,
             actor_id=actor_id,
-            claim_confidence=claim_confidence,
+            claim_confidence=self.claim_confidence,
             expires_at=expires_at,
             observed_at=observed_at,
             correlation_id=correlation_id,
