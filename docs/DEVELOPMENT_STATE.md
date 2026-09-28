@@ -173,7 +173,7 @@ There is **no B11 core-expansion phase**.
 Allowed:
 - product/application workflows outside the kernel;
 - concrete providers and integrations behind adapters;
-- Web/PWA/Android/experience layers;
+- Web/PWA/experience layers;
 - operational tuning supported by measured production evidence;
 - security or reliability fixes meeting the documented exception rule.
 
