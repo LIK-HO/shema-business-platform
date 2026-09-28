@@ -492,4 +492,53 @@ The three most important next executable boundaries are:
 3. **Outcome learning vertical slice** — minimal, versioned, privacy-preserving result feedback.
 
 No additional CRM/ERP/economics/HR subsystem should be added to Shema.
+---
 
+# 15B. Public Intake Trust Boundary — Current Adversarial Review
+
+## Changed boundary
+The public request form is an untrusted ingress surface. It does not create live business state and does not call Bitrix24, registry providers or AI directly from the browser.
+
+The approved causal chain is:
+
+**public Web/MAX mini-app → edge security → canonical API → deterministic identifier validation → official-registry preflight → idempotent request observation → operator review → qualification → Bitrix24 handoff**
+
+## Destruction hypotheses
+
+| Failure hypothesis | Severity | Control / disposition |
+|---|---|---|
+| Automated traffic floods submissions and exhausts application capacity | P1 | Edge WAF/rate limit + bot challenge + bounded request body + application limits + quarantine |
+| Attackers turn INN/OGRN lookup into a registry enumeration oracle | P1 | Separate lookup budget, cache, anti-enumeration, progressive challenge and minimal public responses |
+| Invalid identifiers or repeated lookups amplify provider cost | P1 | Deterministic checksum/type validation first; no GPT; bounded provider budget; cache reuse |
+| A client resubmits after a timeout and creates duplicate observations | P1 | Idempotency key, payload fingerprint, same-key convergence, different-payload fail-closed, reconciliation on ambiguity |
+| Public input bypasses canonical authorization and creates a live Bitrix entity | P0 | Direct browser→Bitrix forbidden; public form creates only a server-authoritative request observation |
+| Registry provider outage is interpreted as a verified clean counterparty | P1 | Explicit UNKNOWN/PROVIDER_UNAVAILABLE state; no fabricated status |
+| Raw registry data is leaked to a public browser | P1 | Minimal public response; detailed evidence only in protected operator surface |
+| Cache poisoning changes a future counterparty result | P1 | Server-only cache writes, source/version/snapshot metadata and provider-bound evidence lineage are required |
+| Attachments become malware/storage/DoS path | P1 | Attachments disabled until private quarantine upload, MIME/size validation and scanning boundary is verified |
+| AI becomes an implicit counterparty verdict authority | P1 | Deterministic evidence precedes AI; AI cannot author registry truth or acceptance decision |
+| Evolution mechanism allows new providers to bypass review | P1 | E2 admission gate, resource/security model, provider exit path, adversarial gate and current-head CI required |
+
+## Split-brain check
+
+- Public Web owns no live transaction state.
+- FNS-derived preflight is evidence, not a second business authority.
+- Shema owns request observation and intelligence context.
+- Bitrix24 owns live business state only after acknowledged handoff.
+- No same live field is dual-written.
+
+## Operator causal chain
+
+`request_id → correlation_id → preflight_snapshot_id → identity/evidence → operator acceptance decision → handoff_id → bitrix_entity_ref → outcome`
+
+## Recovery / rollback
+
+- Disable public intake without changing the kernel.
+- Disable external registry lookup while continuing to accept requests with explicit UNKNOWN verification state.
+- Tighten edge limits without changing canonical persistence semantics.
+- Retire a provider without changing the request observation model.
+- No public-ingress migration is allowed without a controlled cutover and rollback state.
+
+## Verdict
+
+The boundary is **architecturally survivable and bounded**, but it is not release-closed until the implementation and current-head full release-gate CI prove the contract.
