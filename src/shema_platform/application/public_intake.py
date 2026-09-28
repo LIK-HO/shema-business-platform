@@ -360,6 +360,9 @@ class PublicIntakeService:
                 window_seconds=self._window_seconds,
                 now=now,
             )
+            repository.ensure_outbox_capacity(
+                max_pending=self._max_pending_outbox,
+            )
             existing = repository.get_by_idempotency_key(idempotency_key)
             if existing is not None:
                 if existing.request_hash != payload.request_hash:
