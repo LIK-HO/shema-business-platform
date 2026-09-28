@@ -73,6 +73,7 @@ jobs:
         run: pytest -m integration
 
   dependency-review:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
