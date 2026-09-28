@@ -84,6 +84,26 @@ def seed(schema: str, identity_id: str, source_order_id: str) -> None:
                 tax_id="7700000000",
             )
         )
+        conn.execute(
+            """
+            insert into commercial_action (
+                action_id,
+                identity_id,
+                contact_ref,
+                channel,
+                evidence_refs,
+                status
+            ) values (
+                'action-repeat-source',
+                %s,
+                'repeat-contact',
+                'test',
+                '[]'::jsonb,
+                'completed'
+            )
+            """,
+            (identity_id,),
+        )
         PostgresOrderRepository(conn).add(
             Order(
                 source_order_id,
