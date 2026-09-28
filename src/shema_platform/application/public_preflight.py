@@ -70,7 +70,7 @@ class PublicCounterpartyPreflightService:
         cache_lookup: Callable[
             [str, datetime], CounterpartyPreflightSnapshot | None
         ] | None = None,
-        consume_lookup_budget: Callable[[datetime], None] | None = None,
+        consume_lookup_budget: Callable[[str, datetime], None] | None = None,
         cache_store: Callable[[str, CounterpartyPreflightSnapshot], None] | None = None,
         cache_ttl_seconds: int = 300,
         operator_reuse_seconds: int = 900,
@@ -92,6 +92,7 @@ class PublicCounterpartyPreflightService:
         payload: PublicIntakePayload,
         request_id: str,
         correlation_id: str,
+        public_client_key: str,
         now: datetime,
     ) -> CounterpartyPreflightSnapshot:
         identifier_type, identifier = self._resolve_identifier(payload)
@@ -137,7 +138,7 @@ class PublicCounterpartyPreflightService:
             )
 
         if self._consume_lookup_budget is not None:
-            self._consume_lookup_budget(now)
+            self._consume_lookup_budget(public_client_key, now)
 
         try:
             lookup = BoundedCounterpartyLookup(
