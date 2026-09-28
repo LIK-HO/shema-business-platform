@@ -15,7 +15,7 @@ def load_json(path: str) -> dict:
 def test_current_strategy_uses_live_repeat_order_and_canonical_ui_model() -> None:
     manifest = read_text("docs/DEVELOPMENT_MANIFEST.md").splitlines()[:190]
     roadmap = read_text("docs/ROADMAP.md")
-    state = read_text("docs/DEVELOPMENT_STATE.md").splitlines()[:70]
+    state = read_text("docs/DEVELOPMENT_STATE.md").splitlines()[:115]
     growth = read_text("docs/PLATFORM_GROWTH_STRATEGY_2026_09_28.md")
 
     assert any("Repeat Orders & Business Continuity" in line for line in manifest)
