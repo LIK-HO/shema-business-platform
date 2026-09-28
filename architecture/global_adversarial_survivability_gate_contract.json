@@ -35,7 +35,10 @@
     "migration_cutover_backup_restore_and_rollback",
     "observability_audit_and_recovery",
     "public_ingress_and_form_abuse",
-    "deterministic_external_registry_preflight"
+    "deterministic_external_registry_preflight",
+    "public_intake_database_isolation_and_notification_reliability",
+    "repeat_order_cutover_completeness_and_purge_safety",
+    "counterparty_monitoring_batch_integrity_and_false_change_suppression"
   ],
   "mandatory_questions": [
     "Can the change create two authoritative values for one live business concern?",
@@ -51,7 +54,13 @@
     "Can untrusted public input amplify provider lookups or exhaust shared application resources?",
     "Can an identifier lookup endpoint be abused as a registry enumeration oracle?",
     "Can a public form bypass evidence, idempotency or canonical API controls and create duplicate business state?",
-    "Can a public attachment or payload become an execution, storage or denial-of-service vector?"
+    "Can a public attachment or payload become an execution, storage or denial-of-service vector?",
+    "Can a failure between the dedicated intake database and Shema lose a client request or duplicate an operator notification?",
+    "Can a repeat-order migration delete Shema state before Bitrix24 has a complete verified copy and a recoverable snapshot?",
+    "Can the operator UI hide transferred Order/Economics views without breaking navigation, deep links or causal history?",
+    "Can a monitored counterparty produce a false change event because the registry source is stale, unavailable, reordered or partially updated?",
+    "Can attacker-controlled client text poison an AI prompt, operator notification or Bitrix24 business field?",
+    "Can a compromised integration credential or Bitrix24 app gain authority beyond its owned namespace?"
   ],
   "required_outputs": [
     "global_architecture_review",
@@ -64,7 +73,10 @@
     "legal_document_change_resilience_check",
     "migration_and_rollback_check",
     "findings_with_P0_P1_P2_P3_severity",
-    "explicit_disposition_for_each_finding"
+    "explicit_disposition_for_each_finding",
+    "intake_loss_and_notification_recovery_check",
+    "transaction_migration_completeness_check",
+    "monitoring_integrity_and_false_positive_check"
   ],
   "closure_policy": {
     "blocks_verified_state": true,
