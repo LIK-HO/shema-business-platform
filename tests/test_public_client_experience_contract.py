@@ -45,6 +45,9 @@ def test_client_request_preserves_causal_and_source_attribution() -> None:
     form = payload["guided_form"]
     assert "utm_source" in form["source_attribution"]
     assert "contact_channel" in form["minimum_fields"]
+    assert "yandex_advertising_where_available" in payload["acquisition_channels"]
+    assert "google_advertising_where_available" in payload["acquisition_channels"]
+    assert "vk_advertising_where_available" in payload["acquisition_channels"]
 
 
 def test_insales_domain_cutover_preserves_dns_and_mail_before_detachment() -> None:
