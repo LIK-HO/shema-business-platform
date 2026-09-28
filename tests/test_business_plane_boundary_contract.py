@@ -18,6 +18,9 @@ def test_business_plane_contract_prevents_dual_ownership() -> None:
     assert "transaction_price" in payload["domain_ownership"]["forbidden_dual_ownership"]
     assert "business_economics" in payload["domain_ownership"]["forbidden_dual_ownership"]
     assert "customer_outbound_communication_execution" in payload["domain_ownership"]["forbidden_dual_ownership"]
+    assert "procurement_observations" not in payload["domain_ownership"]["shema"]
+    assert "document_requirement_configuration" not in payload["domain_ownership"]["shema"]
+    assert "documents" not in payload
     assert payload["communication"]["max_direct_customer_outbound_from_shema"] == "disabled_by_default"
 
 
@@ -39,4 +42,3 @@ def test_shema_does_not_reimplement_repeat_orders_or_live_economics() -> None:
 
     assert payload["repeat_business"]["shema_must_not_reimplement_bitrix_recurring_deal_engine"] is True
     assert payload["economics"]["no_new_live_accounting_subsystem_in_shema"] is True
-    assert payload["documents"]["shema_role"] == "requirements_and_configuration_snapshot"
