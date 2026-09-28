@@ -519,7 +519,10 @@ class RepeatOrderService:
                 return stored
 
             updated = transition(plan)
-            uow.repeat_orders.save(updated, expected_revision=plan.revision)
+            updated = uow.repeat_orders.save(
+                updated,
+                expected_revision=plan.revision,
+            )
             self._record(
                 uow,
                 actor=actor,
