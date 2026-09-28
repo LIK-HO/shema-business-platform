@@ -21,6 +21,7 @@ class CommercialActionStatus(StrEnum):
 class CommercialAction:
     action_id: str
     identity_id: str
+    owner_actor_id: str | None = None
     contact_ref: str
     channel: str
     evidence_refs: tuple[str, ...]
@@ -54,6 +55,7 @@ class CommercialAction:
         return CommercialAction(
             action_id=self.action_id,
             identity_id=self.identity_id,
+            owner_actor_id=self.owner_actor_id,
             contact_ref=self.contact_ref,
             channel=self.channel,
             evidence_refs=self.evidence_refs,
