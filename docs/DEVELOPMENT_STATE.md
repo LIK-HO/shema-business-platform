@@ -6,7 +6,7 @@
 - PR: #58 — open, draft, mergeable state subject to current CI; head resolved live.
 - Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED; live DaData remains OFF.
 - Current verified architecture boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract** — CLOSED / VERIFIED at contract and test stage. Runtime public-form implementation remains governed by the Phase 3B roadmap exit criteria.
-- Current active extension: **Operator Interface Alignment + Repeat Orders & Business Continuity + Public Intake + Counterparty Monitoring + Bitrix24 Cutover** — contract/test work in progress until the final current-head adversarial review and release gate close.
+- Current verified extension: **Operator Interface Alignment + Repeat Orders & Business Continuity + Public Intake + Counterparty Monitoring + Bitrix24 Cutover** — contract/test boundary CLOSED / VERIFIED. The visual Web/PWA runtime remains the separately scoped Phase 4 implementation boundary.
 - Previous draft procurement subsystem removed from the current product boundary; no procurement/tender runtime, provider adapters, tender workspace or procurement persistence remains in the active implementation.
 - Product flow is fixed for the initial B2B stage as: intelligence → identity/evidence → qualification → contact preparation → repeat orders/business continuity → business handoff → live business execution → result/learning.
 - Phase 3A is fixed as Repeat Orders & Business Continuity in temporary Shema live mode, with verified Bitrix24 cutover and purge/hide semantics.
@@ -22,7 +22,7 @@
 - Corrected YandexGPT configuration so `YANDEXGPT_MAX_COST` is explicitly required and positive; zero/missing cost ceilings now fail closed.
 - The earlier Repeat Business Preparation wording is superseded by the bounded temporary Shema live repeat-order mode; Shema still must not reimplement Bitrix24's recurring-deal engine.
 - Monium is explicitly operational telemetry; durable audit/business history remains PostgreSQL-owned.
-- Full seven-job release-gate CI for the current verified HEAD d595ec856a6a611751c7b619ae75f23ca3db4398 is GREEN in run 36372953967; all quality, integration, supply-chain, backup/recovery and release-contract jobs passed.
+- The latest full seven-job release-gate is GREEN; quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract all pass on the verified architecture/test boundary.
 - Global adversarial survivability gate is now mandatory for every material strategy change and every element completion; no element may enter VERIFIED/CLOSED without a current-head whole-system adversarial review.
 - Data-plane rule: Managed PostgreSQL remains the canonical Shema database in Yandex Cloud. Bitrix24 receives live business ownership after handoff; the Shema database is not wholesale migrated into Bitrix24.
 - Operator continuity rule: every business handoff carries stable Shema identity, handoff, correlation and Bitrix entity references so one or multiple operators can reconstruct the full causal chain without shadow copies.
