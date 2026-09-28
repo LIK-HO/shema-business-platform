@@ -8,9 +8,12 @@ from shema_platform.experience.runtime_composition import (
     compose_yandexgpt_runtime,
 )
 from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
-from shema_platform.foundation.authentication import AuthenticatedActor, AuthenticationPort
-from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.authentication import (
+    AuthenticatedActor,
+    AuthenticationPort,
+)
 from shema_platform.foundation.authorization import Permission
+from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
