@@ -3,7 +3,7 @@
   "status": "strategic_boundary_contract",
   "frozen_kernel_impact": false,
   "product_boundary": {
-    "shema_role": "search_intelligence_evidence_qualification_contact_preparation_public_request_preflight_learning",
+    "shema_role": "search_intelligence_evidence_qualification_contact_preparation_public_request_preflight_repeat_orders_counterparty_monitoring_learning",
     "yandex_cloud_role": "primary_runtime_and_infrastructure_environment",
     "bitrix24_role_after_maturity": "transaction_business_process_communication_calculation_and_economics_control_plane"
   },
@@ -18,7 +18,10 @@
       "research_history",
       "ai_run_lineage",
       "contact_preparation",
-      "learning_outcomes"
+      "learning_outcomes",
+      "temporary_live_repeat_orders_before_bitrix_cutover",
+      "counterparty_monitoring_snapshots_and_change_events",
+      "raw_public_intake_reference_only"
     ],
     "bitrix24_authoritative_after_handoff": [
       "lead_deal_order_lifecycle",
@@ -46,7 +49,7 @@
     "scheduler": "cloud_functions_timer_trigger",
     "async_transport": "message_queue_only_when_transport_scaling_requires_it",
     "observability": "monium",
-    "secondary_database_policy": "ydb_only_after_measured_constraint",
+    "secondary_database_policy": "ydb_only_after_measured_constraint; dedicated_public_intake_database_is_an_approved_bounded_exception",
     "kubernetes_policy": "deferred_until_measured_need"
   },
   "ai": {
@@ -81,7 +84,8 @@
     "bitrix_to_shema": "outcome_events_and_minimal_learning_features",
     "bi_directional_same_field_writes": false,
     "reconciliation_required": true,
-    "idempotent_outbox_required": true
+    "idempotent_outbox_required": true,
+    "repeat_order_cutover": "architecture/repeat_order_transition_contract.json"
   },
   "economics_boundary": {
     "new_shema_transaction_economics_feature_development": false,
@@ -105,7 +109,7 @@
     "microservices_for_maturity_signal"
   ],
   "business_sequence": {
-    "stage_1": "B2B_process_validation_and_repeatable_unit_economics",
+    "stage_1": "B2B_process_validation_repeat_orders_and_repeatable_unit_economics",
     "stage_2": "yandex_cloud_production_shema_intelligence_runtime",
     "stage_3": "bitrix24_business_control_plane_integration",
     "stage_4": "outcome_learning_and_measured_scale"
@@ -120,7 +124,13 @@
       "storage_role": "mature_business_plane_database_and_file_storage_owned_by_bitrix24_deployment_model",
       "authority_after_handoff": "live_business_transactions_and_process_state"
     },
-    "transition_rule": "do_not_migrate_the_entire_shema_database_into_bitrix24; keep_two_authoritative_domains_with_explicit_handoff_and_reference_lineage"
+    "transition_rule": "do_not_migrate_the_entire_shema_database_into_bitrix24; keep_two_authoritative_domains_with_explicit_handoff_and_reference_lineage",
+    "public_intake": {
+      "database": "dedicated_public_intake_database",
+      "authority": "raw_client_submissions_and_intake_notifications",
+      "projection": "accepted_business_context_into_shema",
+      "no_direct_browser_access": true
+    }
   },
   "operator_continuity": {
     "single_operator_view": "one_workflow_with_context_linkage_not_two_competing_records",
@@ -144,9 +154,14 @@
       "no_live_business_authority": true,
       "counterparty_preflight": "deterministic_registry_preflight_without_gpt",
       "public_submission_is_untrusted": true,
-      "server_authoritative": true
+      "server_authoritative": true,
+      "request_storage": "dedicated_public_intake_database"
     },
-    "operator_web": "protected_operator_workspace_on_same_canonical_api",
+    "operator_web": {
+      "role": "protected_operator_workspace_on_same_canonical_api",
+      "counterparty_workspace": "separate_Контрагенты_workspace_with_check_monitoring_favorites",
+      "notification_center": true
+    },
     "pwa": "same_web_semantics_with_bounded_offline_behavior",
     "max_mini_app": "same_public_web_application_inside_MAX_bot",
     "source_attribution": [
