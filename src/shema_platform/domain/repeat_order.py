@@ -63,10 +63,10 @@ class RepeatOrderContext:
 class RepeatOrderPlan:
     plan_id: str
     source_order_id: str
-    owner_actor_id: str | None = None
     identity_id: str
     cadence: RepeatCadence
     context: RepeatOrderContext
+    owner_actor_id: str | None = None
     status: RepeatPlanStatus = RepeatPlanStatus.ACTIVE
     last_order_id: str | None = None
     pending_order_id: str | None = None
