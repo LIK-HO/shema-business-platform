@@ -181,6 +181,7 @@ def make_service(*, provider=None, projector=None, submission_limit=5, lookup_li
         projector=projector or MemoryProjector(),
         submission_limit=submission_limit,
         lookup_limit=lookup_limit,
+        enforce_edge_proof=False,
         allowed_origins=frozenset({"https://example.test"}),
         clock=lambda: NOW,
     )
