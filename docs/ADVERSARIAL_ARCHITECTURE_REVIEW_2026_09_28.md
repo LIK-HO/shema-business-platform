@@ -8,14 +8,14 @@ This review deliberately assumes an adversarial objective: find ways to make the
 The review covered:
 - frozen v1.4 kernel and post-core v1.5 boundaries;
 - Search / Intelligence / Evidence / Qualification;
-- Procurement foundation;
+- removed procurement/tender boundary and deletion integrity;
 - Order / Economics;
 - YandexGPT;
 - MAX;
 - Yandex Cloud deployment strategy;
 - Bitrix24 handoff strategy;
 - repeat business;
-- document configuration;
+- removed document-management boundary and deletion integrity;
 - learning loop;
 - current runtime composition;
 - architecture contracts and tests;
