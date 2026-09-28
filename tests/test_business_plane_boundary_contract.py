@@ -12,16 +12,25 @@ def load(name: str) -> dict:
 def test_business_plane_contract_prevents_dual_ownership() -> None:
     payload = load("business_plane_boundary_contract.json")
 
-    assert payload["ownership_transfer"]["same_live_field_is_never_written_by_both_systems"] is True
+    assert (
+        payload["ownership_transfer"]["same_live_field_is_never_written_by_both_systems"]
+        is True
+    )
     assert payload["domain_ownership"]["bitrix24_after_handoff"]
     assert payload["domain_ownership"]["shema"]
-    assert "transaction_price" in payload["domain_ownership"]["forbidden_dual_ownership"]
-    assert "business_economics" in payload["domain_ownership"]["forbidden_dual_ownership"]
-    assert (\n        "customer_outbound_communication_execution"\n        in payload["domain_ownership"]["forbidden_dual_ownership"]\n    )
+
+    forbidden = payload["domain_ownership"]["forbidden_dual_ownership"]
+    assert "transaction_price" in forbidden
+    assert "business_economics" in forbidden
+    assert "customer_outbound_communication_execution" in forbidden
+
     assert "procurement_observations" not in payload["domain_ownership"]["shema"]
     assert "document_requirement_configuration" not in payload["domain_ownership"]["shema"]
     assert "documents" not in payload
-    assert (\n        payload["communication"]["max_direct_customer_outbound_from_shema"]\n        == "disabled_by_default"\n    )
+    assert (
+        payload["communication"]["max_direct_customer_outbound_from_shema"]
+        == "disabled_by_default"
+    )
 
 
 def test_handoff_is_idempotent_and_reconciliation_safe() -> None:
@@ -40,5 +49,9 @@ def test_handoff_is_idempotent_and_reconciliation_safe() -> None:
 def test_shema_does_not_reimplement_repeat_orders_or_live_economics() -> None:
     payload = load("business_plane_boundary_contract.json")
 
-    assert (\n        payload["repeat_business"]["shema_must_not_reimplement_bitrix_recurring_deal_engine"]\n        is True\n    )
+    repeat_guard = payload["repeat_business"]
+    assert (
+        repeat_guard["shema_must_not_reimplement_bitrix_recurring_deal_engine"]
+        is True
+    )
     assert payload["economics"]["no_new_live_accounting_subsystem_in_shema"] is True
