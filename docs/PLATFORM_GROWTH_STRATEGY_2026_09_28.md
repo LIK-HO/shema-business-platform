@@ -14,9 +14,8 @@ Shema intelligence core
 → evidence
 → research
 → qualification
-→ procurement intelligence
 → contact preparation
-→ document/context preparation
+→ business handoff
 → outcome capture
 → learning
 
@@ -53,67 +52,30 @@ Bitrix24 owns the live transaction state once the opportunity is handed over.
 
 This also reduces unnecessary retention of sensitive personnel data. The intelligence layer may need evidence that a service can be fulfilled, but it should not become a personnel or contractor database unless a separate justified capability is approved.
 
-## 3. B2B-first strategy and procurement boundary
+## 3. B2B-first operating boundary
 
-### Strategic correction
+The first commercial loop is intentionally narrow:
 
-The commercial rollout starts with **B2B**:
+**B2B prospecting → qualification → contact → service delivery → repeat business → measurable unit economics**
 
-B2B prospecting → qualification → contact → service delivery → repeat business → measurable unit economics.
+Nothing in Shema should be added merely because a mature CRM or ERP has such a module.
 
-The objective is to prove a small, repeatable operating system before adding B2G/tender complexity.
+### Removed from Shema
 
-### Procurement / B2G boundary
+- tender/procurement subsystem;
+- tender provider integrations;
+- tender monitoring workspace;
+- tender submission logic;
+- internal document/template/configuration engine;
+- document lifecycle and legal/EDO workflow relationships.
 
-The existing Phase 2-I procurement foundation remains a **dormant technical asset** only. It is not an early product capability.
+These are not deferred Shema features. They are **outside the Shema product boundary**.
 
-Its preserved value is:
-- provider-neutral contracts;
-- normalized procurement observations;
-- provenance and identity/evidence separation;
-- deterministic fixtures;
-- reusable integration knowledge.
+### Business-plane principle
 
-At the current stage Shema does **not** develop:
-- procurement runtime monitoring;
-- tender workspaces;
-- tender participation/submission;
-- commercial aggregator expansion;
-- procurement-specific operator workflows.
+When the business reaches the corresponding maturity, live commercial operations are moved into Bitrix24. Tender/B2G becomes a separate mature-business direction implemented there or in a directly integrated specialist system. Shema does not duplicate it.
 
-The B2G/tender capability is introduced later, at the **Bitrix24 business-plane stage**, using Bitrix24's mature business-process/CRM capabilities or a mature integrated tender capability where required. Shema remains the intelligence/context source, not the tender system of record.
-
-### Provider rule
-
-No named commercial tender provider is a current strategic dependency. Future provider evaluation is postponed until:
-1. B2B operations are repeatable;
-2. Bitrix24 is the live business-control plane;
-3. a measured B2G coverage requirement exists;
-4. the chosen capability can be integrated without creating a second business system of record.
-
-## 4. Universal procurement contract — dormant reusable boundary
-
-When the B2G stage is eventually opened, every source adapter still must declare:
-- source class;
-- supported observation types;
-- pagination/cursor semantics;
-- rate limits;
-- authentication;
-- timeout and error semantics;
-- response-size limits;
-- freshness;
-- provenance;
-- cost budget;
-- capability gaps.
-
-Provider-specific fields remain inside the adapter or explicit extension payload.
-
-The normalized observation preserves:
-provider_id + external_id + source_ref + observed_at + provenance + observation_type
-
-Cross-source identity resolution remains downstream of normalization and uses the existing Identity/Evidence rules.
-
-This contract remains deliberately unactivated during B2B-first development.
+During the starting B2B period, documents are handled manually outside Shema. This is deliberate complexity control: no internal document model, version matrix, template repository or legal workflow is required to acquire, sell and learn from the first B2B transactions.
 
 ## 5. Yandex Cloud deployment strategy
 
@@ -259,10 +221,8 @@ Shema owns:
 - identity resolution;
 - evidence/provenance/freshness;
 - qualification;
-- procurement observations;
 - contact preparation;
 - repeat-business preparation;
-- document requirement/configuration snapshots;
 - learning context.
 
 Bitrix24 owns after handoff:
@@ -284,10 +244,8 @@ Send only the minimum execution context:
 - identity/company/contact reference;
 - qualification state;
 - evidence-backed reason for contact;
-- procurement context;
 - contact preparation;
 - repeat-business preparation;
-- document requirement snapshot;
 - correlation/reference IDs.
 
 **Bitrix24 → Shema**
@@ -456,27 +414,21 @@ Detailed financial or personnel data enters Shema only if a separate business ca
 
 ## 11. Revised implementation order
 
-1. Close the current procurement foundation without activating external production traffic.
-2. Implement procurement durable runtime as one bounded vertical slice:
-   source registry → adapter → durable watch → evidence → operator queue.
-3. Keep ГосПлан as the first real procurement activation.
-4. Add TenderGuru only after measured source-coverage evidence shows a gap.
-5. Complete contact preparation.
-6. Implement Repeat Business Preparation only; do not reimplement Bitrix recurring deals.
-7. Implement Document Configuration & Handoff Preparation; final issuance/signing/storage stays in the business/EDO plane.
-8. Build Web/PWA over the proven workflows.
-9. Deploy the modular monolith to Yandex Cloud with Managed PostgreSQL as the production canonical database.
-10. Activate YandexGPT through the existing provider-neutral gateway and cloud secret boundary.
-11. Introduce Bitrix24 integration as a separate business-plane boundary with explicit field ownership.
-12. Keep MAX live outbound gated until its provider-side safety evidence changes.
-13. Feed low-risk commercial outcomes back into Shema.
-14. Scale infrastructure only from measured bottlenecks.
+1. Finish intelligence/search/research quality.
+2. Complete contact preparation and Repeat Business Preparation.
+3. Build the unified Web/PWA surface with public client intake and protected operator workspace.
+4. Put the same public Web application inside a MAX bot as a mini-app projection.
+5. Move the proven modular monolith to Yandex Cloud with Managed PostgreSQL as the canonical Shema database.
+6. Introduce Bitrix24 as the mature business-control plane with explicit handoff, ownership and reconciliation.
+7. Keep customer-facing MAX communication bounded and tied to the same public client context.
+8. Feed low-risk commercial outcomes back into Shema.
+9. Scale only from measured bottlenecks.
 
 ## 12. Global architectural verdict
 
 The balanced target is not:
 
-Shema + CRM + ERP + HR + tender system + accounting + AI + messenger
+Shema + CRM + ERP + HR + documents + tender system + accounting + AI + messenger
 
 It is:
 
@@ -494,4 +446,4 @@ MAX = guarded communication adapter
 
 This preserves the project's strongest property: complexity is concentrated inside reliability and evidence controls, while the operator sees a small number of useful decisions and actions.
 
-No new database authority, microservice split, tender submission, personnel system or duplicate accounting engine is justified by this strategy.
+No tender subsystem or document-management subsystem is justified inside Shema. No new database authority, microservice split, personnel system or duplicate accounting engine is justified either.
