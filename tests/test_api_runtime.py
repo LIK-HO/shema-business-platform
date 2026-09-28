@@ -318,6 +318,51 @@ def test_runtime_api_generates_correlation_id_when_missing() -> None:
     assert response.json()["healthy"] is True
 
 
+class NoPermissionAuthenticator(AuthenticationPort):
+    def authenticate(self, authorization: str | None) -> AuthenticatedActor:
+        if authorization == "Bearer no-permission":
+            return AuthenticatedActor("operator-no-permission", trust_level=2)
+        raise AuthenticationRequired()
+
+
+def test_runtime_api_rejects_authenticated_but_unauthorized_search() -> None:
+    response = TestClient(
+        create_app(FakeApplication(), NoPermissionAuthenticator())
+    ).post(
+        "/v1/search",
+        headers={"Authorization": "Bearer no-permission"},
+        json={"region": "Moscow", "industries": ["logistics"]},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "authorization_denied"
+
+
+def test_runtime_api_rejects_authenticated_but_unauthorized_sensitive_read() -> None:
+    response = TestClient(
+        create_app(FakeApplication(), NoPermissionAuthenticator())
+    ).get(
+        "/v1/economics/identity-1",
+        headers={"Authorization": "Bearer no-permission"},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "authorization_denied"
+
+
+def test_runtime_api_hard_limits_request_body() -> None:
+    response = TestClient(
+        create_app(FakeApplication(), FakeAuthenticator())
+    ).post(
+        "/v1/search",
+        headers={"Authorization": "Bearer test-token"},
+        content=b"x" * (1_048_576 + 1),
+    )
+
+    assert response.status_code == 413
+    assert response.json()["code"] == "request_body_too_large"
+
+
 def test_runtime_api_requires_authentication() -> None:
     response = TestClient(
         create_app(FakeApplication(), RejectingAuthenticator())
@@ -367,6 +412,26 @@ def test_runtime_api_counterparty_check_exposes_evidence_boundary() -> None:
     assert body["contradictions"][0]["field"] == "canonical_name"
     assert checker.calls[0][1] == "operator-1"
     assert checker.calls[0][2] == body["correlationId"]
+
+
+def test_runtime_api_counterparty_check_rejects_client_supplied_evidence_fields() -> None:
+    response = TestClient(
+        create_app(
+            FakeApplication(),
+            FakeAuthenticator(),
+            counterparty_checker=FakeCounterpartyChecker(),
+        )
+    ).post(
+        "/v1/intelligence/counterparty-check",
+        headers={"Authorization": "Bearer test-token"},
+        json={
+            "identifierType": "INN",
+            "identifier": "7707083893",
+            "canonicalName": "attacker-controlled",
+        },
+    )
+
+    assert response.status_code == 422
 
 
 def test_runtime_api_counterparty_check_requires_composed_capability() -> None:
