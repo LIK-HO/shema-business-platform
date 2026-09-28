@@ -134,6 +134,8 @@ Shema — это **личная операционная система влад
 - **Interface:** adopted mature workspace pattern — summary/highlights + details + related records + activity/history; work lists with filters/sorts and quick actions; contextual/split inspection; progressive disclosure; personal view preferences; responsive/accessibility baseline; server-authoritative business state.
 - **Multi-operator:** collaboration is a permanent architectural requirement: explicit actor, ownership/assignment/team queues, server-side permissions, revision/concurrency protection, audited handoff, explicit conflict resolution and no shadow copies.
 - **Clients:** Web + PWA are sufficient and remain the only approved experience surfaces. Android is removed from the roadmap.
+- **Source set:** the external intelligence layer uses a small role-based source portfolio with query-driven routing; specialist sources are triggered only by a concrete evidence gap. Contract: `architecture/intelligence_source_policy_contract.json`.
+- **Bitrix24 setup:** a bounded Bitrix24 Business Plane Setup Agent is part of the integration boundary. It discovers the actual portal, plans and dry-runs changes, applies only owned/namespaced configuration, verifies read-back and records mapping/configuration versions. It is not part of the frozen kernel and does not become a CRM or generic automation agent. Contract: `architecture/bitrix24_configuration_agent_contract.json`.
 
 ### Research basis
 Recurring work: https://helpdesk.bitrix24.com/open/25850555/ ; https://knowledge.hubspot.com/payments/manage-subscriptions-for-recurring-payments ; https://support.pipedrive.com/en/article/recurring-products ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/22eca60c150344f89bcee6255485f8c7.html ; https://help.salesforce.com/s/articleView?id=sf.order_overview.htm&language=en_US&type=5
@@ -1173,7 +1175,7 @@ truth → identity → evidence → freshness → interpretation → operator us
 - explainable resolution;
 - selective deep research;
 - compact operator view;
-- reusable document/configuration engine.
+- reusable intelligence/evidence primitives.
 
 Подробный алгоритм закреплён в:
 docs/EXTERNAL_INTELLIGENCE_AND_CONTACT_SYSTEM.md.
