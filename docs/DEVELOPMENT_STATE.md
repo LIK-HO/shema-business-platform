@@ -6,9 +6,10 @@
 - PR: #58 — open, draft, mergeable state subject to current CI; head resolved live.
 - Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED; live DaData remains OFF.
 - Current verified architecture boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract** — CLOSED / VERIFIED at contract and test stage. Runtime public-form implementation remains governed by the Phase 3B roadmap exit criteria.
+- Current active extension: **Operator Interface Alignment + Repeat Orders & Business Continuity + Public Intake + Counterparty Monitoring + Bitrix24 Cutover** — contract/test work in progress until the final current-head adversarial review and release gate close.
 - Previous draft procurement subsystem removed from the current product boundary; no procurement/tender runtime, provider adapters, tender workspace or procurement persistence remains in the active implementation.
-- Product flow is fixed for the initial B2B stage as: intelligence → identity/evidence → qualification → contact preparation → business handoff → live business execution → result/learning.
-- Phase 3A is fixed as Repeat Business Preparation immediately before business handoff.
+ - Product flow is fixed for the initial B2B stage as: intelligence → identity/evidence → qualification → contact preparation → repeat orders/business continuity → business handoff → live business execution → result/learning.
+- Phase 3A is fixed as Repeat Orders & Business Continuity in temporary Shema live mode, with verified Bitrix24 cutover and purge/hide semantics.
 - Phase 4 is the unified Web operator/public-client surface; no internal document-management subsystem is part of the roadmap.
 - Web + PWA are the only approved experience surfaces; Android is removed from the target roadmap.
 - Multi-operator collaboration is a permanent architecture requirement: explicit actor, ownership/assignment/team queues, server-side authorization, audited handoff, revision/concurrency protection and explicit conflict resolution.
@@ -19,7 +20,7 @@
 
 - Added explicit `architecture/business_plane_boundary_contract.json` for Shema → Bitrix24 handoff, field ownership, retry/reconciliation and outcome return.
 - Corrected YandexGPT configuration so `YANDEXGPT_MAX_COST` is explicitly required and positive; zero/missing cost ceilings now fail closed.
-- Phase 3A is renamed/redefined as Repeat Business Preparation; Shema must not reimplement Bitrix24 recurring-deal execution.
+- The earlier Repeat Business Preparation wording is superseded by the bounded temporary Shema live repeat-order mode; Shema still must not reimplement Bitrix24's recurring-deal engine.
 - Monium is explicitly operational telemetry; durable audit/business history remains PostgreSQL-owned.
 - Full seven-job release-gate CI for the current verified HEAD d595ec856a6a611751c7b619ae75f23ca3db4398 is GREEN in run 36372953967; all quality, integration, supply-chain, backup/recovery and release-contract jobs passed.
 - Global adversarial survivability gate is now mandatory for every material strategy change and every element completion; no element may enter VERIFIED/CLOSED without a current-head whole-system adversarial review.
@@ -33,9 +34,10 @@
 - New Shema development must not expand into a second CRM, accounting, finance or personnel system. Existing frozen Order/Economics semantics remain only for compatibility, lineage and learning.
 - Existing YandexGPT and MAX provider boundaries remain in force. YandexGPT is the bounded AI processing path; MAX live outbound remains fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
 - This synchronization is architecture/experience-contract/test scope only. No Bitrix24 runtime, MAX activation or new persistence authority has been opened.
-- New strategy contracts: architecture/platform_growth_strategy_contract.json, architecture/business_plane_boundary_contract.json and architecture/public_client_experience_contract.json.
+- New strategy contracts: architecture/platform_growth_strategy_contract.json, architecture/business_plane_boundary_contract.json, architecture/public_client_experience_contract.json and architecture/operator_interface_contract.json.
 - New executable guards: tests/test_platform_growth_strategy_contract.py, tests/test_business_plane_boundary_contract.py and tests/test_public_client_experience_contract.py.
 - Adversarial review: docs/ADVERSARIAL_ARCHITECTURE_REVIEW_2026_09_28.md.
+- Operator interface blueprint: architecture/operator_interface_contract.json.
 
 ## Stage verification — 2026-09-28
 
