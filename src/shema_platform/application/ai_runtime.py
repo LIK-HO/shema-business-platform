@@ -224,4 +224,10 @@ class AIExecutionService:
             # key must not repeat an external call whose outcome is unknown.
             raise
 
+        with self._unit_of_work_factory() as uow:
+            uow.idempotency.complete(
+                request.idempotency_key.strip(),
+                request.request_hash,
+                run.run_id,
+            )
         return run
