@@ -13,6 +13,7 @@ from shema_platform.adapters.ai.composition import AIProviderCompositionError
 from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.adapters.intelligence.dadata_activation import DaDataActivationError
 from shema_platform.application.counterparty_check import (
+    AuthoritativeCounterpartyLookup,
     CounterpartyCheckService,
     CounterpartyIdentifierType,
     CounterpartyObservation,
@@ -78,6 +79,10 @@ from shema_platform.foundation.errors import (
     IdempotencyConflict,
     PolicyDenied,
     QuarantineRequired,
+)
+from shema_platform.foundation.http_security import (
+    RequestBodySizeLimitMiddleware,
+    trusted_peer_identity,
 )
 from shema_platform.foundation.provider_health import ProviderHealthRegistry
 from shema_platform.foundation.runtime_security import RuntimeSecurityConfiguration
@@ -167,7 +172,7 @@ class APIApplication(Protocol):
 
 class CorrelationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        correlation_id = request.headers.get("X-Correlation-Id") or str(uuid4())
+        correlation_id = str(uuid4())
         request.state.correlation_id = correlation_id
         started = monotonic()
 
@@ -258,6 +263,18 @@ def _context(
         permissions=actor.permissions,
     )
 
+def _require_permission(request: Request, permission: Permission) -> RequestContext:
+    context = _context(request, None)
+    RBACAuthorizer(
+        (
+            AuthorizationSubject(
+                actor_id=context.actor_id,
+                permissions=context.permissions,
+            ),
+        )
+    ).require(context.actor_id, permission)
+    return context
+
 
 def _error(
     request: Request,
@@ -292,6 +309,7 @@ def create_app(
     counterparty_provider_lookup: CounterpartyProviderRuntimeLookupService | None = None,
     public_intake: PublicIntakeService | None = None,
     operator_notification_reader=None,
+    authoritative_counterparty_lookup: AuthoritativeCounterpartyLookup | None = None,
 ) -> FastAPI:
     runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
@@ -318,6 +336,7 @@ def create_app(
     app.state.counterparty_provider_lookup = counterparty_provider_lookup
     app.state.public_intake = public_intake
     app.state.operator_notification_reader = operator_notification_reader
+    app.state.authoritative_counterparty_lookup = authoritative_counterparty_lookup
     default_telemetry: TelemetrySink = (
         StructuredLoggingTelemetrySink()
         if runtime_security.environment == "production"
@@ -326,6 +345,7 @@ def create_app(
     app.state.telemetry = telemetry if telemetry is not None else default_telemetry
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(CorrelationMiddleware)
+    app.add_middleware(RequestBodySizeLimitMiddleware, max_body_bytes=1_048_576)
 
     @app.exception_handler(AuthenticationRequired)
     async def authentication_required(
@@ -516,8 +536,6 @@ def create_app(
 
     router = APIRouter(prefix="/v1")
 
-    router = APIRouter(prefix="/v1")
-
     @app.post(
         "/v1/public/intake",
         response_model=PublicIntakeResponse,
@@ -530,11 +548,6 @@ def create_app(
             min_length=8,
             alias="Idempotency-Key",
         ),
-        public_client_key: str = Header(
-            min_length=8,
-            max_length=128,
-            alias="X-Public-Client-Key",
-        ),
         origin: str | None = Header(default=None),
         bot_challenge: str | None = Header(
             default=None,
@@ -546,6 +559,12 @@ def create_app(
             raise ApplicationUnavailable(
                 "public intake capability is not composed"
             )
+        try:
+            rate_limit_key = trusted_peer_identity(request.scope)
+        except ValueError as exc:
+            raise PublicIntakeSecurityRejected(
+                "trusted client identity is unavailable"
+            ) from exc
         result = service.submit(
             payload=PublicIntakePayload(
                 service_type=payload.service_type,
@@ -567,8 +586,7 @@ def create_app(
                 entry_surface=payload.entry_surface,
             ),
             idempotency_key=idempotency_key,
-            public_client_key=public_client_key,
-            origin=origin,
+            public_client_key=rate_limit_key,            origin=origin,
             bot_challenge_passed=(
                 (bot_challenge or "").strip().lower() == "passed"
             ),
@@ -626,14 +644,20 @@ def create_app(
         request: Request,
         payload: SearchRequest,
     ) -> SearchResponse:
-        return services(request).search(payload, _context(request, None))
+        return services(request).search(
+            payload,
+            _require_permission(request, Permission.SEARCH_RUN),
+        )
 
     @router.post("/ai/run", response_model=AIRunResponse)
     async def run_ai(
         request: Request,
         payload: AIRunRequest,
     ) -> AIRunResponse:
-        return services(request).run_ai(payload, _context(request, None))
+        return services(request).run_ai(
+            payload,
+            _require_permission(request, Permission.AI_RUN),
+        )
 
     @router.post("/discovery/evaluate", response_model=DiscoveryResponse)
     async def discovery(
@@ -641,7 +665,17 @@ def create_app(
         payload: DiscoveryRequest,
         idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> DiscoveryResponse:
-        return services(request).discovery(payload, _context(request, idempotency_key))
+        context = _require_permission(request, Permission.DISCOVERY_RUN)
+        return services(request).discovery(
+            payload,
+            RequestContext(
+                correlation_id=context.correlation_id,
+                actor_id=context.actor_id,
+                trust_level=context.trust_level,
+                idempotency_key=idempotency_key,
+                permissions=context.permissions,
+            ),
+        )
 
     @router.post("/intelligence/research", response_model=ResearchResponse)
     async def research(
@@ -649,7 +683,17 @@ def create_app(
         payload: ResearchRequest,
         idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> ResearchResponse:
-        return services(request).research(payload, _context(request, idempotency_key))
+        context = _require_permission(request, Permission.RESEARCH_RUN)
+        return services(request).research(
+            payload,
+            RequestContext(
+                correlation_id=context.correlation_id,
+                actor_id=context.actor_id,
+                trust_level=context.trust_level,
+                idempotency_key=idempotency_key,
+                permissions=context.permissions,
+            ),
+        )
 
     @router.post(
         "/intelligence/counterparty-check",
@@ -659,26 +703,31 @@ def create_app(
         request: Request,
         payload: CounterpartyCheckRequest,
     ) -> CounterpartyCheckResponse:
+        context = _require_permission(request, Permission.COUNTERPARTY_CHECK)
         checker: CounterpartyCheckService | None = request.app.state.counterparty_checker
-        if checker is None:
+        authoritative_lookup: AuthoritativeCounterpartyLookup | None = (
+            request.app.state.authoritative_counterparty_lookup
+        )
+        if checker is None or authoritative_lookup is None:
             raise ApplicationUnavailable(
-                "counterparty check capability is not composed"
+                "authoritative counterparty lookup capability is not composed"
             )
-        context = _context(request, None)
+
+        identifier_type = CounterpartyIdentifierType(payload.identifier_type)
+        observation = authoritative_lookup.lookup(
+            identifier_type=identifier_type,
+            identifier=payload.identifier,
+        )
+        if (
+            observation.identifier != payload.identifier.strip()
+            or observation.identifier_type is not identifier_type
+        ):
+            raise AuthorizationError(
+                "authoritative provider returned mismatched counterparty identity"
+            )
+
         result = checker.check(
-            CounterpartyObservation(
-                identifier_type=CounterpartyIdentifierType(payload.identifier_type),
-                identifier=payload.identifier,
-                canonical_name=payload.canonical_name,
-                tax_id=payload.tax_id,
-                registration_id=payload.registration_id,
-                legal_status=payload.legal_status,
-                source_ref=payload.source_ref,
-                source_reliability=SourceReliability(payload.source_reliability),
-                claim_confidence=payload.claim_confidence,
-                observed_at=payload.observed_at,
-                expires_at=payload.expires_at,
-            ),
+            observation,
             actor_id=context.actor_id,
             correlation_id=context.correlation_id,
         )
@@ -717,13 +766,16 @@ def create_app(
             raise ApplicationUnavailable(
                 "counterparty provider activation capability is not composed"
             )
-        context = _context(request, None)
+        context = _require_permission(
+            request,
+            Permission.INTELLIGENCE_PROVIDER_ACTIVATE,
+        )
         result = service.activate(
             CounterpartyProviderActivationCommand(
                 provider_id=provider_id,
                 actor_id=context.actor_id,
                 reason=payload.reason,
-                operator_authorized=payload.operator_authorized,
+                operator_authorized=True,
                 activation_version=payload.activation_version,
                 correlation_id=context.correlation_id,
             ),
@@ -754,7 +806,10 @@ def create_app(
             raise ApplicationUnavailable(
                 "counterparty provider lookup capability is not composed"
             )
-        context = _context(request, None)
+        context = _require_permission(
+            request,
+            Permission.INTELLIGENCE_PROVIDER_LOOKUP,
+        )
         result = service.execute(
             CounterpartyLookupQuery(
                 identifier_type=CounterpartyLookupIdentifierType(payload.identifier_type),
@@ -808,7 +863,10 @@ def create_app(
             raise ApplicationUnavailable(
                 "counterparty provider activation capability is not composed"
             )
-        context = _context(request, None)
+        context = _require_permission(
+            request,
+            Permission.INTELLIGENCE_PROVIDER_ROLLBACK,
+        )
         result = service.rollback(
             provider_id=provider_id,
             actor_id=context.actor_id,
@@ -836,6 +894,10 @@ def create_app(
         payload: CommercialActionCreateRequest,
         idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> CommercialActionResponse:
+        context = _require_permission(
+            request,
+            Permission.COMMERCIAL_ACTION_CREATE,
+        )
         return services(request).create_commercial_action(
             payload,
             _context(request, idempotency_key),
@@ -851,6 +913,10 @@ def create_app(
         action_id: str = Path(alias="actionId"),
         idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> CommunicationResult:
+        context = _require_permission(
+            request,
+            Permission.COMMERCIAL_ACTION_SEND,
+        )
         return services(request).send_commercial_action(
             action_id,
             payload,
@@ -863,25 +929,43 @@ def create_app(
         payload: OrderCreateRequest,
         idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> OrderResponse:
-        return services(request).create_order(payload, _context(request, idempotency_key))
+        context = _require_permission(request, Permission.ORDER_CREATE)
+        return services(request).create_order(
+            payload,
+            RequestContext(
+                correlation_id=context.correlation_id,
+                actor_id=context.actor_id,
+                trust_level=context.trust_level,
+                idempotency_key=idempotency_key,
+                permissions=context.permissions,
+            ),
+        )
 
     @router.get("/orders/{orderId}", response_model=OrderResponse)
     async def get_order(
         request: Request,
         order_id: str = Path(alias="orderId"),
     ) -> OrderResponse:
-        return services(request).get_order(order_id, _context(request, None))
+        return services(request).get_order(
+            order_id,
+            _require_permission(request, Permission.ORDER_READ),
+        )
 
     @router.get("/economics/{entityRef}", response_model=EconomicResponse)
     async def get_economics(
         request: Request,
         entity_ref: str = Path(alias="entityRef"),
     ) -> EconomicResponse:
-        return services(request).get_economics(entity_ref, _context(request, None))
+        return services(request).get_economics(
+            entity_ref,
+            _require_permission(request, Permission.ECONOMICS_READ),
+        )
 
     @router.get("/diagnostics", response_model=DiagnosticsResponse)
     async def get_diagnostics(request: Request) -> DiagnosticsResponse:
-        return services(request).get_diagnostics(_context(request, None))
+        return services(request).get_diagnostics(
+            _require_permission(request, Permission.DIAGNOSTICS_READ),
+        )
 
     app.include_router(router)
     return app
