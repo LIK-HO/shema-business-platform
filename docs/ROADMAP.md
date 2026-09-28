@@ -341,50 +341,83 @@ Build a contact-script test set covering:
 ### Exit criteria
 The operator can open a verified client dossier and receive a usable, evidence-grounded first-contact script without manually reconstructing the research.
 
-## 7A. Phase 3A — Repeat Business Preparation
-
-### Placement
-This capability sits after Contact Preparation and immediately before business handoff. Its purpose is to detect and prepare repeat demand, not to create a second transaction engine.
+## 7A. Phase 3A — Repeat Orders & Business Continuity (temporary Shema live mode)
 
 ### Objective
-Turn repeat business into a first-class operator workflow while leaving live deal/order, pricing and economic authority to the mature business plane.
-
-### Chosen pattern
-Use a reusable **Repeat Business Rule / Customer Pattern** attached to the canonical customer. The rule stores recurrence signals, preparation window, last known business reference, and references to relevant evidence. Each recurrence creates a **fresh preparation/handoff snapshot**. It never becomes the live order ledger.
+Until Bitrix24 becomes the live business plane, Shema must provide a usable repeat-order workflow using the already frozen Order/Economics semantics, without reopening the kernel.
 
 ### Operator workflow
-- show **Upcoming repeat business** in the work queue;
-- one compact rule exposes recurrence pattern, next preparation window, last known business reference and evidence freshness;
-- primary actions: **Prepare next handoff**, **Skip once**, **Pause**, **Resume**, **Change pattern**;
-- revalidate evidence and current commercial assumptions before preparing the handoff;
-- prevent duplicate open preparation snapshots for the same recurrence window;
-- preserve lineage from the preparation snapshot to the originating customer and prior outcome;
-- after Bitrix24 handoff becomes available, map the preparation snapshot to a Bitrix recurring/repeat-deal capability rather than reimplementing that engine in Shema.
+- **Повторный заказ** is a first-class action from a completed/eligible prior order.
+- The operator sees the prior order context, recurrence pattern, current evidence freshness, current pricing assumptions and capacity/date assumptions.
+- A repeat order is created as a new immutable order transaction; the previous order is never edited.
+- The operator can pause, skip once, resume or cancel the recurrence plan.
+- Current counterparty status and required evidence are revalidated before confirmation.
+- All repeat-order mutations are idempotent and audited.
 
-### Research basis
-Mature CRM/ERP products treat recurrence as a reusable rule/template that generates distinct business transactions. Bitrix24, Salesforce and SAP expose this pattern in different forms. Shema adopts only the preparation/intelligence part of the pattern and delegates the live transaction engine to the business plane. citeturn496805search1turn495622search5turn496805search11
+### Temporary authority
+Before Bitrix24 handoff:
+- Shema owns the live repeat order and the limited transaction-scoped economics required to execute it;
+- the frozen Order/Economics kernel semantics are reused rather than changed;
+- no accounting, tax, payroll or full finance subsystem is introduced.
+
+### Bitrix24 transition
+The complete cutover is governed by:
+`architecture/repeat_order_transition_contract.json`.
+
+A migrated transaction is not purged from Shema merely because Bitrix24 accepted the first write. Purge is permitted only after:
+**snapshot → Bitrix acknowledgement → full readback → completeness proof → recovery snapshot verification**.
+
+After successful migration:
+- live Order/Economics operational rows are purged;
+- a minimal frozen lineage tombstone remains;
+- Order/Economics tabs disappear from the Shema operator interface without a broken layout;
+- deep links show an explicit “moved to Bitrix24” state;
+- Bitrix24 becomes the only live transaction authority.
 
 ### Exit criteria
-The operator can identify upcoming repeat demand, review changed evidence/configuration, and generate a traceable handoff package without creating a live transaction or calculating authoritative business economics in Shema.
+The operator can create and manage repeat orders in Shema safely before Bitrix24, and a verified migration can move the complete business transaction/history package to Bitrix24 without duplicate authority or UI breakage.
 
-## 7B. Phase 3B — Public Intake Trust Boundary and Counterparty Preflight
+## 7B. Phase 3B — Public Intake Data Plane, Trust Boundary and Counterparty Preflight
 
 ### Objective
-Make the future public request surface safe enough for real B2B demand without turning the form into a registry-enumeration tool, GPT cost sink, spam amplifier or second CRM entry point.
+Accept real B2B client demand through the public site while isolating raw submissions from the canonical Shema database and preserving durable notifications.
 
 ### Core design
-- collect the minimum request first; legal identifiers are conditional;
-- validate INN/OGRN/OGRNIP deterministically before external lookup;
-- use official FNS/ЕГРЮЛ/ЕГРИП evidence server-side and before GPT;
-- expose only minimal match/status feedback to the client;
-- provide the operator a provenance-linked preflight card with freshness, contradictions, flags and unknowns;
-- represent provider outage as UNKNOWN rather than inventing a clean result;
-- keep Bitrix24 downstream of qualification/handoff;
-- make submissions idempotent and abuse-resistant;
-- keep attachments disabled until a private quarantine upload boundary is verified.
+- raw client form data is written to a **dedicated PostgreSQL database** through the canonical API;
+- the intake database has separate credentials, bounded access and independent recovery tests;
+- request persistence and the intake outbox are atomic;
+- Shema receives only the accepted business context required for operator work;
+- the operator notification center is projected from the durable intake outbox;
+- notification floods are aggregated, while critical alerts are durable and retryable;
+- counterparty preflight remains deterministic and GPT-free for registry truth.
 
 ### Exit criteria
-Request → preflight → operator review → qualification remains traceable; abusive traffic is rejected or quarantined without exhausting application or provider budgets; current-head adversarial and release gates pass.
+A request survives Shema outages after accepted intake, produces exactly-once operator-visible notification semantics under retries, and can be reconstructed from intake record → preflight snapshot → Shema request context → outcome.
+
+## 7C. Phase 3C — Counterparty Verification, Monitoring & Favorites
+
+### Objective
+Turn the existing lead-search field into a dual-purpose operator tool without creating a second search engine.
+
+### Operator mechanism
+When the operator enters an exact INN/OGRN/OGRNIP:
+- the search mode automatically becomes **Проверка контрагента**;
+- the operator gets deterministic identity/status verification immediately;
+- **Глубокая разведка** invokes the existing bounded intelligence source policy only after identity resolution;
+- **Сохранить в мониторинг** creates a daily change-monitoring record;
+- **В избранное** creates a personal shortcut.
+
+The separate **Контрагенты** workspace contains:
+**Проверка | Мониторинг | Избранные**.
+
+Monitoring is organizationally distinct from favorites:
+- monitoring produces change events and notifications;
+- favorites do not schedule external lookups;
+- monitoring entries are updated from official/verified registry snapshots;
+- registry outage never creates a false “changed” event.
+
+### Exit criteria
+A monitored counterparty has reproducible snapshots, deterministic change detection, severity-aware notifications, checkpointed batch recovery and a direct link back to its dossier/history.
 
 ## 8. Phase 4 — Web Operator System
 
@@ -544,61 +577,47 @@ Roll out gradually, observe, and roll back first when a release is unhealthy. Th
 ### Exit criteria
 A release can be deployed, observed, rolled back and reconstructed without ad hoc manual intervention.
 
-## 13. Phase 9 — Bitrix24 Business Control Plane Integration
+## 13. Phase 9 — Bitrix24 Business Control Plane Integration & Transaction Cutover
 
 ### Objective
-Introduce Bitrix24 as the mature external business-process and transaction-control plane, without rebuilding CRM or finance inside Shema.
+Turn Bitrix24 into the mature live business plane and safely retire the temporary Shema live Order/Economics mode after verified migration.
 
-### Ownership
-Shema remains authoritative for:
-- source observations;
-- identity resolution;
-- evidence/provenance/freshness;
-- intelligence and qualification;
-- contact preparation;
-- AI run lineage;
-- learning context.
+### Business-plane composition
+The Setup Agent configures only capabilities actually available on the portal:
+- CRM: companies, contacts, deals, pipelines and permissions;
+- repeat/recurring sales;
+- Smart Process Automation for bounded logistics/routing/executor workflows;
+- tasks, assignments and team processes;
+- inventory/product catalog and product-level economics where supported;
+- CRM documents and signing where supported;
+- tender connector / approved Bitrix24 Market integration for tender work where a native capability is unavailable;
+- external accounting/finance integration where authoritative accounting is required.
 
-Bitrix24 becomes authoritative after handoff for:
-- live lead/deal/order lifecycle;
-- transactional pricing;
-- invoices/payments and business economics;
-- live communication history;
-- assignments and business process stages;
-- team workflows and approvals;
+Bitrix24 documentation confirms that CRM supports repeat sales, recurring deals, Smart Process Automation, inventory management, CRM documents and role-based permissions; exact availability remains plan-dependent. urlBitrix24 repeat saleshttps://helpdesk.bitrix24.com/open/24147842/ urlBitrix24 recurring dealshttps://helpdesk.bitrix24.com/open/17240254/ urlBitrix24 Smart Process Automationhttps://helpdesk.bitrix24.com/open/19141012/ urlBitrix24 inventory managementhttps://helpdesk.bitrix24.com/open/26000719/ urlBitrix24 CRM documentshttps://helpdesk.bitrix24.com/open/19441484/
 
-### Bitrix24 Setup Agent
+### Full transaction/history migration
+For each selected customer transaction:
+1. freeze the Shema live transaction;
+2. build the complete migration package;
+3. reserve/create the Bitrix24 business object;
+4. transfer all required Order/Economics fields and relevant customer/business history;
+5. read back the complete result;
+6. verify counts, references, monetary aggregates and payload hash;
+7. only then mark the Shema data PURGE_ELIGIBLE;
+8. purge live operational Order/Economics rows;
+9. retain the minimal frozen lineage tombstone;
+10. hide the obsolete Shema UI capability.
 
-Before live handoff is activated, the integration includes a bounded **Bitrix24 Business Plane Setup Agent**.
-
-It:
-- inspects the actual portal and capabilities;
-- reads existing CRM fields, funnels, stages, permissions and integration state;
-- compiles a versioned configuration plan;
-- shows a dry-run diff;
-- applies only owned/namespaced changes;
-- verifies the resulting portal state;
-- preserves a configuration snapshot and mapping version.
-
-It does **not** configure arbitrary Bitrix24 features, delete unknown structures, migrate the Shema database, or become a second CRM inside Shema.
-
-### Integration phases
-1. Single-portal proof with an inbound webhook.
-2. Outbound event intake for selected business events.
-3. Idempotent Shema outbox for handoff commands.
-4. Reconciliation and field-ownership map.
-5. OAuth 2.0 application boundary before multi-user/multi-portal maturity.
-6. Establish operator causal continuity and multi-operator ownership after handoff.
-8. Outcome-only return path for learning.
+A lost or ambiguous Bitrix response always enters reconciliation before another write. A failed readback never permits purge.
 
 ### Non-goals
-- no bidirectional same-field writes;
-- no full CRM mirror in Shema;
-- no second finance system;
-- no copying detailed personnel data without a separately approved need.
+- no wholesale Shema database migration;
+- no parallel live Order/Economics authority after acknowledged cutover;
+- no tender/document subsystem inside Shema;
+- no blind assumption that a Bitrix24 plan exposes every desired capability.
 
 ### Exit criteria
-A qualified opportunity can be handed from Shema to Bitrix24 with traceable identity and evidence references, and the resulting business outcome can return to Shema without creating competing truth.
+Bitrix24 (plus explicitly selected specialist integrations) can operate the live business lifecycle, while Shema retains intelligence, evidence, learning context and only the minimum immutable lineage required for causal continuity.
 
 ## 14. Phase 10 — External Provider Activation and MAX
 
@@ -707,14 +726,15 @@ The practical priority is:
 1. Intelligence quality benchmark + manual counterparty verification
 2. Search/Research maturity
 3. Contact preparation
-4. Repeat Business Preparation
-5. Public Intake Trust Boundary + Counterparty Preflight
-6. Web/PWA public client surface + operator workspace + MAX mini-app projection
-7. Yandex Cloud production foundation
-8. Bitrix24 business-plane integration
-9. Production operations and guarded external activation / MAX
-10. Learning loop
-11. Measured scalability/team mode
+4. Repeat Orders & Business Continuity (temporary Shema live mode)
+5. Public Intake Data Plane + Trust Boundary + Counterparty Preflight
+6. Counterparty Verification, Monitoring & Favorites
+7. Web/PWA public client surface + operator workspace + MAX mini-app projection
+8. Yandex Cloud production foundation
+9. Bitrix24 business-plane configuration + full transaction/history cutover
+10. Production operations and guarded external activation / MAX
+11. Learning loop
+12. Measured scalability/team mode
 
 Where two capabilities are tightly coupled, build them as one vertical slice rather than separate half-finished layers.
 
