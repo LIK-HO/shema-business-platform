@@ -146,7 +146,7 @@ def snapshot() -> ConfigurationSnapshot:
         environment="production",
         values={
             "ai.yandexgpt.model_uri": "gpt://p32/yandexgpt/latest",
-            "ai.yandexgpt.base_url": "https://ai.example.test/v1",
+            "ai.yandexgpt.base_url": "https://ai.api.cloud.yandex.net/v1",
             "ai.yandexgpt.timeout_seconds": 10,
             "ai.yandexgpt.max_response_bytes": 1_048_576,
             "ai.yandexgpt.max_input_chars": 32_768,
@@ -269,6 +269,8 @@ def test_assembled_ai_path_persists_run_audit_and_correlation(monkeypatch) -> No
             headers={
                 "Authorization": "Bearer p32-token",
                 "X-Correlation-Id": correlation_id,
+                "Idempotency-Key": f"p32-expired:{identity_id}:run",
+                "Idempotency-Key": f"p32:{identity_id}:run",
             },
             json={
                 "taskType": "qualification",
@@ -286,10 +288,10 @@ def test_assembled_ai_path_persists_run_audit_and_correlation(monkeypatch) -> No
         body = response.json()
         run_id = body["runId"]
         assert body["providerId"] == "yandexgpt"
-        assert body["output"] == f"P32 deterministic result:{correlation_id}"
-        assert body["correlationId"] == correlation_id
+        assert body["output"] == f"P32 deterministic result:{body['correlationId']}"
+        assert body["correlationId"] != correlation_id
         assert DeterministicYandexGPTProvider.invocations == 1
-        assert response.headers["X-Correlation-Id"] == correlation_id
+        assert response.headers["X-Correlation-Id"] == body["correlationId"]
 
         with psycopg.connect(DATABASE_URL) as connection:
             ai_row = connection.execute(
