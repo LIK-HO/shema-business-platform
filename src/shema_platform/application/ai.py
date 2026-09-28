@@ -184,6 +184,12 @@ class AIGateway:
         # The provider call above is outside the Unit of Work by design.
         with self._unit_of_work_factory() as uow:
             uow.ai_runs.add(run)
+            if context.idempotency_key and context.idempotency_request_hash:
+                uow.idempotency.complete(
+                    context.idempotency_key,
+                    context.idempotency_request_hash,
+                    run.run_id,
+                )
             uow.audits.append(
                 AuditRecord(
                 audit_id=str(uuid4()),
