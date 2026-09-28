@@ -16,9 +16,7 @@ from shema_platform.application.public_intake import (
     PublicIntakePayload,
     PublicIntakeService,
 )
-from shema_platform.application.public_preflight import (
-    PublicCounterpartyPreflightService,
-)
+from shema_platform.application.public_preflight import PublicCounterpartyPreflightService
 from shema_platform.experience.api import create_app
 from shema_platform.experience.api_models import (
     OperatorNotificationListResponse,
