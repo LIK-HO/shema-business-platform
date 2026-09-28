@@ -145,6 +145,7 @@ class RepeatOrderService:
             plan = RepeatOrderPlan(
                 plan_id=plan_id,
                 source_order_id=source_order_id,
+                owner_actor_id=actor.actor_id,
                 identity_id=source.identity_id,
                 cadence=cadence,
                 context=context,
@@ -194,6 +195,7 @@ class RepeatOrderService:
                 return existing
 
             plan = self._require_plan(uow, plan_id)
+            self._require_owner(plan.owner_actor_id, actor)
             if plan.status is not RepeatPlanStatus.ACTIVE:
                 raise QuarantineRequired("repeat plan is not active")
             if plan.pending_order_id is not None:
@@ -239,6 +241,7 @@ class RepeatOrderService:
             order = Order(
                 order_id=order_id,
                 identity_id=source.identity_id,
+                owner_actor_id=actor.actor_id,
                 source_action_id=source.source_action_id,
                 lines=tuple(validation.resolved_lines),
                 status=OrderStatus.DRAFT,
@@ -295,6 +298,7 @@ class RepeatOrderService:
                 return existing
 
             plan = self._require_plan(uow, plan_id)
+            self._require_owner(plan.owner_actor_id, actor)
             if plan.pending_order_id != order_id:
                 raise IntegrityViolation(
                     "order is not the pending repeat order for this plan"
@@ -502,6 +506,7 @@ class RepeatOrderService:
                 return existing
 
             plan = self._require_plan(uow, plan_id)
+            self._require_owner(plan.owner_actor_id, actor)
             identity = self._verified_identity(uow, plan.identity_id)
             self._authorize(actor, identity, evidence_level=2)
 
@@ -575,6 +580,13 @@ class RepeatOrderService:
             )
         identity.require_verified()
         return identity
+
+    @staticmethod
+    def _require_owner(owner_actor_id: str | None, actor: Actor) -> None:
+        if not owner_actor_id or owner_actor_id != actor.actor_id:
+            raise QuarantineRequired(
+                "repeat-order resource is outside the actor resource scope"
+            )
 
     def _authorize(self, actor: Actor, identity: Identity, *, evidence_level: int) -> None:
         self._authorizer.require(actor.actor_id, Permission.ORDER_CREATE)
