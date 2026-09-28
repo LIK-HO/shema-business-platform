@@ -1,0 +1,89 @@
+{
+  "version": "1.0",
+  "status": "approved_architecture_boundary",
+  "purpose": "Isolate raw public client submissions in a dedicated intake database while projecting only the accepted business context into Shema.",
+  "frozen_kernel_impact": false,
+  "authority": {
+    "raw_submission": "dedicated_public_intake_database",
+    "accepted_request_context": "shema_canonical_api_and_intelligence_context",
+    "notifications": "intake_outbox_then_shema_notification_center",
+    "live_business_transaction": "forbidden_at_public_intake"
+  },
+  "storage": {
+    "physical_boundary": "dedicated_postgresql_database",
+    "initial_deployment": "same_managed_postgresql_cluster_as_shema_with_separate_database_role_and_credentials",
+    "database_name": "shema_public_intake",
+    "browser_access": false,
+    "shema_canonical_db_direct_write": false,
+    "independent_backup_and_restore_scope": true,
+    "encrypted_in_transit": true,
+    "encryption_at_rest_required": true
+  },
+  "write_flow": [
+    "edge_security_gate",
+    "server_validation",
+    "deterministic_identifier_validation",
+    "counterparty_preflight_when_identifier_present",
+    "atomic_intake_request_plus_outbox_commit",
+    "notification_projection",
+    "shema_request_context_projection"
+  ],
+  "notification_policy": {
+    "durable_in_intake_db": true,
+    "operator_center_projection": "shema_operator_notification_center",
+    "default_events": [
+      "new_client_request",
+      "counterparty_attention",
+      "counterparty_blocking_fact",
+      "provider_unavailable",
+      "spam_or_abuse_quarantined",
+      "security_anomaly"
+    ],
+    "deduplicate_by": "event_id_plus_request_id",
+    "flood_control": "aggregate_repeated_low_severity_events_into_digest",
+    "critical_events": "never_silently_dropped",
+    "max_is_non_authoritative_channel": true
+  },
+  "data_minimization": {
+    "raw_form_data_stays_in_intake_db": true,
+    "shema_projection_contains_only_required_business_context": true,
+    "raw_registry_payload_is_never_public": true,
+    "secrets_and_auth_tokens_are_forbidden": true,
+    "operator_security_logs_are_not_part_of_client_history": true
+  },
+  "retention": {
+    "policy_versioned": true,
+    "raw_submission_purge_requires_completed_projection_and_verified_retention_rule": true,
+    "purge_is_durable_and_audited": true,
+    "hashed_lineage_survives_purge": true
+  },
+  "abuse_resilience": {
+    "per_ip_or_client_rate_limit": true,
+    "per_identifier_lookup_budget": true,
+    "global_circuit_breaker": true,
+    "bounded_queue_depth": true,
+    "notification_flood_guard": true,
+    "body_and_content_limits": true,
+    "attachment_upload_disabled_until_verified_boundary": true
+  },
+  "recovery": {
+    "intake_db_restore_test_required": true,
+    "outbox_replay_is_idempotent": true,
+    "shema_unavailable_does_not_lose_accepted_intake": true,
+    "notification_replay_is_duplicate_safe": true,
+    "no_distributed_transaction_between_intake_db_and_shema": true
+  },
+  "untrusted_text": {
+    "client_text_is_data_not_instruction": true,
+    "prompt_injection_must_not_become_system_instruction": true,
+    "html_and_script_are_never_rendered_as_trusted_operator_content": true
+  },
+  "operator_ux": {
+    "primary_queue": "Новые заявки",
+    "compact_badge_count": true,
+    "notification_center_persistent": true,
+    "no_forced_navigation_on_low_severity": true,
+    "request_opens_with_preflight_summary": true,
+    "deep_link_after_intake_projection_is_stable": true
+  }
+}
