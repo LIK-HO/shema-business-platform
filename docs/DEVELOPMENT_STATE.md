@@ -5,17 +5,18 @@
 - HEAD: resolved live from GitHub; this ledger does not store a static commit pointer.
 - PR: #58 — open, draft, mergeable state subject to current CI; head resolved live.
 - Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED; live DaData remains OFF.
-- Active implementation sub-boundary: **Phase 2-I procurement foundation** — CLOSED / VERIFIED by full CI #1417 (`36351981305`) on the verified branch head before this documentation synchronization.
+- Active architecture-change boundary: **Global Adversarial Survivability + B2B-first / Bitrix24 transition correction** — IN PROGRESS until current-head full release-gate CI and global review are green.
 - Verified implementation: provider-neutral procurement contracts; ГосПлан API v2 adapter boundary; 44-FZ/223-FZ purchase/plan collections; bounded timeout/response/retry/error mapping; page-offset watch state; provider/external-ID deduplication; new/changed fingerprint detection; deterministic adapter, contract and monitoring tests.
-- Procurement provider execution remains disabled by default; no production credentials in Git; no live CI provider traffic; no tender submission/participation automation; no scraping fallback.
-- Procurement observation remains external evidence input and does not create canonical Identity or a second system of record.
-- Product flow is fixed as: procurement observation → identity/evidence → qualification → contact preparation → commercial action → order → document pack → result/learning.
+- Procurement foundation remains dormant; no new Shema procurement runtime, tender workspace or tender submission/participation automation is authorized at the B2B-first stage.
+- Existing procurement contracts remain technical assets only; B2G/tender execution is deferred until the Bitrix24 business-plane stage.
+- Procurement observations remain external evidence inputs and do not create canonical Identity or a second system of record.
+- Product flow is fixed for the initial B2B stage as: intelligence → identity/evidence → qualification → contact preparation → business handoff → live business execution → result/learning.
 - Phase 3A is fixed as Repeat Business Preparation between Contact Preparation and Document Configuration; runtime implementation is not part of the closed procurement foundation boundary.
 - Phase 4 is fixed as Document Configuration & Handoff Preparation; final issuance/signing/storage remains in the mature business/EDO plane.
 - Web + PWA are the only approved experience surfaces; Android is removed from the target roadmap.
 - Multi-operator collaboration is a permanent architecture requirement: explicit actor, ownership/assignment/team queues, server-side authorization, audited handoff, revision/concurrency protection and explicit conflict resolution.
-- Remaining Phase 2-I work is not implicitly opened: production activation, durable server-side monitoring state/scheduling, canonical API/runtime exposure, Evidence/Identity intake composition and operational monitoring require a separately selected bounded sub-boundary.
-- Prohibited until that boundary is explicitly opened: frozen-kernel semantics, unrelated UI/repeat-order implementation, FNS automation, MAX activation, provider fallback, tender submission automation and unbounded crawling.
+- Phase 2-I has no implicitly open work. Further procurement activation/runtime/monitoring is deferred until the later Bitrix24/B2G stage.
+- Prohibited until the explicitly selected next boundary: frozen-kernel semantics, unrelated UI work, FNS automation, MAX activation, provider fallback, early B2G/tender runtime in Shema and unbounded crawling.
 
 ## Adversarial regression synchronization — 2026-09-28
 
@@ -27,6 +28,10 @@
 - Phase 4 is redefined as Document Configuration & Handoff Preparation; final issuance/signing/storage remains in the mature business/EDO plane.
 - Monium is explicitly operational telemetry; durable audit/business history remains PostgreSQL-owned.
 - Full repository release-gate CI for the latest HEAD remains pending; no new boundary is considered verified until that gate is green.
+- Global adversarial survivability gate is now mandatory for every material strategy change and every element completion; no element may enter VERIFIED/CLOSED without a current-head whole-system adversarial review.
+- Data-plane rule: Managed PostgreSQL remains the canonical Shema database in Yandex Cloud. Bitrix24 receives live business ownership after handoff; the Shema database is not wholesale migrated into Bitrix24.
+- Operator continuity rule: every business handoff carries stable Shema identity, handoff, correlation and Bitrix entity references so one or multiple operators can reconstruct the full causal chain without shadow copies.
+- Document-change resilience: legal/EDO changes are handled as versioned configuration changes with effective dates and downstream capability revalidation; historical configurations remain reconstructable.
 
 ## Strategic boundary synchronization — 2026-09-28
 
