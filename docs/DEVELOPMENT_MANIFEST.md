@@ -1,7 +1,7 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / Phase 2-I Procurement Foundation Closed / MAX Evidence Hold
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / MAX Evidence Hold
 **Active development boundary:** Global Adversarial Survivability + B2B-first / Bitrix24 transition correction — IN PROGRESS until the current-head global review and full release-gate CI are GREEN.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
@@ -35,10 +35,10 @@ This is a hard development rule, not a recommendation.
 
 **Every material strategy change and every completed development element must trigger a fresh global adversarial review of the entire approved architecture and system before the element can be marked VERIFIED or CLOSED.**
 
-The review is intentionally conducted from the position of a professional attempting to destroy the system: find split-brain truth, hidden single points of failure, causal-chain breaks, unsafe external effects, operator dead ends, multi-operator races, migration traps, cost/quota cascades, privacy leaks, provider lock-in and legal/document obsolescence.
+The review is intentionally conducted from the position of a professional attempting to destroy the system: find split-brain truth, hidden single points of failure, causal-chain breaks, unsafe external effects, operator dead ends, multi-operator races, migration traps, cost/quota cascades, privacy leaks, provider lock-in and external legal and operating-environment change.
 
 The check covers the whole system, not only the changed file or module:
-**frozen kernel → post-core contracts → runtime → persistence → integrations → operator workflow → multi-operator model → security/recovery → legal/document model → migration/rollback → cost/resource limits.**
+**frozen kernel → post-core contracts → runtime → persistence → integrations → operator workflow → multi-operator model → security/recovery → external legal/operating constraints → migration/rollback → cost/resource limits.**
 
 Closure is blocked until:
 - P0 findings are fixed or handled by an explicitly approved architecture exception;
@@ -55,7 +55,7 @@ Shema — это **личная операционная система влад
 
 Её назначение — дать одному оператору цельный, надёжный путь:
 
-**Намерение → Поиск → Разрешение сущности → Проверка → Понимание → Квалификация → Подготовка контакта → Подготовка документов → Действие → Результат → Обучение системы**
+**Намерение → Поиск → Разрешение сущности → Проверка → Понимание → Квалификация → Подготовка контакта → Передача в бизнес-контур → Действие → Результат → Обучение системы**
 
 При этом внутри система выполняет гораздо больше работы:
 
@@ -131,8 +131,6 @@ Shema — это **личная операционная система влад
 ### Product decisions added 2026-09-28
 
 - **Repeat business:** mandatory Phase 3A is now **Repeat Business Preparation**, not a second order engine. Shema detects repeat demand, revalidates evidence/configuration and creates a fresh preparation/handoff snapshot. Live recurring/repeat deals are owned by the mature business plane after handoff. Reference patterns: Bitrix24 recurring deals, Salesforce orders and SAP scheduling agreements.
-- **Tender/B2G strategy:** procurement/tender work is deliberately **not an early Shema capability**. B2B is developed and operationally validated first. The existing Phase 2-I provider-neutral foundation is retained dormant as reusable technical evidence; no new procurement runtime, tender workspace or tender automation is developed in Shema at this stage. B2G/tender execution is deferred to the Bitrix24 business-plane stage, where the mature CRM/business-process environment or a dedicated integrated tender capability should own the live workflow.
-- **Documents:** Phase 4 remains a versioned document-requirement/configuration boundary, not the final legal document system. Rules are versioned with effective dates and legal-source references. If law or EDO requirements change, Shema creates a new configuration version and revalidates downstream capability; historical configurations remain reconstructable. Final issuance/signing/storage stays in Bitrix24 or a dedicated EDO system.
 - **Interface:** adopted mature workspace pattern — summary/highlights + details + related records + activity/history; work lists with filters/sorts and quick actions; contextual/split inspection; progressive disclosure; personal view preferences; responsive/accessibility baseline; server-authoritative business state.
 - **Multi-operator:** collaboration is a permanent architectural requirement: explicit actor, ownership/assignment/team queues, server-side permissions, revision/concurrency protection, audited handoff, explicit conflict resolution and no shadow copies.
 - **Clients:** Web + PWA are sufficient and remain the only approved experience surfaces. Android is removed from the roadmap.
@@ -141,24 +139,20 @@ Shema — это **личная операционная система влад
 Recurring work: https://helpdesk.bitrix24.com/open/25850555/ ; https://knowledge.hubspot.com/payments/manage-subscriptions-for-recurring-payments ; https://support.pipedrive.com/en/article/recurring-products ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/22eca60c150344f89bcee6255485f8c7.html ; https://help.salesforce.com/s/articleView?id=sf.order_overview.htm&language=en_US&type=5
 Interface/workspace: https://help.salesforce.com/s/articleView?id=sf.lightning_page_components.htm&language=en_US&type=5 ; https://learn.microsoft.com/en-us/power-apps/user/use-model-driven-apps ; https://learn.microsoft.com/en-us/power-automate/business-process-flows-overview ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/a630d57fc5004c6383e7a81efee7a8bb/f7b3e498c30a4f9aad381062cc9d8b09.html
 Multi-operator: https://learn.microsoft.com/en-us/power-platform/admin/how-record-access-determined ; https://learn.microsoft.com/en-us/power-platform/admin/security-roles-privileges
-Procurement API: https://gosplan.info/docs/guides/purchases/ ; https://gosplan.info/docs/getting-started/quickstart-curl/
 ### Adversarial boundary corrections added 2026-09-28
 
 - The business-plane handoff is an explicit capability contract, not a verbal process. See `architecture/business_plane_boundary_contract.json`.
 - `PREPARED → OUTBOX_RESERVED → SENT_UNKNOWN → ACKNOWLEDGED` is the minimum safe handoff lifecycle; lost acknowledgements require reconciliation before replay.
 - A single live business field has one owner. Shema and Bitrix24 never perform unconstrained bidirectional writes to the same live field.
 - Repeat Business Preparation must not reimplement Bitrix recurring-deal execution.
-- Document work in Shema is configuration/preparation, not the final legal execution/signing/store of business documents.
 - Customer-facing communication after handoff belongs to the business plane. MAX from Shema is not a substitute second communication history; any future direct customer-channel activation requires an explicit reconciliation/ownership contract.
 - Monium is operational observability only; long-lived audit and business history remain PostgreSQL-owned.
-- Procurement monitoring must distinguish page offsets from a true durable cursor/watermark. Production incremental monitoring requires a stable ordering plus a watermark or overlap-window strategy and durable checkpointing.
 - YandexGPT cost ceilings are explicit configuration, never an implicit zero default.
 
 ### Strategic product-boundary correction added 2026-09-28
 
 - **Core role:** Shema is the intelligence, evidence and decision-support system. New development must not turn it into a second CRM/ERP/accounting/personnel platform.
 - **Runtime:** Yandex Cloud is the target deployment environment. Start with serverless components where practical; PostgreSQL remains the canonical production database because the frozen kernel already establishes it as the transaction authority.
-- **Procurement/tender:** B2B is the first commercial operating stage. The procurement foundation remains a dormant provider-neutral boundary only; further tender development inside Shema is deferred. B2G/tender capability belongs to the later Bitrix24 business-plane stage. Shema keeps no tender system of record.
 - **Business-plane ownership:** When the business becomes mature enough to require expanded transaction control, Bitrix24 becomes the live business-process/CRM/communication/calculation/economics control plane. Shema hands over a verified context package and later consumes minimal outcome signals for learning.
 - **Data-plane continuity:** On Yandex Cloud, Managed PostgreSQL remains the canonical Shema database. When Bitrix24 is introduced, the Shema database is **not** moved wholesale into Bitrix24. Bitrix24 stores its own live business data and becomes authoritative only for the business domains explicitly handed over. Shema continues to store intelligence/evidence/provenance/handoff lineage/outcome context. The two domains are joined by stable references, handoff IDs, correlation IDs and versioned mappings, not by competing writes to one live field.
 - **Operator continuity:** The operator should experience one causal workflow, not two unrelated databases. Before handoff, Shema owns intelligence and preparation; after handoff, Bitrix24 owns the live business process. Every handoff remains traceable from the Bitrix entity back to the Shema dossier and from Shema outcome context back to the Bitrix entity. For several operators, live assignment/team workflow belongs to Bitrix24 after handoff; Shema does not keep a shadow operational order board.
@@ -167,7 +161,7 @@ Procurement API: https://gosplan.info/docs/guides/purchases/ ; https://gosplan.i
 - **MAX:** the adapter remains, but live outbound effects stay fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
 - **Cloud observability:** new Yandex Cloud deployment documentation must target Monium rather than Cloud Logging because Yandex Cloud states Cloud Logging is scheduled for shutdown in Q2 2027.
 - **Integration principle:** external systems are connected by explicit field ownership. The same live field must never have competing authorities.
-- **Implementation order:** B2B contact preparation → repeat-business preparation → document configuration/handoff → Web/PWA → Yandex Cloud production → Bitrix24 business-plane integration → B2G/tender capability in the business plane → guarded external communication → learning → measured scale.
+- **Implementation order:** B2B contact preparation → repeat-business preparation → Web/PWA → Yandex Cloud production → Bitrix24 business-plane integration → guarded external communication / MAX → learning → measured scale.
 
 ### Критерий допуска новой capability
 
@@ -1070,18 +1064,6 @@ Ranking может менять порядок показа, но не долж�
 
 Это делает результат воспроизводимым и предотвращает ошибочное толкование ограниченного поиска как полного отсутствия данных.
 
-# 5B.20. Procurement / B2G — deferred business-plane capability
-
-**Status: Phase 2-I technical foundation CLOSED / VERIFIED. Further procurement/tender development inside Shema is DEFERRED.**
-
-The project deliberately develops **B2B first** and proves the complete commercial loop before introducing B2G/tender complexity.
-
-The existing ГосПлан/provider-neutral foundation is retained as a dormant technical asset. Procurement records remain external observations and never become canonical Identity. No tender runtime, tender workspace or tender submission/participation automation is developed in Shema at this stage.
-
-The later B2G path belongs to the **Bitrix24 business-plane stage** or a mature tender capability integrated with that plane. Shema may later supply intelligence/context to that process, but it does not become a tender system of record.
-
-Historical procurement contracts and deterministic fixtures remain valuable for migration/reuse and are not evidence that procurement activation is currently approved.
-
 # 5C. Контур подготовки первого контакта
 
 Search/Intelligence не заканчивается квалификацией.
@@ -1126,100 +1108,12 @@ Required semantics:
 - lineage to the previous business outcome/reference and original commercial configuration;
 - fresh preparation/handoff snapshot per repetition;
 - explicit review before business-plane handoff;
-- changed/expired price and document configuration surfaced as deltas;
+- changed/expired commercial assumptions surfaced as deltas;
 - no duplicate preparation snapshot when an open repeat preparation exists;
 - one-time skip, pause/resume, fixed-count and end-date preparation controls;
 - reminders are preparation signals, not hidden business effects.
 
-This is deliberately a sales scheduling/renewal pattern and is placed between contact preparation and the document engine.
-# 5D. Конструктор документов и юридическая конфигурация
-
-Система должна иметь отдельный Document & Legal Configuration layer, не являющийся частью frozen domain kernel.
-
-Его задача:
-тип контрагентов → налоговый/правовой режим → тип работ/услуг → схема расчёта → требования к оформлению → предлагаемый комплект документов → версия шаблонов → legal/evidence status
-
-## 5D.1. Матрица конфигураций
-
-Минимально поддерживаются конфигурации:
-- ООО → ООО;
-- ООО → ИП;
-- ООО → ИП на НПД;
-- ООО → физлицо — плательщик НПД, где такая модель допустима;
-- ИП → ООО;
-- ИП → ИП;
-- ИП → ИП на НПД;
-- ИП → физлицо — плательщик НПД;
-- и обратные направления, если конкретная сделка юридически допустима.
-
-Конфигурация должна также учитывать:
-- применяемый налоговый режим;
-- НДС/не НДС, когда применимо;
-- вид работ/услуг;
-- оплату;
-- приёмку;
-- ЭДО/электронную подпись;
-- особенности конкретной сделки;
-- дату и версию действующих правил.
-
-Система не должна зашивать налоговые ставки или правовые последствия как вечные constants.
-
-## 5D.2. Document Configuration / Handoff Pack
-
-Для каждой конфигурации система формирует versioned preparation snapshot. Она не становится финальным business-document system of record:
-
-- Shema определяет состав и конфигурацию;
-- Bitrix24/EDO/business plane выполняет финальную выдачу, подписание, хранение и operational document lifecycle после handoff.
-
-Для каждой конфигурации система предлагает:
-- обязательные документы;
-- условно обязательные;
-- рекомендуемые;
-- дополнительные;
-- неприменимые.
-
-Типы могут включать:
-- коммерческое предложение;
-- сопроводительное письмо;
-- договор;
-- заявка/заказ;
-- спецификация;
-- ТЗ;
-- акт;
-- счёт/иные расчётные документы, когда применимо;
-- УПД/иные первичные документы, когда применимо;
-- NPD-status verification;
-- NPD receipt/check control;
-- отчёт/фотофиксацию/подтверждение результата, если это часть сделки.
-
-ФНС указывает, что при работе с плательщиком НПД статус можно проверять по ИНН на официальном сервисе, а чек НПД является ключевым подтверждающим документом расходов; акт может дополнять чек, но не заменяет его.
-
-## 5D.3. Template governance
-
-Каждый шаблон должен иметь:
-- template_id;
-- version;
-- effective_from;
-- configuration applicability;
-- legal source references;
-- last legal review;
-- generation snapshot;
-- checksum;
-- change reason.
-
-Конфигурация/подготовительный пакет должен быть детерминированным и аудируемым. Любая финальная юридически значимая версия документа после handoff принадлежит downstream business/document system.
-
-## 5D.4. Legal safety
-
-Система:
-- не делает автономных юридических выводов при отсутствии достаточного основания;
-- показывает применённые правила и источники;
-- переводит неоднозначные конфигурации в LEGAL_REVIEW_REQUIRED;
-- не подменяет профессиональную юридическую консультацию;
-- не генерирует фиктивные реквизиты, обязательства или факты.
-
-Юридическая конфигурация должна учитывать действующее российское регулирование по ГК РФ, первичным учётным документам, электронной подписи, НПД и персональным данным; соответствующие источники должны быть версионированы в системе.
-
+This is deliberately a sales scheduling/renewal pattern and sits directly before business handoff.
 # 5E. Ручная проверка контрагента
 
 Нужна отдельная operator-first команда:
@@ -1858,21 +1752,6 @@ Least privilege → fail closed → isolate → encrypt → audit → test → r
 Simple core first → standard patterns → measured scaling → extracted services only when justified
 
 ---
-
-# 13C. Definition of Done — Contact Preparation / Legal Documents / Counterparty Check
-
-- [ ] Contact preparation is evidence-grounded and snapshot-versioned.
-- [ ] LPR/role hypotheses are distinguishable from verified facts.
-- [ ] First-contact scripts contain controlled branches and explicit non-claims.
-- [ ] Document Pack Builder selects documents from a configuration matrix.
-- [ ] Legal templates are versioned, source-linked and effective-date aware.
-- [ ] Ambiguous legal configurations fail closed to LEGAL_REVIEW_REQUIRED.
-- [ ] Manual INN/OGRN/OGRNIP checks use the same Identity/Evidence pipeline.
-- [ ] NPD status verification is available by INN and date.
-- [ ] Required NPD cheque/check controls are represented in relevant document packs.
-- [ ] Generated documents, evidence snapshots and configuration versions are auditable.
-- [ ] No document template or AI output silently creates legal authority.
-- [ ] The operator can move from verified intelligence to a prepared contact and document set without reconstructing the dossier manually.
 
 # 13B. Definition of Done — Mature Search / Intelligence System
 
