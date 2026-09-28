@@ -88,3 +88,16 @@ def test_untrusted_and_state_boundaries_are_explicit() -> None:
     assert "UNAVAILABLE != CHANGED" in states
     assert "PENDING != COMPLETED" in states
     assert "UNKNOWN != BLOCKING" in states
+
+
+def test_web_and_pwa_target_yandex_cloud_without_new_backend() -> None:
+    payload = load()
+    deployment = payload["deployment"]
+    assert deployment["target_environment"] == "yandex_cloud"
+    assert deployment["operator_web"]["api_edge"] == "yandex_cloud_api_gateway"
+    assert deployment["operator_web"]["application_runtime"] == (
+        "yandex_cloud_serverless_containers"
+    )
+    assert deployment["operator_web"]["no_direct_database_access"] is True
+    assert deployment["operator_pwa"]["no_separate_backend"] is True
+    assert deployment["operator_pwa"]["offline_storage_is_not_authoritative"] is True
