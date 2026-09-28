@@ -7,12 +7,15 @@ from typing import Protocol
 
 from shema_platform.application.public_intake import (
     CounterpartyPreflightSnapshot,
+    PreflightDecision,
+    IdentityMatch,
     IdentityMatch,
     IntakeStatus,
     PublicIntakePayload,
     PublicIntakeRecord,
 )
 from shema_platform.foundation.errors import IntegrityViolation, IdempotencyConflict
+from shema_platform.application.public_intake import PublicIntakeRateLimited
 from shema_platform.platform.postgres import DBConnection
 
 
@@ -356,7 +359,7 @@ class PostgresPublicIntakeRepository:
             (key_hash, budget, window_start, limit),
         ).fetchone()
         if row is None:
-            raise PublicIntakeRateLimitError(
+            raise PublicIntakeRateLimited(
                 f"{budget} rate limit exceeded",
                 budget=budget,
             )
@@ -534,8 +537,8 @@ class PostgresPublicIntakeRepository:
             normalized_identifier=(
                 str(row[2]) if row[2] is not None else None
             ),
-            decision=row[3],
-            identity_match=row[4],
+            decision=PreflightDecision(str(row[3])),
+            identity_match=IdentityMatch(str(row[4])),
             canonical_name=str(row[5]) if row[5] is not None else None,
             legal_status=str(row[6]) if row[6] is not None else None,
             source_ref=str(row[7]) if row[7] is not None else None,
