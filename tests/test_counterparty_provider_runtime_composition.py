@@ -172,7 +172,8 @@ def test_runtime_http_activation_uses_fake_provider_and_rollback_is_fail_closed(
     )
 
     assert activated.status_code == 200
-    assert activated.headers["X-Correlation-Id"] == "corr-runtime-activate"
+    assert activated.headers["X-Correlation-Id"]
+    assert activated.headers["X-Correlation-Id"] != "corr-runtime-activate"
     assert activated.json()["enabled"] is True
 
     record = assembly.provider().lookup(
@@ -196,6 +197,8 @@ def test_runtime_http_activation_uses_fake_provider_and_rollback_is_fail_closed(
     )
 
     assert rolled_back.status_code == 200
+    assert rolled_back.headers["X-Correlation-Id"]
+    assert rolled_back.headers["X-Correlation-Id"] != "corr-runtime-rollback"
     assert rolled_back.json()["enabled"] is False
     with pytest.raises(DaDataActivationError, match="not active"):
         assembly.provider()
