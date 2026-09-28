@@ -71,12 +71,15 @@ def build() -> YandexGPTRuntimeAssembly:
 def test_public_intake_runtime_requires_server_side_security_prerequisites() -> None:
     from shema_platform.experience.runtime_composition import compose_public_intake_runtime
 
-    failing_connection = lambda: (_ for _ in ()).throw(
-        AssertionError("database must not be touched during insecure composition")
-    )
-    failing_uow = lambda: (_ for _ in ()).throw(
-        AssertionError("canonical DB must not be touched during insecure composition")
-    )
+    def failing_connection():
+        raise AssertionError(
+            "database must not be touched during insecure composition"
+        )
+
+    def failing_uow():
+        raise AssertionError(
+            "canonical DB must not be touched during insecure composition"
+        )
 
     with pytest.raises(ValueError, match="origin allowlist"):
         compose_public_intake_runtime(
