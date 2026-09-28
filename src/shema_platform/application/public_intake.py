@@ -11,6 +11,12 @@ from uuid import uuid4
 from shema_platform.foundation.errors import IdempotencyConflict
 
 
+@dataclass(frozen=True, slots=True)
+class PublicIdempotencyReservation:
+    request_id: str
+    state: str
+
+
 class PreflightDecision(StrEnum):
     NORMAL = "NORMAL"
     ATTENTION = "ATTENTION"
@@ -127,8 +133,23 @@ class PublicIntakeSecurityRejected(RuntimeError):
 
 
 class PublicIntakeRepository(Protocol):
-    def acquire_idempotency_lock(self, key: str) -> None: ...
-    def release_idempotency_lock(self, key: str) -> None: ...
+    def reserve_idempotency(
+        self,
+        *,
+        key: str,
+        request_hash: str,
+        request_id: str,
+        now: datetime,
+        lease_seconds: int,
+    ) -> PublicIdempotencyReservation: ...
+
+    def complete_idempotency(
+        self,
+        *,
+        key: str,
+        request_id: str,
+        now: datetime,
+    ) -> None: ...
 
     def get_by_idempotency_key(self, key: str) -> PublicIntakeRecord | None: ...
 
@@ -245,6 +266,7 @@ class PublicIntakeService:
         bot_challenge_passed: bool,
         correlation_id: str,
         honeypot_value: str = "",
+        request_id: str,
     ) -> PublicIntakeResult:
         normalized_idempotency_key = idempotency_key.strip()
         self._validate_edge_proof(
@@ -254,22 +276,49 @@ class PublicIntakeService:
             bot_challenge_passed=bot_challenge_passed,
             honeypot_value=honeypot_value,
         )
-        with self._repository_factory() as lock_repository:
-            lock_repository.acquire_idempotency_lock(normalized_idempotency_key)
-            try:
-                return self._submit_without_lock(
-                    payload=payload,
-                    idempotency_key=normalized_idempotency_key,
-                    public_client_key=public_client_key,
-                    origin=origin,
-                    bot_challenge_passed=bot_challenge_passed,
-                    correlation_id=correlation_id,
-                    honeypot_value=honeypot_value,
+        request_id = str(uuid4())
+        with self._repository_factory() as repository:
+            reservation = repository.reserve_idempotency(
+                key=normalized_idempotency_key,
+                request_hash=payload.request_hash,
+                request_id=request_id,
+                now=self._clock(),
+                lease_seconds=120,
+            )
+            if reservation.state == "COMPLETE":
+                existing = repository.get_by_idempotency_key(
+                    normalized_idempotency_key
                 )
-            finally:
-                lock_repository.release_idempotency_lock(normalized_idempotency_key)
+                if existing is None:
+                    raise IdempotencyConflict(
+                        "completed public-intake reservation references missing request"
+                    )
+                return PublicIntakeResult(
+                    record=existing,
+                    projection_status=(
+                        "PROJECTED"
+                        if existing.projected_at
+                        else "PENDING_PROJECTION"
+                    ),
+                    deduplicated=True,
+                )
+            if reservation.state == "IN_PROGRESS":
+                raise IdempotencyConflict(
+                    "public intake request with this idempotency key is already in progress"
+                )
 
-    def _submit_without_lock(
+        return self._submit_reserved(
+            payload=payload,
+            idempotency_key=normalized_idempotency_key,
+            public_client_key=public_client_key,
+            origin=origin,
+            bot_challenge_passed=bot_challenge_passed,
+            correlation_id=correlation_id,
+            honeypot_value=honeypot_value,
+            request_id=request_id,
+        )
+
+    def _submit_reserved(
         self,
         *,
         payload: PublicIntakePayload,
@@ -314,7 +363,6 @@ class PublicIntakeService:
                 now=now,
             )
 
-        request_id = str(uuid4())
         preflight = self._preflight.run(
             payload=payload,
             request_id=request_id,
@@ -380,6 +428,11 @@ class PublicIntakeService:
                 },
                 occurred_at=now,
                 notify_operator=notify_operator,
+            )
+            repository.complete_idempotency(
+                key=idempotency_key,
+                request_id=request_id,
+                now=self._clock(),
             )
             if notify_operator and preflight.decision is PreflightDecision.ATTENTION:
                 repository.append_outbox(
