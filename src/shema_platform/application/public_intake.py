@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from enum import StrEnum
 from hashlib import sha256
 import json
@@ -129,7 +129,12 @@ class PublicIntakeSecurityRejected(RuntimeError):
 class PublicIntakeRepository(Protocol):
     def get_by_idempotency_key(self, key: str) -> PublicIntakeRecord | None: ...
 
-    def get_preflight_cache(self, cache_key: str, *, now: datetime) -> CounterpartyPreflightSnapshot | None: ...
+    def get_preflight_cache(
+        self,
+        cache_key: str,
+        *,
+        now: datetime,
+    ) -> CounterpartyPreflightSnapshot | None: ...
 
     def consume_budget(
         self,
@@ -218,7 +223,9 @@ class PublicIntakeService:
         self._lookup_limit = lookup_limit
         self._window_seconds = window_seconds
         self._require_bot_challenge = require_bot_challenge
-        self._allowed_origins = frozenset(item.rstrip("/") for item in allowed_origins)
+        self._allowed_origins = frozenset(
+            item.rstrip("/") for item in allowed_origins
+        )
         self._clock = clock
 
     def submit(
@@ -250,7 +257,11 @@ class PublicIntakeService:
                     )
                 return PublicIntakeResult(
                     record=existing,
-                    projection_status="PROJECTED" if existing.projected_at else "PENDING_PROJECTION",
+                    projection_status=(
+                        "PROJECTED"
+                        if existing.projected_at
+                        else "PENDING_PROJECTION"
+                    ),
                     deduplicated=True,
                 )
 
@@ -297,7 +308,11 @@ class PublicIntakeService:
                     )
                 return PublicIntakeResult(
                     record=existing,
-                    projection_status="PROJECTED" if existing.projected_at else "PENDING_PROJECTION",
+                    projection_status=(
+                        "PROJECTED"
+                        if existing.projected_at
+                        else "PENDING_PROJECTION"
+                    ),
                     deduplicated=True,
                 )
 
