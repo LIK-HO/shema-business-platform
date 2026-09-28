@@ -103,19 +103,11 @@ class ResearchResponse(APIModel):
 
 
 class CounterpartyCheckRequest(APIModel):
+    """Untrusted lookup request; server-side provider supplies all evidence fields."""
     identifier_type: Literal["INN", "OGRN", "OGRNIP"] = Field(alias="identifierType")
     identifier: str = Field(min_length=1, max_length=32)
-    canonical_name: str = Field(min_length=1, alias="canonicalName")
-    tax_id: str | None = Field(default=None, alias="taxId")
-    registration_id: str | None = Field(default=None, alias="registrationId")
-    legal_status: str | None = Field(default=None, alias="legalStatus")
-    source_ref: str = Field(min_length=1, alias="sourceRef")
-    source_reliability: Literal["authoritative"] = Field(
-        alias="sourceReliability",
-    )
-    claim_confidence: float = Field(ge=0, le=1, alias="claimConfidence")
-    observed_at: datetime = Field(alias="observedAt")
-    expires_at: datetime = Field(alias="expiresAt")
+
+
 
 
 class CounterpartyContradictionResponse(APIModel):
@@ -126,7 +118,6 @@ class CounterpartyContradictionResponse(APIModel):
 
 class CounterpartyProviderActivationRequest(APIModel):
     reason: str = Field(min_length=1, max_length=256)
-    operator_authorized: bool = Field(alias="operatorAuthorized")
     activation_version: str = Field(
         min_length=1,
         max_length=128,
@@ -136,7 +127,6 @@ class CounterpartyProviderActivationRequest(APIModel):
 
 class CounterpartyProviderRollbackRequest(APIModel):
     reason: str = Field(min_length=1, max_length=256)
-    operator_authorized: bool = Field(alias="operatorAuthorized")
 
 
 class CounterpartyProviderLookupRequest(APIModel):
