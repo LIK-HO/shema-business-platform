@@ -9,18 +9,6 @@ def load(name: str) -> dict:
     return json.loads((ROOT / "architecture" / name).read_text(encoding="utf-8"))
 
 
-def test_procurement_registry_is_provider_neutral_and_fail_closed() -> None:
-    payload = load("procurement_source_registry_contract.json")
-
-    assert payload["model"]["canonical_port"] == "ProcurementSourceAdapter"
-    assert payload["model"]["registry"] == "ProcurementSourceRegistry"
-    assert payload["rules"]["provider_neutral_contract_first"] is True
-    assert payload["rules"]["no_implicit_provider_fallback"] is True
-    assert payload["rules"]["no_html_scraping_fallback"] is True
-    assert payload["rules"]["provider_outputs_are_not_canonical_identity"] is True
-    assert payload["activation"]["disabled_by_default"] is True
-
-
 def test_platform_strategy_keeps_business_ownership_separated() -> None:
     payload = load("platform_growth_strategy_contract.json")
 
@@ -52,14 +40,19 @@ def test_yandex_cloud_strategy_does_not_create_a_second_transaction_authority() 
     )
 
 
-def test_no_strategic_b2b_center_dependency_remains_in_manifest_or_roadmap() -> None:
-    for relative_path in (
-        "docs/DEVELOPMENT_MANIFEST.md",
-        "docs/ROADMAP.md",
-    ):
-        content = (ROOT / relative_path).read_text(encoding="utf-8")
-        assert "B2B-Center is a later" not in content
-        assert "B2B-Center is removed" in content
+def test_removed_subsystems_have_no_active_repository_surface() -> None:
+    removed = (
+        "architecture/gosplan_procurement_adapter_contract.json",
+        "architecture/procurement_monitoring_contract.json",
+        "architecture/procurement_source_registry_contract.json",
+        "src/shema_platform/application/procurement.py",
+        "src/shema_platform/adapters/procurement/gosplan.py",
+        "tests/test_gosplan_procurement_adapter.py",
+        "tests/test_procurement_contracts.py",
+        "tests/test_procurement_monitoring.py",
+    )
+
+    assert all(not (ROOT / path).exists() for path in removed)
 
 
 def test_strategy_preserves_two_domains_without_split_brain() -> None:
