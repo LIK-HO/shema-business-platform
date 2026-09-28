@@ -47,6 +47,7 @@ class PublicIntakeRuntimeAssembly:
 
     service: PublicIntakeService
     notification_reader: PostgresOperatorNotificationReader
+    bot_challenge_verifier: BotChallengeVerifier
 
     def create_http_app(
         self,
@@ -66,7 +67,7 @@ class PublicIntakeRuntimeAssembly:
             provider_health=provider_health,
             public_intake=self.service,
             operator_notification_reader=self.notification_reader,
-            bot_challenge_verifier=bot_challenge_verifier,
+            bot_challenge_verifier=self.bot_challenge_verifier,
         )
 
 
@@ -129,6 +130,7 @@ def compose_public_intake_runtime(
     return PublicIntakeRuntimeAssembly(
         service=service,
         notification_reader=reader,
+        bot_challenge_verifier=bot_challenge_verifier,
     )
 
 
