@@ -113,8 +113,10 @@ def validate_release_tree(root: Path) -> ReleaseManifest:
     except MigrationPlanError as exc:
         raise ReleaseContractError(str(exc)) from exc
 
-    if not plan.migrations or plan.migrations[-1].version != latest_required:
-        raise ReleaseContractError("migration plan does not match release baseline")
+    if not plan.migrations or len(plan.migrations) < latest_required:
+        raise ReleaseContractError("migration plan is missing the frozen core baseline")
+    if plan.migrations[latest_required - 1].version != latest_required:
+        raise ReleaseContractError("migration plan does not contain the frozen core baseline")
 
     application_version = _project_version(root / "pyproject.toml")
     if application_version != "1.5.0":
