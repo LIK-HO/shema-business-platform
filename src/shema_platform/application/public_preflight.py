@@ -177,7 +177,7 @@ class PublicCounterpartyPreflightService:
             f"{identifier_type.value}:{identifier}"
         )
         if self._cache_lookup is not None:
-            cached = self._cache_lookup(cache_key, now)
+            cached = self._cache_lookup(cache_key, now=now)
             if cached is not None:
                 return cached
 
