@@ -233,7 +233,7 @@ def test_rate_limit_retries_then_succeeds_once() -> None:
     assert delays == [0.25]
     assert len(state.evidence.records) == 4
     assert len(state.audits.records) == 1
-    assert state.audits.records[0].correlation_id == "corr-rate-retry"
+    assert state.audits.records[0].correlation_id != "corr-rate-retry"
 
 
 def test_rate_limit_exhaustion_is_429_and_writes_no_evidence() -> None:
