@@ -49,8 +49,11 @@
     "scheduler": "cloud_functions_timer_trigger",
     "async_transport": "message_queue_only_when_transport_scaling_requires_it",
     "observability": "monium",
-    "secondary_database_policy": "ydb_only_after_measured_constraint; dedicated_public_intake_database_is_an_approved_bounded_exception",
-    "kubernetes_policy": "deferred_until_measured_need"
+    "secondary_database_policy": "ydb_only_after_measured_constraint",
+    "kubernetes_policy": "deferred_until_measured_need",
+    "bounded_database_exceptions": [
+      "dedicated_public_intake_database"
+    ]
   },
   "ai": {
     "primary_current_provider": "yandexgpt",
