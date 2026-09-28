@@ -133,7 +133,7 @@ Each mode has:
 - stopping conditions;
 - escalation rules.
 
-A deeper mode must not simply collect more documents; it must answer a more specific decision question.
+A deeper mode must not simply collect more raw data; it must answer a more specific decision question.
 
 ### Stage 6 — Relationship / graph pivots
 
@@ -144,7 +144,7 @@ For high-value or ambiguous cases, pivot through:
 - domains;
 - phones/emails where lawfully available;
 - related companies;
-- contracts/procurement;
+- public filings/records;
 - licenses;
 - public events;
 - legal/public records;
@@ -222,7 +222,7 @@ Optional branches:
 
 The script is generated from the current dossier snapshot and must retain the evidence version used to construct it.
 
-### Stage 14 — Manual counterparty check
+### Stage 11 — Manual counterparty check
 
 The operator must have a dedicated manual check action:
 
@@ -275,7 +275,7 @@ For a typical B2B candidate the default path is only:
 
 Specialist sources are not part of the default waterfall.
 
-## 5. Source routing policy
+## 5. Quality and decision-state model
 
 Do not create a single opaque "reliability score".
 
