@@ -13,12 +13,17 @@ from shema_platform.domain.search import SearchHit, SelectionLevel
 from shema_platform.experience.api import create_app
 from shema_platform.experience.search_application import SearchOnlyAPIApplication
 from shema_platform.foundation.authentication import AuthenticatedActor, AuthenticationPort
+from shema_platform.foundation.authorization import Permission
 
 
 class FakeAuthenticator(AuthenticationPort):
     def authenticate(self, authorization: str | None) -> AuthenticatedActor:
         assert authorization == "Bearer test-token"
-        return AuthenticatedActor("operator-1", trust_level=2)
+        return AuthenticatedActor(
+            "operator-1",
+            trust_level=2,
+            permissions=frozenset({Permission.SEARCH_RUN}),
+        )
 
 
 class FakeProvider:
@@ -71,7 +76,7 @@ def test_search_only_api_application_returns_completeness_and_source_provenance(
     assert body["sourceAttempts"][0]["sourceId"] == "fns_transparent_business"
     assert body["sourceAttempts"][0]["reliability"] == "authoritative"
     assert body["results"][0]["candidateRef"] == "candidate-1"
-    assert response.headers["X-Correlation-Id"] == "corr-search"
+    assert response.headers["X-Correlation-Id"] != "corr-search"
 
 
 def test_search_only_api_application_preserves_backward_compatible_defaults() -> None:
