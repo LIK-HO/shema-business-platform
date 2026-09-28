@@ -191,6 +191,7 @@ def make_service(*, revalidator: StaticRevalidator | None = None, ids=None):
                 ),
             ),
             status=OrderStatus.COMPLETED,
+            owner_actor_id="operator-1",
         )
     )
     repeat_repo = MemoryRepeatOrderRepository()
@@ -239,6 +240,38 @@ def context() -> RepeatOrderContext:
         service_scope="Погрузка",
         capacity_units=Decimal("2"),
     )
+
+
+def test_repeat_plan_rejects_foreign_source_order_owner() -> None:
+    service, uow = make_service()
+    service._authorizer = RBACAuthorizer(
+        (
+            AuthorizationSubject(
+                "operator-1",
+                frozenset({Permission.ORDER_CREATE}),
+            ),
+            AuthorizationSubject(
+                "operator-2",
+                frozenset({Permission.ORDER_CREATE}),
+            ),
+        )
+    )
+
+    with pytest.raises(
+        QuarantineRequired,
+        match="outside the actor resource scope",
+    ):
+        service.create_plan(
+            plan_id="plan-bola",
+            source_order_id="source-order",
+            actor=Actor("operator-2", trust_level=2),
+            cadence=RepeatCadence(RepeatCadenceUnit.MONTH, 1),
+            context=context(),
+            request_hash="hash-bola",
+            idempotency_key="repeat-bola-1",
+        )
+
+    assert uow.repeat_orders.get("plan-bola") is None
 
 
 def test_repeat_order_lifecycle_preserves_source_and_records_economics() -> None:
