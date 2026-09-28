@@ -808,6 +808,14 @@ def test_provider_fails_on_invalid_json() -> None:
         provider.research("company", max_sources=5)
 
 
+def test_configuration_rejects_untrusted_https_base_url() -> None:
+    with pytest.raises(ValueError, match="pinned official host"):
+        OpenCorporatesConfiguration(
+            api_token="secret",
+            base_url="https://attacker.example/api",
+        )
+
+
 def test_configuration_rejects_unbounded_timeout() -> None:
     with pytest.raises(ValueError, match="must not exceed 30"):
         OpenCorporatesConfiguration(
