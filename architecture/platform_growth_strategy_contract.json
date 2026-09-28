@@ -136,7 +136,6 @@
   "operator_continuity": {
     "single_operator_view": "one_workflow_with_context_linkage_not_two_competing_records",
     "multi_operator_after_bitrix": "Bitrix24_owns_live_assignment_team_workflow_and_transaction_activity_after_handoff",
-    "sheim_pre_handoff_assignment": "Shema_may_own_preparation_assignment_only_before_handoff",
     "stable_context_keys": [
       "shema_identity_ref",
       "handoff_id",
@@ -145,7 +144,8 @@
       "mapping_version"
     ],
     "no_shadow_copy_of_live_business_state": true,
-    "stale_write_protection": true
+    "stale_write_protection": true,
+    "shema_pre_handoff_assignment": "Shema_may_own_preparation_assignment_only_before_handoff"
   },
   "document_evolution": {
     "document_rule_source_is_versioned": true,
