@@ -20,7 +20,7 @@ def test_business_plane_contract_prevents_dual_ownership() -> None:
 
     forbidden = payload["domain_ownership"]["forbidden_dual_ownership"]
     assert "transaction_price" in forbidden
-    assert "business_economics" in forbidden
+    assert "business_margin" in forbidden
     assert "customer_outbound_communication_execution" in forbidden
 
     assert "procurement_observations" not in payload["domain_ownership"]["shema"]
