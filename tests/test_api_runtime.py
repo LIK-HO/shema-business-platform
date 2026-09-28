@@ -310,7 +310,7 @@ def test_runtime_api_propagates_correlation_id() -> None:
 def test_runtime_api_generates_correlation_id_when_missing() -> None:
     response = client(FakeApplication()).get(
         "/v1/diagnostics",
-        headers={"Authorization": "Bearer test-token"},
+        headers={"Authorization": "Bearer test-token", "Idempotency-Key": "ai-api-test-1"},
     )
 
     assert response.status_code == 200
@@ -485,7 +485,7 @@ def test_runtime_api_maps_missing_application_to_503() -> None:
 def test_runtime_api_wires_ai_run_through_application_boundary() -> None:
     response = client(FakeApplication()).post(
         "/v1/ai/run",
-        headers={"Authorization": "Bearer test-token", "X-Correlation-Id": "corr-ai"},
+        headers={"Authorization": "Bearer test-token", "X-Correlation-Id": "corr-ai", "Idempotency-Key": "ai-api-test-1"},
         json={
             "taskType": "qualification",
             "promptVersion": "prompt:v1",
