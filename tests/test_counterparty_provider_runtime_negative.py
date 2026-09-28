@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
-
 from fastapi.testclient import TestClient
 
 from shema_platform.adapters.intelligence.dadata import DaDataConfiguration
