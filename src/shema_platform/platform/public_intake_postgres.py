@@ -809,43 +809,68 @@ class PublicIntakeOutboxDispatcher:
         intake_repository_factory,
         projector,
         *,
+        worker_id: str = "public-intake-projector",
+        lease_seconds: int = 60,
         clock=lambda: datetime.now(UTC),
     ):
+        if not worker_id.strip():
+            raise ValueError("worker_id is required")
+        if lease_seconds <= 0:
+            raise ValueError("lease_seconds must be positive")
         self._intake_repository_factory = intake_repository_factory
         self._projector = projector
+        self._worker_id = worker_id
+        self._lease_seconds = lease_seconds
         self._clock = clock
 
     def dispatch_pending(self, *, limit: int = 100) -> int:
         projected = 0
         with self._intake_repository_factory() as repository:
-            events = repository.pending_outbox(limit=limit)
+            events = repository.claim_pending(
+                self._worker_id,
+                lease_seconds=self._lease_seconds,
+                now=self._clock(),
+                limit=limit,
+            )
 
         for event in events:
-            if not event.notify_operator:
+            try:
+                if not event.notify_operator:
+                    with self._intake_repository_factory() as repository:
+                        repository.mark_outbox_published(
+                            event.event_id,
+                            worker_id=self._worker_id,
+                            now=self._clock(),
+                        )
+                    continue
+
                 with self._intake_repository_factory() as repository:
-                    repository.mark_outbox_published(
-                        event.event_id,
+                    record = repository.get_by_request_id(event.request_id)
+                if record is None:
+                    raise IntegrityViolation(
+                        "intake outbox event references missing request"
+                    )
+
+                # Projection is deliberately outside the intake transaction.
+                # It must therefore be idempotent, and the lease prevents
+                # concurrent workers from claiming the same event at once.
+                self._projector.project(record)
+                with self._intake_repository_factory() as repository:
+                    repository.mark_projected(
+                        record.request_id,
                         now=self._clock(),
                     )
-                continue
-
-            with self._intake_repository_factory() as repository:
-                record = repository.get_by_request_id(event.request_id)
-            if record is None:
-                raise IntegrityViolation(
-                    "intake outbox event references missing request"
-                )
-
-            self._projector.project(record)
-            with self._intake_repository_factory() as repository:
-                repository.mark_projected(
-                    record.request_id,
-                    now=self._clock(),
-                )
-                repository.mark_outbox_published(
-                    event.event_id,
-                    now=self._clock(),
-                )
-            projected += 1
+                    repository.mark_outbox_published(
+                        event.event_id,
+                        worker_id=self._worker_id,
+                        now=self._clock(),
+                    )
+                projected += 1
+            except Exception:
+                # Leave the lease to expire. A later worker can replay the
+                # event; no success marker is written before projection succeeds.
+                raise
 
         return projected
+
+
