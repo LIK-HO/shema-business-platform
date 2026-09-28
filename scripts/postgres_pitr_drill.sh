@@ -27,7 +27,7 @@ docker run -d \
   --health-interval=2s \
   --health-timeout=2s \
   --health-retries=60 \
-  postgres:16 \
+  postgres:16.15-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67 \
   postgres \
     -c wal_level=replica \
     -c archive_mode=on \
@@ -74,8 +74,8 @@ runner = MigrationRunner(
     plan,
 )
 report = runner.apply()
-assert report.current_version == 10
-assert report.applied == tuple(range(1, 11))
+assert report.current_version == 12
+assert report.applied == tuple(range(1, 13))
 PY
 
 python - <<'PY'
@@ -201,7 +201,8 @@ INTAKE_RESTORE="$(docker exec -e PGPASSWORD=postgres "$SOURCE_CONTAINER"   psql 
       (select count(*) from intake_preflight_snapshot where snapshot_id = 'pitr-intake-preflight')
   ")"
 
-if [[ "$INTAKE_RESTORE" != "1|1|1|0" && "$INTAKE_RESTORE" != "1|1|1|1" ]]; then
+if [[ "$INTAKE_RESTORE" != "1|1|1|1" ]]; then
+
   echo "Unexpected dedicated intake restore result: $INTAKE_RESTORE" >&2
   exit 1
 fi
@@ -395,7 +396,7 @@ docker run -d \
   -p 55433:5432 \
   -v "$BASEBACKUP_DIR:/var/lib/postgresql/data" \
   -v "$ARCHIVE_DIR:/var/lib/postgresql/archive:ro" \
-  postgres:16 \
+  postgres:16.15-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67 \
   postgres \
   >/dev/null
 
