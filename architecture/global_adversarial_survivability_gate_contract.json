@@ -38,7 +38,8 @@
     "deterministic_external_registry_preflight",
     "public_intake_database_isolation_and_notification_reliability",
     "repeat_order_cutover_completeness_and_purge_safety",
-    "counterparty_monitoring_batch_integrity_and_false_change_suppression"
+    "counterparty_monitoring_batch_integrity_and_false_change_suppression",
+    "operator_interface_and_capability_visibility"
   ],
   "mandatory_questions": [
     "Can the change create two authoritative values for one live business concern?",
@@ -60,7 +61,10 @@
     "Can the operator UI hide transferred Order/Economics views without breaking navigation, deep links or causal history?",
     "Can a monitored counterparty produce a false change event because the registry source is stale, unavailable, reordered or partially updated?",
     "Can attacker-controlled client text poison an AI prompt, operator notification or Bitrix24 business field?",
-    "Can a compromised integration credential or Bitrix24 app gain authority beyond its owned namespace?"
+    "Can a compromised integration credential or Bitrix24 app gain authority beyond its owned namespace?",
+    "Can the operator interface expose or imply a business authority that Shema does not own?",
+    "Can capability removal after Bitrix24 cutover leave a stale navigation entry, deep link, cache entry or empty workspace that exposes obsolete business state?",
+    "Can personal view preferences, saved filters or Kanban interactions bypass server-side authorization or concurrency protection?"
   ],
   "required_outputs": [
     "global_architecture_review",
@@ -76,7 +80,8 @@
     "explicit_disposition_for_each_finding",
     "intake_loss_and_notification_recovery_check",
     "transaction_migration_completeness_check",
-    "monitoring_integrity_and_false_positive_check"
+    "monitoring_integrity_and_false_positive_check",
+    "operator_interface_authority_and_causal_continuity_check"
   ],
   "closure_policy": {
     "blocks_verified_state": true,
