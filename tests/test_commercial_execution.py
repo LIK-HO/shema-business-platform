@@ -194,6 +194,10 @@ def workflow_parts() -> tuple[CommercialActionSendWorkflow, MemoryUow, MemoryAda
                 "operator-1",
                 frozenset({Permission.COMMERCIAL_ACTION_SEND}),
             ),
+            AuthorizationSubject(
+                "operator-2",
+                frozenset({Permission.COMMERCIAL_ACTION_SEND}),
+            ),
         )
     )
     workflow = CommercialActionSendWorkflow(
