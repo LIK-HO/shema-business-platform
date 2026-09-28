@@ -443,15 +443,6 @@ def test_runtime_api_counterparty_check_requires_composed_capability() -> None:
         json={
             "identifierType": "INN",
             "identifier": "7707083893",
-            "canonicalName": "New Name",
-            "taxId": "7707083893",
-            "registrationId": "1027700132195",
-            "legalStatus": "active",
-            "sourceRef": "https://pb.nalog.ru/",
-            "sourceReliability": "authoritative",
-            "claimConfidence": 0.95,
-            "observedAt": "2026-09-26T10:00:00Z",
-            "expiresAt": "2026-10-03T10:00:00Z",
         },
     )
 
@@ -646,7 +637,7 @@ def test_runtime_api_provider_rollback_uses_path_provider_identity() -> None:
         headers={"Authorization": "Bearer provider-token"},
         json={
             "reason": "controlled verification",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
             "activationVersion": "activation:test-v1",
         },
     )
