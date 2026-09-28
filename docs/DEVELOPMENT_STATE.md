@@ -6,44 +6,34 @@
 - PR: #58 — open, draft, mergeable state subject to current CI; head resolved live.
 - Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED; live DaData remains OFF.
 - Active architecture-change boundary: **Global Adversarial Survivability + B2B-first / Bitrix24 transition correction** — IN PROGRESS until current-head full release-gate CI and global review are green.
-- Verified implementation: provider-neutral procurement contracts; ГосПлан API v2 adapter boundary; 44-FZ/223-FZ purchase/plan collections; bounded timeout/response/retry/error mapping; page-offset watch state; provider/external-ID deduplication; new/changed fingerprint detection; deterministic adapter, contract and monitoring tests.
-- Procurement foundation remains dormant; no new Shema procurement runtime, tender workspace or tender submission/participation automation is authorized at the B2B-first stage.
-- Existing procurement contracts remain technical assets only; B2G/tender execution is deferred until the Bitrix24 business-plane stage.
-- Procurement observations remain external evidence inputs and do not create canonical Identity or a second system of record.
+- Previous draft procurement subsystem removed from the current product boundary; no procurement/tender runtime, provider adapters, tender workspace or procurement persistence remains in the active implementation.
 - Product flow is fixed for the initial B2B stage as: intelligence → identity/evidence → qualification → contact preparation → business handoff → live business execution → result/learning.
-- Phase 3A is fixed as Repeat Business Preparation between Contact Preparation and Document Configuration; runtime implementation is not part of the closed procurement foundation boundary.
-- Phase 4 is fixed as Document Configuration & Handoff Preparation; final issuance/signing/storage remains in the mature business/EDO plane.
+- Phase 3A is fixed as Repeat Business Preparation immediately before business handoff.
+- Phase 4 is the unified Web operator/public-client surface; no internal document-management subsystem is part of the roadmap.
 - Web + PWA are the only approved experience surfaces; Android is removed from the target roadmap.
 - Multi-operator collaboration is a permanent architecture requirement: explicit actor, ownership/assignment/team queues, server-side authorization, audited handoff, revision/concurrency protection and explicit conflict resolution.
-- Phase 2-I has no implicitly open work. Further procurement activation/runtime/monitoring is deferred until the later Bitrix24/B2G stage.
-- Prohibited until the explicitly selected next boundary: frozen-kernel semantics, unrelated UI work, FNS automation, MAX activation, provider fallback, early B2G/tender runtime in Shema and unbounded crawling.
+- Prohibited until the explicitly selected next boundary: frozen-kernel semantics, unrelated UI work, FNS automation, MAX activation, provider fallback and unbounded crawling.
 
 ## Adversarial regression synchronization — 2026-09-28
 
 - Added explicit `architecture/business_plane_boundary_contract.json` for Shema → Bitrix24 handoff, field ownership, retry/reconciliation and outcome return.
 - Corrected YandexGPT configuration so `YANDEXGPT_MAX_COST` is explicitly required and positive; zero/missing cost ceilings now fail closed.
-- Corrected procurement monitoring semantics: provider page offsets are not represented as a durable cursor. Production incremental monitoring requires stable ordering plus watermark/overlap strategy and durable checkpointing.
-- Procurement fingerprints now preserve provider update timestamps and source URLs so material changes are not silently missed.
 - Phase 3A is renamed/redefined as Repeat Business Preparation; Shema must not reimplement Bitrix24 recurring-deal execution.
-- Phase 4 is redefined as Document Configuration & Handoff Preparation; final issuance/signing/storage remains in the mature business/EDO plane.
 - Monium is explicitly operational telemetry; durable audit/business history remains PostgreSQL-owned.
 - Full repository release-gate CI for the latest HEAD remains pending; no new boundary is considered verified until that gate is green.
 - Global adversarial survivability gate is now mandatory for every material strategy change and every element completion; no element may enter VERIFIED/CLOSED without a current-head whole-system adversarial review.
 - Data-plane rule: Managed PostgreSQL remains the canonical Shema database in Yandex Cloud. Bitrix24 receives live business ownership after handoff; the Shema database is not wholesale migrated into Bitrix24.
 - Operator continuity rule: every business handoff carries stable Shema identity, handoff, correlation and Bitrix entity references so one or multiple operators can reconstruct the full causal chain without shadow copies.
-- Document-change resilience: legal/EDO changes are handled as versioned configuration changes with effective dates and downstream capability revalidation; historical configurations remain reconstructable.
 
 ## Strategic boundary synchronization — 2026-09-28
 
-- B2B-Center is removed as a named strategic procurement provider.
-- Procurement is retained only as a dormant provider-neutral technical foundation. B2G/tender execution is deferred to the later Bitrix24 business-plane stage; no commercial aggregator is a current Shema dependency.
 - A new Yandex Cloud deployment strategy is recorded: Serverless Containers + API Gateway + narrow Cloud Functions/Timers + Lockbox + Container Registry + Object Storage + Monium, with Managed PostgreSQL remaining the canonical production database.
 - Bitrix24 is established as the future mature business control plane for live transactions, pricing, calculations/economics, communications, assignments and process automation. Shema supplies verified context and later receives minimal outcome signals for learning.
 - New Shema development must not expand into a second CRM, accounting, finance or personnel system. Existing frozen Order/Economics semantics remain only for compatibility, lineage and learning.
 - Existing YandexGPT and MAX provider boundaries remain in force. YandexGPT is the bounded AI processing path; MAX live outbound remains fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
-- This synchronization is documentation/contract/test scope only. No procurement production runtime, Bitrix24 runtime, MAX activation or new persistence authority has been opened.
-- New strategy contracts: architecture/procurement_source_registry_contract.json, architecture/platform_growth_strategy_contract.json and architecture/business_plane_boundary_contract.json.
-- New executable guards: tests/test_platform_growth_strategy_contract.py and tests/test_business_plane_boundary_contract.py.
+- This synchronization is architecture/experience-contract/test scope only. No Bitrix24 runtime, MAX activation or new persistence authority has been opened.
+- New strategy contracts: architecture/platform_growth_strategy_contract.json, architecture/business_plane_boundary_contract.json and architecture/public_client_experience_contract.json.
+- New executable guards: tests/test_platform_growth_strategy_contract.py, tests/test_business_plane_boundary_contract.py and tests/test_public_client_experience_contract.py.
 - Adversarial review: docs/ADVERSARIAL_ARCHITECTURE_REVIEW_2026_09_28.md.
 
 ## Stage verification — 2026-09-28
