@@ -269,7 +269,6 @@ def test_assembled_ai_path_persists_run_audit_and_correlation(monkeypatch) -> No
             headers={
                 "Authorization": "Bearer p32-token",
                 "X-Correlation-Id": correlation_id,
-                "Idempotency-Key": f"p32-expired:{identity_id}:run",
                 "Idempotency-Key": f"p32:{identity_id}:run",
             },
             json={
@@ -370,6 +369,7 @@ def test_assembled_ai_path_fails_closed_for_expired_evidence(monkeypatch) -> Non
             headers={
                 "Authorization": "Bearer p32-token",
                 "X-Correlation-Id": correlation_id,
+                "Idempotency-Key": f"p32-expired:{identity_id}:run",
             },
             json={
                 "taskType": "qualification",
