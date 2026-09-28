@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -143,8 +142,6 @@ def request_body() -> dict:
     return {
         "identifierType": "INN",
         "identifier": "7707083893",
-        "claimConfidence": 0.8,
-        "expiresAt": (datetime.now(UTC) + timedelta(days=7)).isoformat(),
     }
 
 
@@ -174,7 +171,7 @@ def test_lookup_runs_through_runtime_to_evidence_and_audit_then_rollback_blocks_
         headers={"Authorization": "Bearer activate-token"},
         json={
             "reason": "lookup vertical slice",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
             "activationVersion": "lookup-runtime:v1",
         },
     )
@@ -196,10 +193,10 @@ def test_lookup_runs_through_runtime_to_evidence_and_audit_then_rollback_blocks_
     assert payload["identityRef"] is None
     assert payload["quarantined"] is False
     assert len(payload["evidenceIds"]) == 4
-    assert payload["correlationId"] == "corr-lookup-e2e"
+    assert payload["correlationId"] != "corr-lookup-e2e"
     assert len(state.evidence.records) == 4
     assert len(state.audits.records) == 1
-    assert state.audits.records[0].correlation_id == "corr-lookup-e2e"
+    assert state.audits.records[0].correlation_id == payload["correlationId"]
     assert state.identities.records == []
 
     rolled_back = client.post(
@@ -207,7 +204,7 @@ def test_lookup_runs_through_runtime_to_evidence_and_audit_then_rollback_blocks_
         headers={"Authorization": "Bearer rollback-token"},
         json={
             "reason": "lookup e2e rollback",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
         },
     )
     assert rolled_back.status_code == 200
@@ -230,7 +227,7 @@ def test_lookup_permission_is_required() -> None:
         headers={"Authorization": "Bearer activate-token"},
         json={
             "reason": "permission test",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
             "activationVersion": "lookup-runtime:v1",
         },
     )
