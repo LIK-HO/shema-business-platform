@@ -32,6 +32,10 @@ class OrderService:
     ) -> Order:
         self._authorizer.require(actor.actor_id, Permission.ORDER_CREATE)
 
+        if action.owner_actor_id != actor.actor_id:
+            raise QuarantineRequired(
+                "order creation is forbidden for a commercial action owned by another actor"
+            )
         if action.status not in {
             CommercialActionStatus.SENT,
             CommercialActionStatus.COMPLETED,
@@ -59,6 +63,7 @@ class OrderService:
         order = Order(
             order_id=order_id,
             identity_id=action.identity_id,
+            owner_actor_id=actor.actor_id,
             source_action_id=action.action_id,
             lines=tuple(lines),
         )
