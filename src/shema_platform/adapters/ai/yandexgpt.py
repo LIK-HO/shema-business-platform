@@ -26,8 +26,6 @@ from shema_platform.adapters.ai.contracts import (
     validate_provider_activation,
     validate_provider_response,
 )
-
-
 from shema_platform.foundation.secure_http import secure_urlopen
 
 DEFAULT_BASE_URL = "https://ai.api.cloud.yandex.net/v1"
