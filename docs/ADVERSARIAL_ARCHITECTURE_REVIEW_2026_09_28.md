@@ -244,56 +244,15 @@ This is simpler and more reliable.
 
 ---
 
-# 6. Documents
+# 6. Removed capability tracks
 
-The earlier “Legal / Document Configuration Engine” wording was too ambitious.
+The adversarial review caused two complexity-reduction decisions:
 
-It risked creating:
-- a second document repository;
-- duplicate e-signature semantics;
-- duplicate approval workflow;
-- legally ambiguous generated documents;
-- another place where a business document could become authoritative.
+- no internal document/template/legal workflow module in Shema;
+- no procurement/tender module, provider integration or tender workspace in Shema.
 
-The corrected role is:
+Both were removed from the active repository surface. The later business plane may solve its own operational needs independently, but Shema has no dependency on them.
 
-**Shema = document requirement/configuration snapshot**
-
-**Business plane / EDO = final document execution**
-
-Shema may explain:
-- why a document is required;
-- which configuration applies;
-- which version/effective date was used;
-- which evidence supports the configuration.
-
-It should not silently become the legal system of record.
-
----
-
-# 7. Procurement monitoring regression
-
-The original implementation described `skip + limit` pagination as “cursor-based”.
-
-That is not technically equivalent to a durable cursor.
-
-Offset pagination can be unstable if records are inserted or reordered between polls.
-
-The corrected interpretation is:
-
-**current foundation = bounded page polling + provider/external-ID dedup + fingerprint change detection**
-
-Production incremental monitoring additionally requires:
-
-- stable ordering;
-- watermark or overlap-window semantics;
-- durable checkpoint;
-- revalidation after failures;
-- visible completeness state.
-
-This distinction is now explicit in the contract.
-
----
 
 # 8. Yandex Cloud
 
@@ -384,21 +343,12 @@ This is not yet fully implemented as a runtime vertical slice and should become 
 
 ---
 
-# 12. Procurement / B2G expansion is intentionally deferred
+# 12. B2B-first scope protection
 
-The adversarial review now treats early tender development as a **scope risk**, not a maturity requirement.
+The first commercial stage is deliberately B2B. Anything that would turn Shema into a second operational business platform is rejected unless a measured constraint proves it necessary.
 
-The verified procurement foundation remains dormant. Expanding it now would:
-- increase operator complexity before the B2B loop is proven;
-- create new external-provider cost and reliability surfaces;
-- tempt Shema toward becoming a tender system;
-- complicate the later Bitrix24 cutover.
+The later business plane is a separate system boundary. Shema does not implement tender/procurement execution inside that boundary.
 
-The later B2G gate is:
-
-**measured B2G need → Bitrix24 business-plane capability check → integrated tender capability if needed → explicit ownership/reconciliation**
-
-No early commercial aggregator or tender runtime is required in Shema.
 
 # 13. Security / privacy regression
 
@@ -538,8 +488,7 @@ The **current implementation does not yet pass final release review**, because t
 
 The three most important next executable boundaries are:
 
-1. **Procurement durable runtime** — with real checkpoint/watermark semantics, not fake cursor language.
-2. **Business-plane handoff runtime** — Bitrix24 adapter, idempotent outbox, reconciliation and field-ownership enforcement.
+1. **Business-plane handoff runtime** — Bitrix24 adapter, idempotent outbox, reconciliation and field-ownership enforcement.
 3. **Outcome learning vertical slice** — minimal, versioned, privacy-preserving result feedback.
 
 No additional CRM/ERP/economics/HR subsystem should be added to Shema.
