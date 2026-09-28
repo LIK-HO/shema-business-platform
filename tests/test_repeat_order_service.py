@@ -400,6 +400,18 @@ def test_repeat_plan_controls_pause_skip_resume_cancel_and_context_edit() -> Non
     assert skipped.skipped_occurrences == 1
     assert skipped.context.scheduled_for == datetime(2026, 10, 9, 9, tzinfo=UTC)
 
+    skipped_again = service.skip_once(
+        actor=actor(),
+        plan_id="plan-1",
+        request_hash="skip-hash-2",
+        idempotency_key="skip-idem-2",
+    )
+    assert skipped_again.skipped_occurrences == 2
+    assert skipped_again.context.scheduled_for == datetime(2026, 10, 16, 9, tzinfo=UTC)
+
+    assert len(uow.outbox.pending()) == 7
+    assert len(uow.audits.all()) == 7
+
     cancelled = service.cancel_plan(
         actor=actor(),
         plan_id="plan-1",
