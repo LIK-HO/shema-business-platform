@@ -16,8 +16,6 @@ from shema_platform.application.counterparty_check import (
     AuthoritativeCounterpartyLookup,
     CounterpartyCheckService,
     CounterpartyIdentifierType,
-    CounterpartyObservation,
-    SourceReliability,
 )
 from shema_platform.application.counterparty_lookup import (
     CounterpartyLookupIdentifierType,
@@ -895,10 +893,7 @@ def create_app(
         payload: CommercialActionCreateRequest,
         idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> CommercialActionResponse:
-        context = _require_permission(
-            request,
-            Permission.COMMERCIAL_ACTION_CREATE,
-        )
+        _require_permission(request, Permission.COMMERCIAL_ACTION_CREATE)
         return services(request).create_commercial_action(
             payload,
             _context(request, idempotency_key),
@@ -914,10 +909,7 @@ def create_app(
         action_id: str = Path(alias="actionId"),
         idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> CommunicationResult:
-        context = _require_permission(
-            request,
-            Permission.COMMERCIAL_ACTION_SEND,
-        )
+        _require_permission(request, Permission.COMMERCIAL_ACTION_SEND)
         return services(request).send_commercial_action(
             action_id,
             payload,
