@@ -170,6 +170,16 @@ class PublicIntakeRepository(Protocol):
         now: datetime,
     ) -> None: ...
 
+    def consume_global_circuit(
+        self,
+        *,
+        limit: int,
+        window_seconds: int,
+        now: datetime,
+    ) -> None: ...
+
+    def ensure_outbox_capacity(self, *, max_pending: int) -> None: ...
+
     def add(self, record: PublicIntakeRecord) -> None: ...
 
     def append_outbox(
@@ -232,13 +242,17 @@ class PublicIntakeService:
         submission_limit: int = 5,
         lookup_limit: int = 20,
         window_seconds: int = 600,
+        global_submission_limit: int = 100,
+        max_pending_outbox: int = 1000,
         require_bot_challenge: bool = True,
         enforce_edge_proof: bool = True,
         allowed_origins: frozenset[str] = frozenset(),
         clock=lambda: datetime.now(UTC),
     ) -> None:
-        if submission_limit < 1 or lookup_limit < 1:
+        if submission_limit < 1 or lookup_limit < 1 or global_submission_limit < 1:
             raise ValueError("rate limits must be positive")
+        if max_pending_outbox < 1:
+            raise ValueError("max_pending_outbox must be positive")
         if window_seconds < 1:
             raise ValueError("window_seconds must be positive")
         self._repository_factory = repository_factory
@@ -246,6 +260,8 @@ class PublicIntakeService:
         self._projector = projector
         self._submission_limit = submission_limit
         self._lookup_limit = lookup_limit
+        self._global_submission_limit = global_submission_limit
+        self._max_pending_outbox = max_pending_outbox
         self._window_seconds = window_seconds
         if not require_bot_challenge:
             raise ValueError("public intake bot challenge cannot be disabled")
@@ -339,6 +355,11 @@ class PublicIntakeService:
         now = self._clock()
 
         with self._repository_factory() as repository:
+            repository.consume_global_circuit(
+                limit=self._global_submission_limit,
+                window_seconds=self._window_seconds,
+                now=now,
+            )
             existing = repository.get_by_idempotency_key(idempotency_key)
             if existing is not None:
                 if existing.request_hash != payload.request_hash:
@@ -405,6 +426,9 @@ class PublicIntakeService:
                     deduplicated=True,
                 )
 
+            repository.ensure_outbox_capacity(
+                max_pending=self._max_pending_outbox,
+            )
             repository.save_preflight_snapshot(
                 preflight,
                 request_id=request_id,
