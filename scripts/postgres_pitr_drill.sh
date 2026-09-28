@@ -55,6 +55,9 @@ if [[ "$SOURCE_READY" != "true" ]]; then
 fi
 
 export DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/shema"
+export PUBLIC_INTAKE_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/shema_public_intake"
+
+docker exec -e PGPASSWORD=postgres "$SOURCE_CONTAINER"   psql -U postgres -d postgres -v ON_ERROR_STOP=1   -c 'create database shema_public_intake'
 
 python - <<'PY'
 import os
@@ -74,6 +77,123 @@ report = runner.apply()
 assert report.current_version == 10
 assert report.applied == tuple(range(1, 11))
 PY
+
+python - <<'PY'
+import os
+from pathlib import Path
+import psycopg
+
+from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
+
+plan = MigrationPlan.from_directory(
+    Path(os.environ["GITHUB_WORKSPACE"]) / "db" / "public_intake_migrations"
+)
+runner = MigrationRunner(
+    lambda: psycopg.connect(os.environ["PUBLIC_INTAKE_DATABASE_URL"]),
+    plan,
+)
+report = runner.apply()
+assert report.current_version == 1
+assert report.applied == (1,)
+
+with psycopg.connect(os.environ["PUBLIC_INTAKE_DATABASE_URL"]) as connection:
+    connection.execute(
+        """
+        insert into intake_preflight_snapshot (
+            snapshot_id,
+            request_id,
+            decision,
+            identity_match,
+            observed_at,
+            expires_at,
+            flags
+        ) values (
+            'pitr-intake-preflight',
+            'pitr-intake-request',
+            'UNKNOWN',
+            'NOT_CHECKED',
+            now(),
+            now() + interval '1 hour',
+            '["PROVIDER_UNAVAILABLE"]'::jsonb
+        )
+        """
+    )
+    connection.execute(
+        """
+        insert into intake_request (
+            request_id,
+            correlation_id,
+            idempotency_key,
+            request_hash,
+            status,
+            service_type,
+            location,
+            preferred_date_or_period,
+            work_or_cargo_description,
+            contact_name,
+            contact_channel,
+            entry_surface,
+            preflight_snapshot_id,
+            preflight_decision,
+            created_at
+        ) values (
+            'pitr-intake-request',
+            'corr-pitr-intake',
+            'pitr-intake-idem',
+            'pitr-intake-hash',
+            'ACCEPTED',
+            'Погрузка',
+            'Москва',
+            '2026-10-05',
+            'PITR intake fixture',
+            'PITR Client',
+            '+79990000000',
+            'public_web',
+            'pitr-intake-preflight',
+            'UNKNOWN',
+            now()
+        )
+        """
+    )
+    connection.execute(
+        """
+        insert into intake_outbox_event (
+            event_id,
+            request_id,
+            event_type,
+            payload,
+            occurred_at
+        ) values (
+            'pitr-intake-event',
+            'pitr-intake-request',
+            'new_client_request',
+            '{"request_id":"pitr-intake-request"}'::jsonb,
+            now()
+        )
+        """
+    )
+    connection.commit()
+PY
+
+docker exec -e PGPASSWORD=postgres "$SOURCE_CONTAINER"   pg_dump -Fc -U postgres -d shema_public_intake   -f /tmp/shema_public_intake.dump
+
+docker exec -e PGPASSWORD=postgres "$SOURCE_CONTAINER"   psql -U postgres -d postgres -v ON_ERROR_STOP=1   -c 'create database shema_public_intake_restore'
+
+docker exec -e PGPASSWORD=postgres "$SOURCE_CONTAINER"   pg_restore -U postgres -d shema_public_intake_restore   /tmp/shema_public_intake.dump
+
+INTAKE_RESTORE="$(docker exec -e PGPASSWORD=postgres "$SOURCE_CONTAINER"   psql -U postgres -d shema_public_intake_restore -Atqc "
+  select
+      (select count(*) from intake_request where request_id = 'pitr-intake-request'),
+      (select count(*) from intake_outbox_event where event_id = 'pitr-intake-event'),
+      (select count(*) from intake_preflight_snapshot where snapshot_id = 'pitr-intake-preflight')
+  ")"
+
+if [[ "$INTAKE_RESTORE" != "1|1|1" ]]; then
+  echo "Unexpected dedicated intake restore result: $INTAKE_RESTORE" >&2
+  exit 1
+fi
+
+docker exec -e PGPASSWORD=postgres "$SOURCE_CONTAINER"   psql -U postgres -d postgres -v ON_ERROR_STOP=1   -c 'drop database shema_public_intake_restore'
 
 python - <<'PY'
 import os
