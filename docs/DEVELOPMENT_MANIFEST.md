@@ -8,7 +8,7 @@
 **Runtime baseline:** v1.5.0
 **System target:** personal-first, scalable when justified, reliable, durable and mature system; not a SaaS breadth target.
 **Strategy revalidation:** 2026-09-28 — B2B-first / Bitrix24 transition strategy rechecked against mature systems; global adversarial survivability gate is now binding for subsequent product development.
-**Latest closure verification:** P47 strategy/boundary correction is CLOSED / VERIFIED at the architecture-and-test stage on CI #1589 (`36386211886`); all seven release-gate jobs are GREEN. Runtime implementation remains governed by the roadmap's later capability boundaries.
+**Latest closure verification:** P47 is CLOSED / VERIFIED at the architecture-and-test stage on the final current-head release gate CI #1596 (`36389561280`); all seven jobs are GREEN. Branch HEAD is resolved live; the final verified PR merge-test head was green. Runtime implementation remains governed by the roadmap's later capability boundaries.
 
 ---
 
