@@ -340,8 +340,8 @@ def test_runtime_api_rejects_authenticated_but_unauthorized_search() -> None:
         json={"region": "Moscow", "industries": ["logistics"]},
     )
 
-    assert response.status_code == 400
-    assert response.json()["code"] == "public_intake_security_rejected"
+    assert response.status_code == 403
+    assert response.json()["code"] == "authorization_denied"
 
 
 def test_runtime_api_rejects_authenticated_but_unauthorized_sensitive_read() -> None:
