@@ -6,7 +6,7 @@
 - PR: #58 — open, draft, mergeable state subject to current CI; head resolved live.
 - Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED; live DaData remains OFF.
 - Current verified architecture boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract** — CLOSED / VERIFIED at contract and test stage. Runtime public-form implementation remains governed by the Phase 3B roadmap exit criteria.
-- Current active extension: **Operator Interface Alignment + Repeat Orders & Business Continuity + Public Intake + Counterparty Monitoring + Bitrix24 Cutover** — IN PROGRESS until current-head adversarial review and full release-gate CI are green. The visual Web/PWA runtime remains the separately scoped Phase 4 implementation boundary.
+- Current verified boundary: **Operator Interface Alignment + Repeat Orders & Business Continuity + Public Intake + Counterparty Monitoring + Bitrix24 Cutover strategy/contracts** — CLOSED / VERIFIED at architecture-and-test stage after current-head adversarial review and full release-gate CI #1589. The visual Web/PWA runtime remains the separately scoped Phase 4 implementation boundary.
 - Previous draft procurement subsystem removed from the current product boundary; no procurement/tender runtime, provider adapters, tender workspace or procurement persistence remains in the active implementation.
 - Product flow is fixed for the initial B2B stage as: intelligence → identity/evidence → qualification → contact preparation → repeat orders/business continuity → business handoff → live business execution → result/learning.
 - Phase 3A is fixed as Repeat Orders & Business Continuity in temporary Shema live mode, with verified Bitrix24 cutover and purge/hide semantics.
@@ -38,6 +38,16 @@
 - New executable guards: tests/test_platform_growth_strategy_contract.py, tests/test_business_plane_boundary_contract.py and tests/test_public_client_experience_contract.py.
 - Adversarial review: docs/ADVERSARIAL_ARCHITECTURE_REVIEW_2026_09_28.md.
 - Operator interface blueprint: architecture/operator_interface_contract.json.
+
+## Current-head boundary closure — 2026-09-28
+
+- HEAD: `6d8ca21b2a8af96cdb0b5de6c0d4aae3eb13689a`.
+- PR #58: open, draft, mergeable; no merge or production authorization implied.
+- Full release-gate CI #1589 (`36386211886`) is GREEN across all seven jobs: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract.
+- The preceding CI defect was a stale operator-interface assertion requiring obsolete left-navigation entries; it was corrected to match the approved model where global search lives in the header and Repeat Orders is a specialized workspace.
+- Global adversarial review has no unresolved P0 finding for this boundary after the current-head gate closed. Deferred P1 items remain explicitly bounded to later roadmap stages and do not authorize new runtime authority in the current boundary.
+- P47 is therefore CLOSED / VERIFIED at the architecture-and-test boundary. This does not claim that the Web/PWA visual runtime, Bitrix24 live integration, outcome-learning runtime, or MAX live outbound are implemented or activated.
+- Next implementation boundary is governed by the roadmap: **Phase 3A — Repeat Orders & Business Continuity (temporary Shema live mode)**.
 
 ## Stage verification — 2026-09-28
 
