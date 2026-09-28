@@ -6,6 +6,8 @@ from typing import Any, NoReturn, Protocol
 
 import jwt
 
+MAX_BEARER_TOKEN_BYTES = 16_384
+
 _SAFE_ASYMMETRIC_ALGORITHMS = frozenset(
     {
         "RS256",
@@ -93,7 +95,7 @@ class PyJWTSigningKeyProvider:
         )
 
     def signing_key(self, token: str) -> Any:
-        return self._client.get_signing_key_from_jwt(token).key
+        return self._client.get_signing_key_from_jwt(token)
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,17 +120,30 @@ class OIDCJWTAuthenticator:
 
         token = self._bearer_token(authorization)
         try:
+            header = jwt.get_unverified_header(token)
+            algorithm = header.get("alg")
+            if algorithm not in self.configuration.algorithms:
+                self._authentication_error()
+            if header.get("crit"):
+                # No critical extensions are supported until they have a dedicated verifier.
+                self._authentication_error()
+
             signing_key = self.key_provider.signing_key(token)
+            key_algorithm = getattr(signing_key, "algorithm_name", None)
+            if key_algorithm is not None and key_algorithm != algorithm:
+                self._authentication_error()
+
+            raw_key = getattr(signing_key, "key", signing_key)
             claims = jwt.decode(
                 token,
-                signing_key,
-                algorithms=self.configuration.algorithms,
+                raw_key,
+                algorithms=(algorithm,),
                 audience=self.configuration.audience,
                 issuer=self.configuration.issuer,
                 leeway=self.configuration.clock_skew_seconds,
                 options={"require": ["exp", self.configuration.actor_id_claim]},
             )
-        except (jwt.PyJWTError, ValueError, TypeError):
+        except (jwt.PyJWTError, ValueError, TypeError, AttributeError):
             self._authentication_error()
 
         actor_id = self._required_string_claim(
@@ -157,7 +172,10 @@ class OIDCJWTAuthenticator:
         parts = authorization.strip().split()
         if len(parts) != 2 or parts[0].lower() != "bearer" or not parts[1]:
             OIDCJWTAuthenticator._authentication_error()
-        return parts[1]
+        token = parts[1]
+        if len(token.encode("utf-8")) > MAX_BEARER_TOKEN_BYTES:
+            OIDCJWTAuthenticator._authentication_error()
+        return token
 
     @staticmethod
     def _required_string_claim(claims: dict[str, Any], name: str) -> str:
