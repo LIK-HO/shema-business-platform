@@ -5,13 +5,14 @@
 - HEAD: resolved live from GitHub; this ledger does not store a static commit pointer.
 - PR: #58 — open, draft, mergeable state subject to current CI; head resolved live.
 - Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED; live DaData remains OFF.
-- Active architecture-change boundary: **Global Adversarial Survivability + B2B-first / Bitrix24 transition correction** — IN PROGRESS until current-head full release-gate CI and global review are green.
+- Active architecture-change boundary: **Global Adversarial Survivability + B2B-first / public Web-PWA / Bitrix24 transition correction** — IN PROGRESS until current-head full release-gate CI and global review are green.
 - Previous draft procurement subsystem removed from the current product boundary; no procurement/tender runtime, provider adapters, tender workspace or procurement persistence remains in the active implementation.
 - Product flow is fixed for the initial B2B stage as: intelligence → identity/evidence → qualification → contact preparation → business handoff → live business execution → result/learning.
 - Phase 3A is fixed as Repeat Business Preparation immediately before business handoff.
 - Phase 4 is the unified Web operator/public-client surface; no internal document-management subsystem is part of the roadmap.
 - Web + PWA are the only approved experience surfaces; Android is removed from the target roadmap.
 - Multi-operator collaboration is a permanent architecture requirement: explicit actor, ownership/assignment/team queues, server-side authorization, audited handoff, revision/concurrency protection and explicit conflict resolution.
+- Public experience boundary: схемагрупп.рф is the target public Web/PWA domain; the same public request application is projected into a MAX mini-app, with request/correlation/source attribution preserved.
 - Prohibited until the explicitly selected next boundary: frozen-kernel semantics, unrelated UI work, FNS automation, MAX activation, provider fallback and unbounded crawling.
 
 ## Adversarial regression synchronization — 2026-09-28
