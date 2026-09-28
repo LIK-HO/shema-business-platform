@@ -548,6 +548,21 @@ Bitrix24 becomes authoritative after handoff for:
 - assignments and business process stages;
 - team workflows and approvals;
 
+### Bitrix24 Setup Agent
+
+Before live handoff is activated, the integration includes a bounded **Bitrix24 Business Plane Setup Agent**.
+
+It:
+- inspects the actual portal and capabilities;
+- reads existing CRM fields, funnels, stages, permissions and integration state;
+- compiles a versioned configuration plan;
+- shows a dry-run diff;
+- applies only owned/namespaced changes;
+- verifies the resulting portal state;
+- preserves a configuration snapshot and mapping version.
+
+It does **not** configure arbitrary Bitrix24 features, delete unknown structures, migrate the Shema database, or become a second CRM inside Shema.
+
 ### Integration phases
 1. Single-portal proof with an inbound webhook.
 2. Outbound event intake for selected business events.
