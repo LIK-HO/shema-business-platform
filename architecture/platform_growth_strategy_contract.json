@@ -133,5 +133,22 @@
     "no_shadow_copy_of_live_business_state": true,
     "stale_write_protection": true,
     "shema_pre_handoff_assignment": "Shema_may_own_preparation_assignment_only_before_handoff"
+  },
+  "experience_surfaces": {
+    "public_web": {
+      "canonical_domain": "схемагрупп.рф",
+      "role": "public_site_and_advanced_client_request_intake",
+      "canonical_api": true,
+      "no_live_business_authority": true
+    },
+    "operator_web": "protected_operator_workspace_on_same_canonical_api",
+    "pwa": "same_web_semantics_with_bounded_offline_behavior",
+    "max_mini_app": "same_public_web_application_inside_MAX_bot",
+    "source_attribution": [
+      "utm",
+      "referrer",
+      "entry_surface"
+    ],
+    "domain_cutover": "controlled_dns_cutover_from_inSales_after_https_and_health_validation"
   }
 }
