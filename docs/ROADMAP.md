@@ -367,6 +367,25 @@ Mature CRM/ERP products treat recurrence as a reusable rule/template that genera
 ### Exit criteria
 The operator can identify upcoming repeat demand, review changed evidence/configuration, and generate a traceable handoff package without creating a live transaction or calculating authoritative business economics in Shema.
 
+## 7B. Phase 3B — Public Intake Trust Boundary and Counterparty Preflight
+
+### Objective
+Make the future public request surface safe enough for real B2B demand without turning the form into a registry-enumeration tool, GPT cost sink, spam amplifier or second CRM entry point.
+
+### Core design
+- collect the minimum request first; legal identifiers are conditional;
+- validate INN/OGRN/OGRNIP deterministically before external lookup;
+- use official FNS/ЕГРЮЛ/ЕГРИП evidence server-side and before GPT;
+- expose only minimal match/status feedback to the client;
+- provide the operator a provenance-linked preflight card with freshness, contradictions, flags and unknowns;
+- represent provider outage as UNKNOWN rather than inventing a clean result;
+- keep Bitrix24 downstream of qualification/handoff;
+- make submissions idempotent and abuse-resistant;
+- keep attachments disabled until a private quarantine upload boundary is verified.
+
+### Exit criteria
+Request → preflight → operator review → qualification remains traceable; abusive traffic is rejected or quarantined without exhausting application or provider budgets; current-head adversarial and release gates pass.
+
 ## 8. Phase 4 — Web Operator System
 
 ### Objective
@@ -689,12 +708,13 @@ The practical priority is:
 2. Search/Research maturity
 3. Contact preparation
 4. Repeat Business Preparation
-5. Web/PWA public client surface + operator workspace + MAX mini-app projection
-6. Yandex Cloud production foundation
-7. Bitrix24 business-plane integration
-8. Production operations and guarded external activation / MAX
-9. Learning loop
-10. Measured scalability/team mode
+5. Public Intake Trust Boundary + Counterparty Preflight
+6. Web/PWA public client surface + operator workspace + MAX mini-app projection
+7. Yandex Cloud production foundation
+8. Bitrix24 business-plane integration
+9. Production operations and guarded external activation / MAX
+10. Learning loop
+11. Measured scalability/team mode
 
 Where two capabilities are tightly coupled, build them as one vertical slice rather than separate half-finished layers.
 
