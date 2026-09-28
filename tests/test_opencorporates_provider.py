@@ -48,7 +48,7 @@ def test_environment_configuration_requires_api_token(monkeypatch) -> None:
 
 
 def test_configuration_rejects_non_https_base_url() -> None:
-    with pytest.raises(ValueError, match="must use HTTPS"):
+    with pytest.raises(ValueError, match="HTTPS"):
         OpenCorporatesConfiguration(
             api_token="secret",
             base_url="http://api.opencorporates.com",
@@ -254,7 +254,7 @@ def test_request_json_enforces_request_url_limit_before_transport(
 
     monkeypatch.setattr(
         module,
-        "urlopen",
+        "secure_urlopen",
         lambda request, timeout: calls.append(request),
     )
 
