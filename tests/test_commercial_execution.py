@@ -315,6 +315,20 @@ def test_reusing_key_with_changed_request_is_rejected() -> None:
     assert len(adapter.calls) == 1
 
 
+def test_object_owner_scope_is_required_before_external_effect() -> None:
+    workflow, uow, adapter = workflow_parts()
+    with pytest.raises(QuarantineRequired, match="outside the actor resource scope"):
+        workflow.execute(
+            actor=Actor("operator-2", trust_level=2),
+            action_id="action-1",
+            body="Здравствуйте",
+            idempotency_key="send-key-owner-bola",
+        )
+
+    assert adapter.calls == []
+    assert uow.commercial_actions.get("action-1").owner_actor_id == "operator-1"
+
+
 def test_permission_is_required_before_external_effect() -> None:
     workflow, _, adapter = workflow_parts()
     with pytest.raises(AuthorizationError, match="permission denied"):
