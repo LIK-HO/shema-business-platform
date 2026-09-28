@@ -1,0 +1,356 @@
+{
+  "version": "1.0",
+  "status": "approved_operator_interface_boundary",
+  "purpose": "Define a mature, Bitrix24-aligned operator workspace for Shema without turning Shema into a CRM clone or introducing a second business authority.",
+  "design_basis": {
+    "reference_model": "Bitrix24 CRM workspace patterns",
+    "principles": [
+      "persistent_left_navigation",
+      "workspace_header_with_search_and_filter",
+      "list_first_work_queues",
+      "optional_kanban_for_stage_or_queue_work",
+      "saved_filters_and_personal_view_preferences",
+      "quick_create_and_quick_actions",
+      "contextual_or_split_inspection_without_losing_list_state",
+      "record_form_with_structured_fields_and_activity_history",
+      "related_records_are_explicit_and_traceable",
+      "progressive_disclosure_for_evidence_and_technical_details",
+      "server_authoritative_state",
+      "clear_loading_empty_degraded_error_offline_and_pending_states"
+    ],
+    "official_reference_urls": [
+      "https://helpdesk.bitrix24.com/open/25355170/",
+      "https://helpdesk.bitrix24.com/open/22879716/",
+      "https://helpdesk.bitrix24.com/open/25816403/",
+      "https://helpdesk.bitrix24.com/open/25778719/",
+      "https://helpdesk.bitrix24.com/open/25875327/"
+    ]
+  },
+  "experience_surfaces": {
+    "operator_web": {
+      "canonical_surface": true,
+      "protected": true,
+      "uses_canonical_api": true
+    },
+    "operator_pwa": {
+      "same_information_architecture": true,
+      "same_canonical_api": true,
+      "no_second_business_rule_implementation": true
+    },
+    "public_web": {
+      "same_design_language": true,
+      "separate_public_information_architecture": true,
+      "must_not_expose_operator_navigation": true
+    },
+    "max_mini_app": {
+      "inherits_public_web_patterns_only": true,
+      "must_not_expose_operator_workspace": true
+    }
+  },
+  "shell": {
+    "left_navigation": {
+      "persistent_on_desktop": true,
+      "collapsible": true,
+      "primary_sections": [
+        {
+          "id": "workbench",
+          "label": "Рабочий стол",
+          "role": "today_queue_summary_and_attention"
+        },
+        {
+          "id": "search",
+          "label": "Поиск",
+          "role": "canonical_lead_and_counterparty_search"
+        },
+        {
+          "id": "clients",
+          "label": "Клиенты",
+          "role": "verified_clients_and_client_context"
+        },
+        {
+          "id": "counterparties",
+          "label": "Контрагенты",
+          "role": "check_monitoring_and_favorites"
+        },
+        {
+          "id": "requests",
+          "label": "Заявки",
+          "role": "public_intake_queue"
+        },
+        {
+          "id": "research",
+          "label": "Разведка",
+          "role": "evidence_and_deep_research_workspace"
+        },
+        {
+          "id": "handoffs",
+          "label": "Передача",
+          "role": "business_plane_handoff_and_reconciliation"
+        },
+        {
+          "id": "control",
+          "label": "Контроль",
+          "role": "technical_operations_only",
+          "visibility": "technical_role_only"
+        }
+      ],
+      "forbidden_primary_sections": [
+        "Сделки",
+        "Счета",
+        "Документы",
+        "Тендеры",
+        "Склад",
+        "Бухгалтерия",
+        "Персонал"
+      ],
+      "rule": "Do not expose a primary navigation item for a business subsystem that Shema does not own."
+    },
+    "header": {
+      "persistent": true,
+      "elements": [
+        "workspace_title",
+        "global_search_or_context_search",
+        "saved_filter_or_view_selector",
+        "notifications",
+        "operator_menu"
+      ],
+      "notification_behavior": "counter_badge_plus_persistent_center; low_severity_does_not_force_navigation"
+    }
+  },
+  "work_queue": {
+    "default_view": "list",
+    "alternate_views": [
+      "kanban"
+    ],
+    "list_primitives": [
+      "search",
+      "filter",
+      "saved_filter",
+      "sort",
+      "column_selection",
+      "bulk_action"
+    ],
+    "kanban_rules": [
+      "columns_represent_server_authoritative_stage_or_queue_state",
+      "drag_and_drop_is_an_authorized_state_change",
+      "failed_or_stale_drag_does_not_silently_overwrite_newer_state"
+    ],
+    "quick_actions": true,
+    "quick_create": true,
+    "remember_personal_view_preferences": true,
+    "personal_preferences_must_not_change_canonical_business_logic": true,
+    "state_preservation": {
+      "opening_record_preserves_list_filters_and_scroll_context": true,
+      "back_navigation_restores_work_context": true,
+      "split_or_contextual_inspection_preferred_before_full_navigation": true
+    }
+  },
+  "record_form": {
+    "canonical_layout": "structured_fields_left_activity_history_right",
+    "top_action_bar": {
+      "contextual": true,
+      "primary_action_limit": 4,
+      "destructive_actions_require_confirmation": true,
+      "irreversible_actions_require_explicit_confirmation_and_authorization": true
+    },
+    "field_sections": [
+      {
+        "id": "summary",
+        "label": "Кратко",
+        "visibility": "always"
+      },
+      {
+        "id": "identity",
+        "label": "Идентичность",
+        "visibility": "always_when_relevant"
+      },
+      {
+        "id": "work",
+        "label": "Потребность",
+        "visibility": "always_when_relevant"
+      },
+      {
+        "id": "evidence",
+        "label": "Основания",
+        "visibility": "one_level_deeper"
+      },
+      {
+        "id": "related",
+        "label": "Связанные",
+        "visibility": "one_level_deeper"
+      },
+      {
+        "id": "technical",
+        "label": "Техническое",
+        "visibility": "technical_role_only"
+      }
+    ],
+    "activity_history": {
+      "position": "right",
+      "shows": [
+        "operator_actions",
+        "state_changes",
+        "comments",
+        "planned_activities",
+        "system_events",
+        "handoff_events",
+        "reconciliation_events"
+      ],
+      "filterable": true,
+      "server_authoritative": true,
+      "immutable_history_entries": true
+    },
+    "related_records": {
+      "explicit_links_only": true,
+      "no_shadow_copies": true,
+      "follow_causal_links": [
+        "request_to_client",
+        "client_to_counterparty",
+        "counterparty_to_evidence",
+        "client_to_repeat_order",
+        "order_to_bitrix_handoff",
+        "handoff_to_bitrix_reference"
+      ]
+    }
+  },
+  "specialized_workspaces": {
+    "counterparties": {
+      "tabs": [
+        "Проверка",
+        "Мониторинг",
+        "Избранные"
+      ],
+      "identifier_search": "exact INN/OGRN/OGRNIP in the common search field switches to counterparty check mode",
+      "monitoring_is_not_favorites": true,
+      "favorites_are_personal_shortcuts": true,
+      "monitoring_creates_durable_change_checks_and_notifications": true
+    },
+    "requests": {
+      "primary_queue": "Новые заявки",
+      "record_opening": "preflight_summary_first",
+      "raw_intake_data_is_not_shown_as_trusted_instruction": true,
+      "notification_link_is_stable": true
+    },
+    "repeat_orders": {
+      "entry_point": "client_record_primary_action_and_repeat_order_queue",
+      "queue_label": "Повторные заказы",
+      "work_modes": [
+        "list",
+        "kanban"
+      ],
+      "canonical_actions": [
+        "create_next_repeat_order",
+        "pause_recurrence",
+        "skip_once",
+        "resume_recurrence",
+        "cancel_repeat_plan"
+      ],
+      "past_orders_are_immutable": true,
+      "temporary_shema_live_mode_is_allowed": true,
+      "bitrix_recurring_engine_is_not_reimplemented": true,
+      "after_cutover": {
+        "capability_flag": "live_order_economics_available",
+        "hide_without_layout_reflow": true,
+        "deep_links_show_bitrix_destination_state": true
+      }
+    }
+  },
+  "state_presentation": {
+    "severity": [
+      "normal",
+      "attention",
+      "blocking",
+      "unknown",
+      "conflicting"
+    ],
+    "trust_states": [
+      "verified",
+      "stale",
+      "not_checked",
+      "unavailable",
+      "reconciliation_required"
+    ],
+    "mandatory_distinction": [
+      "NOT_SEARCHED != NOT_FOUND",
+      "UNAVAILABLE != CHANGED",
+      "PENDING != COMPLETED",
+      "UNKNOWN != BLOCKING"
+    ],
+    "no_hidden_global_score_as_truth": true
+  },
+  "responsive_and_accessibility": {
+    "desktop": "keyboard_friendly",
+    "tablet": "responsive",
+    "mobile": "touch_friendly_pwa",
+    "minimum_requirements": [
+      "keyboard_reachable_primary_actions",
+      "visible_focus",
+      "semantic_labels",
+      "adequate_touch_targets",
+      "no_information_loss_only_due_to_viewport_width"
+    ],
+    "offline": {
+      "read_cache_only_by_default": true,
+      "mutations_only_when_idempotency_is_proven": true,
+      "pending_mutation_state_is_explicit": true
+    }
+  },
+  "capability_visibility": {
+    "server_authoritative": true,
+    "disabled_or_absent_capability_is_not_rendered_as_empty_module": true,
+    "order_economics_cutover_hides_navigation_and_tabs_without_layout_break": true,
+    "old_deep_links_show_authorized_destination_or_explicit_moved_state": true
+  },
+  "bitrix24_alignment": {
+    "mapping_is_conceptual_not_shared_authority": true,
+    "operator_pattern_to_bitrix_concept": {
+      "work_queue": "CRM list and Kanban",
+      "saved_filters": "saved CRM filters",
+      "record_form": "CRM item form",
+      "activity_history": "CRM timeline",
+      "related_records": "CRM associations/dependencies",
+      "quick_create": "CRM quick creation form",
+      "stage_board": "CRM Kanban stages",
+      "repeat_orders": "Bitrix recurring/repeat business capability after handoff",
+      "business_handoff": "explicit external integration mapping and reconciliation"
+    },
+    "forbidden": [
+      "copying_bitrix_navigation_item_for_item_when_shema_does_not_own_the_domain",
+      "creating_shema_deals_or_invoices_to_make_the_ui_look_like_bitrix",
+      "reimplementing_bitrix_recurring_deal_engine",
+      "duplicating_bitrix_customer_communication_history"
+    ]
+  },
+  "security_and_authority": {
+    "client_text_is_untrusted_data": true,
+    "server_checks_authorization": true,
+    "operator_preferences_cannot_change_permissions": true,
+    "ui_does_not_own_truth": true,
+    "external_effects_are_not_authorized_by_visual_state_alone": true
+  },
+  "required_test_classes": [
+    "contract_shape",
+    "navigation_scope",
+    "bitrix_alignment",
+    "repeat_order_cutover_ui_behavior",
+    "counterparty_monitoring_separation",
+    "untrusted_intake_text_boundary",
+    "state_presentation",
+    "responsive_and_offline_rules"
+  ],
+  "references": {
+    "business_plane_boundary": "architecture/business_plane_boundary_contract.json",
+    "repeat_order_transition": "architecture/repeat_order_transition_contract.json",
+    "public_client_experience": "architecture/public_client_experience_contract.json",
+    "counterparty_monitoring": "architecture/counterparty_monitoring_contract.json"
+  },
+  "non_goals": [
+    "crm_clone",
+    "finance_or_accounting_ui",
+    "document_management_ui",
+    "tender_workspace",
+    "personnel_management_ui",
+    "second_communication_history",
+    "second_business_authority"
+  ]
+}
