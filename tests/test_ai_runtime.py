@@ -25,6 +25,10 @@ class MemoryRuns(AIRunRepository):
     def get(self, run_id: str) -> AIRun | None:
         return next((run for run in self.records if run.run_id == run_id), None)
 
+    def get_by_task_id(self, task_id: str) -> AIRun | None:
+        return next((run for run in self.records if run.task_id == task_id), None)
+
+
 
 @dataclass
 class MemoryIdempotency:
