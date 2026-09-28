@@ -131,3 +131,73 @@ def test_bitrix_setup_agent_is_bounded_to_discovery_plan_apply_verify() -> None:
     assert "read_only_discovery_before_mutation" in agent["safety_rules"]
     assert "direct_unreviewed_rest_mutations" in agent["ai_role"]["forbidden"]
     assert "tender_or_document_subsystem_configuration" in agent["non_goals"]
+
+def test_platform_evolution_contract_is_mandatory_for_growth() -> None:
+    payload = json.loads(
+        (ROOT / "architecture" / "platform_evolution_contract.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert payload["change_classes"]["E2"] == (
+        "external_provider_public_ingress_or_new_security_boundary"
+    )
+    assert payload["public_ingress"]["all_client_input_is_untrusted"] is True
+    assert payload["ai_economy"]["deterministic_first"] is True
+    assert "global_adversarial_review" in payload["closure_evidence"]
+
+
+def test_public_intake_never_uses_gpt_for_registry_truth() -> None:
+    payload = json.loads(
+        (
+            ROOT
+            / "architecture"
+            / "public_intake_counterparty_preflight_contract.json"
+        ).read_text(encoding="utf-8")
+    )
+
+    assert (
+        payload["counterparty_preflight"]["gpt_policy"]["used_for_registry_lookup"]
+        is False
+    )
+    assert (
+        payload["counterparty_preflight"]["gpt_policy"][
+            "used_for_initial_identifier_validation"
+        ]
+        is False
+    )
+    assert payload["registry_integration"]["server_side_only"] is True
+    assert payload["registry_integration"]["no_undocumented_browser_scraping"] is True
+    assert payload["request_safety"]["direct_bitrix_creation_from_public_form"] is False
+    assert (
+        payload["abuse_and_security"]["anti_enumeration"][
+            "no_unbounded_identifier_search"
+        ]
+        is True
+    )
+
+
+def test_public_experience_points_to_counterparty_preflight() -> None:
+    payload = load("public_client_experience_contract.json")
+
+    assert payload["counterparty_preflight_contract"].endswith(
+        "public_intake_counterparty_preflight_contract.json"
+    )
+    assert "counterparty_preflight_without_gpt" in payload["public_request_flow"]
+
+
+def test_global_gate_covers_public_ingress_and_registry_abuse() -> None:
+    payload = json.loads(
+        (
+            ROOT
+            / "architecture"
+            / "global_adversarial_survivability_gate_contract.json"
+        ).read_text(encoding="utf-8")
+    )
+
+    assert "public_ingress_and_form_abuse" in payload["scope"]
+    questions = set(payload["mandatory_questions"])
+    assert any("provider lookups" in q for q in questions)
+    assert any("registry enumeration oracle" in q for q in questions)
+    assert any("public form bypass" in q for q in questions)
+
