@@ -103,5 +103,56 @@
     "unbounded_confidential_personnel_dataset",
     "provider_specific_domain_logic",
     "microservices_for_maturity_signal"
-  ]
+  ],
+  "business_sequence": {
+    "stage_1": "B2B_process_validation_and_repeatable_unit_economics",
+    "stage_2": "yandex_cloud_production_shema_intelligence_runtime",
+    "stage_3": "bitrix24_business_control_plane_integration",
+    "stage_4": "B2G_tender_business_execution_inside_bitrix24_or_a_mature_integrated_tender_capability",
+    "stage_5": "outcome_learning_and_measured_scale"
+  },
+  "procurement_strategy": {
+    "shema_status": "dormant_foundation_only",
+    "new_shema_procurement_runtime_development": false,
+    "activation_stage": "after_B2B_is_repeatable_and_Bitrix24_business_plane_is_operational",
+    "business_model": "B2G_is_not_an_early_Shema_growth_dependency",
+    "execution_owner": "Bitrix24_or_a_mature_tender_capability_integrated_with_the_business_plane",
+    "existing_foundation_retention": "keep_provider_neutral_contracts_and_verified_fixtures_without_active_runtime_or_operator_tender_workspace",
+    "no_html_scraping_fallback": true,
+    "no_tender_submission_automation_in_shema": true
+  },
+  "data_plane": {
+    "shema_yandex_cloud": {
+      "canonical_database": "managed_postgresql",
+      "role": "intelligence_evidence_identity_provenance_handoff_lineage_learning_context",
+      "durable_audit_and_business_history": true
+    },
+    "bitrix24": {
+      "storage_role": "mature_business_plane_database_and_file_storage_owned_by_bitrix24_deployment_model",
+      "authority_after_handoff": "live_business_transactions_and_process_state"
+    },
+    "transition_rule": "do_not_migrate_the_entire_shema_database_into_bitrix24; keep_two_authoritative_domains_with_explicit_handoff_and_reference_lineage"
+  },
+  "operator_continuity": {
+    "single_operator_view": "one_workflow_with_context_linkage_not_two_competing_records",
+    "multi_operator_after_bitrix": "Bitrix24_owns_live_assignment_team_workflow_and_transaction_activity_after_handoff",
+    "sheim_pre_handoff_assignment": "Shema_may_own_preparation_assignment_only_before_handoff",
+    "stable_context_keys": [
+      "shema_identity_ref",
+      "handoff_id",
+      "integration_correlation_id",
+      "bitrix_entity_ref",
+      "mapping_version"
+    ],
+    "no_shadow_copy_of_live_business_state": true,
+    "stale_write_protection": true
+  },
+  "document_evolution": {
+    "document_rule_source_is_versioned": true,
+    "effective_date_required": true,
+    "historical_configuration_is_preserved": true,
+    "legal_or_edo_change_action": "introduce_new_versioned_rule_and_revalidate_capability_mapping",
+    "missing_downstream_capability": "fail_closed_to_manual_review_or_preparation_only",
+    "final_legal_execution_owner": "bitrix24_or_dedicated_edo_system"
+  }
 }
