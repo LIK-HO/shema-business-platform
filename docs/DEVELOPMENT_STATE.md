@@ -8,7 +8,7 @@
 - Current verified architecture boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract** — CLOSED / VERIFIED at contract and test stage. Runtime public-form implementation remains governed by the Phase 3B roadmap exit criteria.
 - Current active extension: **Operator Interface Alignment + Repeat Orders & Business Continuity + Public Intake + Counterparty Monitoring + Bitrix24 Cutover** — contract/test work in progress until the final current-head adversarial review and release gate close.
 - Previous draft procurement subsystem removed from the current product boundary; no procurement/tender runtime, provider adapters, tender workspace or procurement persistence remains in the active implementation.
- - Product flow is fixed for the initial B2B stage as: intelligence → identity/evidence → qualification → contact preparation → repeat orders/business continuity → business handoff → live business execution → result/learning.
+- Product flow is fixed for the initial B2B stage as: intelligence → identity/evidence → qualification → contact preparation → repeat orders/business continuity → business handoff → live business execution → result/learning.
 - Phase 3A is fixed as Repeat Orders & Business Continuity in temporary Shema live mode, with verified Bitrix24 cutover and purge/hide semantics.
 - Phase 4 is the unified Web operator/public-client surface; no internal document-management subsystem is part of the roadmap.
 - Web + PWA are the only approved experience surfaces; Android is removed from the target roadmap.
