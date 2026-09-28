@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 from shema_platform.application.counterparty_lookup import (
     CounterpartyLookupProviderError,
