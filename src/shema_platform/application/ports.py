@@ -200,6 +200,8 @@ class AIRunRepository(Protocol):
 
     def get(self, run_id: str) -> AIRun | None: ...
 
+    def get_by_task_id(self, task_id: str) -> AIRun | None: ...
+
 
 class UnitOfWork(Protocol):
     """Application transaction boundary shared by all durable workflows."""
