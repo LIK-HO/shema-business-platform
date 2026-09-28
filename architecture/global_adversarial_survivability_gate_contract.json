@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "status": "mandatory_architectural_change_gate",
   "purpose": "Prevent strategy or element changes from creating a system-level failure even when the local element passes its own tests.",
   "core_principle": "Every material strategy change and every element completion triggers a fresh adversarial review of the entire approved architecture and operating model before the boundary may be VERIFIED or CLOSED.",
@@ -33,7 +33,9 @@
     "provider_replacement_and_dependency_risk",
     "legal_document_and_edo_change_resilience",
     "migration_cutover_backup_restore_and_rollback",
-    "observability_audit_and_recovery"
+    "observability_audit_and_recovery",
+    "public_ingress_and_form_abuse",
+    "deterministic_external_registry_preflight"
   ],
   "mandatory_questions": [
     "Can the change create two authoritative values for one live business concern?",
@@ -45,7 +47,11 @@
     "Can the system continue safely when a legal or EDO rule changes?",
     "Can cost, quota, rate-limit or storage exhaustion amplify into cascading failure?",
     "Can a new UI, integration or runtime path silently bypass an existing policy or evidence gate?",
-    "Can the system reconstruct what happened after an ambiguous external result?"
+    "Can the system reconstruct what happened after an ambiguous external result?",
+    "Can untrusted public input amplify provider lookups or exhaust shared application resources?",
+    "Can an identifier lookup endpoint be abused as a registry enumeration oracle?",
+    "Can a public form bypass evidence, idempotency or canonical API controls and create duplicate business state?",
+    "Can a public attachment or payload become an execution, storage or denial-of-service vector?"
   ],
   "required_outputs": [
     "global_architecture_review",
