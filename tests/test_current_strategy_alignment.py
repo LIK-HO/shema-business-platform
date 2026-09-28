@@ -47,6 +47,7 @@ def test_public_experience_and_adversarial_gate_reference_ui_boundary() -> None:
 def test_ui_contract_is_referenced_by_the_business_plane_boundaries() -> None:
     interface = load_json("architecture/operator_interface_contract.json")
     business = load_json("architecture/business_plane_boundary_contract.json")
+    growth_contract = load_json("architecture/platform_growth_strategy_contract.json")
     repeat = load_json("architecture/repeat_order_transition_contract.json")
 
     assert (
@@ -54,4 +55,6 @@ def test_ui_contract_is_referenced_by_the_business_plane_boundaries() -> None:
         is True
     )
     assert business["repeat_business"]["no_dual_live_ownership"] is True
+    assert business["operator_continuity"]["interface_contract"] == "architecture/operator_interface_contract.json"
+    assert growth_contract["experience_surfaces"]["operator_web"]["interface_contract"] == "architecture/operator_interface_contract.json"
     assert repeat["purge_policy"]["never_purge_before_readback_verification"] is True
