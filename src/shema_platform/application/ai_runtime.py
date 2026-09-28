@@ -83,7 +83,6 @@ class AIExecutionRequest:
         if self.actor_trust_level < 0:
             raise ValueError("actor_trust_level cannot be negative")
 
-
     @property
     def request_hash(self) -> str:
         payload = {
@@ -98,9 +97,13 @@ class AIExecutionRequest:
             "max_duration_seconds": self.max_duration_seconds,
             "actor_id": self.actor_id,
         }
-        return sha256(
-            json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
+        encoded = json.dumps(
+            payload,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode()
+        return sha256(encoded).hexdigest()
 
 
 class AIExecutionService:
