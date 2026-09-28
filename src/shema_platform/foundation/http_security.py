@@ -1,9 +1,16 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from typing import Protocol
 from uuid import uuid4
 
 ASGIApp = Callable[[dict, Callable, Callable], Awaitable[None]]
+
+
+class BotChallengeVerifier(Protocol):
+    """Server-side verification boundary for anti-bot challenge tokens."""
+
+    def verify(self, *, token: str, peer_identity: str) -> bool: ...
 
 
 class RequestBodyTooLarge(Exception):
