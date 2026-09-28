@@ -163,6 +163,9 @@ def test_public_intake_database_is_isolated_durable_and_idempotent() -> None:
             assert conn.execute(
                 "select count(*) from intake_rate_limit"
             ).fetchone() == (1,)
+            assert conn.execute(
+                "select count(*) from intake_idempotency_reservation"
+            ).fetchone() == (1,)
 
     finally:
         drop_database(database)
@@ -178,12 +181,12 @@ def test_public_intake_migration_can_be_adopted_by_a_fresh_database() -> None:
                 ROOT / "db" / "public_intake_migrations"
             ),
         ).apply()
-        assert report.current_version == 1
-        assert report.applied == (1,)
+        assert report.current_version == 3
+        assert report.applied == (1, 2, 3)
 
         with psycopg.connect(admin_dsn(database)) as conn:
             assert conn.execute(
-                "select count(*) from schema_migration where version = 1"
+                "select count(*) from schema_migration where version = 3"
             ).fetchone() == (1,)
     finally:
         drop_database(database)
