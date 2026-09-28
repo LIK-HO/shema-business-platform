@@ -13,8 +13,6 @@ from urllib.parse import urlsplit, urlencode
 from urllib.request import Request
 from uuid import uuid4
 
-from shema_platform.foundation.secure_http import secure_urlopen
-
 from shema_platform.adapters.ai.contracts import (
     AIModelProvenance,
     AIProviderActivation,
@@ -32,6 +30,9 @@ from shema_platform.adapters.ai.contracts import (
     validate_provider_response,
 )
 from shema_platform.application.ai import AIRun
+
+
+from shema_platform.foundation.secure_http import secure_urlopen
 
 DEFAULT_BASE_URL = "https://api.giga.chat/v1"
 DEFAULT_TOKEN_URL = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth"
