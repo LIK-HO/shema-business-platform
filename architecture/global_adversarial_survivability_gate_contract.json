@@ -1,0 +1,73 @@
+{
+  "version": "1.0",
+  "status": "mandatory_architectural_change_gate",
+  "purpose": "Prevent strategy or element changes from creating a system-level failure even when the local element passes its own tests.",
+  "core_principle": "Every material strategy change and every element completion triggers a fresh adversarial review of the entire approved architecture and operating model before the boundary may be VERIFIED or CLOSED.",
+  "survivability_target": {
+    "name": "architectural_survivability",
+    "meaning": "No single provider, application component, deployment change, migration, operator error, policy change, legal/document change or integration ambiguity may destroy canonical truth or make recovery impossible within the designed recovery boundary.",
+    "literal_immortality_claim": false,
+    "engineering_goal": "detect_failure_early_contain_impact_preserve_truth_recover_deterministically_audit_and_learn"
+  },
+  "triggers": [
+    "strategy_change",
+    "architecture_boundary_change",
+    "element_completion",
+    "persistence_authority_change",
+    "external_integration_ownership_change",
+    "legal_or_document_regime_change",
+    "runtime_or_deployment_change",
+    "migration_or_cutover_change"
+  ],
+  "scope": [
+    "frozen_v1_4_kernel",
+    "post_core_contracts",
+    "runtime_composition",
+    "data_plane_and_persistence",
+    "identity_evidence_provenance",
+    "security_privacy_and_secrets",
+    "external_effects_idempotency_and_reconciliation",
+    "operator_causal_continuity",
+    "multi_operator_assignment_permissions_and_concurrency",
+    "cost_quota_and_resource_exhaustion",
+    "provider_replacement_and_dependency_risk",
+    "legal_document_and_edo_change_resilience",
+    "migration_cutover_backup_restore_and_rollback",
+    "observability_audit_and_recovery"
+  ],
+  "mandatory_questions": [
+    "Can the change create two authoritative values for one live business concern?",
+    "Can an external side effect happen twice after timeout_or_lost_response?",
+    "Can a provider outage or provider replacement corrupt canonical truth?",
+    "Can an operator complete a task without losing the causal link to its evidence, handoff and outcome?",
+    "Can two operators overwrite each other or act on stale state?",
+    "Can a failed migration leave the old and new systems both partially authoritative?",
+    "Can the system continue safely when a legal or EDO rule changes?",
+    "Can cost, quota, rate-limit or storage exhaustion amplify into cascading failure?",
+    "Can a new UI, integration or runtime path silently bypass an existing policy or evidence gate?",
+    "Can the system reconstruct what happened after an ambiguous external result?"
+  ],
+  "required_outputs": [
+    "global_architecture_review",
+    "fatal_failure_hypotheses",
+    "cross_system_split_brain_check",
+    "dependency_and_single_point_of_failure_check",
+    "operator_causal_chain_check",
+    "multi_operator_concurrency_check",
+    "security_privacy_and_secret_boundary_check",
+    "legal_document_change_resilience_check",
+    "migration_and_rollback_check",
+    "findings_with_P0_P1_P2_P3_severity",
+    "explicit_disposition_for_each_finding"
+  ],
+  "closure_policy": {
+    "blocks_verified_state": true,
+    "blocks_closed_state": true,
+    "P0_disposition": "must_be_fixed_or_explicit_architecture_exception_before_closure",
+    "P1_disposition": "must_be_fixed_or_explicitly bounded_and_scheduled before closure",
+    "P2_disposition": "must_have_control_and_owner_boundary_before_closure",
+    "P3_disposition": "may_be_documentation_or_optimization_follow_up",
+    "current_head_required": true,
+    "full_release_gate_required_after_change": true
+  }
+}
