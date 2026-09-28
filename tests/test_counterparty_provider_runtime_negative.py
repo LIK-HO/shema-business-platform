@@ -141,8 +141,6 @@ def request_body() -> dict:
     return {
         "identifierType": "INN",
         "identifier": "7707083893",
-        "claimConfidence": 0.8,
-        "expiresAt": (datetime.now(UTC) + timedelta(days=7)).isoformat(),
     }
 
 
@@ -173,7 +171,7 @@ def activate(client: TestClient) -> None:
         headers={"Authorization": "Bearer activate-token"},
         json={
             "reason": "negative outcome rehearsal",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
             "activationVersion": "negative-runtime:v1",
         },
     )
