@@ -79,6 +79,7 @@ from shema_platform.foundation.errors import (
     QuarantineRequired,
 )
 from shema_platform.foundation.http_security import (
+    BotChallengeVerifier,
     RequestBodySizeLimitMiddleware,
     trusted_peer_identity,
 )
@@ -308,6 +309,7 @@ def create_app(
     public_intake: PublicIntakeService | None = None,
     operator_notification_reader=None,
     authoritative_counterparty_lookup: AuthoritativeCounterpartyLookup | None = None,
+    bot_challenge_verifier: BotChallengeVerifier | None = None,
 ) -> FastAPI:
     runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
@@ -335,6 +337,7 @@ def create_app(
     app.state.public_intake = public_intake
     app.state.operator_notification_reader = operator_notification_reader
     app.state.authoritative_counterparty_lookup = authoritative_counterparty_lookup
+    app.state.bot_challenge_verifier = bot_challenge_verifier
     default_telemetry: TelemetrySink = (
         StructuredLoggingTelemetrySink()
         if runtime_security.environment == "production"
@@ -563,6 +566,27 @@ def create_app(
             raise PublicIntakeSecurityRejected(
                 "trusted client identity is unavailable"
             ) from exc
+
+        verifier: BotChallengeVerifier | None = request.app.state.bot_challenge_verifier
+        challenge_token = (bot_challenge or "").strip()
+        if verifier is None:
+            raise PublicIntakeSecurityRejected(
+                "server-side bot challenge verification is unavailable"
+            )
+        try:
+            challenge_verified = verifier.verify(
+                token=challenge_token,
+                peer_identity=rate_limit_key,
+            )
+        except Exception as exc:
+            raise PublicIntakeSecurityRejected(
+                "bot challenge verification failed"
+            ) from exc
+        if not challenge_verified:
+            raise PublicIntakeSecurityRejected(
+                "bot challenge verification rejected"
+            )
+
         result = service.submit(
             payload=PublicIntakePayload(
                 service_type=payload.service_type,
@@ -586,9 +610,7 @@ def create_app(
             idempotency_key=idempotency_key,
             public_client_key=rate_limit_key,
             origin=origin,
-            bot_challenge_passed=(
-                (bot_challenge or "").strip().lower() == "passed"
-            ),
+            bot_challenge_passed=True,
             correlation_id=request.state.correlation_id,
             honeypot_value=payload.honeypot,
         )
