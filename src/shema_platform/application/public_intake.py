@@ -208,7 +208,7 @@ class PublicIntakeService:
         submission_limit: int = 5,
         lookup_limit: int = 20,
         window_seconds: int = 600,
-        require_bot_challenge: bool = False,
+        require_bot_challenge: bool = True,
         allowed_origins: frozenset[str] = frozenset(),
         clock=lambda: datetime.now(UTC),
     ) -> None:
@@ -409,9 +409,12 @@ class PublicIntakeService:
             raise PublicIntakeSecurityRejected(
                 "public client key must be 8-128 characters"
             )
-        if self._require_bot_challenge and not bot_challenge_passed:
+        if not self._allowed_origins:
+            raise PublicIntakeSecurityRejected(
+                "public origin allowlist is not configured"
+            )
+        normalized_origin = (origin or "").rstrip("/")
+        if normalized_origin not in self._allowed_origins:
+            raise PublicIntakeSecurityRejected("origin is not allowed")
+        if not bot_challenge_passed:
             raise PublicIntakeSecurityRejected("bot challenge is required")
-        if self._allowed_origins:
-            normalized_origin = (origin or "").rstrip("/")
-            if normalized_origin not in self._allowed_origins:
-                raise PublicIntakeSecurityRejected("origin is not allowed")
