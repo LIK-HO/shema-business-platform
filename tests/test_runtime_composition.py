@@ -10,6 +10,7 @@ from shema_platform.experience.runtime_composition import (
 from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
 from shema_platform.foundation.authentication import AuthenticatedActor, AuthenticationPort
 from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
@@ -27,7 +28,11 @@ class FakeAuthenticator(AuthenticationPort):
     def authenticate(self, authorization: str | None) -> AuthenticatedActor:
         if authorization != "Bearer test-token":
             raise AssertionError("unexpected authorization")
-        return AuthenticatedActor("operator-1", trust_level=2)
+        return AuthenticatedActor(
+            "operator-1",
+            trust_level=2,
+            permissions=frozenset({Permission.SEARCH_RUN}),
+        )
 
 
 class MockSearchApplication:
