@@ -171,7 +171,7 @@ def yandex_snapshot() -> ConfigurationSnapshot:
         environment="production",
         values={
             "ai.yandexgpt.model_uri": "gpt://p37/yandexgpt/latest",
-            "ai.yandexgpt.base_url": "https://ai.example.test/v1",
+            "ai.yandexgpt.base_url": "https://ai.api.cloud.yandex.net/v1",
             "ai.yandexgpt.timeout_seconds": 10,
             "ai.yandexgpt.max_response_bytes": 1_048_576,
             "ai.yandexgpt.max_input_chars": 32_768,
@@ -337,6 +337,7 @@ def execute_selected_provider(
         headers={
             "Authorization": "Bearer p37-token",
             "X-Correlation-Id": correlation_id,
+            "Idempotency-Key": f"p37:{provider_id}:{identity_id}:run",
         },
         json={
             "taskType": "qualification",
@@ -393,8 +394,8 @@ def test_yandex_selected_runtime_executes_end_to_end(monkeypatch) -> None:
         body = response.json()
         run_id = body["runId"]
         assert body["providerId"] == "yandexgpt"
-        assert body["output"] == f"P37 yandex result:{correlation_id}"
-        assert body["correlationId"] == correlation_id
+        assert body["output"] == f"P37 yandex result:{body['correlationId']}"
+        assert body["correlationId"] != correlation_id
         assert DeterministicYandexGPTProvider.invocations == 1
         assert DeterministicGigaChatProvider.invocations == 0
         assert yandex.ai.gate.state.enabled is True
@@ -480,7 +481,7 @@ def test_gigachat_selected_runtime_executes_end_to_end(monkeypatch) -> None:
         body = response.json()
         run_id = body["runId"]
         assert body["providerId"] == "gigachat"
-        assert body["output"] == f"P37 gigachat result:{correlation_id}"
+        assert body["output"] == f"P37 gigachat result:{body['correlationId']}"
         assert body["correlationId"] == correlation_id
         assert DeterministicGigaChatProvider.invocations == 1
         assert DeterministicYandexGPTProvider.invocations == 0
@@ -560,6 +561,7 @@ def test_selected_provider_fails_closed_when_not_activated(monkeypatch) -> None:
             headers={
                 "Authorization": "Bearer p37-token",
                 "X-Correlation-Id": correlation_id,
+                "Idempotency-Key": f"p37:expired:{identity_id}:run",
             },
             json={
                 "taskType": "qualification",
