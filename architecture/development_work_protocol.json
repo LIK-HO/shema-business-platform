@@ -34,7 +34,8 @@
     "recovery",
     "tests",
     "observability",
-    "release_impact"
+    "release_impact",
+    "global_adversarial_survivability_review"
   ],
   "interruption_requirements": [
     "active_element",
@@ -96,7 +97,8 @@
       "tests_green",
       "observability_sufficient",
       "release_impact_checked",
-      "development_state_updated"
+      "development_state_updated",
+      "global_adversarial_survivability_gate_passed_for_current_head"
     ],
     "interruption_cursor_required": true
   },
@@ -104,5 +106,52 @@
     "entry": "Read AGENTS.md, manifest, work protocol, development state; then resolve live branch/head/PR/CI.",
     "no_conversation_memory_as_source_of_truth": true,
     "live_github_state_authoritative": true
+  },
+  "governance": {
+    "global_adversarial_survivability_gate": {
+      "enabled": true,
+      "mandatory_triggers": [
+        "strategy_change",
+        "architecture_boundary_change",
+        "element_completion",
+        "persistence_authority_change",
+        "external_integration_ownership_change",
+        "legal_or_document_regime_change",
+        "runtime_or_deployment_change",
+        "migration_or_cutover_change"
+      ],
+      "blocks_element_closure_until_passed": true,
+      "scope": [
+        "frozen_kernel_invariants",
+        "current_post_core_architecture",
+        "data_ownership_and_canonical_truth",
+        "persistence_and_recovery",
+        "security_and_privacy",
+        "external_effects_and_idempotency",
+        "operator_causal_continuity",
+        "multi_operator_concurrency_and_assignment",
+        "cost_and_resource_failure",
+        "provider_replacement_and_dependency_risk",
+        "legal_document_evolution",
+        "migration_and_rollback"
+      ],
+      "required_outputs": [
+        "fatal_failure_hypotheses",
+        "cross_system_split_brain_check",
+        "dependency_and_single_point_of_failure_check",
+        "operator_workflow_causal_chain_check",
+        "recovery_and_rollback_check",
+        "security_privacy_check",
+        "legal_change_resilience_check",
+        "findings_with_severity_and_disposition"
+      ],
+      "severity_levels": [
+        "P0",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "target": "architectural_survivability_under_professional_adversarial_destruction"
+    }
   }
 }
