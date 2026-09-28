@@ -251,7 +251,7 @@ def test_preflight_matches_counterparty_without_gpt() -> None:
     assert result.record.preflight.identity_match is IdentityMatch.MATCH
     assert result.projection_status == "PROJECTED"
     assert projector.calls == [result.record.request_id]
-    assert len(repository.outbox) == 1
+    assert len(repository.outbox) == 2
     assert provider.calls == 1
 
 
@@ -419,6 +419,7 @@ def test_public_api_rate_limit_ignores_caller_supplied_client_key() -> None:
         application=None,
         authenticator=PermissionedAuthenticator(),
         public_intake=service,
+        bot_challenge_verifier=FakeBotChallengeVerifier(),
     )
     first = TestClient(app).post(
         "/v1/public/intake",
@@ -499,7 +500,8 @@ def test_public_api_default_edge_policy_rejects_missing_proof() -> None:
             "contactChannel": "+79990000000",
         },
     )
-    assert response.status_code == 403
+    assert response.status_code == 400
+    assert response.json()["code"] == "public_intake_security_rejected"
 
 
 def test_operator_notification_center_requires_permission() -> None:
