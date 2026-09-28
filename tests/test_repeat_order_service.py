@@ -101,6 +101,17 @@ class MemoryRepeatOrderRepository:
         return saved
 
 
+class MemoryAuditRepository:
+    def __init__(self) -> None:
+        self.records = []
+
+    def append(self, record) -> None:
+        self.records.append(record)
+
+    def all(self):
+        return tuple(self.records)
+
+
 class MemoryEconomicsRepository:
     def __init__(self) -> None:
         self.items: list[EconomicEntry] = []
@@ -186,7 +197,7 @@ def make_service(*, revalidator: StaticRevalidator | None = None, ids=None):
     repeat_repo = MemoryRepeatOrderRepository()
     economics_repo = MemoryEconomicsRepository()
     idempotency = IdempotencyStore()
-    audit = AuditLog()
+    audit = MemoryAuditRepository()
     outbox = OutboxStore()
     uow = MemoryUoW(
         identity_repo,
