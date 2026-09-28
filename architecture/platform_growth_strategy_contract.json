@@ -163,7 +163,8 @@
     "operator_web": {
       "role": "protected_operator_workspace_on_same_canonical_api",
       "counterparty_workspace": "separate_Контрагенты_workspace_with_check_monitoring_favorites",
-      "notification_center": true
+      "notification_center": true,
+      "interface_contract": "architecture/operator_interface_contract.json"
     },
     "pwa": "same_web_semantics_with_bounded_offline_behavior",
     "max_mini_app": "same_public_web_application_inside_MAX_bot",
