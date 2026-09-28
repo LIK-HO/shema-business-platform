@@ -54,3 +54,6 @@ def test_shema_does_not_reimplement_repeat_orders_or_live_economics() -> None:
         is True
     )
     assert payload["economics"]["no_new_live_accounting_subsystem_in_shema"] is True
+    assert payload["repeat_business"]["shema_must_not_reimplement_bitrix_recurring_deal_engine"] is True
+    assert payload["order_economics_transition"]["full_transfer_required"] is True
+    assert payload["order_economics_transition"]["purge_only_after_verified_readback"] is True
