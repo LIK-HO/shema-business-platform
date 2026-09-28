@@ -78,6 +78,26 @@ class PostgresPublicIntakeRepository:
             return None
         return self.get_by_idempotency_key(str(row[0]))
 
+    def acquire_idempotency_lock(self, key: str) -> None:
+        normalized = key.strip()
+        if not normalized:
+            raise ValueError("idempotency key is required")
+        self.connection.execute(
+            "select pg_advisory_lock(hashtextextended(%s, 0))",
+            (normalized,),
+        )
+
+    def release_idempotency_lock(self, key: str) -> None:
+        normalized = key.strip()
+        if not normalized:
+            raise ValueError("idempotency key is required")
+        released = self.connection.execute(
+            "select pg_advisory_unlock(hashtextextended(%s, 0))",
+            (normalized,),
+        ).fetchone()
+        if not released or not bool(released[0]):
+            raise IntegrityViolation("public intake idempotency lock was not held")
+
     def get_by_idempotency_key(self, key: str) -> PublicIntakeRecord | None:
         row = self.connection.execute(
             """
