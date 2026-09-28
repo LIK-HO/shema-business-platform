@@ -3,8 +3,6 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timezone
-from typing import Protocol
-
 from shema_platform.application.public_intake import (
     CounterpartyPreflightSnapshot,
     PreflightDecision,
@@ -17,17 +15,6 @@ from shema_platform.application.public_intake import (
 from shema_platform.foundation.errors import IntegrityViolation, IdempotencyConflict
 from shema_platform.application.public_intake import PublicIntakeRateLimited
 from shema_platform.platform.postgres import DBConnection
-
-
-class PublicIntakeOutboxEventLike(Protocol):
-    event_id: str
-    request_id: str
-    event_type: str
-    payload: dict[str, object]
-    occurred_at: datetime
-    notify_operator: bool
-
-
 class PublicIntakeOutboxEvent:
     def __init__(
         self,
@@ -79,6 +66,15 @@ class PostgresPublicIntakeRepository:
         finally:
             connection.close()
         return False
+
+    def get_by_request_id(self, request_id: str) -> PublicIntakeRecord | None:
+        row = self.connection.execute(
+            "select idempotency_key from intake_request where request_id = %s",
+            (request_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        return self.get_by_idempotency_key(str(row[0]))
 
     def get_by_idempotency_key(self, key: str) -> PublicIntakeRecord | None:
         row = self.connection.execute(
@@ -758,3 +754,54 @@ class PostgresOperatorNotificationReader:
 
 class PublicRequestUnavailable(RuntimeError):
     pass
+
+
+
+class PublicIntakeOutboxDispatcher:
+    """Replay-safe bridge from the isolated intake outbox into Shema."""
+
+    def __init__(
+        self,
+        intake_repository_factory,
+        projector,
+        *,
+        clock=lambda: datetime.now(timezone.utc),
+    ):
+        self._intake_repository_factory = intake_repository_factory
+        self._projector = projector
+        self._clock = clock
+
+    def dispatch_pending(self, *, limit: int = 100) -> int:
+        projected = 0
+        with self._intake_repository_factory() as repository:
+            events = repository.pending_outbox(limit=limit)
+
+        for event in events:
+            if not event.notify_operator:
+                with self._intake_repository_factory() as repository:
+                    repository.mark_outbox_published(
+                        event.event_id,
+                        now=self._clock(),
+                    )
+                continue
+
+            with self._intake_repository_factory() as repository:
+                record = repository.get_by_request_id(event.request_id)
+            if record is None:
+                raise IntegrityViolation(
+                    "intake outbox event references missing request"
+                )
+
+            self._projector.project(record)
+            with self._intake_repository_factory() as repository:
+                repository.mark_projected(
+                    record.request_id,
+                    now=self._clock(),
+                )
+                repository.mark_outbox_published(
+                    event.event_id,
+                    now=self._clock(),
+                )
+            projected += 1
+
+        return projected
