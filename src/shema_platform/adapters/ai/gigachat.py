@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from math import isfinite
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
+from urllib.parse import urlsplit, urlencode
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
@@ -33,6 +33,8 @@ from shema_platform.application.ai import AIRun
 
 DEFAULT_BASE_URL = "https://api.giga.chat/v1"
 DEFAULT_TOKEN_URL = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth"
+_ALLOWED_BASE_HOST = "api.giga.chat"
+_ALLOWED_TOKEN_HOST = "ngw.devices.sberbank.ru"
 DEFAULT_TIMEOUT_SECONDS = 10.0
 DEFAULT_MAX_RESPONSE_BYTES = 1_048_576
 DEFAULT_MAX_INPUT_CHARS = 32_768
@@ -116,10 +118,25 @@ class GigaChatConfiguration:
             raise ValueError("GIGACHAT_MODEL is required")
         if self.scope not in ALLOWED_SCOPES:
             raise ValueError("GIGACHAT_SCOPE is invalid")
-        if not self.base_url.startswith("https://"):
-            raise ValueError("GigaChat base_url must use HTTPS")
-        if not self.token_url.startswith("https://"):
-            raise ValueError("GigaChat token_url must use HTTPS")
+        parsed_base = urlsplit(self.base_url)
+        if (
+            parsed_base.scheme != "https"
+            or parsed_base.hostname != _ALLOWED_BASE_HOST
+            or parsed_base.port is not None
+            or parsed_base.query
+            or parsed_base.fragment
+        ):
+            raise ValueError("GigaChat base_url must target the pinned official host")
+
+        parsed_token = urlsplit(self.token_url)
+        if (
+            parsed_token.scheme != "https"
+            or parsed_token.hostname != _ALLOWED_TOKEN_HOST
+            or parsed_token.port != 9443
+            or parsed_token.query
+            or parsed_token.fragment
+        ):
+            raise ValueError("GigaChat token_url must target the pinned official host")
         if not isfinite(self.timeout_seconds) or self.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be finite and positive")
         if self.timeout_seconds > MAX_TIMEOUT_SECONDS:
