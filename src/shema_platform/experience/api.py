@@ -838,9 +838,6 @@ def create_app(
             ),
             actor_id=context.actor_id,
             permissions=context.permissions,
-            claim_confidence=payload.claim_confidence,
-            expires_at=payload.expires_at,
-            observed_at=payload.observed_at,
             correlation_id=context.correlation_id,
         )
         if result.provider_record.provider_id != provider_id:
