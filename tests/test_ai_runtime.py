@@ -11,6 +11,7 @@ from shema_platform.application.ai_runtime import (
 from shema_platform.application.ports import AIRunRepository
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import Permission
+from shema_platform.foundation.idempotency import IdempotencyRecord
 from shema_platform.foundation.policy import PolicyEngine
 
 
@@ -26,6 +27,37 @@ class MemoryRuns(AIRunRepository):
 
 
 @dataclass
+class MemoryIdempotency:
+    records: dict[str, IdempotencyRecord] = field(default_factory=dict)
+
+    def reserve(self, key: str, request_hash: str, result_ref: str) -> IdempotencyRecord:
+        existing = self.records.get(key)
+        if existing is not None:
+            if existing.request_hash != request_hash:
+                raise Exception("idempotency key reused with different request")
+            return existing
+        record = IdempotencyRecord(key=key, request_hash=request_hash, result_ref=result_ref)
+        self.records[key] = record
+        return record
+
+    def complete(
+        self,
+        key: str,
+        request_hash: str,
+        result_ref: str,
+    ) -> IdempotencyRecord:
+        existing = self.records[key]
+        if existing.request_hash != request_hash:
+            raise Exception("idempotency request hash mismatch")
+        record = IdempotencyRecord(key=key, request_hash=request_hash, result_ref=result_ref)
+        self.records[key] = record
+        return record
+
+    def get(self, key: str) -> IdempotencyRecord | None:
+        return self.records.get(key)
+
+
+@dataclass
 class MemoryAudits:
     records: list[AuditRecord] = field(default_factory=list)
 
@@ -37,6 +69,7 @@ class MemoryUnitOfWork:
     def __init__(self) -> None:
         self.ai_runs = MemoryRuns()
         self.audits = MemoryAudits()
+        self.idempotency = MemoryIdempotency()
 
     def __enter__(self) -> "MemoryUnitOfWork":
         return self
@@ -94,9 +127,10 @@ def request(**overrides) -> AIExecutionRequest:
 
 
 def service(provider_factory=FakeProvider):
+    unit_of_work = MemoryUnitOfWork()
     return AIExecutionService(
         provider_factory=provider_factory,
-        unit_of_work_factory=MemoryUnitOfWork,
+        unit_of_work_factory=lambda: unit_of_work,
         trust_resolver=StaticTrustResolver(),
         configuration_version_provider=lambda: "yandexgpt-config:v1",
         policy=PolicyEngine(),
@@ -111,10 +145,20 @@ def _execute_scoped(gateway, task, **kwargs):
 
 
 def test_ai_application_service_reuses_completed_idempotent_run() -> None:
-    first = service().execute(request())
-    # A new service instance sees the durable reservation/result in real storage;
-    # this test fixture models the contract at the request boundary.
-    assert first.run_id == "run-1"
+    provider_calls = 0
+
+    class CountingProvider(FakeProvider):
+        def run(self, task, *, input_refs):
+            nonlocal provider_calls
+            provider_calls += 1
+            return super().run(task, input_refs=input_refs)
+
+    instance = service(provider_factory=CountingProvider)
+    first = instance.execute(request())
+    second = instance.execute(request())
+
+    assert first.run_id == second.run_id == "run-1"
+    assert provider_calls == 1
 
 
 def test_ai_application_service_uses_server_trust_and_frozen_gateway() -> None:
