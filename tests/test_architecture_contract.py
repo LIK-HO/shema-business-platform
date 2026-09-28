@@ -276,6 +276,7 @@ def test_ai_http_route_contract_is_bounded() -> None:
         "evidence_level",
         "production_activation_state",
         "provider_credentials",
+        "correlation_id",
     ]
     assert (
         route["composition_boundary"]["frozen_AIGateway_semantics_unchanged"]
