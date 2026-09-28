@@ -305,7 +305,7 @@ def test_assembled_ai_path_persists_run_audit_and_correlation(monkeypatch) -> No
                 "yandexgpt",
                 "gpt://p32/yandexgpt/latest",
                 "prompt:p32",
-                f"P32 deterministic result:{correlation_id}",
+                f"P32 deterministic result:{body['correlationId']}",
                 12,
                 Decimal("0.02000000"),
             )
