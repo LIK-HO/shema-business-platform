@@ -467,4 +467,50 @@ The standard path is:
 `OBSERVE → PROBLEM_STATEMENT → BOUNDARY_CONTRACT → GLOBAL_IMPACT_REVIEW → THREAT_AND_ABUSE_MODEL → RESOURCE_AND_COST_MODEL → VERTICAL_SLICE → NEGATIVE/RECOVERY → INTEGRATION/E2E → ADVERSARIAL_GATE → CONTROLLED_RELEASE → MEASURE → LEARN → FREEZE_OR_AMEND`.
 
 Public ingress/provider changes are classified E2; persistence-authority or cross-system ownership changes are E3; frozen-kernel semantic changes are E4 and require the separate core exception process.
+## 8E. Temporary Repeat Orders Before Bitrix24
+
+Before Bitrix24 is active as the live business plane, Shema is permitted a bounded local repeat-order mode using the frozen Order/Economics semantics.
+
+The local operator flow is:
+
+Previous completed order → Revalidate client/evidence/current assumptions → Create new repeat order → Execute → Record result
+
+The previous order remains immutable. The new order receives its own idempotency key, lineage reference and transaction-scoped economics.
+
+Once Bitrix24 becomes live, the transition is not a copy followed by immediate deletion. It is:
+
+Freeze → Snapshot → Bitrix create/acknowledge → Full readback → Completeness proof → Recovery verification → Purge live Shema rows → Freeze minimal lineage → Hide obsolete UI capability
+
+This guarantees that deleting operational rows is the last step of a verified migration, not part of the migration attempt.
+
+## 8F. Public Intake Data Plane
+
+Raw website/MAX request data is stored in a dedicated PostgreSQL database behind the canonical API. This database has separate credentials, access policy, backup/recovery scope and an intake outbox.
+
+The purpose is isolation:
+
+- the public edge cannot write the canonical Shema DB directly;
+- a temporary Shema outage cannot destroy an accepted request;
+- intake notifications can be retried independently;
+- raw form data can be purged according to a versioned retention policy without restructuring Shema's intelligence database.
+
+The operator sees a durable **Новые заявки** queue and notification center. The notification layer is derived from durable intake events, not browser state.
+
+## 8G. Counterparty Verification & Monitoring
+
+The lead-search field now acts as a dual-mode operator tool.
+
+When the value matches an exact INN/OGRN/OGRNIP:
+- canonical search enters COUNTERPARTY_CHECK;
+- deterministic registry verification runs first;
+- the operator may request bounded deep research;
+- the counterparty may be saved to **Мониторинг** or **Избранные**.
+
+The operator workspace is:
+
+**Контрагенты → Проверка | Мониторинг | Избранные**
+
+Monitoring is separate from favorites. Favorites are personal shortcuts; monitoring creates scheduled registry snapshots, change events and notifications.
+
+AI is optional after the deterministic evidence packet. It can explain what changed, but it cannot create or approve the underlying change event.
 
