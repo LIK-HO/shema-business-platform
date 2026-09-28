@@ -351,6 +351,18 @@ def test_prompt_input_limit_fails_before_external_call() -> None:
     assert called is False
 
 
+def test_configuration_rejects_untrusted_https_base_and_token_hosts() -> None:
+    with pytest.raises(ValueError, match="pinned official host"):
+        default_configuration(
+            base_url="https://attacker.example/v1",
+        )
+
+    with pytest.raises(ValueError, match="pinned official host"):
+        default_configuration(
+            token_url="https://attacker.example/oauth",
+        )
+
+
 def test_production_scopes_exclude_personal_scope() -> None:
     assert PRODUCTION_SCOPES == {
         "GIGACHAT_API_B2B",
