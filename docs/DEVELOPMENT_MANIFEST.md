@@ -2,7 +2,7 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / MAX Evidence Hold
-**Active development boundary:** Global Adversarial Survivability + B2B-first / Bitrix24 transition correction — IN PROGRESS until the current-head global review and full release-gate CI are GREEN.
+**Active development boundary:** Global Adversarial Survivability + B2B-first / Bitrix24 transition correction + Operator Interface Alignment — IN PROGRESS until the current-head global review and full release-gate CI are GREEN.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -130,8 +130,8 @@ Shema — это **личная операционная система влад
 
 ### Product decisions added 2026-09-28
 
-- **Repeat business:** mandatory Phase 3A is now **Repeat Business Preparation**, not a second order engine. Shema detects repeat demand, revalidates evidence/configuration and creates a fresh preparation/handoff snapshot. Live recurring/repeat deals are owned by the mature business plane after handoff. Reference patterns: Bitrix24 recurring deals, Salesforce orders and SAP scheduling agreements.
-- **Interface:** adopted mature workspace pattern — summary/highlights + details + related records + activity/history; work lists with filters/sorts and quick actions; contextual/split inspection; progressive disclosure; personal view preferences; responsive/accessibility baseline; server-authoritative business state.
+- **Repeat business:** mandatory Phase 3A is now **Repeat Orders & Business Continuity (temporary Shema live mode)**. Shema may execute bounded repeat orders and limited transaction-scoped economics until Bitrix24 becomes the live business plane. The frozen Order/Economics semantics are reused; no second recurring-deal engine is built. The complete transfer/purge contract governs the later Bitrix24 cutover.
+- **Interface:** adopted a dedicated Bitrix24-aligned operator workspace contract: persistent left navigation, list-first work queues, saved filters/sorts, optional Kanban, quick actions, contextual/split inspection, structured record forms with activity/history, related-record links and progressive disclosure. Canonical contract: `architecture/operator_interface_contract.json`.
 - **Multi-operator:** collaboration is a permanent architectural requirement: explicit actor, ownership/assignment/team queues, server-side permissions, revision/concurrency protection, audited handoff, explicit conflict resolution and no shadow copies.
 - **Clients:** Web + PWA are sufficient and remain the only approved experience surfaces. Android is removed from the roadmap.
 - **Source set:** the external intelligence layer uses a small role-based source portfolio with query-driven routing; specialist sources are triggered only by a concrete evidence gap. Contract: `architecture/intelligence_source_policy_contract.json`.
@@ -146,7 +146,7 @@ Multi-operator: https://learn.microsoft.com/en-us/power-platform/admin/how-recor
 - The business-plane handoff is an explicit capability contract, not a verbal process. See `architecture/business_plane_boundary_contract.json`.
 - `PREPARED → OUTBOX_RESERVED → SENT_UNKNOWN → ACKNOWLEDGED` is the minimum safe handoff lifecycle; lost acknowledgements require reconciliation before replay.
 - A single live business field has one owner. Shema and Bitrix24 never perform unconstrained bidirectional writes to the same live field.
-- Repeat Business Preparation must not reimplement Bitrix recurring-deal execution.
+- Temporary Shema repeat orders use the frozen Order/Economics semantics and must not reimplement Bitrix24's recurring-deal engine; after verified handoff Bitrix24 owns live repeat execution.
 - Customer-facing communication after handoff belongs to the business plane. MAX from Shema is not a substitute second communication history; any future direct customer-channel activation requires an explicit reconciliation/ownership contract.
 - Monium is operational observability only; long-lived audit and business history remain PostgreSQL-owned.
 - YandexGPT cost ceilings are explicit configuration, never an implicit zero default.
@@ -163,7 +163,7 @@ Multi-operator: https://learn.microsoft.com/en-us/power-platform/admin/how-recor
 - **MAX:** the adapter remains, but live outbound effects stay fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
 - **Cloud observability:** new Yandex Cloud deployment documentation must target Monium rather than Cloud Logging because Yandex Cloud states Cloud Logging is scheduled for shutdown in Q2 2027.
 - **Integration principle:** external systems are connected by explicit field ownership. The same live field must never have competing authorities.
-- **Implementation order:** B2B contact preparation → repeat-business preparation → Web/PWA → Yandex Cloud production → Bitrix24 business-plane integration → guarded external communication / MAX → learning → measured scale.
+- **Implementation order:** B2B contact preparation → bounded Repeat Orders & Business Continuity → Web/PWA → Yandex Cloud production → Bitrix24 business-plane integration → guarded external communication / MAX → learning → measured scale.
 
 ### Критерий допуска новой capability
 
@@ -1100,22 +1100,20 @@ DOSSIER → ЛПР/ROLE HYPOTHESIS → CONTACT CONTEXT → VALUE HYPOTHESIS → 
 - какие факты требуют повторной проверки;
 - какие вопросы лучше задать вместо предположения.
 
-// SUPERSEDED — Repeat Business Preparation is the current post-core pattern.
-# 5C-A. Repeat Business Preparation
+# 5C-A. Repeat Orders & Business Continuity
 
-Repeat business is represented by a reusable preparation rule attached to an existing canonical customer. It produces a fresh preparation/handoff snapshot, not a live transaction ledger.
+Until Bitrix24 becomes the live business plane, Shema provides a bounded operator-facing repeat-order workflow on the frozen Order/Economics semantics. A repeat order is a new immutable transaction; the previous order remains unchanged.
 
-Required semantics:
-- recurrence signal, preparation window, owner/assignee and pause/end controls;
-- lineage to the previous business outcome/reference and original commercial configuration;
-- fresh preparation/handoff snapshot per repetition;
-- explicit review before business-plane handoff;
-- changed/expired commercial assumptions surfaced as deltas;
-- no duplicate preparation snapshot when an open repeat preparation exists;
-- one-time skip, pause/resume, fixed-count and end-date preparation controls;
-- reminders are preparation signals, not hidden business effects.
+Required operator semantics:
+- create the next repeat order from an eligible prior order;
+- revalidate counterparty status, service scope, evidence freshness, current pricing assumptions and date/capacity assumptions before confirmation;
+- pause, skip once, resume and cancel the repeat plan;
+- protect duplicate creation with idempotency and audit;
+- expose the current repeat queue as a list with an optional Kanban view;
+- preserve causal links to the originating client, prior order and later Bitrix24 handoff.
 
-This is deliberately a sales scheduling/renewal pattern and sits directly before business handoff.
+Bitrix24 owns the mature recurring-deal engine after verified handoff. Shema never becomes a second recurring CRM/order engine.
+
 # 5E. Ручная проверка контрагента
 
 Нужна отдельная operator-first команда:
@@ -1136,7 +1134,7 @@ This is deliberately a sales scheduling/renewal pattern and sits directly before
 - источники;
 - history/revalidation;
 - recommended next step;
-- downloadable verification report.
+- machine-readable verification snapshot with traceable evidence references.
 
 Для российских юрлиц и ИП стартовым authoritative layer должен быть официальный контур ФНС. Сервис «Прозрачный бизнес» поддерживает поиск по ИНН/ОГРН/названию для организаций и ИНН/ОГРНИП/ФИО для ИП и объединяет государственные сведения; ФНС отдельно подчёркивает необходимость комплексной оценки, а не вывода по одному индикатору.
 
@@ -1936,6 +1934,7 @@ The current source-tree HEAD is never copied into this manifest as a permanent v
 - Added `architecture/public_intake_data_plane_contract.json`: raw public requests live in a dedicated PostgreSQL database with separate credentials, durable intake outbox and operator notification projection.
 - Added `architecture/repeat_order_transition_contract.json`: temporary live repeat-order mode in Shema until Bitrix24 handoff, followed by completeness-verified migration, purge of live Order/Economics rows and frozen hidden lineage.
 - Added `architecture/counterparty_monitoring_contract.json`: exact INN/OGRN/OGRNIP detection in the existing lead-search field, deterministic preflight, bounded deep research, daily monitoring, change notifications and separate favorites.
+- Added `architecture/operator_interface_contract.json`: canonical operator shell, list/Kanban work queues, Bitrix24-aligned record form/timeline patterns, counterparty/repeat-order workspaces, capability-aware UI hiding and no-second-authority rules.
 - Bitrix24 remains the mature live business plane; CRM, SPA, tasks, inventory, documents, routing/logistics and executor workflows are configured only where capabilities are actually available. Tender work uses a specialist connector when needed; no tender subsystem is reintroduced into Shema.
 - Public intake data never writes the canonical Shema database directly from the browser and never creates a live Bitrix24 transaction.
 - Order/Economics UI removal after verified Bitrix cutover is a capability-driven hide, not a broken route or empty navigation element.
