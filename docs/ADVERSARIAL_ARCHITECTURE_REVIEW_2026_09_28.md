@@ -143,7 +143,7 @@ Severity definitions:
 |---|---|---|---|
 | Ambiguous ownership between Shema and Bitrix24 | P0 | Fixed | Explicit business-plane boundary contract |
 | External handoff lacked a formal failure/reconciliation state machine | P0 | Fixed | Stable handoff ID, outbox, idempotency, reconciliation |
-| Repeat-order design could duplicate Bitrix recurring-deal functionality | P1 | Fixed | Phase 3A renamed Repeat Business Preparation |
+| Repeat-order design could duplicate Bitrix recurring-deal functionality | P1 | Superseded | Replaced by bounded temporary Shema repeat-order mode using frozen Order/Economics semantics; Bitrix24 remains the recurring-deal authority after cutover |
 | Internal document engine would have turned Shema into a second legal/business system | P1 | REMOVED | Document subsystem deleted from Shema boundary |
 | Procurement subsystem increased unnecessary complexity for the first B2B stage | P1 | REMOVED | Procurement code/contracts/tests deleted from Shema |
 | Document/tender expansion created avoidable dependency surface | P1 | REMOVED | Both capability tracks removed from Shema |
@@ -581,6 +581,8 @@ The 2026 Verizon DBIR reports vulnerability exploitation as the top initial brea
 5. **Client-controlled text can never become privileged instruction.**
 6. **Every external integration has bounded scope, kill switch, audit and replacement path.**
 7. **A missing provider is represented as UNKNOWN, never as a clean state.**
+8. **The operator interface follows mature Bitrix24 work patterns without inheriting Bitrix24 business authority: list/Kanban work queues, structured record forms, activity/timeline history, saved filters and capability-aware navigation.**
+9. **Temporary Shema repeat orders are bounded and disappear cleanly after verified Bitrix24 cutover; no stale route, cache or empty module may resurrect purged live business state.**
 
 ## External research references
 
