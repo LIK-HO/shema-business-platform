@@ -150,5 +150,8 @@
     "includes_order_economics_and_required_client_history": true,
     "excludes_secrets_and_unrelated_security_telemetry": true,
     "readback_verification_required": true
+  },
+  "operator_continuity": {
+    "interface_contract": "architecture/operator_interface_contract.json"
   }
 }
