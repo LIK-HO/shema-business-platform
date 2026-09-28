@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "status": "approved_experience_boundary",
   "frozen_kernel_impact": false,
   "purpose": "One Web/PWA experience surface with a public client intake zone, a protected operator zone and a MAX mini-app projection, without a second business authority.",
@@ -10,7 +10,10 @@
       "uses_canonical_api": true,
       "creates_live_business_order": false,
       "creates_client_request_observation": true,
-      "operator_confirmation_required_for_critical_action": true
+      "operator_confirmation_required_for_critical_action": true,
+      "preflight": "deterministic_counterparty_preflight_before_operator_queue",
+      "public_submission_is_untrusted": true,
+      "server_authoritative": true
     },
     "operator_web": {
       "role": "protected_work_surface",
@@ -39,7 +42,9 @@
     "ad_or_direct_visit",
     "public_site_or_max_mini_app",
     "guided_request_form",
-    "request_validation",
+    "edge_security_gate",
+    "deterministic_identifier_validation",
+    "counterparty_preflight_without_gpt",
     "idempotent_request_submission",
     "shelved_client_request_observation",
     "operator_review",
@@ -53,8 +58,6 @@
       "location",
       "preferred_date_or_period",
       "work_or_cargo_description",
-      "approximate_volume_or_weight_when_relevant",
-      "access_or_lifting_constraints_when_relevant",
       "contact_name",
       "contact_channel"
     ],
@@ -71,9 +74,21 @@
       "entry_surface"
     ],
     "anti_abuse": [
-      "rate_limit",
-      "bot_or_spam_detection",
+      "edge_waf_or_equivalent",
+      "bot_or_turnstile_verification",
+      "separate_submission_and_registry_lookup_rate_limits",
+      "server_side_validation",
+      "idempotency_key",
+      "duplicate_submission_detection",
+      "bounded_provider_lookup_budget",
       "bounded_attachment_limits"
+    ],
+    "conditional_fields": [
+      "approximate_volume_or_weight",
+      "access_or_lifting_constraints",
+      "company_name",
+      "inn",
+      "ogrn_or_ogrnip"
     ]
   },
   "causal_continuity": {
@@ -81,7 +96,9 @@
     "correlation_id_required": true,
     "source_attribution_preserved": true,
     "client_can_reopen_request_status_without_creating_duplicate": true,
-    "operator_can_trace_request_to_dossier_and_outcome": true
+    "operator_can_trace_request_to_dossier_and_outcome": true,
+    "preflight_snapshot_reference_required": true,
+    "operator_can_trace_preflight_to_request": true
   },
   "domain_migration": {
     "source_platform": "inSales",
@@ -92,7 +109,8 @@
     "cutover_requires_https_validation": true,
     "cutover_requires_redirect_and_health_check": true,
     "inSales_detachment_after_successful_cutover": true,
-    "dns_propagation_is_treated_as_a_controlled_transition": true
+    "dns_propagation_is_treated_as_a_controlled_transition": true,
+    "cutover_requires_security_control_validation": true
   },
   "non_goals": [
     "second_crm",
@@ -107,5 +125,7 @@
     "vk_advertising_where_available",
     "direct",
     "partner_or_referral"
-  ]
+  ],
+  "evolution_contract": "architecture/platform_evolution_contract.json",
+  "counterparty_preflight_contract": "architecture/public_intake_counterparty_preflight_contract.json"
 }
