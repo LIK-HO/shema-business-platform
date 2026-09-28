@@ -444,7 +444,7 @@ These are real strengths worth preserving.
 
 ### Phase A — intelligence
 
-**Search → Identity → Evidence → Research → Qualification → Contact Preparation → Repeat Business Preparation**
+**Search → Identity → Evidence → Research → Qualification → Contact Preparation → Repeat Orders & Business Continuity**
 
 ### Phase B — public acquisition and operator surface
 
@@ -594,3 +594,5 @@ The 2026 Verizon DBIR reports vulnerability exploitation as the top initial brea
 ## Destructive-test disposition
 
 The architecture is intentionally designed to survive the listed P0/P1 cases through containment, immutable lineage, verified migration and recoverable state rather than by assuming attacks or provider failures will not occur.
+
+The operator UI boundary is `architecture/operator_interface_contract.json`: it adopts mature Bitrix24 work patterns (List/Kanban queues, structured forms with a right-side activity timeline, saved filters and quick forms) while keeping Shema out of Bitrix24-owned CRM, finance, document and tender authority. citeturn232543search3turn232543search1turn232543search4
