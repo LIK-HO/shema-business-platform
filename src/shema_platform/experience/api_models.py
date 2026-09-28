@@ -355,7 +355,12 @@ class PublicIntakeRequest(APIModel):
     utm_medium: str | None = Field(default=None, max_length=160, alias="utmMedium")
     utm_campaign: str | None = Field(default=None, max_length=240, alias="utmCampaign")
     referrer: str | None = Field(default=None, max_length=500, alias="referrer")
-    entry_surface: str = Field(default="public_web", min_length=2, max_length=80, alias="entrySurface")
+    entry_surface: str = Field(
+        default="public_web",
+        min_length=2,
+        max_length=80,
+        alias="entrySurface",
+    )
     honeypot: str = Field(default="", max_length=200)
 
 
