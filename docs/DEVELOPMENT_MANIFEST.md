@@ -28,6 +28,27 @@
 Работа с GitHub не должна зависеть от памяти предыдущего диалога. Вход в каждый новый development session выполняется по `docs/GITHUB_WORK_PROTOCOL.md`, `docs/DEVELOPMENT_STATE.md` и `AGENTS.md`; текущий branch/HEAD/PR/CI всегда читаются заново из GitHub.
 
 Post-core development order is governed by `docs/ROADMAP.md`. The roadmap is capability-oriented and does not reopen frozen kernel semantics.
+
+## 1B. Global adversarial survivability gate — MANDATORY
+
+This is a hard development rule, not a recommendation.
+
+**Every material strategy change and every completed development element must trigger a fresh global adversarial review of the entire approved architecture and system before the element can be marked VERIFIED or CLOSED.**
+
+The review is intentionally conducted from the position of a professional attempting to destroy the system: find split-brain truth, hidden single points of failure, causal-chain breaks, unsafe external effects, operator dead ends, multi-operator races, migration traps, cost/quota cascades, privacy leaks, provider lock-in and legal/document obsolescence.
+
+The check covers the whole system, not only the changed file or module:
+**frozen kernel → post-core contracts → runtime → persistence → integrations → operator workflow → multi-operator model → security/recovery → legal/document model → migration/rollback → cost/resource limits.**
+
+Closure is blocked until:
+- P0 findings are fixed or handled by an explicitly approved architecture exception;
+- P1 findings are fixed or have an explicit bounded control and scheduled boundary;
+- P2 findings have a concrete control and ownership boundary;
+- current-head tests and the full release gate are re-run after the change.
+
+“Immortal” is the engineering target in the sense of **survivable architecture**: no designed failure should destroy canonical truth or make deterministic recovery impossible. Literal zero-failure is not asserted; preservation of truth, containment, recovery, audit and learning are.
+
+Machine-readable contract: `architecture/global_adversarial_survivability_gate_contract.json`.
 ## 1A. Цельный образ продукта и баланс стратегии
 
 Shema — это **личная операционная система владельца**, а не урезанная корпоративная CRM/ERP и не SaaS-продукт, который должен догонять коммерческие платформы по числу функций.
@@ -110,8 +131,8 @@ Shema — это **личная операционная система влад
 ### Product decisions added 2026-09-28
 
 - **Repeat business:** mandatory Phase 3A is now **Repeat Business Preparation**, not a second order engine. Shema detects repeat demand, revalidates evidence/configuration and creates a fresh preparation/handoff snapshot. Live recurring/repeat deals are owned by the mature business plane after handoff. Reference patterns: Bitrix24 recurring deals, Salesforce orders and SAP scheduling agreements.
-- **Tender/procurement intelligence:** mandatory Phase 2-I inside Mature Search/Research, before Contact Preparation. Initial provider boundary: ГосПлан API v2 over ЕИС data because current documentation exposes plans, purchases, procedures and contracts through REST and explicitly describes monitoring/search use cases. Production access is API-key/tariff governed; test access is available without key but rate limited.
-- **Documents:** Phase 4 includes a complete configurable document registry rather than a small template set: contract, service/work order, specification, commercial offer, invoice/payment request, act, UПД/equivalent tax document where applicable, addendum/change order, reconciliation, confidentiality/authority/termination forms and procurement packs.
+- **Tender/B2G strategy:** procurement/tender work is deliberately **not an early Shema capability**. B2B is developed and operationally validated first. The existing Phase 2-I provider-neutral foundation is retained dormant as reusable technical evidence; no new procurement runtime, tender workspace or tender automation is developed in Shema at this stage. B2G/tender execution is deferred to the Bitrix24 business-plane stage, where the mature CRM/business-process environment or a dedicated integrated tender capability should own the live workflow.
+- **Documents:** Phase 4 remains a versioned document-requirement/configuration boundary, not the final legal document system. Rules are versioned with effective dates and legal-source references. If law or EDO requirements change, Shema creates a new configuration version and revalidates downstream capability; historical configurations remain reconstructable. Final issuance/signing/storage stays in Bitrix24 or a dedicated EDO system.
 - **Interface:** adopted mature workspace pattern — summary/highlights + details + related records + activity/history; work lists with filters/sorts and quick actions; contextual/split inspection; progressive disclosure; personal view preferences; responsive/accessibility baseline; server-authoritative business state.
 - **Multi-operator:** collaboration is a permanent architectural requirement: explicit actor, ownership/assignment/team queues, server-side permissions, revision/concurrency protection, audited handoff, explicit conflict resolution and no shadow copies.
 - **Clients:** Web + PWA are sufficient and remain the only approved experience surfaces. Android is removed from the roadmap.
@@ -137,14 +158,16 @@ Procurement API: https://gosplan.info/docs/guides/purchases/ ; https://gosplan.i
 
 - **Core role:** Shema is the intelligence, evidence and decision-support system. New development must not turn it into a second CRM/ERP/accounting/personnel platform.
 - **Runtime:** Yandex Cloud is the target deployment environment. Start with serverless components where practical; PostgreSQL remains the canonical production database because the frozen kernel already establishes it as the transaction authority.
-- **Procurement:** B2B-Center is removed as a named strategic provider. Procurement is now governed by the provider-neutral ProcurementSourceRegistry contract. ГосПлан is the official-origin baseline; TenderGuru is the first aggregation candidate only after measured coverage evidence.
+- **Procurement/tender:** B2B is the first commercial operating stage. The procurement foundation remains a dormant provider-neutral boundary only; further tender development inside Shema is deferred. B2G/tender capability belongs to the later Bitrix24 business-plane stage. Shema keeps no tender system of record.
 - **Business-plane ownership:** When the business becomes mature enough to require expanded transaction control, Bitrix24 becomes the live business-process/CRM/communication/calculation/economics control plane. Shema hands over a verified context package and later consumes minimal outcome signals for learning.
+- **Data-plane continuity:** On Yandex Cloud, Managed PostgreSQL remains the canonical Shema database. When Bitrix24 is introduced, the Shema database is **not** moved wholesale into Bitrix24. Bitrix24 stores its own live business data and becomes authoritative only for the business domains explicitly handed over. Shema continues to store intelligence/evidence/provenance/handoff lineage/outcome context. The two domains are joined by stable references, handoff IDs, correlation IDs and versioned mappings, not by competing writes to one live field.
+- **Operator continuity:** The operator should experience one causal workflow, not two unrelated databases. Before handoff, Shema owns intelligence and preparation; after handoff, Bitrix24 owns the live business process. Every handoff remains traceable from the Bitrix entity back to the Shema dossier and from Shema outcome context back to the Bitrix entity. For several operators, live assignment/team workflow belongs to Bitrix24 after handoff; Shema does not keep a shadow operational order board.
 - **Economics boundary:** existing frozen Order/Economics semantics remain for compatibility, lineage and learning; no new Shema accounting subsystem is to be developed unless a separately justified architectural exception is approved.
 - **AI:** the existing YandexGPT adapter remains the primary AI path in Yandex Cloud. AI may summarize, classify and prepare; it cannot become canonical identity, legal or economic truth.
 - **MAX:** the adapter remains, but live outbound effects stay fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
 - **Cloud observability:** new Yandex Cloud deployment documentation must target Monium rather than Cloud Logging because Yandex Cloud states Cloud Logging is scheduled for shutdown in Q2 2027.
 - **Integration principle:** external systems are connected by explicit field ownership. The same live field must never have competing authorities.
-- **Implementation order:** procurement durable runtime → contact preparation → repeat-order preparation → documents → Web/PWA → Yandex Cloud production → Bitrix24 business-plane integration → guarded external communication → learning → measured scale.
+- **Implementation order:** B2B contact preparation → repeat-business preparation → document configuration/handoff → Web/PWA → Yandex Cloud production → Bitrix24 business-plane integration → B2G/tender capability in the business plane → guarded external communication → learning → measured scale.
 
 ### Критерий допуска новой capability
 
