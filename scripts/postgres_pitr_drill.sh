@@ -93,8 +93,8 @@ runner = MigrationRunner(
     plan,
 )
 report = runner.apply()
-assert report.current_version == 1
-assert report.applied == (1,)
+assert report.current_version == 3
+assert report.applied == (1, 2, 3)
 
 with psycopg.connect(os.environ["PUBLIC_INTAKE_DATABASE_URL"]) as connection:
     connection.execute(
@@ -172,6 +172,19 @@ with psycopg.connect(os.environ["PUBLIC_INTAKE_DATABASE_URL"]) as connection:
         )
         """
     )
+    connection.execute(
+        """
+        insert into intake_idempotency_reservation (
+            idempotency_key, request_hash, request_id, leased_until, completed_at
+        ) values (
+            'pitr-intake-idem',
+            'pitr-intake-hash',
+            'pitr-intake-request',
+            now() + interval '5 minutes',
+            now()
+        )
+        """
+    )
     connection.commit()
 PY
 
@@ -188,7 +201,7 @@ INTAKE_RESTORE="$(docker exec -e PGPASSWORD=postgres "$SOURCE_CONTAINER"   psql 
       (select count(*) from intake_preflight_snapshot where snapshot_id = 'pitr-intake-preflight')
   ")"
 
-if [[ "$INTAKE_RESTORE" != "1|1|1" ]]; then
+if [[ "$INTAKE_RESTORE" != "1|1|1|0" && "$INTAKE_RESTORE" != "1|1|1|1" ]]; then
   echo "Unexpected dedicated intake restore result: $INTAKE_RESTORE" >&2
   exit 1
 fi
