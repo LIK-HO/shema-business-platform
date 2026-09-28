@@ -96,9 +96,12 @@
     "full_crm_replication_disabled_by_default": true
   },
   "repeat_business": {
-    "shema_role": "detect_and_prepare_repeat_business",
-    "bitrix_role_after_handoff": "execute_recurring_or_repeat_business_process",
-    "shema_must_not_reimplement_bitrix_recurring_deal_engine": true
+    "shema_role_before_bitrix": "execute_bounded_repeat_orders_and_revalidate_current_context",
+    "shema_role_after_bitrix": "preparation_only_then_frozen_hidden_after_migration",
+    "bitrix_role_after_handoff": "live_repeat_and_recurring_transaction_execution",
+    "temporary_local_mode_is_allowed": true,
+    "local_mode_uses_frozen_order_economics_semantics": true,
+    "no_dual_live_ownership": true
   },
   "economics": {
     "shema_role": "optional_coarse_outcome_features_for_learning",
@@ -118,5 +121,33 @@
     "bitrix24_or_business_plane_after_handoff": "authoritative customer-facing communication execution and history",
     "max_direct_customer_outbound_from_shema": "disabled_by_default",
     "max_customer_outbound_requires": "explicit_provider_safety_and_business_plane_reconciliation_contract"
+  },
+  "order_economics_transition": {
+    "migration_mode": "full_transaction_history_transfer_then_purge_live_shema_rows",
+    "contract": "architecture/repeat_order_transition_contract.json",
+    "full_transfer_required": true,
+    "purge_only_after_verified_readback": true,
+    "frozen_lineage_tombstone_required": true,
+    "ui_capability_hide_after_purge": true,
+    "no_stale_deep_links": true
+  },
+  "bitrix_business_plane_stack": {
+    "crm_core": "native_bitrix24_crm",
+    "custom_workflows": "bitrix24_smart_process_automation_when_available",
+    "assignments_and_team_work": "bitrix24_tasks_automation_and_permissions_when_available",
+    "inventory_and_product_economics": "bitrix24_inventory_and_product_catalog_when_available",
+    "documents_and_signing": "bitrix24_crm_documents_and_signing_when_available",
+    "routing_and_logistics": "bitrix24_spa_or_external_specialist_integration_selected_by_capability_detection",
+    "executors": "bitrix24_users_departments_roles_and_task_assignment_or_specialist_integration",
+    "tenders": "external_tender_platform_or_approved_bitrix24_market_integration; never reimplemented in shema",
+    "accounting_authority": "external_accounting_or_finance_system_if_required; bitrix24 remains business-plane coordinator",
+    "capability_detection_required": true
+  },
+  "full_history_transfer": {
+    "enabled_only_for_transaction_migration": true,
+    "package_contract": "architecture/repeat_order_transition_contract.json",
+    "includes_order_economics_and_required_client_history": true,
+    "excludes_secrets_and_unrelated_security_telemetry": true,
+    "readback_verification_required": true
   }
 }
