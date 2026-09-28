@@ -157,9 +157,15 @@ Severity definitions:
 | Source coverage quality is not yet measured against realized business outcomes | P1 | Open | Coverage/precision/revenue-quality benchmark before aggregation expansion |
 | Commercial tender-provider expansion | P2 | REMOVED | No tender provider is part of the Shema product |
 | Live MAX outbound remains blocked | P1 | Correctly blocked | Do not weaken safety gate |
-| Full latest CI gate has not yet closed | P0 for release status | Pending | Do not declare the current boundary verified |
+| Full latest CI gate has not yet closed | P0 for release status | Fixed | CI #1589 (`36386211886`) is GREEN across all seven release-gate jobs |
 
 ---
+
+## Closure update — current-head verification
+
+The previously pending release-status blocker is now closed. CI #1589 (`36386211886`) completed successfully on the reviewed P47 HEAD and all seven release-gate jobs are GREEN. The current boundary is therefore CLOSED / VERIFIED at the architecture-and-test stage.
+
+The review's remaining P1 entries are deliberately deferred maturity boundaries: Bitrix24 runtime integration, outcome-learning runtime, outcome-based source-quality measurement and MAX live outbound. Each remains bounded by an explicit later capability boundary; none is silently activated by this closure.
 
 # 3. Hidden weakness: split-brain business state
 
