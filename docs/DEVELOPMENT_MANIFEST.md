@@ -2,12 +2,12 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / Phase 2-I Procurement Foundation Closed / MAX Evidence Hold
-**Active development boundary:** NONE — Phase 2-I procurement foundation is CLOSED / VERIFIED by CI #1417; remaining live/runtime monitoring work must be opened as a separate bounded sub-boundary.
+**Active development boundary:** Global Adversarial Survivability + B2B-first / Bitrix24 transition correction — IN PROGRESS until the current-head global review and full release-gate CI are GREEN.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
 **System target:** personal-first, scalable when justified, reliable, durable and mature system; not a SaaS breadth target.
-**Strategy revalidation:** 2026-09-26 — post-core strategy rechecked against mature systems; balance rules below are binding for subsequent product development.
+**Strategy revalidation:** 2026-09-28 — B2B-first / Bitrix24 transition strategy rechecked against mature systems; global adversarial survivability gate is now binding for subsequent product development.
 
 ---
 
