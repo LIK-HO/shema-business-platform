@@ -55,7 +55,8 @@ def test_counterparty_monitoring_and_favorites_are_distinct() -> None:
     )
 
 
-def test_repeat_orders_use_frozen_semantics_and_hide_cleanly_after_bitrix_cutover() -> None:
+def test_repeat_orders_use_frozen_semantics_and_hide_cleanly_after_bitrix_cutover(
+    ) -> None:
     payload = load()
     repeat = payload["specialized_workspaces"]["repeat_orders"]
     assert repeat["temporary_shema_live_mode_is_allowed"] is True
@@ -76,7 +77,10 @@ def test_ui_never_becomes_a_second_authority() -> None:
     security = payload["security_and_authority"]
     assert security["ui_does_not_own_truth"] is True
     assert security["external_effects_are_not_authorized_by_visual_state_alone"] is True
-    assert payload["bitrix24_alignment"]["mapping_is_conceptual_not_shared_authority"] is True
+    assert (
+        payload["bitrix24_alignment"]["mapping_is_conceptual_not_shared_authority"]
+        is True
+    )
 
 
 def test_untrusted_and_state_boundaries_are_explicit() -> None:
