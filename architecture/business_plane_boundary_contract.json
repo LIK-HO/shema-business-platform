@@ -11,7 +11,7 @@
       "freshness",
       "qualification",
       "contact_preparation",
-      "repeat_business_preparation",
+      "temporary_live_repeat_orders_before_bitrix_handoff",
       "ai_run_lineage",
       "learning_context",
       "communication_preparation"
