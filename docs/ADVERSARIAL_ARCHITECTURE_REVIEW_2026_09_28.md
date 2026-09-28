@@ -542,3 +542,52 @@ The approved causal chain is:
 ## Verdict
 
 The boundary is **architecturally survivable and bounded**. Contract tests and the full current-head seven-job release gate are GREEN on d595ec856a6a611751c7b619ae75f23ca3db4398 / run 36372953967. This closes the architecture-contract stage; production activation remains separately gated by Phase 3B runtime exit criteria.
+---
+
+# 15C. Destructive Review — Intake Isolation, Repeat Orders, Monitoring and Bitrix Cutover
+
+## Threat basis
+
+The 2026 Verizon DBIR reports vulnerability exploitation as the top initial breach vector at 31%, third-party involvement at 48% of breaches and strong growth in AI-assisted attack velocity. Microsoft’s 2025 Digital Defense Report highlights phishing/social engineering, unpatched web assets, exposed remote services, access brokers, infostealers and AI-driven attacks, and recommends resilience and assume-breach design. NIST SP 800-115 emphasizes planned security assessment, execution and validation of controls. This review therefore prioritizes public-edge exposure, credential/token compromise, third-party integration failure, AI prompt/data poisoning and destructive recovery paths.
+
+## Destruction hypotheses
+
+| Hypothesis | Severity | Required control |
+|---|---|---|
+| Intake database is unavailable after a client submits a request | P0 | Atomic local persistence before projection; durable outbox; independent restore path; no loss on Shema outage |
+| Intake notification is emitted twice and overloads the operator | P1 | Event-id/request-id dedupe, notification ledger, digest/flood controls |
+| Intake request is stored twice after timeout | P1 | Idempotency key + request fingerprint + same-key convergence + reconciliation |
+| Attacker uses identifier lookup as a registry enumeration service | P1 | Separate lookup budget, anti-enumeration, cache reuse, minimal public response |
+| Client text becomes a prompt-injection instruction to GPT | P1 | Untrusted-data boundary, structured evidence packet, system prompt isolation, no raw text as instruction |
+| Notification content becomes stored-XSS or business-field injection | P1 | Escaping, structured rendering, no trusted HTML, output encoding at every sink |
+| Stolen Bitrix/OAuth credential gains wider authority than the intended namespace | P0 | Least privilege, namespaced fields, scope verification, owned-resource mutation only, audit and kill switch |
+| Bitrix24 is partially available during transaction migration | P0 | Transaction migration state machine, no purge before readback, package hash, resumable reconciliation |
+| A migration bug silently drops one order line or economic entry | P0 | Field manifest, record/line counts, aggregate amount checks, reference integrity, payload hash and full readback |
+| Shema deletes Order/Economics before clean recovery point exists | P0 | Recovery snapshot verification is a hard purge gate |
+| UI hides Order/Economics but stale deep links expose deleted/stale data | P1 | Capability-based navigation, route guard, moved-to-Bitrix state, no stale cache |
+| Daily monitoring sees a provider outage and reports a false company change | P1 | Snapshot date/source, UNKNOWN source state, no-change-on-unavailable rule |
+| Monitoring batch is replayed and sends the same change repeatedly | P1 | Checkpointing, idempotent batch keys, change-event fingerprint and notification dedupe |
+| Attacker poisons a monitored identity by submitting another company's identifier | P1 | Identifier→canonical identity resolution before watchlist persistence; verified identity reference required |
+| Supply-chain compromise alters an integration package or build artifact | P0 | Immutable artifacts, dependency audit, signed/reproducible release evidence and current-head release gate |
+| Backup exists but restore is unusable after destructive migration | P0 | Executable PITR/restore drill before migration closure and after migration tooling changes |
+| Operator is socially engineered into a destructive migration/permission action | P1 | Deliberate confirmation, least privilege, immutable audit, destructive action separation from routine operations |
+
+## Additional survivor invariants
+
+1. **Raw intake and canonical intelligence are different authorities.**
+2. **Temporary local Order/Economics and Bitrix live transaction are never simultaneously authoritative.**
+3. **Purge is a proof-driven consequence, never an operational shortcut.**
+4. **Monitoring detects facts; AI may explain facts but cannot create the change event.**
+5. **Client-controlled text can never become privileged instruction.**
+6. **Every external integration has bounded scope, kill switch, audit and replacement path.**
+7. **A missing provider is represented as UNKNOWN, never as a clean state.**
+
+## External research references
+
+- Verizon 2026 DBIR: https://www.verizon.com/business/resources/reports/dbir/
+- Microsoft Digital Defense Report 2025: https://www.microsoft.com/en-us/security/security-insider/threat-landscape/microsoft-digital-defense-report-2025
+- NIST SP 800-115: https://csrc.nist.gov/pubs/sp/800/115/final
+
+## Destructive-test disposition
+
+The architecture is intentionally designed to survive the listed P0/P1 cases through containment, immutable lineage, verified migration and recoverable state rather than by assuming attacks or provider failures will not occur.
