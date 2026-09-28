@@ -1,0 +1,60 @@
+{
+  "version": "1.0",
+  "status": "approved_operator_boundary",
+  "purpose": "Let an operator switch the existing lead search into exact-counterparty verification by INN/OGRN/OGRNIP and separately manage monitored and favorite counterparties.",
+  "frozen_kernel_impact": false,
+  "search_mode_detection": {
+    "exact_identifier_auto_detection": true,
+    "supported_identifier_types": ["INN","OGRN","OGRNIP"],
+    "fallback_mode": "canonical_lead_discovery_search",
+    "no_ai_before_identifier_validation": true
+  },
+  "operator_flow": {
+    "search_field_behavior": "one field; exact identifier switches result mode to COUNTERPARTY_CHECK without changing the surrounding workspace",
+    "primary_actions": ["Проверить контрагента","Глубокая разведка","Сохранить в мониторинг","В избранное"],
+    "result_sections": ["identity_and_registry_status","critical_changes","key_parameters","evidence_and_sources","uncertainty_and_conflicts","recommended_next_check"],
+    "separate_workspace": "Контрагенты",
+    "workspace_tabs": ["Проверка","Мониторинг","Избранные"],
+    "monitoring_is_visually_distinct": true,
+    "favorites_are_visually_distinct": true,
+    "favorites_scope": "operator_personal",
+    "monitoring_scope": "operator_or_team_as_explicitly_configured"
+  },
+  "ai_policy": {
+    "fast_check_without_gpt": true,
+    "deep_research_allowed_after_deterministic_identity": true,
+    "source_routing_uses_existing_intelligence_source_policy": true,
+    "no_unbounded_all_registry_crawl": true,
+    "ai_summarizes_evidence_and_changes_but_does_not_author_registry_truth": true
+  },
+  "monitoring": {
+    "default_frequency": "daily",
+    "deterministic_change_detection": true,
+    "batch_source_mode": "official_registry_or_verified_registry_dataset_delta",
+    "key_parameters": ["registration_status","liquidation_or_termination","reorganization","legal_name","registration_identifiers","director_or_significant_control_changes_when_available","address_and_invalidity_signal","okved_changes_when_available","disqualification_or_registry_warning_signals_when_available"],
+    "each_snapshot_has_source_and_snapshot_date": true,
+    "unavailable_source_is_not_a_change": true,
+    "checkpointed_batch": true,
+    "bounded_parallelism": true,
+    "adaptive_backoff": true,
+    "daily_digest_for_noncritical_changes": true,
+    "immediate_notification_for_critical_changes": true,
+    "duplicate_change_suppression": true
+  },
+  "change_event": {
+    "before_snapshot_reference": true,
+    "after_snapshot_reference": true,
+    "changed_parameters": true,
+    "source_reference": true,
+    "freshness": true,
+    "severity": true,
+    "correlation_id": true,
+    "notification_id": true
+  },
+  "recovery": {
+    "partial_batch_resumes_from_checkpoint": true,
+    "duplicate_batch_is_idempotent": true,
+    "provider_outage_does_not_generate_false_changes": true,
+    "corrupted_snapshot_fails_closed": true
+  }
+}
