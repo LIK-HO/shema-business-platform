@@ -21,7 +21,8 @@
       "role": "protected_work_surface",
       "uses_canonical_api": true,
       "shares_business_semantics_with_pwa": true,
-      "notification_center": true
+      "notification_center": true,
+      "interface_contract": "architecture/operator_interface_contract.json"
     },
     "pwa": {
       "role": "installable_operator_and_client_capable_web_surface",
