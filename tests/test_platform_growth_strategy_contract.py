@@ -96,3 +96,16 @@ def test_strategy_has_no_tender_or_document_subsystem_ownership() -> None:
     ]["bitrix24_authoritative_after_handoff"]
     assert "procurement_strategy" not in payload
     assert "document_evolution" not in payload
+
+
+def test_intelligence_source_policy_is_bounded_and_question_driven() -> None:
+    payload = load("intelligence_source_policy_contract.json")
+
+    assert payload["routing_rules"]["no_all_sources_by_default"] is True
+    assert payload["routing_rules"]["no_global_source_waterfall"] is True
+    assert payload["routing_rules"]["specialist_sources_are_triggered_not_default"] is True
+    assert payload["operator_budget"]["default_candidate_discovery_source_classes"] == 3
+    assert payload["operator_modes"]["FAST"]
+    assert payload["operator_modes"]["VERIFY"]
+    assert payload["operator_modes"]["DEEP"]
+    assert payload["operator_modes"]["MANUAL"]
