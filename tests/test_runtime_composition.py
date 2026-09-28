@@ -68,6 +68,30 @@ def build() -> YandexGPTRuntimeAssembly:
     )
 
 
+def test_public_intake_runtime_requires_server_side_security_prerequisites() -> None:
+    from shema_platform.experience.runtime_composition import compose_public_intake_runtime
+
+    failing_connection = lambda: (_ for _ in ()).throw(
+        AssertionError("database must not be touched during insecure composition")
+    )
+    failing_uow = lambda: (_ for _ in ()).throw(
+        AssertionError("canonical DB must not be touched during insecure composition")
+    )
+
+    with pytest.raises(ValueError, match="origin allowlist"):
+        compose_public_intake_runtime(
+            intake_connection_factory=failing_connection,
+            shema_unit_of_work_factory=failing_uow,
+        )
+
+    with pytest.raises(ValueError, match="bot challenge verifier"):
+        compose_public_intake_runtime(
+            intake_connection_factory=failing_connection,
+            shema_unit_of_work_factory=failing_uow,
+            allowed_origins=frozenset({"https://example.test"}),
+        )
+
+
 def test_runtime_assembly_is_explicit_and_does_not_activate_provider() -> None:
     assembly = build()
 
