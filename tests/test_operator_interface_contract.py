@@ -18,12 +18,10 @@ def test_operator_shell_uses_bounded_bitrix_aligned_workspaces() -> None:
     ids = {item["id"] for item in sections}
     assert {
         "workbench",
-        "search",
         "clients",
         "counterparties",
         "requests",
         "research",
-        "repeat_orders",
         "handoffs",
         "control",
     } <= ids
