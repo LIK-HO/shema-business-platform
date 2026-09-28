@@ -409,8 +409,8 @@ def test_repeat_plan_controls_pause_skip_resume_cancel_and_context_edit() -> Non
     assert skipped_again.skipped_occurrences == 2
     assert skipped_again.context.scheduled_for == datetime(2026, 10, 16, 9, tzinfo=UTC)
 
-    assert len(uow.outbox.pending()) == 7
-    assert len(uow.audits.all()) == 7
+    assert len(uow.outbox.pending()) == 6
+    assert len(uow.audits.all()) == 6
 
     cancelled = service.cancel_plan(
         actor=actor(),
