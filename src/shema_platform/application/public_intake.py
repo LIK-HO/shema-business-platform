@@ -9,6 +9,8 @@ from time import monotonic
 from typing import Protocol
 from uuid import uuid4
 
+from shema_platform.foundation.errors import IdempotencyConflict
+
 
 class PreflightDecision(StrEnum):
     NORMAL = "NORMAL"
@@ -180,6 +182,7 @@ class PublicCounterpartyPreflight(Protocol):
         payload: PublicIntakePayload,
         request_id: str,
         correlation_id: str,
+        public_client_key: str,
         now: datetime,
     ) -> CounterpartyPreflightSnapshot: ...
 
@@ -243,7 +246,9 @@ class PublicIntakeService:
             existing = repository.get_by_idempotency_key(idempotency_key)
             if existing is not None:
                 if existing.request_hash != payload.request_hash:
-                    raise ValueError("idempotency key reused with different payload")
+                    raise IdempotencyConflict(
+                        "idempotency key reused with different payload"
+                    )
                 return PublicIntakeResult(
                     record=existing,
                     projection_status="PROJECTED" if existing.projected_at else "PENDING_PROJECTION",
@@ -263,6 +268,7 @@ class PublicIntakeService:
             payload=payload,
             request_id=request_id,
             correlation_id=correlation_id,
+            public_client_key=public_client_key,
             now=now,
         )
         cache_key = self._cache_key(preflight)
