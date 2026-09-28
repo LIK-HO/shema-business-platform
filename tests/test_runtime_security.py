@@ -166,15 +166,8 @@ def test_health_ready_endpoint_is_unauthenticated_and_redacted(monkeypatch) -> N
     assert response.status_code == 503
     payload = response.json()
     assert payload["ready"] is False
-    assert payload["providers"] == [
-        {
-            "providerId": "opencorporates",
-            "enabled": True,
-            "configured": False,
-            "reachable": None,
-            "lastCheckedAt": None,
-            "lastErrorCode": None,
-        }
-    ]
+    assert set(payload) == {"ready"}
+    assert "opencorporates" not in response.text
+    assert "lastErrorCode" not in response.text
     assert "api_token" not in response.text
     assert "Authorization" not in response.text
