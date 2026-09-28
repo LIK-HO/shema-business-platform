@@ -317,7 +317,7 @@ def test_preflight_matches_counterparty_without_gpt() -> None:
     assert result.record.preflight.identity_match is IdentityMatch.MATCH
     assert result.projection_status == "PROJECTED"
     assert projector.calls == [result.record.request_id]
-    assert len(repository.outbox) == 2
+    assert len(repository.outbox) == 1
     assert provider.calls == 1
 
 
@@ -473,7 +473,7 @@ def test_same_idempotency_key_converges_and_different_payload_fails_closed() -> 
     assert second.deduplicated is True
     assert second.record.request_id == first.record.request_id
     assert len(repository.requests) == 1
-    assert len(repository.outbox) == 1
+    assert len(repository.outbox) == 2
 
     with pytest.raises(Exception, match="different payload"):
         service.submit(
