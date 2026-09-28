@@ -23,8 +23,6 @@ from shema_platform.application.counterparty_provider_runtime_lookup import (
     CounterpartyProviderRuntimeLookupService,
 )
 from shema_platform.application.ports import UnitOfWork
-from shema_platform.application.public_intake import PublicIntakeService
-from shema_platform.application.public_preflight import PublicCounterpartyPreflightService
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api import APIApplication, create_app
 from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
@@ -36,8 +34,6 @@ from shema_platform.platform.public_intake_postgres import (
     PostgresPublicIntakeRepository,
     PostgresPublicRequestProjection,
 )
-
-
 
 
 @dataclass(frozen=True, slots=True)
