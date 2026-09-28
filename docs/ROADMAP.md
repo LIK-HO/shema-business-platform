@@ -547,7 +547,6 @@ Bitrix24 becomes authoritative after handoff for:
 - live communication history;
 - assignments and business process stages;
 - team workflows and approvals;
-- business documents configured for the portal.
 
 ### Integration phases
 1. Single-portal proof with an inbound webhook.
