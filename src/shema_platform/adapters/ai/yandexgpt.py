@@ -11,8 +11,6 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import Request
 
-from shema_platform.foundation.secure_http import secure_urlopen
-
 from shema_platform.adapters.ai.contracts import (
     AIProviderActivation,
     AIProviderAdapter,
@@ -28,6 +26,9 @@ from shema_platform.adapters.ai.contracts import (
     validate_provider_activation,
     validate_provider_response,
 )
+
+
+from shema_platform.foundation.secure_http import secure_urlopen
 
 DEFAULT_BASE_URL = "https://ai.api.cloud.yandex.net/v1"
 _ALLOWED_BASE_HOST = "ai.api.cloud.yandex.net"
