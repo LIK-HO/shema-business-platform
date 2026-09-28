@@ -187,6 +187,8 @@ class AIExecutionService:
             evidence_level=trust.evidence_level,
             correlation_id=request.correlation_id,
             configuration_version=configuration_version,
+            idempotency_key=request.idempotency_key.strip(),
+            idempotency_request_hash=request.request_hash,
         )
         if self._scoped_executor is None:
             raise RuntimeError("AI scoped executor is not configured")
