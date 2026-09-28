@@ -23,6 +23,26 @@ The review covered:
 
 The repository was not treated as correct merely because the existing CI had previously been green. The current HEAD and newly introduced strategic contracts were reviewed separately.
 
+## 0A. Global mandatory survival gate
+
+This review establishes a permanent rule: every material strategy change and every element completion triggers a new adversarial review of the entire approved architecture before VERIFIED/CLOSED.
+
+The review attempts professional system destruction, not local confirmation. It searches for:
+- split-brain authority;
+- broken operator causal continuity;
+- multi-operator stale writes and assignment conflicts;
+- provider failure/lock-in;
+- migration and rollback traps;
+- cost/quota cascades;
+- unsafe external effects;
+- legal/EDO obsolescence;
+- recovery failure.
+
+The machine-readable contract is architecture/global_adversarial_survivability_gate_contract.json. The development protocol makes the gate a closure requirement for the current HEAD.
+
+The target is architectural survivability: preserve canonical truth, contain impact, recover deterministically, audit and learn. Literal zero failure is not assumed.
+
+
 ---
 
 ## Executive conclusion
@@ -364,31 +384,21 @@ This is not yet fully implemented as a runtime vertical slice and should become 
 
 ---
 
-# 12. Procurement source expansion
+# 12. Procurement / B2G expansion is intentionally deferred
 
-Adding more procurement providers is not automatically an improvement.
+The adversarial review now treats early tender development as a **scope risk**, not a maturity requirement.
 
-The correct test is:
+The verified procurement foundation remains dormant. Expanding it now would:
+- increase operator complexity before the B2B loop is proven;
+- create new external-provider cost and reliability surfaces;
+- tempt Shema toward becoming a tender system;
+- complicate the later Bitrix24 cutover.
 
-**Does another provider improve decision quality enough to justify cost and operational complexity?**
+The later B2G gate is:
 
-Measure:
+**measured B2G need → Bitrix24 business-plane capability check → integrated tender capability if needed → explicit ownership/reconciliation**
 
-- unique opportunities added;
-- duplicate rate;
-- relevant-opportunity recall;
-- false-positive rate;
-- freshness;
-- lead conversion;
-- commercial outcome quality;
-- operator time saved;
-- provider cost per useful opportunity.
-
-Only after the measured gap exists should a commercial aggregator be activated.
-
-TenderGuru therefore remains a **candidate**, not a strategic dependency.
-
----
+No early commercial aggregator or tender runtime is required in Shema.
 
 # 13. Security / privacy regression
 
@@ -521,6 +531,27 @@ Only after real measurements:
 - specialized databases.
 
 ---
+
+# 16A. Database, operator continuity and legal-change survival
+
+### Database
+
+Yandex Cloud Managed PostgreSQL remains the canonical Shema database. Bitrix24 has its own business-plane storage. The architecture deliberately does not migrate the entire Shema database into Bitrix24.
+
+### Operator continuity
+
+The practical path is one causal chain:
+
+**Shema intelligence → handoff → Bitrix24 live process → outcome → Shema learning**
+
+Stable references preserve the chain:
+**identity_ref + handoff_id + correlation_id + external_entity_ref + mapping_version**
+
+For multiple operators, live assignment and transaction activity belong to Bitrix24 after handoff. Shema retains the evidence and reason for the handoff but not a shadow live business process.
+
+### Legal / EDO evolution
+
+Legal changes become versioned configuration changes with effective dates. Unsupported downstream capabilities fail closed to preparation/manual review. Past configurations remain reconstructable; historical decisions are never rewritten to match a new legal regime.
 
 # 17. Release verdict
 
