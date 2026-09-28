@@ -127,6 +127,9 @@ class PublicIntakeSecurityRejected(RuntimeError):
 
 
 class PublicIntakeRepository(Protocol):
+    def acquire_idempotency_lock(self, key: str) -> None: ...
+    def release_idempotency_lock(self, key: str) -> None: ...
+
     def get_by_idempotency_key(self, key: str) -> PublicIntakeRecord | None: ...
 
     def get_preflight_cache(
@@ -233,6 +236,40 @@ class PublicIntakeService:
         self._clock = clock
 
     def submit(
+        self,
+        *,
+        payload: PublicIntakePayload,
+        idempotency_key: str,
+        public_client_key: str,
+        origin: str | None,
+        bot_challenge_passed: bool,
+        correlation_id: str,
+        honeypot_value: str = "",
+    ) -> PublicIntakeResult:
+        normalized_idempotency_key = idempotency_key.strip()
+        self._validate_edge_proof(
+            idempotency_key=normalized_idempotency_key,
+            public_client_key=public_client_key,
+            origin=origin,
+            bot_challenge_passed=bot_challenge_passed,
+            honeypot_value=honeypot_value,
+        )
+        with self._repository_factory() as lock_repository:
+            lock_repository.acquire_idempotency_lock(normalized_idempotency_key)
+            try:
+                return self._submit_without_lock(
+                    payload=payload,
+                    idempotency_key=normalized_idempotency_key,
+                    public_client_key=public_client_key,
+                    origin=origin,
+                    bot_challenge_passed=bot_challenge_passed,
+                    correlation_id=correlation_id,
+                    honeypot_value=honeypot_value,
+                )
+            finally:
+                lock_repository.release_idempotency_lock(normalized_idempotency_key)
+
+    def _submit_without_lock(
         self,
         *,
         payload: PublicIntakePayload,
