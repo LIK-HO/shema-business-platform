@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from threading import Lock
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import Request
 
 DEFAULT_MAX_RESPONSE_BYTES = 1_048_576
 _ALLOWED_BASE_HOST = "api.opencorporates.com"
@@ -118,7 +118,7 @@ def _request_json(
         method="GET",
     )
     try:
-        with urlopen(request, timeout=timeout_seconds) as response:
+        with secure_urlopen(request, timeout=timeout_seconds) as response:
             return response.status, _read_bounded(
                 response,
                 max_response_bytes=max_response_bytes,
@@ -260,6 +260,8 @@ class OpenCorporatesProvider:
             [str, Mapping[str, str], float], tuple[int, bytes]
         ] | None = None,
     ) -> None:
+        from shema_platform.foundation.secure_http import secure_urlopen
+
         from shema_platform.application.research import ProviderCapability
 
         self._configuration = configuration
@@ -441,6 +443,7 @@ class OpenCorporatesProvider:
         return "opencorporates"
 
     def check(self, *, call_budget=None):
+        from shema_platform.foundation.secure_http import secure_urlopen
         from shema_platform.foundation.provider_budget import ProviderCallBudget
         from shema_platform.foundation.provider_probe import ProbeResult
 
