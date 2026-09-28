@@ -235,4 +235,4 @@ Prohibited:
 - Bitrix24 cutover is destructive only after complete package transfer, readback verification, recovery snapshot verification and reconciliation proof. Live Shema Order/Economics rows are then purgeable and the operator UI hides those capabilities cleanly.
 - Counterparty monitoring is a separate operator workspace with daily deterministic registry change detection, severity-aware notifications and personal favorites.
 - The adversarial gate has been extended to intake loss/notification recovery, transaction migration completeness and monitoring false-positive/poisoning scenarios.
-- Runtime implementation remains gated by contracts, negative paths, integration/E2E, recovery, adversarial review and current-head CI.
+- Current-head verification: CI run #1591 (`36387246513`) on the synchronized HEAD passed all seven release-gate jobs: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract. The earlier CI #1588 failure was an obsolete intermediate-head failure caused by the stale `search` navigation assertion and is not evidence against the current HEAD.
