@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -95,7 +96,7 @@ class MemoryRepeatOrderRepository:
             or current.cadence != plan.cadence
         ):
             raise IntegrityViolation("repeat plan immutable fields changed")
-        saved = type(plan)(**{**plan.__dict__, "revision": current.revision + 1})
+        saved = replace(plan, revision=current.revision + 1)
         self.items[plan.plan_id] = saved
         return saved
 
