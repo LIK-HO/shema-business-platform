@@ -21,10 +21,10 @@ class CommercialActionStatus(StrEnum):
 class CommercialAction:
     action_id: str
     identity_id: str
-    owner_actor_id: str | None = None
     contact_ref: str
     channel: str
     evidence_refs: tuple[str, ...]
+    owner_actor_id: str | None = None
     status: CommercialActionStatus = CommercialActionStatus.DRAFT
     send_attempt: int = 0
     send_worker_id: str | None = None
@@ -89,6 +89,7 @@ class CommercialAction:
             contact_ref=self.contact_ref,
             channel=self.channel,
             evidence_refs=self.evidence_refs,
+            owner_actor_id=self.owner_actor_id,
             status=CommercialActionStatus.SENDING,
             send_attempt=attempt,
             send_worker_id=worker_id,
@@ -104,6 +105,7 @@ class CommercialAction:
             contact_ref=self.contact_ref,
             channel=self.channel,
             evidence_refs=self.evidence_refs,
+            owner_actor_id=self.owner_actor_id,
             status=CommercialActionStatus.SENT,
             send_attempt=self.send_attempt,
         )
