@@ -39,6 +39,7 @@ def sent_action() -> CommercialAction:
     return CommercialAction(
         action_id="action-1",
         identity_id="identity-1",
+        owner_actor_id="operator-1",
         contact_ref="chat:42",
         channel="max",
         evidence_refs=("evidence:1",),
