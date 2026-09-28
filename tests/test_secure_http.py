@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import pytest
 from urllib.error import HTTPError
 from urllib.request import Request
+
+import pytest
 
 from shema_platform.foundation.secure_http import _NoRedirectHandler, secure_urlopen
 
