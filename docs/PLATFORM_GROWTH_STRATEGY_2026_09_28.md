@@ -222,7 +222,7 @@ Shema owns:
 - evidence/provenance/freshness;
 - qualification;
 - contact preparation;
-- repeat-business preparation;
+- repeat-orders-and-business-continuity;
 - learning context.
 
 Bitrix24 owns after handoff:
@@ -244,7 +244,7 @@ Send only the minimum execution context:
 - qualification state;
 - evidence-backed reason for contact;
 - contact preparation;
-- repeat-business preparation;
+- repeat-orders-and-business-continuity;
 - correlation/reference IDs.
 
 **Bitrix24 → Shema**
