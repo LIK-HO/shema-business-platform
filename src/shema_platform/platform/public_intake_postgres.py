@@ -2,19 +2,21 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from shema_platform.application.public_intake import (
     CounterpartyPreflightSnapshot,
-    PreflightDecision,
-    IdentityMatch,
     IdentityMatch,
     IntakeStatus,
+    PreflightDecision,
     PublicIntakePayload,
+    PublicIntakeRateLimited,
     PublicIntakeRecord,
 )
-from shema_platform.foundation.errors import IntegrityViolation, IdempotencyConflict
-from shema_platform.application.public_intake import PublicIntakeRateLimited
+from shema_platform.foundation.errors import IdempotencyConflict, IntegrityViolation
 from shema_platform.platform.postgres import DBConnection
+
+
 class PublicIntakeOutboxEvent:
     def __init__(
         self,
@@ -41,7 +43,7 @@ class PostgresPublicIntakeRepository:
         self._connection_factory = connection_factory
         self._connection: DBConnection | None = None
 
-    def __enter__(self) -> "PostgresPublicIntakeRepository":
+    def __enter__(self) -> PostgresPublicIntakeRepository:
         if self._connection is not None:
             raise RuntimeError("public intake repository is already active")
         self._connection = self._connection_factory()
@@ -328,7 +330,7 @@ class PostgresPublicIntakeRepository:
         epoch = int(now.timestamp())
         window_start = datetime.fromtimestamp(
             epoch - (epoch % window_seconds),
-            tz=timezone.utc,
+            tz=UTC,
         )
         key_hash = hashlib.sha256(
             public_client_key.strip().encode("utf-8")
@@ -549,7 +551,12 @@ class PostgresPublicIntakeRepository:
 class PostgresPublicRequestProjection:
     """Projects accepted business context into canonical Shema PostgreSQL."""
 
-    def __init__(self, unit_of_work_factory, *, clock=lambda: datetime.now(timezone.utc)):
+    def __init__(
+        self,
+        unit_of_work_factory,
+        *,
+        clock=lambda: datetime.now(UTC),
+    ):
         self._unit_of_work_factory = unit_of_work_factory
         self._clock = clock
 
@@ -558,7 +565,9 @@ class PostgresPublicRequestProjection:
         with self._unit_of_work_factory() as uow:
             connection = getattr(uow, "connection", None)
             if connection is None:
-                raise RuntimeError("canonical unit of work exposes no database connection")
+                raise RuntimeError(
+                    "canonical unit of work exposes no database connection"
+                )
 
             connection.execute(
                 """
@@ -754,7 +763,6 @@ class PostgresOperatorNotificationReader:
 
 class PublicRequestUnavailable(RuntimeError):
     pass
-
 
 
 class PublicIntakeOutboxDispatcher:
