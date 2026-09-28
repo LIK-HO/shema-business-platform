@@ -541,4 +541,4 @@ The approved causal chain is:
 
 ## Verdict
 
-The boundary is **architecturally survivable and bounded**, but it is not release-closed until the implementation and current-head full release-gate CI prove the contract.
+The boundary is **architecturally survivable and bounded**. Contract tests and the full current-head seven-job release gate are GREEN on d595ec856a6a611751c7b619ae75f23ca3db4398 / run 36372953967. This closes the architecture-contract stage; production activation remains separately gated by Phase 3B runtime exit criteria.
