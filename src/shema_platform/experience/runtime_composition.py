@@ -82,7 +82,7 @@ def compose_public_intake_runtime(
     window_seconds: int = 600,
     telemetry: TelemetrySink | None = None,
     provider_sleeper: Callable[[float], None] | None = None,
- ) -> PublicIntakeRuntimeAssembly:
+) -> PublicIntakeRuntimeAssembly:
     if not allowed_origins:
         raise ValueError("public intake requires a non-empty origin allowlist")
     if bot_challenge_verifier is None:
