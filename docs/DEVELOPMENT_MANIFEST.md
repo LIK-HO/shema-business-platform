@@ -1922,3 +1922,13 @@ The agent must restore these documents before substantive GitHub work. A convers
 The current source-tree HEAD is never copied into this manifest as a permanent value. Live GitHub state is authoritative for branch, commit, PR and CI status.
 
 **Новые core semantics не добавляются только потому, что появилась новая feature request.**
+
+## Public Intake / Platform Evolution Synchronization — 2026-09-28
+
+- Added mandatory platform evolution contract: architecture/platform_evolution_contract.json.
+- Added public request trust-boundary contract: architecture/public_intake_counterparty_preflight_contract.json.
+- Public intake is untrusted ingress and never writes live Bitrix24 business state directly.
+- Counterparty preflight is deterministic and registry-driven; GPT is excluded from identifier validation and registry truth lookup.
+- Public responses contain minimal status/match information; the operator sees the evidence-linked preflight summary and can drill down.
+- Public-ingress/provider changes are classified E2 and require abuse, resource/cost, security, rollback/deactivation, provider-exit and global-adversarial gates.
+
