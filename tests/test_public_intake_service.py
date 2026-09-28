@@ -140,6 +140,11 @@ class PermissionedAuthenticator(AuthenticationPort):
         raise AuthenticationRequired()
 
 
+class FakeBotChallengeVerifier:
+    def verify(self, *, token: str, peer_identity: str) -> bool:
+        return token == "passed" and bool(peer_identity)
+
+
 def payload(**overrides) -> PublicIntakePayload:
     values = dict(
         service_type="Погрузка",
@@ -370,6 +375,7 @@ def test_public_api_accepts_without_auth_and_preserves_correlation() -> None:
         application=None,
         authenticator=PermissionedAuthenticator(),
         public_intake=service,
+        bot_challenge_verifier=FakeBotChallengeVerifier(),
     )
     response = TestClient(app).post(
         "/v1/public/intake",
@@ -443,6 +449,29 @@ def test_public_api_rate_limit_ignores_caller_supplied_client_key() -> None:
 
     assert first.status_code == 202
     assert second.status_code == 429
+
+
+def test_public_api_rejects_spoofed_bot_header_without_server_verifier() -> None:
+    service, _ = make_service(provider=None)
+    app = create_app(public_intake=service)
+    response = TestClient(app).post(
+        "/v1/public/intake",
+        headers={
+            "Idempotency-Key": "api-spoof-1",
+            "Origin": "https://example.test",
+            "X-Bot-Challenge": "passed",
+        },
+        json={
+            "serviceType": "Погрузка",
+            "location": "Москва",
+            "preferredDateOrPeriod": "2026-10-05",
+            "workOrCargoDescription": "Погрузить оборудование",
+            "contactName": "Иван Петров",
+            "contactChannel": "+79990000000",
+        },
+    )
+    assert response.status_code == 400
+    assert response.json()["code"] == "public_intake_security_rejected"
 
 
 def test_public_api_default_edge_policy_rejects_missing_proof() -> None:
