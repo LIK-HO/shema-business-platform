@@ -198,7 +198,8 @@ INTAKE_RESTORE="$(docker exec -e PGPASSWORD=postgres "$SOURCE_CONTAINER"   psql 
   select
       (select count(*) from intake_request where request_id = 'pitr-intake-request'),
       (select count(*) from intake_outbox_event where event_id = 'pitr-intake-event'),
-      (select count(*) from intake_preflight_snapshot where snapshot_id = 'pitr-intake-preflight')
+      (select count(*) from intake_preflight_snapshot where snapshot_id = 'pitr-intake-preflight'),
+      (select count(*) from intake_idempotency_reservation where idempotency_key = 'pitr-intake-idem')
   ")"
 
 if [[ "$INTAKE_RESTORE" != "1|1|1|1" ]]; then
