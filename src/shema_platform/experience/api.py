@@ -796,7 +796,7 @@ def create_app(
                 provider_id=provider_id,
                 actor_id=context.actor_id,
                 reason=payload.reason,
-                operator_authorized=True,
+                operator_authorized=payload.operator_confirmed,
                 activation_version=payload.activation_version,
                 correlation_id=context.correlation_id,
             ),
@@ -892,7 +892,7 @@ def create_app(
             provider_id=provider_id,
             actor_id=context.actor_id,
             reason=payload.reason,
-            operator_authorized=payload.operator_authorized,
+            operator_authorized=payload.operator_confirmed,
             correlation_id=context.correlation_id,
             permissions=context.permissions,
         )
