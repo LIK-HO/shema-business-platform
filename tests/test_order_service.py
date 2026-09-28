@@ -76,6 +76,7 @@ def test_order_rejects_unsent_action() -> None:
     action = CommercialAction(
         action_id="action-1",
         identity_id="identity-1",
+        owner_actor_id="operator-1",
         contact_ref="chat:42",
         channel="max",
         evidence_refs=("evidence:1",),
@@ -88,6 +89,34 @@ def test_order_rejects_unsent_action() -> None:
             action=action,
             lines=(line(),),
             request_hash="hash-1",
+        )
+
+
+def test_order_rejects_foreign_action_owner_even_with_permission() -> None:
+    authorizer = RBACAuthorizer(
+        (
+            AuthorizationSubject(
+                "operator-1",
+                frozenset({Permission.ORDER_CREATE}),
+            ),
+            AuthorizationSubject(
+                "operator-2",
+                frozenset({Permission.ORDER_CREATE}),
+            ),
+        )
+    )
+    scoped_service = OrderService(authorizer, PolicyEngine())
+
+    with pytest.raises(
+        QuarantineRequired,
+        match="owned by another actor",
+    ):
+        scoped_service.create_from_action(
+            order_id="order-bola",
+            actor=Actor("operator-2", trust_level=2),
+            action=sent_action(),
+            lines=(line(),),
+            request_hash="hash-bola",
         )
 
 
