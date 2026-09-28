@@ -8,8 +8,7 @@ def load(name: str) -> dict:
     return json.loads((ROOT / "architecture" / name).read_text(encoding="utf-8"))
 
 
-def test_global_adversarial_gate_is_mandatory_for_strategy_and_element_changes(
-) -> None:
+def test_global_gate_is_mandatory_for_strategy_changes() -> None:
     payload = load("global_adversarial_survivability_gate_contract.json")
 
     assert payload["core_principle"].startswith(
