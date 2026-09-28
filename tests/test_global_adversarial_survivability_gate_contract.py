@@ -52,7 +52,9 @@ def test_global_adversarial_gate_covers_the_actual_system_failure_boundaries() -
 def test_work_protocol_cannot_close_an_element_without_the_global_gate() -> None:
     payload = load("development_work_protocol.json")
 
-    assert "global_adversarial_survivability_review" in payload["integrity_requirements"]
+    assert "global_adversarial_survivability_review" in payload[
+        "integrity_requirements"
+    ]
     assert (
         "global_adversarial_survivability_gate_passed_for_current_head"
         in payload["element_completion"]["close_only_when"]
