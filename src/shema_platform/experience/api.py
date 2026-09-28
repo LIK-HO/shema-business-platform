@@ -511,24 +511,7 @@ def create_app(
     @app.get("/health/ready")
     async def provider_readiness(request: Request) -> JSONResponse:
         registry: ProviderHealthRegistry = request.app.state.provider_health
-        payload = {
-            "ready": registry.ready(),
-            "providers": [
-                {
-                    "providerId": state.provider_id,
-                    "enabled": state.enabled,
-                    "configured": state.configured,
-                    "reachable": state.reachable,
-                    "lastCheckedAt": (
-                        state.last_checked_at.isoformat()
-                        if state.last_checked_at is not None
-                        else None
-                    ),
-                    "lastErrorCode": state.last_error_code,
-                }
-                for state in registry.snapshot()
-            ],
-        }
+        payload = {"ready": registry.ready()}
         return JSONResponse(
             status_code=200 if registry.ready() else 503,
             content=payload,
