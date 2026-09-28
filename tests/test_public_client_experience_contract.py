@@ -28,6 +28,9 @@ def test_max_is_a_projection_of_the_same_public_web_application() -> None:
 
     max_app = payload["experience_surfaces"]["max_mini_app"]
     assert max_app["requires_max_bot"] is True
+    assert max_app["bot_role"] == (
+        "answer_client_questions_clarify_request_and_open_request_flow"
+    )
     assert max_app["static_https_url_required"] is True
     assert max_app["uses_same_public_web_application"] is True
     assert max_app["uses_same_canonical_api"] is True
