@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "status": "phase_2c_pilot",
+  "status": "approved_operator_search_boundary",
   "depends_on": [
     "architecture/search_run_contract.json",
     "architecture/search_plan_registry_contract.json",
