@@ -39,12 +39,33 @@ class MemoryPublicIntakeRepository:
         self.cache = {}
         self.budgets = {}
         self.reservations = {}
+        self.global_used = 0
+        self.global_tripped_until = None
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         return False
+
+    def consume_global_circuit(self, *, limit, window_seconds, now):
+        from datetime import timedelta
+
+        if self.global_tripped_until is not None and self.global_tripped_until > now:
+            raise Exception("global public-intake circuit is open")
+        self.global_used += 1
+        if self.global_used >= limit:
+            self.global_tripped_until = now + timedelta(seconds=window_seconds)
+
+    def ensure_outbox_capacity(self, *, max_pending):
+        if len(
+            [item for item in self.outbox if item.get("published_at") is None]
+        ) >= max_pending:
+            from shema_platform.application.public_intake import PublicIntakeRateLimited
+            raise PublicIntakeRateLimited(
+                "public-intake outbox backlog is at capacity",
+                budget="outbox_queue",
+            )
 
     def reserve_idempotency(
         self,
@@ -203,7 +224,15 @@ def payload(**overrides) -> PublicIntakePayload:
     return PublicIntakePayload(**values)
 
 
-def make_service(*, provider=None, projector=None, submission_limit=5, lookup_limit=20):
+def make_service(
+    *,
+    provider=None,
+    projector=None,
+    submission_limit=5,
+    lookup_limit=20,
+    global_submission_limit=100,
+    max_pending_outbox=1000,
+):
     repository = MemoryPublicIntakeRepository()
     preflight = PublicCounterpartyPreflightService(
         provider=provider,
@@ -224,6 +253,8 @@ def make_service(*, provider=None, projector=None, submission_limit=5, lookup_li
         projector=projector or MemoryProjector(),
         submission_limit=submission_limit,
         lookup_limit=lookup_limit,
+        global_submission_limit=global_submission_limit,
+        max_pending_outbox=max_pending_outbox,
         enforce_edge_proof=False,
         allowed_origins=frozenset({"https://example.test"}),
         clock=lambda: NOW,
@@ -342,6 +373,77 @@ def test_in_progress_idempotency_fails_before_provider_call() -> None:
             origin=None,
             bot_challenge_passed=False,
             correlation_id="corr-in-progress",
+        )
+
+    assert provider.calls == 0
+
+
+def test_global_circuit_opens_before_provider_on_aggregate_overload() -> None:
+    provider = FakeProvider(
+        record=CounterpartyProviderRecord(
+            provider_id="fake_registry",
+            source_ref="https://registry.example.test/party",
+            canonical_name="ООО Альфа",
+            tax_id="7707083893",
+            registration_id="1027700132195",
+            legal_status="ACTIVE",
+        )
+    )
+    service, repository = make_service(
+        provider=provider,
+        global_submission_limit=1,
+    )
+
+    first = service.submit(
+        payload=payload(),
+        idempotency_key="global-circuit-1",
+        public_client_key="client-1",
+        origin=None,
+        bot_challenge_passed=False,
+        correlation_id="corr-global-1",
+    )
+    assert first.record.request_id
+    assert provider.calls == 1
+
+    with pytest.raises(Exception, match="global public-intake circuit is open"):
+        service.submit(
+            payload=payload(location="Москва, второй адрес"),
+            idempotency_key="global-circuit-2",
+            public_client_key="client-2",
+            origin=None,
+            bot_challenge_passed=False,
+            correlation_id="corr-global-2",
+        )
+
+    assert provider.calls == 1
+    assert len(repository.requests) == 1
+
+
+def test_outbox_capacity_fails_closed_before_provider() -> None:
+    provider = FakeProvider(
+        record=CounterpartyProviderRecord(
+            provider_id="fake_registry",
+            source_ref="https://registry.example.test/party",
+            canonical_name="ООО Альфа",
+            tax_id="7707083893",
+            registration_id="1027700132195",
+            legal_status="ACTIVE",
+        )
+    )
+    service, repository = make_service(
+        provider=provider,
+        max_pending_outbox=1,
+    )
+    repository.outbox.append({"published_at": None})
+
+    with pytest.raises(PublicIntakeRateLimited, match="outbox backlog"):
+        service.submit(
+            payload=payload(),
+            idempotency_key="queue-cap-1",
+            public_client_key="client-queue",
+            origin=None,
+            bot_challenge_passed=False,
+            correlation_id="corr-queue-cap",
         )
 
     assert provider.calls == 0
