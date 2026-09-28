@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Callable
+from collections.abc import Callable
 
 from shema_platform.application.counterparty_lookup import (
     BoundedCounterpartyLookup,
@@ -37,13 +37,34 @@ def _normalize_name(value: str | None) -> str:
 def _inn_valid(identifier: str) -> bool:
     if len(identifier) == 10:
         weights = (2, 4, 10, 3, 5, 9, 4, 6, 8, 0)
-        checksum = sum(int(digit) * weight for digit, weight in zip(identifier, weights)) % 11 % 10
+        checksum = (
+            sum(
+                int(digit) * weight
+                for digit, weight in zip(identifier, weights, strict=True)
+            )
+            % 11
+            % 10
+        )
         return checksum == int(identifier[-1])
     if len(identifier) == 12:
         weights_1 = (7, 2, 4, 10, 3, 5, 9, 4, 6, 8, 0, 0)
         weights_2 = (3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8, 0)
-        check_1 = sum(int(digit) * weight for digit, weight in zip(identifier, weights_1)) % 11 % 10
-        check_2 = sum(int(digit) * weight for digit, weight in zip(identifier, weights_2)) % 11 % 10
+        check_1 = (
+            sum(
+                int(digit) * weight
+                for digit, weight in zip(identifier, weights_1, strict=True)
+            )
+            % 11
+            % 10
+        )
+        check_2 = (
+            sum(
+                int(digit) * weight
+                for digit, weight in zip(identifier, weights_2, strict=True)
+            )
+            % 11
+            % 10
+        )
         return check_1 == int(identifier[-2]) and check_2 == int(identifier[-1])
     return False
 
