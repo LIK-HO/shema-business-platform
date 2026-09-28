@@ -5,7 +5,7 @@
 - HEAD: resolved live from GitHub; this ledger does not store a static commit pointer.
 - PR: #58 — open, draft, mergeable state subject to current CI; head resolved live.
 - Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED; live DaData remains OFF.
-- Active architecture-change boundary: **Global Adversarial Survivability + B2B-first / public Web-PWA / Bitrix24 transition correction** — IN PROGRESS until current-head full release-gate CI and global review are green.
+- Current verified architecture boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract** — CLOSED / VERIFIED at contract and test stage. Runtime public-form implementation remains governed by the Phase 3B roadmap exit criteria.
 - Previous draft procurement subsystem removed from the current product boundary; no procurement/tender runtime, provider adapters, tender workspace or procurement persistence remains in the active implementation.
 - Product flow is fixed for the initial B2B stage as: intelligence → identity/evidence → qualification → contact preparation → business handoff → live business execution → result/learning.
 - Phase 3A is fixed as Repeat Business Preparation immediately before business handoff.
@@ -21,7 +21,7 @@
 - Corrected YandexGPT configuration so `YANDEXGPT_MAX_COST` is explicitly required and positive; zero/missing cost ceilings now fail closed.
 - Phase 3A is renamed/redefined as Repeat Business Preparation; Shema must not reimplement Bitrix24 recurring-deal execution.
 - Monium is explicitly operational telemetry; durable audit/business history remains PostgreSQL-owned.
-- Full repository release-gate CI for the latest HEAD remains pending; no new boundary is considered verified until that gate is green.
+- Full seven-job release-gate CI for the current verified HEAD d595ec856a6a611751c7b619ae75f23ca3db4398 is GREEN in run 36372953967; all quality, integration, supply-chain, backup/recovery and release-contract jobs passed.
 - Global adversarial survivability gate is now mandatory for every material strategy change and every element completion; no element may enter VERIFIED/CLOSED without a current-head whole-system adversarial review.
 - Data-plane rule: Managed PostgreSQL remains the canonical Shema database in Yandex Cloud. Bitrix24 receives live business ownership after handoff; the Shema database is not wholesale migrated into Bitrix24.
 - Operator continuity rule: every business handoff carries stable Shema identity, handoff, correlation and Bitrix entity references so one or multiple operators can reconstruct the full causal chain without shadow copies.
@@ -47,6 +47,16 @@
 - Integration 3.13: success.
 - Backup/recovery: success.
 - Release-contract: success.
+
+## Current strategy-boundary verification — 2026-09-28
+
+- Boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract**.
+- Current verified HEAD: d595ec856a6a611751c7b619ae75f23ca3db4398.
+- Full CI run 36372953967 passed all seven jobs: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup-recovery and release-contract.
+- Dedicated contract tests were added for public intake and controlled platform evolution.
+- During verification, the gate exposed and the branch corrected two regressions: YandexGPT dataclass field ordering and a stale Bitrix24 business-plane ownership assertion.
+- No FNS live automation, public-form Bitrix24 write path, or MAX activation was opened by this stage.
+- The verified result closes the architectural contract/test stage; runtime implementation must still satisfy the Phase 3B exit criteria before production activation.
 
 ## Historical core-certification baseline
 
@@ -200,9 +210,9 @@ Prohibited:
 - v1.4 kernel semantics: frozen.
 - v1.5 core maturity: certified.
 
-- Active strategy boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract** — IN PROGRESS; current-head CI is not yet green.
+- Verified strategy boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract** — CLOSED / VERIFIED at contract/test stage.
 - Deterministic registry preflight is the first line: GPT is not used for INN/OGRN validation or registry truth lookup.
 - Public form is untrusted ingress; layered edge/application protection, idempotency, anti-enumeration and provider budgets are mandatory.
 - No live FNS automation or public-form Bitrix24 write path is activated by this contract change.
-- Adversarial review of the delta found no new kernel authority or cross-system split-brain; closure remains blocked until executable verification and current-head release-gate CI are green.
+- Adversarial review of the delta found no new kernel authority or cross-system split-brain. The current-head full release-gate CI is GREEN; production activation remains separately gated.
 
