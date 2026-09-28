@@ -62,30 +62,6 @@ def test_no_strategic_b2b_center_dependency_remains_in_manifest_or_roadmap() -> 
         assert "B2B-Center is removed" in content
 
 
-def test_strategy_is_b2b_first_and_defers_tender_work_to_bitrix24() -> None:
-    payload = load("platform_growth_strategy_contract.json")
-
-    assert payload["business_sequence"]["stage_1"] == (
-        "B2B_process_validation_and_repeatable_unit_economics"
-    )
-    assert payload["procurement_strategy"]["shema_status"] == "dormant_foundation_only"
-    assert payload["procurement_strategy"]["new_shema_procurement_runtime_development"] is False
-    assert payload["procurement_strategy"]["activation_stage"] == (
-        "after_B2B_is_repeatable_and_Bitrix24_business_plane_is_operational"
-    )
-    assert payload["procurement_strategy"]["execution_owner"].startswith(
-        "Bitrix24"
-    )
-
-    for relative_path in (
-        "docs/DEVELOPMENT_MANIFEST.md",
-        "docs/ROADMAP.md",
-        "docs/DEVELOPMENT_STATE.md",
-    ):
-        content = (ROOT / relative_path).read_text(encoding="utf-8")
-        assert "TenderGuru" not in content
-
-
 def test_strategy_preserves_two_domains_without_split_brain() -> None:
     payload = load("platform_growth_strategy_contract.json")
 
@@ -103,12 +79,27 @@ def test_strategy_preserves_two_domains_without_split_brain() -> None:
     )
 
 
-def test_document_change_is_versioned_and_recoverable() -> None:
+
+
+def test_public_experience_is_part_of_the_platform_strategy() -> None:
     payload = load("platform_growth_strategy_contract.json")
 
-    assert payload["document_evolution"]["document_rule_source_is_versioned"] is True
-    assert payload["document_evolution"]["effective_date_required"] is True
-    assert payload["document_evolution"]["historical_configuration_is_preserved"] is True
-    assert payload["document_evolution"]["missing_downstream_capability"].startswith(
-        "fail_closed"
+    public_web = payload["experience_surfaces"]["public_web"]
+    assert public_web["canonical_domain"] == "схемагрупп.рф"
+    assert public_web["canonical_api"] is True
+    assert public_web["no_live_business_authority"] is True
+    assert payload["experience_surfaces"]["max_mini_app"] == (
+        "same_public_web_application_inside_MAX_bot"
     )
+    assert "utm" in payload["experience_surfaces"]["source_attribution"]
+
+
+def test_strategy_has_no_tender_or_document_subsystem_ownership() -> None:
+    payload = load("platform_growth_strategy_contract.json")
+
+    assert "procurement_observations" not in payload["ownership"]["shema_authoritative"]
+    assert "business_documents_and_approvals_where_configured" not in payload[
+        "ownership"
+    ]["bitrix24_authoritative_after_handoff"]
+    assert "procurement_strategy" not in payload
+    assert "document_evolution" not in payload
