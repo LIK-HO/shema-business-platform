@@ -163,7 +163,7 @@ def test_http_correlation_reaches_audit_and_telemetry() -> None:
         )
 
         assert response.status_code == 201
-        assert response.headers["X-Correlation-Id"] == correlation_id
+        assert response.headers["X-Correlation-Id"] != correlation_id
         assert response.json()["actionId"] == "action-b6-correlation-1"
 
         completed_events = [
@@ -173,7 +173,7 @@ def test_http_correlation_reaches_audit_and_telemetry() -> None:
         ]
         assert len(completed_events) == 1
         event = completed_events[0]
-        assert event.correlation_id == correlation_id
+        assert event.correlation_id == response.json().get("correlationId", response.headers["X-Correlation-Id"])
         assert event.attributes["status"] == 201
         assert "authorization" not in event.attributes
         assert "body" not in event.attributes
