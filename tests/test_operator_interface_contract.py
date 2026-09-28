@@ -55,8 +55,7 @@ def test_counterparty_monitoring_and_favorites_are_distinct() -> None:
     )
 
 
-def test_repeat_orders_use_frozen_semantics_and_hide_cleanly_after_bitrix_cutover(
-    ) -> None:
+def test_repeat_orders_hide_cleanly_after_bitrix_cutover() -> None:
     payload = load()
     repeat = payload["specialized_workspaces"]["repeat_orders"]
     assert repeat["temporary_shema_live_mode_is_allowed"] is True
