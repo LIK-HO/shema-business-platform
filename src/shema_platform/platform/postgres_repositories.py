@@ -991,6 +991,7 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
                 channel,
                 evidence_refs,
                 status,
+                owner_actor_id,
                 send_attempt,
                 send_worker_id,
                 send_lease_until
@@ -1045,6 +1046,7 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
                 channel,
                 evidence_refs,
                 status,
+                owner_actor_id,
                 send_attempt,
                 send_worker_id,
                 send_lease_until
@@ -1109,6 +1111,7 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
         return CommercialAction(
             action_id=str(action_id_value),
             identity_id=str(identity_id),
+            owner_actor_id=str(owner_actor_id) if owner_actor_id is not None else None,
             contact_ref=str(contact_ref),
             channel=str(channel),
             evidence_refs=tuple(str(ref) for ref in evidence_refs),
@@ -1188,7 +1191,7 @@ class PostgresOrderRepository(OrderRepository):
     def save(self, order: Order) -> None:
         cursor = self._connection.execute(
             """
-            select order_id, identity_id, source_action_id, status
+            select order_id, identity_id, source_action_id, status, owner_actor_id
             from order_header
             where order_id = %s
             for update
@@ -1223,6 +1226,7 @@ class PostgresOrderRepository(OrderRepository):
                 in line_cursor.fetchall()
             ),
             status=OrderStatus(str(row[3])),
+            owner_actor_id=str(row[4]) if row[4] is not None else None,
         )
 
         if (
@@ -1260,6 +1264,7 @@ class PostgresOrderRepository(OrderRepository):
             set identity_id = %s,
                 source_action_id = %s,
                 status = %s,
+                owner_actor_id = %s,
                 updated_at = now()
             where order_id = %s
             """,
@@ -1388,6 +1393,7 @@ class PostgresRepeatOrderRepository(RepeatOrderRepository):
             select
                 plan_id,
                 source_order_id,
+                owner_actor_id,
                 identity_id,
                 status,
                 cadence_unit,
@@ -1441,6 +1447,7 @@ class PostgresRepeatOrderRepository(RepeatOrderRepository):
             returning
                 plan_id,
                 source_order_id,
+                owner_actor_id,
                 identity_id,
                 status,
                 cadence_unit,
