@@ -79,6 +79,96 @@ class PostgresPublicIntakeRepository:
             return None
         return self.get_by_idempotency_key(str(row[0]))
 
+    def consume_global_circuit(
+        self,
+        *,
+        limit: int,
+        window_seconds: int,
+        now: datetime,
+    ) -> None:
+        if limit <= 0:
+            raise ValueError("global circuit limit must be positive")
+        if window_seconds <= 0:
+            raise ValueError("global circuit window must be positive")
+        if now.tzinfo is None:
+            raise ValueError("global circuit timestamp must be timezone-aware")
+
+        row = self.connection.execute(
+            """
+            select window_started_at, used_count, tripped_until
+            from intake_global_circuit
+            where circuit_id = 1
+            for update
+            """
+        ).fetchone()
+
+        if row is None:
+            self.connection.execute(
+                """
+                insert into intake_global_circuit (
+                    circuit_id,
+                    window_started_at,
+                    used_count,
+                    tripped_until
+                ) values (1, %s, 1, %s)
+                """,
+                (
+                    now,
+                    now + timedelta(seconds=window_seconds)
+                    if limit == 1
+                    else None,
+                ),
+            )
+            return
+
+        window_started_at, used_count, tripped_until = row
+        if tripped_until is not None and tripped_until > now:
+            raise PublicIntakeRateLimited(
+                "global public-intake circuit is open",
+                budget="global_circuit",
+            )
+
+        if now >= window_started_at + timedelta(seconds=window_seconds):
+            used_count = 0
+            window_started_at = now
+
+        next_count = int(used_count) + 1
+        next_tripped_until = (
+            now + timedelta(seconds=window_seconds)
+            if next_count >= limit
+            else None
+        )
+        self.connection.execute(
+            """
+            update intake_global_circuit
+            set window_started_at = %s,
+                used_count = %s,
+                tripped_until = %s
+            where circuit_id = 1
+            """,
+            (window_started_at, next_count, next_tripped_until),
+        )
+
+    def ensure_outbox_capacity(self, *, max_pending: int) -> None:
+        if max_pending <= 0:
+            raise ValueError("max_pending must be positive")
+        self.connection.execute(
+            "select pg_advisory_xact_lock(hashtextextended(%s, 0))",
+            ("shema:public_intake:outbox_capacity",),
+        )
+        count = self.connection.execute(
+            """
+            select count(*)
+            from intake_outbox_event
+            where published_at is null
+            """
+        ).fetchone()[0]
+        if int(count) >= max_pending:
+            raise PublicIntakeRateLimited(
+                "public-intake outbox backlog is at capacity",
+                budget="outbox_queue",
+            )
+
     def reserve_idempotency(
         self,
         *,
