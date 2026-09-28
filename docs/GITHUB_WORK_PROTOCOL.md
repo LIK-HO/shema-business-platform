@@ -69,10 +69,14 @@ Before moving to the next element:
 4. security boundary checked;
 5. persistence/recovery checked where relevant;
 6. observability checked;
-7. CI/release implications checked;
-8. Development State updated;
-9. commit identified;
-10. next element explicitly selected.
+7. **global adversarial survivability review performed across the whole architecture and system, not only the changed element;**
+8. **strategy, data ownership, operator causal continuity, multi-operator behavior, migration/rollback and legal/document-change resilience rechecked;**
+9. CI/release implications checked;
+10. Development State updated;
+11. commit identified;
+12. next element explicitly selected.
+
+A strategy change or element completion may not be marked VERIFIED/CLOSED without the global adversarial gate for the current HEAD.
 
 ## 6. Interruption protocol
 
