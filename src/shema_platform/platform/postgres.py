@@ -15,6 +15,7 @@ if TYPE_CHECKING:
         JobRepository,
         OrderRepository,
         OutboxRepository,
+        RepeatOrderRepository,
         QuarantineRepository,
     )
 
@@ -58,6 +59,7 @@ class PostgresUnitOfWork:
         self.jobs: JobRepository | None = None
         self.commercial_actions: CommercialActionRepository | None = None
         self.orders: OrderRepository | None = None
+        self.repeat_orders: RepeatOrderRepository | None = None
         self.economics: EconomicEntryRepository | None = None
         self.ai_runs: AIRunRepository | None = None
 
@@ -84,6 +86,7 @@ class PostgresUnitOfWork:
             PostgresOrderRepository,
             PostgresOutboxRepository,
             PostgresQuarantineRepository,
+            PostgresRepeatOrderRepository,
         )
 
         connection = self.connection
@@ -96,6 +99,7 @@ class PostgresUnitOfWork:
         self.jobs = PostgresJobRepository(connection)
         self.commercial_actions = PostgresCommercialActionRepository(connection)
         self.orders = PostgresOrderRepository(connection)
+        self.repeat_orders = PostgresRepeatOrderRepository(connection)
         self.economics = PostgresEconomicEntryRepository(connection)
         self.ai_runs = PostgresAIRunRepository(connection)
         return self
@@ -112,6 +116,7 @@ class PostgresUnitOfWork:
         self.jobs = None
         self.commercial_actions = None
         self.orders = None
+        self.repeat_orders = None
         self.economics = None
         self.ai_runs = None
         if connection is None:
