@@ -36,7 +36,7 @@
 ## Strategic boundary synchronization — 2026-09-28
 
 - B2B-Center is removed as a named strategic procurement provider.
-- Procurement is now governed by a provider-neutral ProcurementSourceRegistry strategy. ГосПлан remains the official-origin baseline; TenderGuru is the first commercial aggregation candidate only after a measured coverage gap.
+- Procurement is retained only as a dormant provider-neutral technical foundation. B2G/tender execution is deferred to the later Bitrix24 business-plane stage; no commercial aggregator is a current Shema dependency.
 - A new Yandex Cloud deployment strategy is recorded: Serverless Containers + API Gateway + narrow Cloud Functions/Timers + Lockbox + Container Registry + Object Storage + Monium, with Managed PostgreSQL remaining the canonical production database.
 - Bitrix24 is established as the future mature business control plane for live transactions, pricing, calculations/economics, communications, assignments and process automation. Shema supplies verified context and later receives minimal outcome signals for learning.
 - New Shema development must not expand into a second CRM, accounting, finance or personnel system. Existing frozen Order/Economics semantics remain only for compatibility, lineage and learning.
