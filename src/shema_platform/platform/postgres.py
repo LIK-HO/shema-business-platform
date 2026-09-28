@@ -15,8 +15,8 @@ if TYPE_CHECKING:
         JobRepository,
         OrderRepository,
         OutboxRepository,
-        RepeatOrderRepository,
         QuarantineRepository,
+        RepeatOrderRepository,
     )
 
 
