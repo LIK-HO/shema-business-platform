@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from fastapi.testclient import TestClient
 
 from shema_platform.adapters.intelligence.dadata import DaDataConfiguration
