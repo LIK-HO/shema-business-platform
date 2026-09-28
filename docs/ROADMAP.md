@@ -53,7 +53,7 @@ The target is not feature breadth. The target is a coherent personal system in w
 Therefore:
 - Web is the first universal client surface;
 - PWA is justified by real mobile/network needs;
-- Android is justified only where native capabilities provide material value;
+- Web + PWA are the approved client surfaces. Native Android is not part of the roadmap unless a separately approved evidence-backed exception is opened;
 - team/RBAC/tenancy is deferred until a real constraint or operating requirement exists;
 - external legal/operating assumptions are kept minimal and do not become an internal document-management subsystem;
 - intelligence sources are added by measured contribution, not by provider count;
@@ -436,11 +436,12 @@ Build the public and operator surfaces from the same canonical API:
 - intelligence/evidence view;
 - qualification;
 - contact preparation;
-- repeat-business preparation;
+- Repeat Orders & Business Continuity;
 - action;
 - result;
 - system control plane;
-- MAX mini-app projection of the same public request surface.
+- MAX mini-app projection of the same public request surface;
+- canonical operator-interface contract: `architecture/operator_interface_contract.json`;
 
 ### Public-client domain
 - canonical public domain: `схемагрупп.рф`;
@@ -499,7 +500,7 @@ Web and PWA provide the complete proven operator workflow without a second busin
 ## 10A. Operator Interface & Multi-Operator Doctrine
 
 ### Interface principles
-The operator interface is an operational safety mechanism, not decoration. The adopted pattern is:
+The operator interface is an operational safety mechanism, not decoration. The authoritative implementation blueprint is `architecture/operator_interface_contract.json`, aligned to mature Bitrix24 CRM patterns. The adopted pattern is:
 - compact summary/highlights at the top;
 - Details, Related records and Activity/History as predictable information groups;
 - list views as work queues with saved filters/sorts and quick actions;
