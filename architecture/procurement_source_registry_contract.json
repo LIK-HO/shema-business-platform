@@ -18,12 +18,12 @@
     },
     "aggregator": {
       "role": "coverage_enrichment_and_consolidation",
-      "first_candidate": "tenderguru_api",
-      "activation_rule": "only_after_measured_coverage_gap"
+      "status": "deferred_to_Bitrix24_B2G_stage",
+      "activation_rule": "only_after_B2B_is_repeatable_and_the_mature_business_plane_has_a_measured_coverage_need"
     },
     "specialized": {
       "role": "optional_domain_specific_enrichment",
-      "activation_rule": "separate bounded evidence and cost gate"
+      "activation_rule": "separate bounded evidence and cost gate at the later business-plane stage"
     }
   },
   "provider_neutral_capabilities": [
@@ -76,6 +76,7 @@
     "no_domain_semantics_for_specific_provider": true,
     "no_microservice_extraction": true,
     "no_automatic_qualification": true,
-    "no_automatic_tender_participation": true
+    "no_automatic_tender_participation": true,
+    "no_early_B2G_tender_runtime_in_shema": true
   }
 }
