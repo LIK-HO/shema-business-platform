@@ -46,7 +46,7 @@
     "deterministic_identifier_validation",
     "counterparty_preflight_without_gpt",
     "idempotent_request_submission",
-    "shelved_client_request_observation",
+    "persisted_client_request_observation",
     "operator_review",
     "qualification",
     "business_handoff_when_ready"
