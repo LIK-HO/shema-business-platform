@@ -8,7 +8,9 @@ from threading import Lock
 from time import monotonic, sleep
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import Request
+
+from shema_platform.foundation.secure_http import secure_urlopen
 
 from shema_platform.application.counterparty_lookup import (
     CounterpartyLookupIdentifierType,
@@ -52,7 +54,7 @@ def _request_json(
         method="POST",
     )
     try:
-        with urlopen(request, timeout=timeout_seconds) as response:
+        with secure_urlopen(request, timeout=timeout_seconds) as response:
             return response.status, _read_bounded(
                 response,
                 max_response_bytes=max_response_bytes,
