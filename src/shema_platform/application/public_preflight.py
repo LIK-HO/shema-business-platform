@@ -82,7 +82,7 @@ def _ogrnip_valid(identifier: str) -> bool:
 
 
 class PublicCounterpartyPreflightService:
-    """Deterministic intake preflight; no GPT and no automatic customer verdict."""
+    """Deterministic intake preflight; only explicitly authoritative sources may establish registry facts."""
 
     def __init__(
         self,
@@ -140,12 +140,6 @@ class PublicCounterpartyPreflightService:
                 error_code="INVALID_IDENTIFIER",
             )
 
-        cache_key = f"preflight:v1:{identifier}"
-        if self._cache_lookup is not None:
-            cached = self._cache_lookup(cache_key, now)
-            if cached is not None:
-                return cached
-
         if self._provider is None:
             return self._snapshot(
                 request_id=request_id,
@@ -157,6 +151,32 @@ class PublicCounterpartyPreflightService:
                 now=now,
                 error_code="UNKNOWN_PROVIDER_UNAVAILABLE",
             )
+
+        provider_id = str(getattr(self._provider, "provider_id", "")).strip()
+        source_version = str(getattr(self._provider, "source_version", "")).strip()
+        source_authority = str(
+            getattr(self._provider, "source_authority", "")
+        ).strip()
+        if source_authority != "official_registry" or not provider_id or not source_version:
+            return self._snapshot(
+                request_id=request_id,
+                identifier_type=identifier_type.value,
+                identifier=identifier,
+                decision=PreflightDecision.UNKNOWN,
+                identity_match=IdentityMatch.NOT_CHECKED,
+                flags=("NON_AUTHORITATIVE_PROVIDER",),
+                now=now,
+                error_code="NON_AUTHORITATIVE_PROVIDER",
+            )
+
+        cache_key = (
+            f"preflight:v2:{provider_id}:{source_version}:"
+            f"{identifier_type.value}:{identifier}"
+        )
+        if self._cache_lookup is not None:
+            cached = self._cache_lookup(cache_key, now)
+            if cached is not None:
+                return cached
 
         if self._consume_lookup_budget is not None:
             self._consume_lookup_budget(public_client_key, now)
