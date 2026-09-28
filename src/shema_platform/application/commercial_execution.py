@@ -79,6 +79,7 @@ class CommercialActionSendWorkflow:
             failed = CommercialAction(
                 action_id=current.action_id,
                 identity_id=current.identity_id,
+                owner_actor_id=current.owner_actor_id,
                 contact_ref=current.contact_ref,
                 channel=current.channel,
                 evidence_refs=current.evidence_refs,
