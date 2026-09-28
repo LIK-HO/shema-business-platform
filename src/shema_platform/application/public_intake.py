@@ -159,6 +159,15 @@ class PublicIntakeRepository(Protocol):
         snapshot: CounterpartyPreflightSnapshot,
     ) -> None: ...
 
+    def save_preflight_snapshot(
+        self,
+        snapshot: CounterpartyPreflightSnapshot,
+        *,
+        request_id: str,
+    ) -> None: ...
+
+    def mark_projected(self, request_id: str, *, now: datetime) -> None: ...
+
 
 class PublicRequestProjector(Protocol):
     def project(self, record: PublicIntakeRecord) -> None: ...
@@ -286,6 +295,10 @@ class PublicIntakeService:
                     deduplicated=True,
                 )
 
+            repository.save_preflight_snapshot(
+                preflight,
+                request_id=request_id,
+            )
             repository.add(record)
             repository.append_outbox(
                 event_id=event_id,
@@ -306,12 +319,50 @@ class PublicIntakeService:
                 occurred_at=now,
                 notify_operator=notify_operator,
             )
+            if notify_operator and preflight.decision is PreflightDecision.ATTENTION:
+                repository.append_outbox(
+                    event_id=f"{event_id}:attention",
+                    request_id=request_id,
+                    event_type="counterparty_attention",
+                    payload={
+                        "request_id": request_id,
+                        "preflight_snapshot_id": preflight.snapshot_id,
+                    },
+                    occurred_at=now,
+                    notify_operator=True,
+                )
+            elif notify_operator and preflight.decision is PreflightDecision.BLOCKING_FACT:
+                repository.append_outbox(
+                    event_id=f"{event_id}:blocking",
+                    request_id=request_id,
+                    event_type="counterparty_blocking_fact",
+                    payload={
+                        "request_id": request_id,
+                        "preflight_snapshot_id": preflight.snapshot_id,
+                    },
+                    occurred_at=now,
+                    notify_operator=True,
+                )
+            elif notify_operator and "PROVIDER_UNAVAILABLE" in preflight.flags:
+                repository.append_outbox(
+                    event_id=f"{event_id}:provider",
+                    request_id=request_id,
+                    event_type="provider_unavailable",
+                    payload={
+                        "request_id": request_id,
+                        "preflight_snapshot_id": preflight.snapshot_id,
+                    },
+                    occurred_at=now,
+                    notify_operator=True,
+                )
             if cache_key is not None:
                 repository.save_preflight_cache(cache_key, preflight)
 
         projection_status = "PENDING_PROJECTION"
         try:
             self._projector.project(record)
+            with self._repository_factory() as repository:
+                repository.mark_projected(request_id, now=self._clock())
             projection_status = "PROJECTED"
         except Exception:
             projection_status = "PENDING_PROJECTION"
