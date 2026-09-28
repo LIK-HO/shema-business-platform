@@ -111,7 +111,10 @@ def test_ai_only_api_application_returns_503_for_unavailable_provider() -> None:
 
     response = client.post(
         "/v1/ai/run",
-        headers={"Authorization": "Bearer test"},
+        headers={
+            "Authorization": "Bearer test",
+            "Idempotency-Key": "ai-composition-test",
+        },
         json={
             "taskType": "qualification",
             "promptVersion": "prompt:v1",
