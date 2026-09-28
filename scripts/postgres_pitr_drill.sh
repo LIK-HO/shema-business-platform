@@ -71,8 +71,8 @@ runner = MigrationRunner(
     plan,
 )
 report = runner.apply()
-assert report.current_version == 9
-assert report.applied == tuple(range(1, 10))
+assert report.current_version == 10
+assert report.applied == tuple(range(1, 11))
 PY
 
 python - <<'PY'
@@ -318,7 +318,7 @@ select
     (select count(*) from audit_log where audit_id = '00000000-0000-0000-0000-000000000502'),
     (select count(*) from audit_log where audit_id = '00000000-0000-0000-0000-000000000503'),
     (select count(*) from audit_log where audit_id = '00000000-0000-0000-0000-000000000504'),
-    (select count(*) from schema_migration where version = 9)
+    (select count(*) from schema_migration where version = 10)
 ")"
 
 EXPECTED="1|1|1|1|1|1|1|0|1"
