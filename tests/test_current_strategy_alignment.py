@@ -51,7 +51,9 @@ def test_ui_contract_is_referenced_by_the_business_plane_boundaries() -> None:
     repeat = load_json("architecture/repeat_order_transition_contract.json")
 
     assert (
-        interface["specialized_workspaces"]["repeat_orders"]["bitrix_recurring_engine_is_not_reimplemented"]
+        interface["specialized_workspaces"]["repeat_orders"][
+            "bitrix_recurring_engine_is_not_reimplemented"
+        ]
         is True
     )
     assert business["repeat_business"]["no_dual_live_ownership"] is True
