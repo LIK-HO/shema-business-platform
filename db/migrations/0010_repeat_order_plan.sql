@@ -1,7 +1,7 @@
 -- Phase 3A repeat-order continuity state.
 -- This is a product/application table around the frozen Order/Economics model.
 create table repeat_order_plan (
-    plan_id uuid primary key,
+    plan_id text primary key,
     source_order_id text not null references order_header(order_id),
     identity_id uuid not null references identity(identity_id),
     status text not null check (status in ('active', 'paused', 'cancelled')),
