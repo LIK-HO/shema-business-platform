@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from hashlib import sha256
+import json
 from dataclasses import dataclass
 from typing import Protocol
 from uuid import uuid4
@@ -19,6 +21,7 @@ from shema_platform.foundation.authorization import (
     Permission,
     RBACAuthorizer,
 )
+from shema_platform.foundation.errors import IdempotencyConflict
 from shema_platform.foundation.policy import PolicyEngine
 
 
@@ -56,6 +59,7 @@ class AIExecutionRequest:
     actor_trust_level: int
     permissions: frozenset[Permission]
     correlation_id: str
+    idempotency_key: str
 
     def __post_init__(self) -> None:
         if not self.task_type.strip() or not self.prompt_version.strip():
@@ -64,6 +68,8 @@ class AIExecutionRequest:
             raise ValueError("resource_ref and actor_id are required")
         if not self.correlation_id.strip():
             raise ValueError("correlation_id is required")
+        if not 8 <= len(self.idempotency_key.strip()) <= 128:
+            raise ValueError("idempotency_key must be 8-128 characters")
         if not self.input_refs or len(self.input_refs) > 64:
             raise ValueError("input_refs must contain 1..64 references")
         if not self.evidence_refs or len(self.evidence_refs) > 64:
@@ -76,6 +82,25 @@ class AIExecutionRequest:
             raise ValueError("references cannot be empty")
         if self.actor_trust_level < 0:
             raise ValueError("actor_trust_level cannot be negative")
+
+
+    @property
+    def request_hash(self) -> str:
+        payload = {
+            "task_type": self.task_type,
+            "prompt_version": self.prompt_version,
+            "resource_ref": self.resource_ref,
+            "input_refs": self.input_refs,
+            "evidence_refs": self.evidence_refs,
+            "evidence_required": self.evidence_required,
+            "max_tokens": self.max_tokens,
+            "max_cost": self.max_cost,
+            "max_duration_seconds": self.max_duration_seconds,
+            "actor_id": self.actor_id,
+        }
+        return sha256(
+            json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
 
 
 class AIExecutionService:
@@ -117,6 +142,25 @@ class AIExecutionService:
         if not configuration_version.strip():
             raise RuntimeError("AI provider configuration is not active")
 
+        with self._unit_of_work_factory() as uow:
+            pending_id = f"pending:ai:{uuid4()}"
+            reservation = uow.idempotency.reserve(
+                key=request.idempotency_key.strip(),
+                request_hash=request.request_hash,
+                result_ref=pending_id,
+            )
+            if reservation.result_ref != pending_id:
+                if reservation.result_ref.startswith("pending:"):
+                    raise IdempotencyConflict(
+                        "AI execution has an unknown external outcome and requires reconciliation"
+                    )
+                stored = uow.ai_runs.get(reservation.result_ref)
+                if stored is None:
+                    raise IdempotencyConflict(
+                        "AI idempotency reservation references a missing result"
+                    )
+                return stored
+
         gateway = AIGateway(
             self._provider_factory(),
             authorizer,
@@ -146,11 +190,18 @@ class AIExecutionService:
         )
         if self._scoped_executor is None:
             raise RuntimeError("AI scoped executor is not configured")
-        return self._scoped_executor(
-            gateway,
-            task,
-            input_refs=request.input_refs,
-            evidence_refs=request.evidence_refs,
-            context=context,
-            budget=budget,
-        )
+        try:
+            run = self._scoped_executor(
+                gateway,
+                task,
+                input_refs=request.input_refs,
+                evidence_refs=request.evidence_refs,
+                context=context,
+                budget=budget,
+            )
+        except Exception:
+            # The reservation intentionally remains pending. A retry with the same
+            # key must not repeat an external call whose outcome is unknown.
+            raise
+
+        return run
