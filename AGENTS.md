@@ -29,6 +29,7 @@ Work is performed element-by-element. An element is not closed when code merely 
 - tests are present;
 - observability is sufficient;
 - release implications are checked;
+- a current-head global adversarial survivability review has attempted professional system-destruction across the whole architecture;
 - state ledger records the verified boundary.
 
 ## Interruption rule
