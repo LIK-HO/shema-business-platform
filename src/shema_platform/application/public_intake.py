@@ -294,7 +294,9 @@ class PublicIntakeService:
             existing = repository.get_by_idempotency_key(idempotency_key)
             if existing is not None:
                 if existing.request_hash != payload.request_hash:
-                    raise ValueError("idempotency key reused with different payload")
+                    raise IdempotencyConflict(
+                        "idempotency key reused with different payload"
+                    )
                 return PublicIntakeResult(
                     record=existing,
                     projection_status="PROJECTED" if existing.projected_at else "PENDING_PROJECTION",
