@@ -10,6 +10,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import Request
 
+from shema_platform.foundation.secure_http import secure_urlopen
+
 DEFAULT_MAX_RESPONSE_BYTES = 1_048_576
 _ALLOWED_BASE_HOST = "api.opencorporates.com"
 MAX_MAX_RESPONSE_BYTES = 4_194_304
@@ -260,8 +262,6 @@ class OpenCorporatesProvider:
             [str, Mapping[str, str], float], tuple[int, bytes]
         ] | None = None,
     ) -> None:
-        from shema_platform.foundation.secure_http import secure_urlopen
-
         from shema_platform.application.research import ProviderCapability
 
         self._configuration = configuration
@@ -443,7 +443,6 @@ class OpenCorporatesProvider:
         return "opencorporates"
 
     def check(self, *, call_budget=None):
-        from shema_platform.foundation.secure_http import secure_urlopen
         from shema_platform.foundation.provider_budget import ProviderCallBudget
         from shema_platform.foundation.provider_probe import ProbeResult
 
