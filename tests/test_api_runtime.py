@@ -485,7 +485,11 @@ def test_runtime_api_maps_missing_application_to_503() -> None:
 def test_runtime_api_wires_ai_run_through_application_boundary() -> None:
     response = client(FakeApplication()).post(
         "/v1/ai/run",
-        headers={"Authorization": "Bearer test-token", "X-Correlation-Id": "corr-ai", "Idempotency-Key": "ai-api-test-1"},
+        headers={
+            "Authorization": "Bearer test-token",
+            "X-Correlation-Id": "corr-ai",
+            "Idempotency-Key": "ai-api-test-1",
+        },
         json={
             "taskType": "qualification",
             "promptVersion": "prompt:v1",
