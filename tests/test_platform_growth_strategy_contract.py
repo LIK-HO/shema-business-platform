@@ -129,8 +129,8 @@ def test_bitrix_setup_agent_is_bounded_to_discovery_plan_apply_verify() -> None:
     ]
     assert "read_only_discovery_before_mutation" in agent["safety_rules"]
     assert "direct_unreviewed_rest_mutations" in agent["ai_role"]["forbidden"]
-    assert "tender connector or approved Bitrix24 Market integration boundary" in agent["configure_scope"]
-    assert agent["business_plane_capability_tiers"]["fail_closed"].startswith("never emulate")
+    assert (\n        "tender connector or approved Bitrix24 Market integration boundary"\n        in agent["configure_scope"]\n    )
+    assert agent["business_plane_capability_tiers"]["fail_closed"].startswith(\n        "never emulate"\n    )
 
 def test_platform_evolution_contract_is_mandatory_for_growth() -> None:
     payload = json.loads(
