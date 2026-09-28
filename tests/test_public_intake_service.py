@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal
-
+from datetime import UTC, datetime
 import pytest
 from fastapi.testclient import TestClient
 
@@ -12,13 +10,14 @@ from shema_platform.application.counterparty_lookup import (
     CounterpartyProviderRecord,
 )
 from shema_platform.application.public_intake import (
-    CounterpartyPreflightSnapshot,
     IdentityMatch,
     PreflightDecision,
     PublicIntakePayload,
     PublicIntakeService,
 )
-from shema_platform.application.public_preflight import PublicCounterpartyPreflightService
+from shema_platform.application.public_preflight import (
+    PublicCounterpartyPreflightService,
+)
 from shema_platform.experience.api import create_app
 from shema_platform.experience.api_models import (
     OperatorNotificationListResponse,
