@@ -897,11 +897,12 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
                 channel,
                 evidence_refs,
                 status,
+                owner_actor_id,
                 send_attempt,
                 send_worker_id,
                 send_lease_until
             )
-            values (%s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s)
+            values (%s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s)
             """,
             (
                 action.action_id,
@@ -910,6 +911,7 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
                 action.channel,
                 json.dumps(action.evidence_refs, ensure_ascii=False),
                 action.status.value,
+                action.owner_actor_id,
                 action.send_attempt,
                 action.send_worker_id,
                 action.send_lease_until,
@@ -926,6 +928,7 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
                 channel,
                 evidence_refs,
                 status,
+                owner_actor_id,
                 send_attempt,
                 send_worker_id,
                 send_lease_until
@@ -1110,6 +1113,9 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
             channel=str(channel),
             evidence_refs=tuple(str(ref) for ref in evidence_refs),
             status=CommercialActionStatus(str(status)),
+            owner_actor_id=(
+                str(owner_actor_id) if owner_actor_id is not None else None
+            ),
             send_attempt=int(send_attempt),
             send_worker_id=str(send_worker_id) if send_worker_id is not None else None,
             send_lease_until=send_lease_until,
@@ -1125,8 +1131,10 @@ class PostgresOrderRepository(OrderRepository):
     def add(self, order: Order) -> None:
         self._connection.execute(
             """
-            insert into order_header (order_id, identity_id, source_action_id, status)
-            values (%s, %s, %s, %s)
+            insert into order_header (
+                order_id, identity_id, source_action_id, status, owner_actor_id
+            )
+            values (%s, %s, %s, %s, %s)
             """,
             (
                 order.order_id,
@@ -1140,7 +1148,7 @@ class PostgresOrderRepository(OrderRepository):
     def get(self, order_id: str) -> Order | None:
         cursor = self._connection.execute(
             """
-            select order_id, identity_id, source_action_id, status
+            select order_id, identity_id, source_action_id, status, owner_actor_id
             from order_header
             where order_id = %s
             """,
@@ -1174,6 +1182,7 @@ class PostgresOrderRepository(OrderRepository):
             source_action_id=str(row[2]),
             lines=lines,
             status=OrderStatus(str(row[3])),
+            owner_actor_id=str(row[4]) if row[4] is not None else None,
         )
 
     def save(self, order: Order) -> None:
@@ -1258,6 +1267,7 @@ class PostgresOrderRepository(OrderRepository):
                 order.identity_id,
                 order.source_action_id,
                 order.status.value,
+                order.owner_actor_id,
                 order.order_id,
             ),
         )
@@ -1302,6 +1312,7 @@ class PostgresRepeatOrderRepository(RepeatOrderRepository):
             insert into repeat_order_plan (
                 plan_id,
                 source_order_id,
+                owner_actor_id,
                 identity_id,
                 status,
                 cadence_unit,
@@ -1315,13 +1326,14 @@ class PostgresRepeatOrderRepository(RepeatOrderRepository):
                 revision
             )
             values (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s
             )
             """,
             (
                 plan.plan_id,
                 plan.source_order_id,
+                plan.owner_actor_id,
                 plan.identity_id,
                 plan.status.value,
                 plan.cadence.unit.value,
@@ -1342,6 +1354,7 @@ class PostgresRepeatOrderRepository(RepeatOrderRepository):
             select
                 plan_id,
                 source_order_id,
+                owner_actor_id,
                 identity_id,
                 status,
                 cadence_unit,
@@ -1465,6 +1478,7 @@ class PostgresRepeatOrderRepository(RepeatOrderRepository):
         (
             plan_id,
             source_order_id,
+            owner_actor_id,
             identity_id,
             status,
             cadence_unit,
@@ -1480,6 +1494,9 @@ class PostgresRepeatOrderRepository(RepeatOrderRepository):
         return RepeatOrderPlan(
             plan_id=str(plan_id),
             source_order_id=str(source_order_id),
+            owner_actor_id=(
+                str(owner_actor_id) if owner_actor_id is not None else None
+            ),
             identity_id=str(identity_id),
             cadence=RepeatCadence(
                 unit=RepeatCadenceUnit(str(cadence_unit)),
