@@ -262,8 +262,12 @@ def _context(
         permissions=actor.permissions,
     )
 
-def _require_permission(request: Request, permission: Permission) -> RequestContext:
-    context = _context(request, None)
+def _require_permission(
+    request: Request,
+    permission: Permission,
+    idempotency_key: str | None = None,
+) -> RequestContext:
+    context = _context(request, idempotency_key),
     RBACAuthorizer(
         (
             AuthorizationSubject(
