@@ -118,6 +118,7 @@ def seed(schema: str, identity_id: str, source_order_id: str) -> None:
                     ),
                 ),
                 status=OrderStatus.COMPLETED,
+                owner_actor_id="operator-1",
             )
         )
         conn.commit()
