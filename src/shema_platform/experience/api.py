@@ -30,6 +30,12 @@ from shema_platform.application.counterparty_provider_activation import (
 from shema_platform.application.counterparty_provider_runtime_lookup import (
     CounterpartyProviderRuntimeLookupService,
 )
+from shema_platform.application.public_intake import (
+    PublicIntakePayload,
+    PublicIntakeRateLimited,
+    PublicIntakeSecurityRejected,
+    PublicIntakeService,
+)
 from shema_platform.experience.api_models import (
     AIRunRequest,
     AIRunResponse,
@@ -56,6 +62,10 @@ from shema_platform.experience.api_models import (
     ResearchResponse,
     SearchRequest,
     SearchResponse,
+    OperatorNotificationListResponse,
+    OperatorNotificationResponse,
+    PublicIntakeRequest,
+    PublicIntakeResponse,
 )
 from shema_platform.foundation.authentication import (
     AuthenticatedActor,
@@ -201,7 +211,13 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
 
 class AuthenticationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.url.path in {"/docs", "/redoc", "/openapi.json", "/health/ready"}:
+        if request.url.path in {
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/health/ready",
+            "/v1/public/intake",
+        }:
             return await call_next(request)
 
         authenticator: AuthenticationPort | None = request.app.state.authenticator
@@ -274,6 +290,8 @@ def create_app(
     counterparty_checker: CounterpartyCheckService | None = None,
     counterparty_provider_activation: CounterpartyProviderActivationService | None = None,
     counterparty_provider_lookup: CounterpartyProviderRuntimeLookupService | None = None,
+    public_intake: PublicIntakeService | None = None,
+    operator_notification_reader=None,
 ) -> FastAPI:
     runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
@@ -298,6 +316,8 @@ def create_app(
     app.state.counterparty_checker = counterparty_checker
     app.state.counterparty_provider_activation = counterparty_provider_activation
     app.state.counterparty_provider_lookup = counterparty_provider_lookup
+    app.state.public_intake = public_intake
+    app.state.operator_notification_reader = operator_notification_reader
     default_telemetry: TelemetrySink = (
         StructuredLoggingTelemetrySink()
         if runtime_security.environment == "production"
@@ -365,6 +385,31 @@ def create_app(
             status_code=409,
             code="idempotency_conflict",
             message=str(exc),
+        )
+
+    @app.exception_handler(PublicIntakeSecurityRejected)
+    async def public_intake_security_rejected(
+        request: Request,
+        exc: PublicIntakeSecurityRejected,
+    ) -> JSONResponse:
+        return _error(
+            request,
+            status_code=400,
+            code="public_intake_security_rejected",
+            message=str(exc),
+        )
+
+    @app.exception_handler(PublicIntakeRateLimited)
+    async def public_intake_rate_limited(
+        request: Request,
+        exc: PublicIntakeRateLimited,
+    ) -> JSONResponse:
+        return _error(
+            request,
+            status_code=429,
+            code="public_intake_rate_limited",
+            message=str(exc),
+            details={"budget": exc.budget},
         )
 
     @app.exception_handler(QuarantineRequired)
@@ -467,6 +512,43 @@ def create_app(
             status_code=200 if registry.ready() else 503,
             content=payload,
             headers={"X-Correlation-Id": request.state.correlation_id},
+        )
+
+    @router.get(
+        "/operator/notifications",
+        response_model=OperatorNotificationListResponse,
+    )
+    async def operator_notifications(
+        request: Request,
+        limit: int = 50,
+    ) -> OperatorNotificationListResponse:
+        if limit < 1 or limit > 100:
+            raise ValueError("limit must be between 1 and 100")
+        reader = request.app.state.operator_notification_reader
+        if reader is None:
+            raise ApplicationUnavailable(
+                "operator notification center is not composed"
+            )
+        context = _context(request, None)
+        from shema_platform.foundation.authorization import RBACAuthorizer
+
+        RBACAuthorizer(
+            (
+                AuthorizationSubject(
+                    actor_id=context.actor_id,
+                    permissions=context.permissions,
+                ),
+            )
+        ).require(
+            context.actor_id,
+            Permission.PUBLIC_INTAKE_REVIEW,
+        )
+        notifications = reader.list_unread(limit=limit)
+        return OperatorNotificationListResponse(
+            notifications=[
+                OperatorNotificationResponse(**notification)
+                for notification in notifications
+            ]
         )
 
     router = APIRouter(prefix="/v1")
