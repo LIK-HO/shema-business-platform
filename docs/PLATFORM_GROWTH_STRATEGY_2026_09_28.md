@@ -1,5 +1,5 @@
 # Shema Business Platform — Strategic Reorientation
-## Yandex Cloud foundation + provider-neutral procurement + Bitrix24 business plane
+## B2B-first intelligence core + Yandex Cloud + Bitrix24 business plane
 ### 2026-09-28
 
 ## 1. Strategic decision
@@ -53,76 +53,67 @@ Bitrix24 owns the live transaction state once the opportunity is handed over.
 
 This also reduces unnecessary retention of sensitive personnel data. The intelligence layer may need evidence that a service can be fulfilled, but it should not become a personnel or contractor database unless a separate justified capability is approved.
 
-## 3. Procurement architecture correction
+## 3. B2B-first strategy and procurement boundary
 
-### Rejected direction
+### Strategic correction
 
-B2B-Center is removed from the roadmap as a named strategic provider.
+The commercial rollout starts with **B2B**:
 
-The architecture must not depend on a single commercial ETP.
+B2B prospecting → qualification → contact → service delivery → repeat business → measurable unit economics.
 
-### Adopted direction
+The objective is to prove a small, repeatable operating system before adding B2G/tender complexity.
 
-Build one provider-neutral procurement source registry and adapter boundary.
+### Procurement / B2G boundary
 
-The internal model is:
+The existing Phase 2-I procurement foundation remains a **dormant technical asset** only. It is not an early product capability.
 
-ProcurementSourceRegistry
-→ Source Adapter
-→ Normalized Procurement Observation
-→ Change/Freshness layer
-→ Identity/Evidence
-→ Qualification
-→ Contact reason
+Its preserved value is:
+- provider-neutral contracts;
+- normalized procurement observations;
+- provenance and identity/evidence separation;
+- deterministic fixtures;
+- reusable integration knowledge.
 
-Each provider exposes capabilities rather than owning domain semantics.
+At the current stage Shema does **not** develop:
+- procurement runtime monitoring;
+- tender workspaces;
+- tender participation/submission;
+- commercial aggregator expansion;
+- procurement-specific operator workflows.
 
-### Provider portfolio
+The B2G/tender capability is introduced later, at the **Bitrix24 business-plane stage**, using Bitrix24's mature business-process/CRM capabilities or a mature integrated tender capability where required. Shema remains the intelligence/context source, not the tender system of record.
 
-| Layer | Provider | Role | Status |
-|---|---|---|---|
-| Official baseline | ГосПлан API v2 / ЕИС-origin data | public procurement observation | foundation already verified |
-| Aggregation | TenderGuru API | broader state/corporate/commercial coverage, contracts/docs/risk-oriented enrichment | first candidate, not yet activated |
-| Specialized | future providers | narrow coverage gaps only | evidence-gated |
+### Provider rule
 
-TenderGuru's current API documentation publishes multiple procurement/data sections and a tiered API offer; its current published API Start plan is 150,000 requests/month for 10,000 RUB/month. This makes it a growth-stage aggregation option rather than a free foundation. citeturn820635search11
+No named commercial tender provider is a current strategic dependency. Future provider evaluation is postponed until:
+1. B2B operations are repeatable;
+2. Bitrix24 is the live business-control plane;
+3. a measured B2G coverage requirement exists;
+4. the chosen capability can be integrated without creating a second business system of record.
 
-The free/minimal path therefore remains:
+## 4. Universal procurement contract — dormant reusable boundary
 
-GosPlan test → verified deterministic fixtures → controlled production GosPlan later
-
-and only then:
-
-measured coverage gap → TenderGuru adapter
-
-No provider is silently substituted when another fails.
-
-## 4. Universal procurement adapter contract
-
-Every source adapter must declare:
-
+When the B2G stage is eventually opened, every source adapter still must declare:
 - source class;
 - supported observation types;
-- supported filters;
 - pagination/cursor semantics;
 - rate limits;
 - authentication;
 - timeout and error semantics;
 - response-size limits;
-- freshness characteristics;
-- provenance requirements;
+- freshness;
+- provenance;
 - cost budget;
 - capability gaps.
 
-Provider-specific fields remain inside the adapter or an explicit extension payload.
+Provider-specific fields remain inside the adapter or explicit extension payload.
 
-The normalized observation always preserves:
-
+The normalized observation preserves:
 provider_id + external_id + source_ref + observed_at + provenance + observation_type
 
-Cross-source identity resolution happens only after normalization, using the existing Identity/Evidence rules.
+Cross-source identity resolution remains downstream of normalization and uses the existing Identity/Evidence rules.
 
-This permits the system to combine official-origin observations with commercial aggregation later without turning either provider into a second CRM.
+This contract remains deliberately unactivated during B2B-first development.
 
 ## 5. Yandex Cloud deployment strategy
 
@@ -133,7 +124,6 @@ Use serverless components for the application shell:
 - Serverless Containers for the FastAPI modular monolith;
 - API Gateway as the explicit external API edge;
 - Cloud Functions for narrow scheduled/triggered workers;
-- Timer trigger for procurement polling;
 - Object Storage only for bounded large objects/exports;
 - Container Registry for immutable application images;
 - Lockbox for API keys and secrets;
@@ -167,7 +157,6 @@ Add only when justified:
 - production/recovery environment separation;
 - staged deployments;
 - backup verification in target environment;
-- durable procurement scheduler state in PostgreSQL;
 - optional Message Queue for transport/fanout, never as a second canonical business-state authority;
 - Object Storage lifecycle policies;
 - cost budgets and alarms.
@@ -344,6 +333,53 @@ A mature integration requires:
 - detection of orphaned/duplicated external entities;
 - quarantine of ownership mismatches;
 - append-only handoff/outcome history.
+
+## 8A. Data-plane continuity, operator causality and legal/EDO resilience
+
+### Where the databases live
+
+**Yandex Cloud / Shema**
+- Managed PostgreSQL is the canonical database for Shema-owned intelligence, identity, evidence, provenance, handoff lineage and learning context.
+- Object Storage holds only bounded large objects/exports where required.
+- Monium is operational telemetry; durable audit/history stays in PostgreSQL.
+
+**Bitrix24**
+- Bitrix24 maintains its own CRM/business-plane database and file storage according to the selected Bitrix24 deployment model.
+- After handoff, Bitrix24 owns the live deal/order/process state explicitly transferred to it.
+
+The transition is **not** a wholesale migration of the Shema database into Bitrix24.
+
+### How the operator sees the transition
+
+The operator sees one causal workflow, even though two systems have different ownership:
+
+**Shema dossier → prepared handoff → Bitrix24 deal/entity → live work → outcome → Shema learning context**
+
+The handoff carries stable Shema identity reference, handoff ID, integration correlation ID, Bitrix24 entity reference, mapping version and snapshot/payload reference.
+
+For multiple operators:
+- before handoff, Shema may own preparation assignment;
+- after handoff, Bitrix24 owns live assignment, team queues, tasks, approvals and transaction activity;
+- Shema does not keep a parallel live-order board;
+- stale writes are rejected by revision/ownership controls;
+- every assignment/reassignment is attributable to an actor.
+
+This prevents the operator-level failure where one person continues to work from a stale Shema record while another changes the live transaction in Bitrix24.
+
+### Legal / EDO change resilience
+
+A legal or document-regime change is handled as a **versioned rule/configuration change**, not by rewriting the whole system.
+
+Shema preserves the rule version, effective date, legal/source reference, applicability conditions and configuration snapshot/checksum.
+
+When requirements change:
+1. a new version becomes effective;
+2. affected configurations are revalidated;
+3. downstream Bitrix24/EDO capability mapping is checked;
+4. unsupported execution fails closed to preparation/manual review;
+5. historical configurations remain intact for reconstruction of past decisions.
+
+The system changes the rule version and downstream capability, not historical truth.
 
 ## 9. Economics and Order Boundary
 
