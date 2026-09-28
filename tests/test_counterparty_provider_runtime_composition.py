@@ -143,7 +143,7 @@ def test_runtime_http_activation_fails_closed_on_incomplete_readiness() -> None:
         headers={"Authorization": "Bearer activate-token"},
         json={
             "reason": "rehearsal",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
             "activationVersion": "runtime-rehearsal:v1",
         },
     )
@@ -166,7 +166,7 @@ def test_runtime_http_activation_uses_fake_provider_and_rollback_is_fail_closed(
         },
         json={
             "reason": "runtime rehearsal",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
             "activationVersion": "runtime-rehearsal:v1",
         },
     )
@@ -191,7 +191,7 @@ def test_runtime_http_activation_uses_fake_provider_and_rollback_is_fail_closed(
         },
         json={
             "reason": "rehearsal rollback",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
         },
     )
 
@@ -209,7 +209,7 @@ def test_runtime_composition_keeps_authentication_boundary() -> None:
         f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/activation",
         json={
             "reason": "unauthenticated",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
             "activationVersion": "runtime-rehearsal:v1",
         },
     )
