@@ -1073,6 +1073,7 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
                 channel = %s,
                 evidence_refs = %s::jsonb,
                 status = %s,
+                owner_actor_id = %s,
                 send_attempt = %s,
                 send_worker_id = %s,
                 send_lease_until = %s,
@@ -1086,6 +1087,7 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
                 action.channel,
                 json.dumps(action.evidence_refs, ensure_ascii=False),
                 action.status.value,
+                action.owner_actor_id,
                 action.send_attempt,
                 action.send_worker_id,
                 action.send_lease_until,
@@ -1104,6 +1106,7 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
             channel,
             evidence_refs,
             status,
+            owner_actor_id,
             send_attempt,
             send_worker_id,
             send_lease_until,
@@ -1111,14 +1114,13 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
         return CommercialAction(
             action_id=str(action_id_value),
             identity_id=str(identity_id),
-            owner_actor_id=str(owner_actor_id) if owner_actor_id is not None else None,
+            owner_actor_id=(
+                str(owner_actor_id) if owner_actor_id is not None else None
+            ),
             contact_ref=str(contact_ref),
             channel=str(channel),
             evidence_refs=tuple(str(ref) for ref in evidence_refs),
             status=CommercialActionStatus(str(status)),
-            owner_actor_id=(
-                str(owner_actor_id) if owner_actor_id is not None else None
-            ),
             send_attempt=int(send_attempt),
             send_worker_id=str(send_worker_id) if send_worker_id is not None else None,
             send_lease_until=send_lease_until,
