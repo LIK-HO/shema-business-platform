@@ -121,6 +121,7 @@ class RepeatOrderService:
             source = uow.orders.get(source_order_id)
             if source is None:
                 raise KeyError(f"unknown source order: {source_order_id}")
+            self._require_owner(source.owner_actor_id, actor)
             if source.status is not OrderStatus.COMPLETED:
                 raise QuarantineRequired(
                     "repeat plan requires a completed source order"
