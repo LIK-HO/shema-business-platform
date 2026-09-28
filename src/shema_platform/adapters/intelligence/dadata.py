@@ -108,6 +108,8 @@ class DaDataConfiguration:
 
 class DaDataCounterpartyLookupProvider:
     provider_id = "dadata_organization_api"
+    source_version = "dadata-find-party:v1"
+    source_authority = "trusted_secondary"
 
     def __init__(
         self,
