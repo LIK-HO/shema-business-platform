@@ -365,5 +365,26 @@
     "personnel_management_ui",
     "second_communication_history",
     "second_business_authority"
-  ]
+  ],
+  "deployment": {
+    "target_environment": "yandex_cloud",
+    "operator_web": {
+      "serving_model": "web_frontend_over_canonical_api",
+      "runtime_authority": "canonical_shema_api",
+      "api_edge": "yandex_cloud_api_gateway",
+      "application_runtime": "yandex_cloud_serverless_containers",
+      "no_direct_database_access": true
+    },
+    "operator_pwa": {
+      "same_runtime_semantics_as_web": true,
+      "client_asset_delivery": "yandex_cloud",
+      "canonical_api": "yandex_cloud_api_gateway",
+      "no_separate_backend": true,
+      "offline_storage_is_not_authoritative": true
+    },
+    "public_web": {
+      "same_yandex_cloud_target": true,
+      "public_edge_is_server_authoritative": true
+    }
+  }
 }
