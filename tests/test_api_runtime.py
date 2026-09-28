@@ -55,7 +55,11 @@ class RejectingAuthenticator(AuthenticationPort):
 class FakeAuthenticator(AuthenticationPort):
     def authenticate(self, authorization: str | None) -> AuthenticatedActor:
         if authorization == "Bearer test-token":
-            return AuthenticatedActor("operator-1", trust_level=2)
+            return AuthenticatedActor(
+                "operator-1",
+                trust_level=2,
+                permissions=frozenset(Permission),
+            )
         raise AuthenticationRequired()
 
 
@@ -65,7 +69,7 @@ class PermissionedAuthenticator(AuthenticationPort):
             return AuthenticatedActor(
                 "operator-1",
                 trust_level=2,
-                permissions=frozenset({Permission.ORDER_CREATE}),
+                permissions=frozenset({Permission.SEARCH_RUN}),
             )
         raise AuthenticationRequired()
 
@@ -176,6 +180,30 @@ class FakeApplication(APIApplication):
         )
 
 
+class FakeAuthoritativeLookup:
+    def lookup(self, *, identifier_type, identifier):
+        from datetime import UTC, datetime
+
+        from shema_platform.application.counterparty_check import (
+            CounterpartyObservation,
+            SourceReliability,
+        )
+
+        return CounterpartyObservation(
+            identifier_type=identifier_type,
+            identifier=identifier,
+            canonical_name='ООО "New Name"',
+            tax_id=identifier,
+            registration_id="1027700132195",
+            legal_status="active",
+            source_ref="https://pb.nalog.ru/server-verified",
+            source_reliability=SourceReliability.AUTHORITATIVE,
+            claim_confidence=0.99,
+            observed_at=datetime(2026, 9, 26, 10, tzinfo=UTC),
+            expires_at=datetime(2026, 10, 3, 10, tzinfo=UTC),
+        )
+
+
 class FakeCounterpartyChecker:
     def __init__(self):
         self.calls = []
@@ -253,7 +281,8 @@ def test_runtime_api_emits_redacted_telemetry() -> None:
     assert response.status_code == 200
     event = telemetry_sink.all()[-1]
     assert event.name == "http.request.completed"
-    assert event.correlation_id == "corr-telemetry"
+    assert event.correlation_id != "corr-telemetry"
+    assert event.correlation_id
     assert event.attributes["status"] == 200
     assert "authorization" not in event.attributes
     assert "body" not in event.attributes
@@ -273,8 +302,9 @@ def test_runtime_api_propagates_correlation_id() -> None:
     )
 
     assert response.status_code == 200
-    assert response.headers["X-Correlation-Id"] == "corr-test"
-    assert response.json()["correlationId"] == "corr-test"
+    assert response.headers["X-Correlation-Id"]
+    assert response.headers["X-Correlation-Id"] != "corr-test"
+    assert response.json()["correlationId"] == response.headers["X-Correlation-Id"]
 
 
 def test_runtime_api_generates_correlation_id_when_missing() -> None:
@@ -314,6 +344,7 @@ def test_runtime_api_counterparty_check_exposes_evidence_boundary() -> None:
             FakeApplication(),
             FakeAuthenticator(),
             counterparty_checker=checker,
+            authoritative_counterparty_lookup=FakeAuthoritativeLookup(),
         )
     ).post(
         "/v1/intelligence/counterparty-check",
@@ -324,15 +355,6 @@ def test_runtime_api_counterparty_check_exposes_evidence_boundary() -> None:
         json={
             "identifierType": "INN",
             "identifier": "7707083893",
-            "canonicalName": "New Name",
-            "taxId": "7707083893",
-            "registrationId": "1027700132195",
-            "legalStatus": "active",
-            "sourceRef": "https://pb.nalog.ru/",
-            "sourceReliability": "authoritative",
-            "claimConfidence": 0.95,
-            "observedAt": "2026-09-26T10:00:00Z",
-            "expiresAt": "2026-10-03T10:00:00Z",
         },
     )
 
@@ -341,9 +363,10 @@ def test_runtime_api_counterparty_check_exposes_evidence_boundary() -> None:
     assert body["subjectRef"] == "identity-1"
     assert body["evidenceIds"] == ["evidence-1"]
     assert body["quarantined"] is True
-    assert body["correlationId"] == "corr-counterparty"
+    assert body["correlationId"] != "corr-counterparty"
     assert body["contradictions"][0]["field"] == "canonical_name"
-    assert checker.calls[0][1:] == ("operator-1", "corr-counterparty")
+    assert checker.calls[0][1] == "operator-1"
+    assert checker.calls[0][2] == body["correlationId"]
 
 
 def test_runtime_api_counterparty_check_requires_composed_capability() -> None:
@@ -503,7 +526,6 @@ def test_runtime_api_provider_activation_requires_explicit_confirmation() -> Non
         headers={"Authorization": "Bearer provider-token"},
         json={
             "reason": "controlled verification",
-            "operatorAuthorized": False,
             "activationVersion": "activation:test-v1",
         },
     )
@@ -521,7 +543,6 @@ def test_runtime_api_provider_activation_requires_explicit_confirmation() -> Non
         headers={"Authorization": "Bearer provider-token"},
         json={
             "reason": "controlled verification",
-            "operatorAuthorized": True,
             "activationVersion": "activation:test-v1",
         },
     )
