@@ -5,7 +5,6 @@ from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from hashlib import sha256
 import json
-from time import monotonic
 from typing import Protocol
 from uuid import uuid4
 
@@ -271,7 +270,6 @@ class PublicIntakeService:
             public_client_key=public_client_key,
             now=now,
         )
-        cache_key = self._cache_key(preflight)
         event_id = str(uuid4())
         notify_operator = not bool(honeypot_value.strip())
         status = (
@@ -363,8 +361,6 @@ class PublicIntakeService:
                     occurred_at=now,
                     notify_operator=True,
                 )
-            if cache_key is not None:
-                repository.save_preflight_cache(cache_key, preflight)
 
         projection_status = "PENDING_PROJECTION"
         try:
@@ -380,12 +376,6 @@ class PublicIntakeService:
             projection_status=projection_status,
             deduplicated=False,
         )
-
-    @staticmethod
-    def _cache_key(snapshot: CounterpartyPreflightSnapshot) -> str | None:
-        if not snapshot.provider_id or not snapshot.normalized_identifier:
-            return None
-        return f"{snapshot.provider_id}:v1:{snapshot.normalized_identifier}"
 
     def _validate_edge_proof(
         self,
