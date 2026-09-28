@@ -60,3 +60,43 @@ def test_no_strategic_b2b_center_dependency_remains_in_manifest_or_roadmap() -> 
         content = (ROOT / relative_path).read_text(encoding="utf-8")
         assert "B2B-Center is a later" not in content
         assert "B2B-Center is removed" in content
+
+def test_strategy_is_b2b_first_and_defers_tender_work_to_bitrix24() -> None:
+    payload = load("platform_growth_strategy_contract.json")
+
+    assert payload["business_sequence"]["stage_1"] == (
+        "B2B_process_validation_and_repeatable_unit_economics"
+    )
+    assert payload["procurement_strategy"]["sheim_status" if "sheim_status" in payload["procurement_strategy"] else "shema_status"] == "dormant_foundation_only"
+    assert payload["procurement_strategy"]["new_shema_procurement_runtime_development"] is False
+    assert payload["procurement_strategy"]["activation_stage"] == (
+        "after_B2B_is_repeatable_and_Bitrix24_business_plane_is_operational"
+    )
+    assert payload["procurement_strategy"]["execution_owner"].startswith(
+        "Bitrix24"
+    )
+
+
+def test_strategy_preserves_two_domains_without_split_brain() -> None:
+    payload = load("platform_growth_strategy_contract.json")
+
+    assert payload["data_plane"]["shema_yandex_cloud"]["canonical_database"] == "managed_postgresql"
+    assert payload["data_plane"]["bitrix24"]["authority_after_handoff"] == (
+        "live_business_transactions_and_process_state"
+    )
+    assert payload["data_plane"]["transition_rule"].startswith(
+        "do_not_migrate_the_entire_shema_database"
+    )
+    assert payload["operator_continuity"]["no_shadow_copy_of_live_business_state"] is True
+    assert "handoff_id" in payload["operator_continuity"]["stable_context_keys"]
+
+
+def test_document_change_is_versioned_and_recoverable() -> None:
+    payload = load("platform_growth_strategy_contract.json")
+
+    assert payload["document_evolution"]["document_rule_source_is_versioned"] is True
+    assert payload["document_evolution"]["effective_date_required"] is True
+    assert payload["document_evolution"]["historical_configuration_is_preserved"] is True
+    assert payload["document_evolution"]["missing_downstream_capability"].startswith(
+        "fail_closed"
+    )
