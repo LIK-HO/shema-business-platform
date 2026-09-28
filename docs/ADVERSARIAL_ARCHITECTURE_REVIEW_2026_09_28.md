@@ -564,7 +564,7 @@ The approved causal chain is:
 
 ## Verdict
 
-The boundary is **architecturally survivable and bounded**. The final current-head seven-job release gate CI #1596 (`36389561280`) is GREEN: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract all passed. This closes the P47 architecture/test boundary; production activation remains separately gated by the later runtime phases.
+The boundary is **architecturally survivable and bounded**. The final functional P47 seven-job release gate CI #1600 (`36397100698`) is GREEN: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract all passed. Documentation-only closure synchronization commits preserve this result; production activation remains separately gated by the later runtime phases.
 ---
 
 # 15C. Destructive Review — Intake Isolation, Repeat Orders, Monitoring and Bitrix Cutover
