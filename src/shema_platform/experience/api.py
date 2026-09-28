@@ -514,6 +514,8 @@ def create_app(
             headers={"X-Correlation-Id": request.state.correlation_id},
         )
 
+    router = APIRouter(prefix="/v1")
+
     @router.get(
         "/operator/notifications",
         response_model=OperatorNotificationListResponse,
@@ -548,8 +550,6 @@ def create_app(
                 for notification in notifications
             ]
         )
-
-    router = APIRouter(prefix="/v1")
 
     @router.post("/search", response_model=SearchResponse)
     async def search(
