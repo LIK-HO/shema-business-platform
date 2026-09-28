@@ -44,6 +44,15 @@ class MemoryPublicIntakeRepository:
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
+    def acquire_idempotency_lock(self, key):
+        self.locked_keys = getattr(self, "locked_keys", set())
+        if key in self.locked_keys:
+            raise AssertionError("duplicate in-memory idempotency lock")
+        self.locked_keys.add(key)
+
+    def release_idempotency_lock(self, key):
+        self.locked_keys.remove(key)
+
     def get_by_idempotency_key(self, key):
         return self.requests.get(key)
 
