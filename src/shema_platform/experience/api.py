@@ -267,7 +267,7 @@ def _require_permission(
     permission: Permission,
     idempotency_key: str | None = None,
 ) -> RequestContext:
-    context = _context(request, idempotency_key),
+    context = _context(request, idempotency_key)
     RBACAuthorizer(
         (
             AuthorizationSubject(
@@ -661,10 +661,15 @@ def create_app(
     async def run_ai(
         request: Request,
         payload: AIRunRequest,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> AIRunResponse:
         return services(request).run_ai(
             payload,
-            _require_permission(request, Permission.AI_RUN),
+            _require_permission(
+                request,
+                Permission.AI_RUN,
+                idempotency_key=idempotency_key,
+            ),
         )
 
     @router.post("/discovery/evaluate", response_model=DiscoveryResponse)
