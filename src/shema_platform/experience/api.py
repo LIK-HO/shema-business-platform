@@ -516,6 +516,76 @@ def create_app(
 
     router = APIRouter(prefix="/v1")
 
+    router = APIRouter(prefix="/v1")
+
+    @app.post(
+        "/v1/public/intake",
+        response_model=PublicIntakeResponse,
+        status_code=202,
+    )
+    async def public_intake_submission(
+        request: Request,
+        payload: PublicIntakeRequest,
+        idempotency_key: str = Header(
+            min_length=8,
+            alias="Idempotency-Key",
+        ),
+        public_client_key: str = Header(
+            min_length=8,
+            max_length=128,
+            alias="X-Public-Client-Key",
+        ),
+        origin: str | None = Header(default=None),
+        bot_challenge: str | None = Header(
+            default=None,
+            alias="X-Bot-Challenge",
+        ),
+    ) -> PublicIntakeResponse:
+        service: PublicIntakeService | None = request.app.state.public_intake
+        if service is None:
+            raise ApplicationUnavailable(
+                "public intake capability is not composed"
+            )
+        result = service.submit(
+            payload=PublicIntakePayload(
+                service_type=payload.service_type,
+                location=payload.location,
+                preferred_date_or_period=payload.preferred_date_or_period,
+                work_or_cargo_description=payload.work_or_cargo_description,
+                contact_name=payload.contact_name,
+                contact_channel=payload.contact_channel,
+                approximate_volume_or_weight=payload.approximate_volume_or_weight,
+                access_or_lifting_constraints=payload.access_or_lifting_constraints,
+                company_name=payload.company_name,
+                inn=payload.inn,
+                ogrn_or_ogrnip=payload.ogrn_or_ogrnip,
+                comments=payload.comments,
+                utm_source=payload.utm_source,
+                utm_medium=payload.utm_medium,
+                utm_campaign=payload.utm_campaign,
+                referrer=payload.referrer,
+                entry_surface=payload.entry_surface,
+            ),
+            idempotency_key=idempotency_key,
+            public_client_key=public_client_key,
+            origin=origin,
+            bot_challenge_passed=(
+                (bot_challenge or "").strip().lower() == "passed"
+            ),
+            correlation_id=request.state.correlation_id,
+            honeypot_value=payload.honeypot,
+        )
+        return PublicIntakeResponse(
+            requestId=result.record.request_id,
+            correlationId=result.record.correlation_id,
+            status=result.record.status.value,
+            preflightDecision=result.record.preflight.decision.value,
+            identityMatch=result.record.preflight.identity_match.value,
+            projectionStatus=result.projection_status,
+            deduplicated=result.deduplicated,
+        )
+
+
     @router.get(
         "/operator/notifications",
         response_model=OperatorNotificationListResponse,
