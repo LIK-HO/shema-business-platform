@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from shema_platform.application.counterparty_lookup import (
     CounterpartyLookupProvider,
@@ -67,11 +67,11 @@ class CounterpartyProviderRuntimeLookupService:
             sleeper=self.sleeper,
         )
         provider_observed_at = (
-            datetime.fromtimestamp(result.provider_record.observed_at_ms / 1000, tz=datetime.now().astimezone().tzinfo)
+            datetime.fromtimestamp(result.provider_record.observed_at_ms / 1000, tz=UTC)
             if result.provider_record.observed_at_ms is not None
             else None
         )
-        observed_at = provider_observed_at or datetime.now().astimezone()
+        observed_at = provider_observed_at or datetime.now(UTC)
         expires_at = observed_at + timedelta(seconds=self.evidence_ttl_seconds)
         result = result_service.execute(
             query,
