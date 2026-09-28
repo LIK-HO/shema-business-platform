@@ -379,6 +379,7 @@ def test_repeat_plan_controls_pause_skip_resume_cancel_and_context_edit() -> Non
         idempotency_key="pause-idem",
     )
     assert paused.status.value == "paused"
+    assert paused.revision == 2
 
     resumed = service.resume_plan(
         actor=actor(),
@@ -387,6 +388,7 @@ def test_repeat_plan_controls_pause_skip_resume_cancel_and_context_edit() -> Non
         idempotency_key="resume-idem",
     )
     assert resumed.status.value == "active"
+    assert resumed.revision == 3
 
     edited = service.edit_context(
         actor=actor(),
@@ -400,6 +402,7 @@ def test_repeat_plan_controls_pause_skip_resume_cancel_and_context_edit() -> Non
         idempotency_key="edit-idem",
     )
     assert edited.context.service_scope == "Подъём оборудования"
+    assert edited.revision == 4
 
     skipped = service.skip_once(
         actor=actor(),
@@ -408,6 +411,7 @@ def test_repeat_plan_controls_pause_skip_resume_cancel_and_context_edit() -> Non
         idempotency_key="skip-idem",
     )
     assert skipped.skipped_occurrences == 1
+    assert skipped.revision == 5
     assert skipped.context.scheduled_for == datetime(2026, 10, 9, 9, tzinfo=UTC)
 
     skipped_again = service.skip_once(
@@ -417,6 +421,7 @@ def test_repeat_plan_controls_pause_skip_resume_cancel_and_context_edit() -> Non
         idempotency_key="skip-idem-2",
     )
     assert skipped_again.skipped_occurrences == 2
+    assert skipped_again.revision == 6
     assert skipped_again.context.scheduled_for == datetime(2026, 10, 16, 9, tzinfo=UTC)
 
     assert len(uow.outbox.pending()) == 6
@@ -429,6 +434,7 @@ def test_repeat_plan_controls_pause_skip_resume_cancel_and_context_edit() -> Non
         idempotency_key="cancel-idem",
     )
     assert cancelled.status.value == "cancelled"
+    assert cancelled.revision == 7
     assert uow.repeat_orders.get("plan-1") == cancelled
 
 
