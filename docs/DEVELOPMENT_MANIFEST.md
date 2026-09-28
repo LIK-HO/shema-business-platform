@@ -1,8 +1,8 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / MAX Evidence Hold
-**Active development boundary:** Global Adversarial Survivability + B2B-first / Bitrix24 transition correction + Operator Interface Alignment — IN PROGRESS until the current-head global review and full release-gate CI are GREEN.
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / Operator Interface Contract Closed / MAX Evidence Hold
+**Current verified boundary:** Global Adversarial Survivability + B2B-first / Bitrix24 transition correction + Operator Interface Alignment — CLOSED / VERIFIED at architecture-and-test stage. The visual Web/PWA runtime remains the separately scoped Phase 4 implementation boundary.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
