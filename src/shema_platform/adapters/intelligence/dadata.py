@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from threading import Lock
 from time import monotonic, sleep
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 from shema_platform.application.counterparty_lookup import (
@@ -17,6 +18,7 @@ from shema_platform.application.counterparty_lookup import (
 )
 
 DEFAULT_ENDPOINT = "https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party"
+_ALLOWED_ENDPOINT_HOST = "suggestions.dadata.ru"
 DEFAULT_TIMEOUT_SECONDS = 5.0
 MAX_TIMEOUT_SECONDS = 30.0
 DEFAULT_MAX_RESPONSE_BYTES = 2_097_152
@@ -96,8 +98,15 @@ class DaDataConfiguration:
     def __post_init__(self) -> None:
         if self.enabled and not self.api_key.strip():
             raise ValueError("DADATA_API_KEY is required when DaData execution is enabled")
-        if not self.endpoint.startswith("https://"):
-            raise ValueError("DaData endpoint must use HTTPS")
+        parsed_endpoint = urlsplit(self.endpoint)
+        if (
+            parsed_endpoint.scheme != "https"
+            or parsed_endpoint.hostname != _ALLOWED_ENDPOINT_HOST
+            or parsed_endpoint.port is not None
+            or parsed_endpoint.query
+            or parsed_endpoint.fragment
+        ):
+            raise ValueError("DaData endpoint must target the pinned official host")
         if not 0 < self.timeout_seconds <= MAX_TIMEOUT_SECONDS:
             raise ValueError("timeout_seconds must be in (0, 30]")
         if not 0 < self.max_response_bytes <= MAX_MAX_RESPONSE_BYTES:
