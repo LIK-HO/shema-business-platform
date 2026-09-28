@@ -67,7 +67,7 @@ def test_strategy_is_b2b_first_and_defers_tender_work_to_bitrix24() -> None:
     assert payload["business_sequence"]["stage_1"] == (
         "B2B_process_validation_and_repeatable_unit_economics"
     )
-    assert payload["procurement_strategy"]["sheim_status" if "sheim_status" in payload["procurement_strategy"] else "shema_status"] == "dormant_foundation_only"
+    assert payload["procurement_strategy"]["shema_status"] == "dormant_foundation_only"
     assert payload["procurement_strategy"]["new_shema_procurement_runtime_development"] is False
     assert payload["procurement_strategy"]["activation_stage"] == (
         "after_B2B_is_repeatable_and_Bitrix24_business_plane_is_operational"
