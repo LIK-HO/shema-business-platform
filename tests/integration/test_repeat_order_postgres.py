@@ -284,6 +284,11 @@ def test_postgres_repeat_plan_revision_rejects_stale_operator_write() -> None:
             idempotency_key="idem:repeat:plan",
         )
 
+        with factory(schema)() as stale_reader:
+            stale_plan = stale_reader.repeat_orders.get(plan.plan_id)
+            assert stale_plan is not None
+            assert stale_plan.revision == plan.revision
+
         with factory(schema)() as first:
             first_plan = first.repeat_orders.get(plan.plan_id)
             assert first_plan is not None
@@ -292,13 +297,11 @@ def test_postgres_repeat_plan_revision_rejects_stale_operator_write() -> None:
                 expected_revision=first_plan.revision,
             )
 
-        with factory(schema)() as stale:
-            stale_plan = stale.repeat_orders.get(plan.plan_id)
-            assert stale_plan is not None
+        with factory(schema)() as stale_writer:
             with pytest.raises(IntegrityViolation, match="revision conflict"):
-                stale.repeat_orders.save(
+                stale_writer.repeat_orders.save(
                     stale_plan.pause(),
-                    expected_revision=plan.revision,
+                    expected_revision=stale_plan.revision,
                 )
     finally:
         cleanup(schema)
