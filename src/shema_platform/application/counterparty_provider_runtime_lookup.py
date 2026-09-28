@@ -66,12 +66,7 @@ class CounterpartyProviderRuntimeLookupService:
             backoff_seconds=self.backoff_seconds,
             sleeper=self.sleeper,
         )
-        provider_observed_at = (
-            datetime.fromtimestamp(result.provider_record.observed_at_ms / 1000, tz=UTC)
-            if result.provider_record.observed_at_ms is not None
-            else None
-        )
-        observed_at = provider_observed_at or datetime.now(UTC)
+        observed_at = datetime.now(UTC)
         expires_at = observed_at + timedelta(seconds=self.evidence_ttl_seconds)
         result = result_service.execute(
             query,
