@@ -58,13 +58,13 @@ class YandexGPTExecutionError(RuntimeError):
 @dataclass(frozen=True, slots=True)
 class YandexGPTConfiguration:
     api_key: str = field(repr=False)
+    max_cost: float
     model_uri: str = "gpt://placeholder/yandexgpt/latest"
     base_url: str = DEFAULT_BASE_URL
     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS
     max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES
     max_input_chars: int = DEFAULT_MAX_INPUT_CHARS
     max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS
-    max_cost: float
     configuration_version: str = "yandexgpt-config:v1"
     activation_version: str = "yandexgpt-activation:v1"
 
