@@ -162,6 +162,10 @@ class CommercialActionSendWorkflow:
 
             if action is None:
                 raise KeyError(f"unknown commercial action: {action_id}")
+            if action.owner_actor_id != actor.actor_id:
+                raise QuarantineRequired(
+                    "commercial action is outside the actor resource scope"
+                )
 
             decision = self._policy.evaluate(
                 PolicyContext(
