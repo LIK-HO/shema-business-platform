@@ -145,5 +145,5 @@ def test_ai_only_api_application_keeps_uncomposed_capabilities_unavailable() -> 
         headers={"Authorization": "Bearer test"},
     )
 
-    assert response.status_code == 503
-    assert response.json()["code"] == "application_unavailable"
+    assert response.status_code == 403
+    assert response.json()["code"] == "authorization_denied"
