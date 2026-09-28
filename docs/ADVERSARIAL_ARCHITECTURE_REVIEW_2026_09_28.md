@@ -45,6 +45,39 @@ The target is architectural survivability: preserve canonical truth, contain imp
 
 ---
 
+## 0B. Phase 3A — Repeat Orders & Business Continuity destructive review
+
+### Implemented boundary
+The verified 3A runtime is a bounded local repeat-order capability in Shema before Bitrix24 live cutover. It reuses frozen Order/Economics semantics and does not create a second CRM, recurring-deal engine or accounting subsystem.
+
+### Destruction hypotheses and controls
+
+| Hypothesis | Severity | Control / disposition |
+|---|---|---|
+| Two operators mutate the same repeat plan from stale state | P1 | PostgreSQL revision check with row locking; stale writes fail closed and are covered by integration tests |
+| Retry after timeout creates two repeat orders | P1 | Idempotency key + request hash + one pending order per plan |
+| Repeat order uses obsolete price or stale evidence | P1 | Mandatory injected revalidation before confirmation; changed lines force quarantine/re-draft |
+| Counterparty becomes unverifiable before confirmation | P1 | Identity must remain verified/active; policy/evidence gates are server-side |
+| Repeat mutation destroys prior order history | P1 | Prior Order is immutable; repeat order is a new Order linked through repeat plan/source lineage |
+| Audit/outbox IDs collide across repeated plan mutations | P1 | IDs include command idempotency key; regression test covers repeated mutations |
+| Partial application leaves plan/order/idempotency inconsistent | P0 | Shared PostgreSQL transaction boundary; integration rollback test covers failed outbox append |
+| Bitrix24 and Shema both remain live owners after future handoff | P0 | 3A is explicitly local interim mode; Bitrix ownership begins only after acknowledged verified cutover |
+| Automatic scheduler silently expands scope | P1 | No autonomous recurrence scheduler implemented in 3A; operator-triggered next-order creation is the bounded capability |
+| Pricing/economics turn into accounting authority | P1 | Only transaction-scoped revenue lineage is recorded; accounting/finance authority remains outside 3A |
+| Public Web/MАX becomes an implicit repeat-order write path | P1 | No public UI/API activation is introduced by 3A; later ingress remains separately gated |
+
+### Verification evidence
+- Implementation HEAD: `7a766c35c4a2ce8a38d9fbeda268896d6716bd4e`
+- Full release-gate CI #1628 (`36402645839`): 7/7 GREEN.
+- Covered: quality 3.12/3.13, integration 3.12/3.13, supply-chain, PostgreSQL PITR/backup and release-contract.
+- Frozen kernel impact: false.
+- No external provider live effect was introduced.
+- No Bitrix24 live transaction ownership was activated.
+- No Web/PWA runtime was activated.
+
+### Verdict
+**Phase 3A is architecturally survivable and CLOSED / VERIFIED.** The next boundary is Phase 3B, and none of its runtime capabilities are implicitly activated by this closure.
+
 ## Executive conclusion
 
 The global strategy is sound **after the boundary corrections made during this review**. The current contract/test boundary is VERIFIED; production runtime activation remains separately gated by the Phase-specific runtime exit criteria.
