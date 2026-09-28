@@ -292,24 +292,24 @@ A mature integration requires:
 - quarantine of ownership mismatches;
 - append-only handoff/outcome history.
 
-## 8A. Data-plane continuity, operator causality and legal/EDO resilience
+## 8A. Data-plane continuity and operator causality
 
 ### Where the databases live
 
 **Yandex Cloud / Shema**
 - Managed PostgreSQL is the canonical database for Shema-owned intelligence, identity, evidence, provenance, handoff lineage and learning context.
-- Object Storage holds only bounded large objects/exports where required.
+- Object Storage holds only bounded large evidence objects/exports where required.
 - Monium is operational telemetry; durable audit/history stays in PostgreSQL.
 
 **Bitrix24**
-- Bitrix24 maintains its own CRM/business-plane database and file storage according to the selected Bitrix24 deployment model.
+- Bitrix24 maintains its own business-plane storage according to the selected deployment model.
 - After handoff, Bitrix24 owns the live deal/order/process state explicitly transferred to it.
 
 The transition is **not** a wholesale migration of the Shema database into Bitrix24.
 
-### How the operator sees the transition
+### Operator continuity
 
-The operator sees one causal workflow, even though two systems have different ownership:
+The operator sees one causal workflow:
 
 **Shema dossier → prepared handoff → Bitrix24 deal/entity → live work → outcome → Shema learning context**
 
@@ -322,22 +322,7 @@ For multiple operators:
 - stale writes are rejected by revision/ownership controls;
 - every assignment/reassignment is attributable to an actor.
 
-This prevents the operator-level failure where one person continues to work from a stale Shema record while another changes the live transaction in Bitrix24.
-
-### Legal / EDO change resilience
-
-A legal or document-regime change is handled as a **versioned rule/configuration change**, not by rewriting the whole system.
-
-Shema preserves the rule version, effective date, legal/source reference, applicability conditions and configuration snapshot/checksum.
-
-When requirements change:
-1. a new version becomes effective;
-2. affected configurations are revalidated;
-3. downstream Bitrix24/EDO capability mapping is checked;
-4. unsupported execution fails closed to preparation/manual review;
-5. historical configurations remain intact for reconstruction of past decisions.
-
-The system changes the rule version and downstream capability, not historical truth.
+This prevents one operator from continuing against a stale Shema record while another changes the live transaction in Bitrix24.
 
 ## 9. Economics and Order Boundary
 
@@ -428,7 +413,7 @@ Detailed financial or personnel data enters Shema only if a separate business ca
 
 The balanced target is not:
 
-Shema + CRM + ERP + HR + documents + tender system + accounting + AI + messenger
+Shema + CRM + ERP + HR + accounting + AI + messenger
 
 It is:
 
@@ -446,4 +431,4 @@ MAX = guarded communication adapter
 
 This preserves the project's strongest property: complexity is concentrated inside reliability and evidence controls, while the operator sees a small number of useful decisions and actions.
 
-No tender subsystem or document-management subsystem is justified inside Shema. No new database authority, microservice split, personnel system or duplicate accounting engine is justified either.
+No additional CRM/ERP/HR/accounting subsystem is justified inside Shema. No new database authority or microservice split is justified either.
