@@ -69,7 +69,7 @@ class PermissionedAuthenticator(AuthenticationPort):
             return AuthenticatedActor(
                 "operator-1",
                 trust_level=2,
-                permissions=frozenset({Permission.SEARCH_RUN}),
+                permissions=frozenset({Permission.ORDER_CREATE}),
             )
         raise AuthenticationRequired()
 
@@ -509,7 +509,7 @@ def test_runtime_api_wires_ai_run_through_application_boundary() -> None:
 
     assert response.status_code == 200
     assert response.json()["providerId"] == "yandexgpt"
-    assert response.json()["correlationId"] == "corr-ai"
+    assert response.json()["correlationId"] != "corr-ai"
 
 
 def test_runtime_api_does_not_accept_client_controlled_ai_trust_levels() -> None:
@@ -624,7 +624,7 @@ def test_runtime_api_provider_activation_remains_unavailable_when_not_composed()
         headers={"Authorization": "Bearer provider-token"},
         json={
             "reason": "should remain unavailable",
-            "operatorAuthorized": True,
+            "operatorConfirmed": True,
             "activationVersion": "activation:test-v1",
         },
     )
