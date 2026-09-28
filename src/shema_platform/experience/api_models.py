@@ -118,6 +118,7 @@ class CounterpartyContradictionResponse(APIModel):
 
 class CounterpartyProviderActivationRequest(APIModel):
     reason: str = Field(min_length=1, max_length=256)
+    operator_confirmed: bool = Field(alias="operatorConfirmed")
     activation_version: str = Field(
         min_length=1,
         max_length=128,
@@ -127,14 +128,13 @@ class CounterpartyProviderActivationRequest(APIModel):
 
 class CounterpartyProviderRollbackRequest(APIModel):
     reason: str = Field(min_length=1, max_length=256)
+    operator_confirmed: bool = Field(alias="operatorConfirmed")
 
 
 class CounterpartyProviderLookupRequest(APIModel):
+    """Untrusted lookup query; evidence freshness/confidence are server/provider controlled."""
     identifier_type: Literal["INN", "OGRN", "OGRNIP"] = Field(alias="identifierType")
     identifier: str = Field(min_length=1, max_length=32)
-    claim_confidence: float = Field(ge=0, le=1, alias="claimConfidence")
-    expires_at: datetime = Field(alias="expiresAt")
-    observed_at: datetime | None = Field(default=None, alias="observedAt")
 
 
 class CounterpartyProviderLookupResponse(APIModel):
