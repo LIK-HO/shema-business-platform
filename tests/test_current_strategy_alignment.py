@@ -55,6 +55,11 @@ def test_ui_contract_is_referenced_by_the_business_plane_boundaries() -> None:
         is True
     )
     assert business["repeat_business"]["no_dual_live_ownership"] is True
-    assert business["operator_continuity"]["interface_contract"] == "architecture/operator_interface_contract.json"
-    assert growth_contract["experience_surfaces"]["operator_web"]["interface_contract"] == "architecture/operator_interface_contract.json"
+    assert business["operator_continuity"]["interface_contract"] == (
+        "architecture/operator_interface_contract.json"
+    )
+    assert (
+        growth_contract["experience_surfaces"]["operator_web"]["interface_contract"]
+        == "architecture/operator_interface_contract.json"
+    )
     assert repeat["purge_policy"]["never_purge_before_readback_verification"] is True
