@@ -308,66 +308,27 @@ Do not collapse these three tasks into one score.
 ### Exit criteria
 A search run produces a reproducible, evidence-backed candidate set and a compact intelligence brief without flooding the operator with raw source noise.
 
-## 6A. Phase 2-I — Procurement Intelligence & Tender Monitoring API
+## 6A. Phase 2-I — Procurement Foundation (Dormant / B2G Deferred)
 
 ### Status
-**IN PROGRESS — foundation sub-boundary CLOSED / VERIFIED by CI #1417; live provider execution and durable runtime monitoring remain separate bounded steps.**
+**CLOSED / VERIFIED as a technical foundation; product activation and further Shema development are DEFERRED.**
 
-### Objective
-Add a provider-neutral procurement intelligence path for discovering, tracking and monitoring future procurements without making a tender provider a second business system of record.
+### Strategy correction
+B2B is the first operating stage. The system must first prove repeatable B2B acquisition, qualification, contact, service delivery and unit economics in real work.
 
-### Selected initial integration
-**ГосПлан API v2**, an API integration layer over ЕИС procurement data. Current documentation exposes REST endpoints for 44-ФЗ, 223-ФЗ and PP RF 615, including purchase plans, procurements, procedures and contracts. The production API is API-key based and tariff-limited; the test server is available without an API key but rate-limited.
-
-### Required flow
-TENDER SOURCE → PROCUREMENT OBSERVATION → IDENTITY/EVIDENCE → QUALIFICATION → CONTACT PREPARATION → COMMERCIAL ACTION → ORDER → DOCUMENT PACK → RESULT/LEARNING.
+The existing procurement foundation is retained only because it is already a verified provider-neutral boundary. It is **not** a reason to pull B2G/tender complexity into the early product.
 
 ### Rules
-- procurement data is an external observation, never canonical identity;
-- customer identifiers may resolve to an existing Identity, but a tender observation cannot create or promote canonical identity by itself;
-- future procurement plans, published notices, active procedures and completed procedures remain distinguishable;
-- monitoring is page-offset based in the current foundation, with provider/external-ID deduplication and bounded fingerprint change detection; production incremental monitoring must add stable ordering plus a watermark/overlap-window checkpoint;
-- source freshness, provider availability, rate limits and API lag remain visible;
-- provider credentials remain deployment configuration only;
-- no HTML scraping is introduced as a substitute for an unavailable API contract;
-- no automatic tender submission/participation is included in this boundary;
-- live traffic remains OFF until provider contract, negative paths, budgets, observability and activation gate are verified.
+- no new procurement runtime is developed in Shema before the Bitrix24 business-plane stage;
+- no tender workspace is added to the early Shema operator interface;
+- no tender submission/participation automation is built in Shema;
+- no HTML scraping fallback;
+- existing provider-neutral contracts and deterministic fixtures remain reusable technical assets;
+- B2G/tender execution is evaluated later inside Bitrix24 or a mature tender capability integrated with the business plane;
+- Shema remains focused on intelligence, evidence, qualification, preparation and handoff.
 
-### Integration with other capabilities
-- procurement signals can provide an evidence-backed reason for contact;
-- a procurement watch can attach to an existing client/candidate without creating a duplicate company;
-- a completed business outcome originating from a procurement opportunity may seed the Repeat Business Preparation rule;
-- procurement-specific document requirements flow through the same Legal/Document Configuration Engine.
-
-### Current verified boundary exit
-The provider-neutral contract, deterministic GosPlan adapter boundary, bounded error/retry handling, page-offset/fingerprint monitoring foundation and deterministic tests are verified by full CI #1417; durable incremental monitoring remains a separate boundary. Live activation remains OFF.
-
-### Remaining Phase 2-I work
-- authenticated production provider activation;
-- durable server-side monitoring schedule/state;
-- canonical API/runtime exposure for procurement search/watch;
-- Evidence/Identity intake composition for procurement observations;
-- operational alerting/revalidation and cost controls.
-
-### Original exit criteria
-- provider-neutral procurement contract;
-- deterministic ГосПлан adapter fixture set;
-- bounded timeout/error mapping;
-- search + future-plan + monitoring semantics proven without live credentials;
-- repeated polls deduplicated;
-- conservative Identity/Evidence linking;
-- full seven-job CI GREEN;
-- Development State updated with the verified boundary.
-
-### Provider-neutral procurement expansion
-B2B-Center is removed as a named strategic provider. The durable runtime boundary is a provider-neutral ProcurementSourceRegistry with per-source capability declarations and preserved provenance.
-
-The provider portfolio is:
-- ГосПлан API v2 / ЕИС-origin data as the official-origin baseline already covered by the current foundation;
-- TenderGuru API as the first commercial aggregation candidate, activated only after measured coverage evidence shows a gap that justifies its cost;
-- future specialized sources only through separate evidence/cost gates.
-
-No provider is an implicit fallback, and provider failure never changes canonical identity or business truth.
+### Exit
+This foundation is considered closed as dormant infrastructure. No further Phase 2-I sub-work is implicitly opened.
 
 ## 7. Phase 3 — Contact Preparation
 
@@ -459,13 +420,12 @@ For each supported configuration the system can explain why a document is requir
 ## 9. Phase 5 — Web Operator System
 
 ### Objective
-Create the primary human operating surface over proven workflows and consolidate the vertical slices into one coherent operator system. This is not the first appearance of UI; earlier phases already include minimal operator surfaces for validation.
+Create the primary human operating surface over proven B2B workflows and consolidate the vertical slices into one coherent operator system. This is not the first appearance of UI; earlier phases already include minimal operator surfaces for validation.
 
 ### Work
 Build only the workflows already proven in Phases 1–4:
 - command/search center;
 - counterparty check;
-- procurement/tender watchlist and monitoring queue;
 - repeat-business preparation queue;
 - client dossier;
 - intelligence/evidence view;
@@ -561,7 +521,6 @@ Move the proven modular monolith into Yandex Cloud without changing domain seman
 - containerized canonical API/runtime in Serverless Containers;
 - API Gateway as the explicit external edge;
 - Cloud Functions only for narrow scheduled/triggered work;
-- Timer-triggered procurement polling;
 - Lockbox for provider/API credentials;
 - Container Registry for immutable application artifacts;
 - Object Storage for bounded large evidence objects and exports;
@@ -608,7 +567,7 @@ A release can be deployed, observed, rolled back and reconstructed without ad ho
 ## 13. Phase 9A — Bitrix24 Business Control Plane Integration
 
 ### Objective
-Introduce Bitrix24 as the mature external business-process and transaction-control plane, without rebuilding CRM/finance inside Shema.
+Introduce Bitrix24 as the mature external business-process and transaction-control plane, without rebuilding CRM/finance/tender execution inside Shema.
 
 ### Ownership
 Shema remains authoritative for:
@@ -636,7 +595,9 @@ Bitrix24 becomes authoritative after handoff for:
 3. Idempotent Shema outbox for handoff commands.
 4. Reconciliation and field-ownership map.
 5. OAuth 2.0 application boundary before multi-user/multi-portal maturity.
-6. Outcome-only return path for learning.
+6. Establish operator causal continuity and multi-operator ownership after handoff.
+7. Evaluate B2G/tender capability in Bitrix24 or a mature integrated tender tool.
+8. Outcome-only return path for learning.
 
 ### Non-goals
 - no bidirectional same-field writes;
@@ -735,6 +696,7 @@ These are permanent roadmap rules, not optional UX preferences:
 
 - no v1.6/v1.7 kernel expansion for UI convenience;
 - no parallel client business-rule implementations;
+- no early B2G/tender subsystem inside Shema;
 - no giant intelligence graph before useful bounded workflows exist;
 - no mass source integration before both identity and search-relevance benchmarks exist;
 - no mandatory qualification/ranking gate that prevents direct operator search;
@@ -757,14 +719,15 @@ The practical priority is:
 2. Search/Research maturity
 3. Contact preparation
 4. Document Configuration & Handoff Preparation
-5. Web operator system + repeat-business/procurement workspaces
+5. Web operator system + repeat-business workspace
 6. PWA
 7. Production Web/PWA consolidation
 8. Yandex Cloud production foundation
-9. Bitrix24 business-plane integration
-10. Production operations and guarded external activation / MAX
-11. Learning loop
-12. Measured scalability/team mode
+9. Bitrix24 business-plane integration + multi-operator operating model
+10. B2G/tender capability inside Bitrix24 or mature integrated tender tooling
+11. Production operations and guarded external activation / MAX
+12. Learning loop
+13. Measured scalability/team mode
 
 Where two capabilities are tightly coupled, build them as one vertical slice rather than separate half-finished layers.
 
