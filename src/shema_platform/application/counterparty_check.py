@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Protocol
 from urllib.parse import urlsplit
 from uuid import uuid4
 
@@ -41,6 +42,17 @@ class SourceReliability(StrEnum):
 class FreshnessState(StrEnum):
     FRESH = "fresh"
     EXPIRED = "expired"
+
+
+class AuthoritativeCounterpartyLookup(Protocol):
+    """Server-side authority boundary; HTTP callers never provide evidence claims."""
+
+    def lookup(
+        self,
+        *,
+        identifier_type: CounterpartyIdentifierType,
+        identifier: str,
+    ) -> CounterpartyObservation: ...
 
 
 @dataclass(frozen=True, slots=True)
