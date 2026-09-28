@@ -40,9 +40,9 @@ class OrderLine:
 class Order:
     order_id: str
     identity_id: str
-    owner_actor_id: str | None = None
     source_action_id: str
     lines: tuple[OrderLine, ...]
+    owner_actor_id: str | None = None
     status: OrderStatus = OrderStatus.DRAFT
 
     def __post_init__(self) -> None:
@@ -82,6 +82,7 @@ class Order:
             identity_id=self.identity_id,
             source_action_id=self.source_action_id,
             lines=self.lines,
+            owner_actor_id=self.owner_actor_id,
             status=OrderStatus.IN_PROGRESS,
         )
 
@@ -93,5 +94,6 @@ class Order:
             identity_id=self.identity_id,
             source_action_id=self.source_action_id,
             lines=self.lines,
+            owner_actor_id=self.owner_actor_id,
             status=OrderStatus.COMPLETED,
         )
