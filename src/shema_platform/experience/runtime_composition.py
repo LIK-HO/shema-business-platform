@@ -57,7 +57,6 @@ class PublicIntakeRuntimeAssembly:
         enable_docs: bool = True,
         telemetry: TelemetrySink | None = None,
         provider_health=None,
-        bot_challenge_verifier: BotChallengeVerifier | None = None,
     ):
         return create_app(
             application=application,
@@ -83,7 +82,12 @@ def compose_public_intake_runtime(
     window_seconds: int = 600,
     telemetry: TelemetrySink | None = None,
     provider_sleeper: Callable[[float], None] | None = None,
-) -> PublicIntakeRuntimeAssembly:
+ ) -> PublicIntakeRuntimeAssembly:
+    if not allowed_origins:
+        raise ValueError("public intake requires a non-empty origin allowlist")
+    if bot_challenge_verifier is None:
+        raise ValueError("public intake requires a server-side bot challenge verifier")
+
     def repository_factory():
         return PostgresPublicIntakeRepository(intake_connection_factory)
 
