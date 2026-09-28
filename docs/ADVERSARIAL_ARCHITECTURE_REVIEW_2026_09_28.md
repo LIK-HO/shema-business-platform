@@ -144,18 +144,18 @@ Severity definitions:
 | Ambiguous ownership between Shema and Bitrix24 | P0 | Fixed | Explicit business-plane boundary contract |
 | External handoff lacked a formal failure/reconciliation state machine | P0 | Fixed | Stable handoff ID, outbox, idempotency, reconciliation |
 | Repeat-order design could duplicate Bitrix recurring-deal functionality | P1 | Fixed | Phase 3A renamed Repeat Business Preparation |
-| Document engine could turn Shema into a second legal/business document system | P1 | Fixed | Phase 4 renamed Document Configuration & Handoff Preparation |
-| Procurement monitor called page offsets a cursor | P1 | Fixed | Offset polling separated from production watermark/checkpoint semantics |
-| Procurement changes could be missed when title/price stay unchanged | P1 | Fixed | Fingerprint now includes provider update timestamp/source URL |
+| Internal document engine would have turned Shema into a second legal/business system | P1 | REMOVED | Document subsystem deleted from Shema boundary |
+| Procurement subsystem increased unnecessary complexity for the first B2B stage | P1 | REMOVED | Procurement code/contracts/tests deleted from Shema |
+| Document/tender expansion created avoidable dependency surface | P1 | REMOVED | Both capability tracks removed from Shema |
 | YandexGPT had an invalid implicit zero cost ceiling | P1 | Fixed | Explicit positive cost configuration required |
 | Bitrix24 plan capabilities differ materially | P1 | Fixed at strategy level | Capability detection, no hidden reimplementation |
 | Monium could be mistaken for long-term audit storage | P1 | Fixed at strategy level | PostgreSQL remains durable audit/business history |
 | Customer communication ownership after handoff was ambiguous | P1 | Fixed | Bitrix24/business plane owns customer-facing execution/history |
-| Procurement production runtime is still absent | P1 | Open by design | Separate bounded runtime phase |
+| Early tender runtime would create an unnecessary second business surface | P1 | REMOVED | No tender runtime exists in Shema |
 | Bitrix24 production runtime integration is still absent | P1 | Open by design | Separate handoff/adapter phase |
 | Outcome-learning schema is not yet a full runtime vertical slice | P1 | Open | Versioned outcome contract + reconciliation + privacy controls |
 | Source coverage quality is not yet measured against realized business outcomes | P1 | Open | Coverage/precision/revenue-quality benchmark before aggregation expansion |
-| TenderGuru is a candidate, not a verified production dependency | P2 | Open | Revalidate current contract/tariff/coverage immediately before activation |
+| Commercial tender-provider expansion | P2 | REMOVED | No tender provider is part of the Shema product |
 | Live MAX outbound remains blocked | P1 | Correctly blocked | Do not weaken safety gate |
 | Full latest CI gate has not yet closed | P0 for release status | Pending | Do not declare the current boundary verified |
 
@@ -441,6 +441,26 @@ Until both are solved:
 
 ---
 
+# 15A. Public Web/PWA/MAX attack surface
+
+The new public surface is deliberately one application, not a second platform:
+
+**Advertising/direct traffic → public Web → request form → canonical API → request observation → operator → Bitrix24 after handoff**
+
+MAX is a projection of that same public Web application inside a MAX bot. The mini-app must not introduce a second database or separate business rules. MAX bot conversations may answer questions and guide the customer, but authoritative live transaction state remains on the server/business plane.
+
+New adversarial checks therefore include:
+- duplicate form submission after timeout or refresh;
+- spam/automation and attachment abuse;
+- forged UTM/referral attribution;
+- request creation without valid server-side validation;
+- MAX start-parameter tampering;
+- cross-user access to another customer's request;
+- public endpoint accidentally bypassing operator/business authorization;
+- domain/DNS cutover breaking mail or HTTPS.
+
+The public surface becomes a new trust boundary, so its inputs are observations, never canonical business truth by themselves.
+
 # 15. Positive findings
 
 The adversarial review also found important strengths:
@@ -472,86 +492,43 @@ These are real strengths worth preserving.
 
 # 16. Final optimized strategy
 
-### Phase A — intelligence foundation
+### Phase A — intelligence
 
-Shema:
+**Search → Identity → Evidence → Research → Qualification → Contact Preparation → Repeat Business Preparation**
 
-**Search → Identity → Evidence → Research → Qualification**
+### Phase B — public acquisition and operator surface
 
-### Phase B — opportunity discovery
+**Public Web/PWA → advanced client request → operator workflow → MAX mini-app projection**
 
-Add:
-
-**Procurement intelligence → monitoring → need/opportunity evidence**
-
-### Phase C — preparation
-
-Add:
-
-**Contact preparation → Repeat Business Preparation → Document Configuration**
-
-### Phase D — business handoff
-
-Add:
+### Phase C — business handoff
 
 **Business Plane Handoff → Bitrix24**
 
-with:
-- idempotency;
-- outbox;
-- reconciliation;
-- capability detection;
-- explicit ownership.
+with idempotency, outbox, reconciliation, explicit ownership and multi-operator continuity.
 
-### Phase E — business execution
+### Phase D — live business execution
 
-Bitrix24:
+Bitrix24 owns the live commercial process:
 
 **Deal → Order → Pricing → Invoice → Payment → Economics → Communication → Fulfillment**
 
-### Phase F — learning
-
-Return:
+### Phase E — learning
 
 **Outcome → Correction → Search/Research improvement**
 
-not:
+### Phase F — measured scale
 
-**Entire CRM → duplicate database → black-box training**
+Only after actual measurements justify it: queues, caches, service extraction, team mode and specialized infrastructure.
 
-### Phase G — scale
+# 16A. Database and operator continuity
 
-Only after real measurements:
+Yandex Cloud Managed PostgreSQL remains the canonical Shema database. Bitrix24 owns its own live business-plane data after handoff. The full Shema database is not migrated into Bitrix24.
 
-- more providers;
-- queues;
-- caches;
-- service extraction;
-- team mode;
-- specialized databases.
-
----
-
-# 16A. Database, operator continuity and legal-change survival
-
-### Database
-
-Yandex Cloud Managed PostgreSQL remains the canonical Shema database. Bitrix24 has its own business-plane storage. The architecture deliberately does not migrate the entire Shema database into Bitrix24.
-
-### Operator continuity
-
-The practical path is one causal chain:
+The causal chain remains:
 
 **Shema intelligence → handoff → Bitrix24 live process → outcome → Shema learning**
 
-Stable references preserve the chain:
-**identity_ref + handoff_id + correlation_id + external_entity_ref + mapping_version**
-
-For multiple operators, live assignment and transaction activity belong to Bitrix24 after handoff. Shema retains the evidence and reason for the handoff but not a shadow live business process.
-
-### Legal / EDO evolution
-
-Legal changes become versioned configuration changes with effective dates. Unsupported downstream capabilities fail closed to preparation/manual review. Past configurations remain reconstructable; historical decisions are never rewritten to match a new legal regime.
+Stable references preserve continuity across the two systems.
 
 # 17. Release verdict
 
