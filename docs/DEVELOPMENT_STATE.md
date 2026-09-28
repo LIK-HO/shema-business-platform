@@ -215,4 +215,12 @@ Prohibited:
 - Public form is untrusted ingress; layered edge/application protection, idempotency, anti-enumeration and provider budgets are mandatory.
 - No live FNS automation or public-form Bitrix24 write path is activated by this contract change.
 - Adversarial review of the delta found no new kernel authority or cross-system split-brain. The current-head full release-gate CI is GREEN; production activation remains separately gated.
+## Current strategy extension — 2026-09-28
 
+- New active boundary: **Repeat Orders & Business Continuity + Public Intake Data Plane + Counterparty Monitoring + Bitrix24 Transaction Cutover**.
+- Public client submissions now have a separate dedicated PostgreSQL intake database boundary; raw intake is not written directly into the canonical Shema database.
+- Shema provides temporary live repeat-order execution until the Bitrix24 business plane is active. The frozen Order/Economics kernel is reused without semantic expansion.
+- Bitrix24 cutover is destructive only after complete package transfer, readback verification, recovery snapshot verification and reconciliation proof. Live Shema Order/Economics rows are then purgeable and the operator UI hides those capabilities cleanly.
+- Counterparty monitoring is a separate operator workspace with daily deterministic registry change detection, severity-aware notifications and personal favorites.
+- The adversarial gate has been extended to intake loss/notification recovery, transaction migration completeness and monitoring false-positive/poisoning scenarios.
+- Runtime implementation remains gated by contracts, negative paths, integration/E2E, recovery, adversarial review and current-head CI.
