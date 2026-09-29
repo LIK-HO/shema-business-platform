@@ -64,6 +64,7 @@ def test_web_surface_exposes_manifest_and_service_worker():
     html = (WEB / "index.html").read_text(encoding="utf-8")
     web_py = (ROOT / "src" / "shema_platform" / "experience" / "web.py").read_text(encoding="utf-8")
     assert 'rel="manifest"' in html
-    assert "navigator.serviceWorker.register('/sw.js'" in (WEB / "app.js").read_text(encoding="utf-8")
+    app_js = (WEB / "app.js").read_text(encoding="utf-8")
+    assert "navigator.serviceWorker.register('/sw.js'" in app_js
     assert '"/sw.js"' in web_py
     assert '"/manifest.webmanifest"' in web_py
