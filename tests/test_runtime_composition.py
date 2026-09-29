@@ -4,7 +4,9 @@ from fastapi.testclient import TestClient
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api_models import SearchResponse
 from shema_platform.experience.runtime_composition import (
+    CounterpartyMonitoringRuntimeAssembly,
     YandexGPTRuntimeAssembly,
+    compose_counterparty_monitoring_runtime,
     compose_yandexgpt_runtime,
 )
 from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
@@ -79,6 +81,19 @@ def build() -> YandexGPTRuntimeAssembly:
         activation_state_store=InMemoryProviderActivationStateStore(),
     )
 
+
+
+
+def test_counterparty_monitoring_runtime_is_explicit_and_db_lazy() -> None:
+    def forbidden_uow():
+        raise AssertionError("database must not be touched during monitoring assembly")
+
+    assembly = compose_counterparty_monitoring_runtime(
+        unit_of_work_factory=forbidden_uow,
+    )
+
+    assert isinstance(assembly, CounterpartyMonitoringRuntimeAssembly)
+    assert assembly.monitoring._unit_of_work_factory is forbidden_uow
 
 def test_public_intake_runtime_requires_server_side_security_prerequisites() -> None:
     from shema_platform.experience.runtime_composition import compose_public_intake_runtime
