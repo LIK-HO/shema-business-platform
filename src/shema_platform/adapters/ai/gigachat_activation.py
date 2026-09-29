@@ -335,6 +335,14 @@ class GigaChatProductionGate:
             raise GigaChatProductionActivationError(
                 "GigaChat canonical activation configuration does not match runtime"
             )
+        if (
+            self._provider is not None
+            and not self._provider.binding_matches(
+                activation_version=str(canonical.activation_version),
+                activated_at=canonical.activated_at,
+            )
+        ):
+            self._provider = None
         if self._provider is None:
             if self._provider_factory is None:
                 raise GigaChatProductionActivationError(
