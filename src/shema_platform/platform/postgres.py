@@ -78,11 +78,11 @@ class PostgresUnitOfWork:
             raise RuntimeError("unit of work is already active")
         self._connection = self._connection_factory()
 
-        from shema_platform.platform.counterparty_monitoring_postgres import (
-            PostgresCounterpartyMonitoringRepository,
-        )
         from shema_platform.platform.counterparty_monitoring_batch_postgres import (
             PostgresCounterpartyMonitoringBatchRepository,
+        )
+        from shema_platform.platform.counterparty_monitoring_postgres import (
+            PostgresCounterpartyMonitoringRepository,
         )
         from shema_platform.platform.postgres_repositories import (
             PostgresAIRunRepository,
@@ -111,7 +111,9 @@ class PostgresUnitOfWork:
         self.orders = PostgresOrderRepository(connection)
         self.repeat_orders = PostgresRepeatOrderRepository(connection)
         self.monitoring = PostgresCounterpartyMonitoringRepository(connection)
-        self.counterparty_monitoring_batches = PostgresCounterpartyMonitoringBatchRepository(connection)
+        self.counterparty_monitoring_batches = (
+            PostgresCounterpartyMonitoringBatchRepository(connection)
+        )
         self.economics = PostgresEconomicEntryRepository(connection)
         self.ai_runs = PostgresAIRunRepository(connection)
         return self
