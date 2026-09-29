@@ -1,0 +1,113 @@
+{
+  "version": "1.0",
+  "status": "executable_security_invariant_contract",
+  "principle": "Runtime enforcement plus adversarial evidence, not documentation, is the proof.",
+  "invariants": [
+    {
+      "id": "SI-01",
+      "name": "authenticated_not_authorized",
+      "class": "authorization",
+      "enforcement": "sensitive route/application permission guards",
+      "negative_test": "authenticated actor without required permission is denied"
+    },
+    {
+      "id": "SI-02",
+      "name": "foreign_object_denied",
+      "class": "BOLA",
+      "enforcement": "resource owner scope on commercial_action/order/repeat_order",
+      "negative_test": "actor with valid role cannot act on foreign resource"
+    },
+    {
+      "id": "SI-03",
+      "name": "client_evidence_not_authoritative",
+      "class": "provenance",
+      "enforcement": "server-side authoritative lookup",
+      "negative_test": "client-submitted canonical evidence fields rejected"
+    },
+    {
+      "id": "SI-04",
+      "name": "public_identity_not_client_defined",
+      "class": "public_ingress",
+      "enforcement": "trusted peer identity",
+      "negative_test": "rotating client header does not reset budget"
+    },
+    {
+      "id": "SI-05",
+      "name": "bot_verification_server_side",
+      "class": "public_ingress",
+      "enforcement": "BotChallengeVerifier composition boundary",
+      "negative_test": "spoofed 'passed' header without verifier rejected"
+    },
+    {
+      "id": "SI-06",
+      "name": "bounded_http_body",
+      "class": "resource_exhaustion",
+      "enforcement": "RequestBodySizeLimitMiddleware",
+      "negative_test": "oversized body rejected"
+    },
+    {
+      "id": "SI-07",
+      "name": "outbound_destination_pinned",
+      "class": "SSRF",
+      "enforcement": "official host allowlists",
+      "negative_test": "attacker HTTPS endpoint rejected"
+    },
+    {
+      "id": "SI-08",
+      "name": "redirect_not_followed",
+      "class": "SSRF",
+      "enforcement": "secure_urlopen",
+      "negative_test": "30x redirect does not trigger second request"
+    },
+    {
+      "id": "SI-09",
+      "name": "server_correlation",
+      "class": "forensics",
+      "enforcement": "CorrelationMiddleware generates IDs",
+      "negative_test": "client correlation header cannot replace canonical ID"
+    },
+    {
+      "id": "SI-10",
+      "name": "critical_effect_idempotent",
+      "class": "replay",
+      "enforcement": "durable idempotency reservation",
+      "negative_test": "same key converges; different payload fails"
+    },
+    {
+      "id": "SI-11",
+      "name": "outbox_lease_safe",
+      "class": "concurrency",
+      "enforcement": "PostgreSQL FOR UPDATE SKIP LOCKED leases",
+      "negative_test": "two workers cannot claim one event concurrently"
+    },
+    {
+      "id": "SI-12",
+      "name": "frozen_kernel_integrity",
+      "class": "supply_chain",
+      "enforcement": "kernel hash gate",
+      "negative_test": "kernel byte drift blocks promotion"
+    },
+    {
+      "id": "SI-13",
+      "name": "minimal_public_health",
+      "class": "information_disclosure",
+      "enforcement": "readiness returns only ready",
+      "negative_test": "provider topology absent from unauthenticated response"
+    },
+    {
+      "id": "SI-14",
+      "name": "fail_closed_composition",
+      "class": "misconfiguration",
+      "enforcement": "required public security dependencies validated at composition time",
+      "negative_test": "missing allowlist/verifier prevents insecure public runtime composition"
+    }
+  ],
+  "closure": {
+    "required_current_head": true,
+    "required_full_release_gate": true,
+    "P0": "fix or explicit architecture exception",
+    "P1": "fix or explicit bounded scheduled disposition",
+    "P2": "control and owner",
+    "documentation_only_is_not_closure": true
+  }
+}
