@@ -141,6 +141,50 @@ def test_dadata_activation_and_rollback_are_global_across_replicas() -> None:
     with pytest.raises(DaDataActivationError, match="not active"):
         gate_b.provider(configuration=configuration)
 
+def test_cached_provider_rejects_reactivated_canonical_binding() -> None:
+    store = InMemoryProviderActivationStateStore()
+    first_time = datetime(2026, 9, 27, 12, 0, tzinfo=UTC)
+    second_time = datetime(2026, 9, 27, 12, 0, 1, tzinfo=UTC)
+    current_time = [first_time]
+
+    gate = DaDataControlledActivationGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=store,
+        provider_factory=lambda _configuration: FakeProvider(),
+        now=lambda: current_time[0],
+    )
+    configuration = DaDataConfiguration(api_key="test-secret", enabled=True)
+
+    old_provider = gate.activate(
+        configuration,
+        readiness=readiness(),
+        activated_by="operator-1",
+        activation_version="activation:shared-v1",
+        correlation_id="corr-1",
+    )
+    gate.rollback(
+        rolled_back_by="operator-2",
+        reason="rebind test",
+        correlation_id="corr-2",
+    )
+
+    current_time[0] = second_time
+    gate.activate(
+        configuration,
+        readiness=readiness(),
+        activated_by="operator-3",
+        activation_version="activation:shared-v1",
+        correlation_id="corr-3",
+    )
+
+    query = CounterpartyLookupQuery(
+        identifier_type=CounterpartyLookupIdentifierType.INN,
+        identifier="7707083893",
+    )
+    with pytest.raises(DaDataActivationError, match="stale"):
+        old_provider.lookup(query)
+
+
 def test_activation_is_fail_closed_without_explicit_authorization() -> None:
     _, gate, service = gate_and_service()
 
