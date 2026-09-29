@@ -126,6 +126,7 @@ class CounterpartyMonitoringRepository(Protocol):
     def get_favorite(self, favorite_id: str) -> CounterpartyFavorite | None: ...
     def list_favorites(self, actor_id: str) -> tuple[CounterpartyFavorite, ...]: ...
     def get_latest_snapshot(self, monitor_id: str) -> CounterpartySnapshot | None: ...
+    def get_snapshot(self, snapshot_id: str) -> CounterpartySnapshot | None: ...
     def add_snapshot(self, snapshot: CounterpartySnapshot) -> CounterpartySnapshot: ...
     def set_last_snapshot(
         self,
@@ -471,6 +472,7 @@ class CounterpartyMonitoringService:
         observation: CounterpartyObservation,
         correlation_id: str,
         now: datetime,
+        idempotency_key: str | None = None,
     ) -> CounterpartySnapshot:
         self._authorize(actor_id, permissions, Permission.COUNTERPARTY_MONITOR_MANAGE)
         with self._unit_of_work_factory() as uow:
@@ -478,6 +480,31 @@ class CounterpartyMonitoringService:
             if monitor is None:
                 raise IntegrityViolation("monitor is missing or outside actor scope")
             snapshot = snapshot_from_observation(monitor, observation, now=now)
+            observation_hash = self._idempotency_hash(
+                "counterparty.observation",
+                monitor_id,
+                idempotency_key or "none",
+                snapshot.snapshot_id,
+                snapshot.payload_hash,
+            )
+            reservation = None
+            if idempotency_key:
+                reservation = uow.idempotency.reserve(
+                    f"counterparty.observation:{monitor_id}:{idempotency_key}",
+                    observation_hash,
+                    f"pending:{snapshot.snapshot_id}",
+                )
+                if reservation.result_ref != f"pending:{snapshot.snapshot_id}":
+                    if reservation.result_ref.startswith("pending:"):
+                        raise IdempotencyConflict(
+                            "counterparty observation request is already in progress"
+                        )
+                    stored = uow.monitoring.get_snapshot(reservation.result_ref)
+                    if stored is None:
+                        raise IntegrityViolation(
+                            "completed observation reservation references missing snapshot"
+                        )
+                    return stored
             previous = uow.monitoring.get_latest_snapshot(monitor_id)
             stored = uow.monitoring.add_snapshot(snapshot)
             current = now.astimezone(UTC)
@@ -551,4 +578,10 @@ class CounterpartyMonitoringService:
                             correlation_id=correlation_id,
                         )
                     )
+            if idempotency_key:
+                uow.idempotency.complete(
+                    f"counterparty.observation:{monitor_id}:{idempotency_key}",
+                    observation_hash,
+                    stored.snapshot_id,
+                )
             return stored
