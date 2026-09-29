@@ -416,6 +416,55 @@ class OperatorNotificationResponse(APIModel):
     created_at: str = Field(alias="createdAt")
 
 
+class RepeatCadenceRequest(APIModel):
+    unit: Literal["day", "week", "month"]
+    interval: int = Field(default=1, ge=1)
+
+
+class RepeatContextRequest(APIModel):
+    scheduled_for: datetime = Field(alias="scheduledFor")
+    service_scope: str = Field(alias="serviceScope", min_length=1)
+    capacity_units: Decimal = Field(alias="capacityUnits", gt=0)
+
+
+class RepeatPlanCreateRequest(APIModel):
+    plan_id: str = Field(alias="planId", min_length=1)
+    source_order_id: str = Field(alias="sourceOrderId", min_length=1)
+    cadence: RepeatCadenceRequest
+    context: RepeatContextRequest
+
+
+class RepeatPlanResponse(APIModel):
+    plan_id: str = Field(alias="planId")
+    source_order_id: str = Field(alias="sourceOrderId")
+    identity_id: str = Field(alias="identityId")
+    owner_actor_id: str | None = Field(default=None, alias="ownerActorId")
+    cadence_unit: str = Field(alias="cadenceUnit")
+    cadence_interval: int = Field(alias="cadenceInterval")
+    scheduled_for: datetime = Field(alias="scheduledFor")
+    service_scope: str = Field(alias="serviceScope")
+    capacity_units: str = Field(alias="capacityUnits")
+    status: str
+    pending_order_id: str | None = Field(default=None, alias="pendingOrderId")
+    last_order_id: str | None = Field(default=None, alias="lastOrderId")
+    skipped_occurrences: int = Field(alias="skippedOccurrences")
+    revision: int
+
+
+class RepeatPlanActionRequest(APIModel):
+    plan_id: str = Field(alias="planId", min_length=1)
+
+
+class RepeatPlanConfirmRequest(APIModel):
+    plan_id: str = Field(alias="planId", min_length=1)
+    order_id: str = Field(alias="orderId", min_length=1)
+
+
+class RepeatPlanEditRequest(APIModel):
+    plan_id: str = Field(alias="planId", min_length=1)
+    context: RepeatContextRequest
+
+
 class OperatorCapabilitiesResponse(APIModel):
     actor_id: str = Field(alias="actorId")
     capabilities: dict[str, bool]
