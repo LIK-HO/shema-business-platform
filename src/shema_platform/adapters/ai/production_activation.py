@@ -122,7 +122,9 @@ class YandexGPTProductionGate:
             activated_at=canonical.activated_at,
             max_cost=canonical.max_cost,
             max_duration_seconds=canonical.max_duration_seconds,
-            rollback_from_configuration_version=None,
+            rollback_from_configuration_version=(
+                canonical.rollback_from_configuration_version
+            ),
             rollback_by=canonical.rollback_by,
             rollback_at=canonical.rollback_at,
             rollback_reason=canonical.rollback_reason,
