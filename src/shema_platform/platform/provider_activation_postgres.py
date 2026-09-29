@@ -59,7 +59,7 @@ class PostgresProviderActivationStateStore(ProviderActivationStateStore):
                     rollback_reason,
                     rollback_from_configuration_version
                 )
-                values (%s, true, %s, %s, %s, %s, %s, %s, null, null, %s, null)
+                values (%s, true, %s, %s, %s, %s, %s, %s, null, null, null, null)
                 on conflict (provider_id) do update
                 set enabled = true,
                     configuration_version = excluded.configuration_version,
