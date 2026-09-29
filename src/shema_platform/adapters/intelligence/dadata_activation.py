@@ -241,6 +241,8 @@ class DaDataControlledActivationGate:
         self._provider = GatedDaDataCounterpartyLookupProvider(
             provider,
             gate=self,
+            activation_version=activation_version.strip(),
+            activated_at=activation_time,
         )
         self._emit(
             "intelligence.provider.activated",
