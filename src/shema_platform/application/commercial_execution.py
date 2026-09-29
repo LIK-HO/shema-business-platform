@@ -11,10 +11,7 @@ from shema_platform.application.communication import (
     CommunicationSendResult,
 )
 from shema_platform.application.ports import UnitOfWork
-from shema_platform.domain.commercial_action import (
-    CommercialAction,
-    CommercialActionStatus,
-)
+from shema_platform.domain.commercial_action import CommercialActionStatus
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.authorization import Permission, RBACAuthorizer
 from shema_platform.foundation.errors import (
