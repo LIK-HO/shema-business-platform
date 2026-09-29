@@ -8,7 +8,7 @@ A control is considered closed only when:
 3. the test passes on the current HEAD; and
 4. the full release gate passes after the change.
 
-**Current security re-baseline evidence:** exact HEAD `b8983dcf16630869db1318746edc93298ea8c333` passed full seven-job release-gate CI #1994 (`36556900641`): quality 3.12/3.13, supply-chain, integration 3.12/3.13, backup/recovery and release-contract. This is current-head evidence for the security boundaries recorded below; it does not claim zero vulnerabilities outside the reviewed scope.
+**Current security re-baseline evidence:** Phase 3C-1 exact implementation HEAD passed full seven-job release-gate CI #2041 (`36561799870`): quality 3.12/3.13, supply-chain, integration 3.12/3.13, backup/recovery and release-contract. This is current-head evidence for the security boundaries recorded below; it does not claim zero vulnerabilities outside the reviewed scope.
 
 | Boundary | Runtime enforcement | Adversarial evidence | Current closure rule |
 |---|---|---|---|
@@ -16,6 +16,7 @@ A control is considered closed only when:
 | Function authorization | explicit Permission checks | authenticated-but-no-permission API tests | current-head CI required |
 | Permission non-escalation | explicit Permission membership; no wildcard/derived capability | permission-combination negative matrix + unknown-permission rejection | current-head CI required |
 | Object authorization | canonical owner scope on sensitive resources and resource reads | foreign-owner/BOLA tests, resource-read API negatives and persistence tests | current-head CI + persistence tests |
+| Counterparty monitoring/favorites scope | separate monitoring/favorite permissions; actor-scoped persistence and service reads | missing-permission, cross-actor, duplicate-command and snapshot-tamper negative tests | current-head CI + integration |
 | Evidence provenance | server-side authoritative provider boundary | client-evidence rejection tests | current-head CI required |
 | Public identity | trusted peer identity | rotating client-key attack test | current-head CI required |
 | Bot protection | server-side verifier boundary | spoofed-header test | insecure composition must fail |
