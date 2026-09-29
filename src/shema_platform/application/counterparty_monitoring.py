@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Protocol
 from uuid import uuid4
@@ -446,10 +446,7 @@ class CounterpartyMonitoringService:
                 monitor_id,
                 snapshot_id=stored.snapshot_id,
                 checked_at=current,
-                next_check_at=current
-                + __import__("datetime").timedelta(
-                    seconds=monitor.frequency_seconds
-                ),
+                next_check_at=current + timedelta(seconds=monitor.frequency_seconds),
             )
             if previous is not None:
                 changed, severity = detect_counterparty_changes(previous, stored)
