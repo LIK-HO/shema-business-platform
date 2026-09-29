@@ -149,6 +149,13 @@
       "class": "misconfiguration",
       "enforcement": "required public security dependencies validated at composition time",
       "negative_test": "missing allowlist/verifier prevents insecure public runtime composition"
+    },
+    {
+      "id": "SI-22",
+      "name": "counterparty_monitoring_checkpoint_recovery_integrity",
+      "class": "concurrency",
+      "enforcement": "daily monitoring uses durable batch/item checkpoints, bounded leases with worker ownership CAS, deterministic command idempotency and fail-closed provider/snapshot handling",
+      "negative_test": "a stale worker cannot complete a reclaimed item; provider outage creates no snapshot/change; replay converges to the existing snapshot; exhausted attempts do not call the provider; tampered snapshots are rejected"
     }
   ],
   "closure": {
