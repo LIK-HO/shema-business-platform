@@ -446,7 +446,10 @@ class CounterpartyMonitoringService:
                 monitor_id,
                 snapshot_id=stored.snapshot_id,
                 checked_at=current,
-                next_check_at=current,
+                next_check_at=current
+                + __import__("datetime").timedelta(
+                    seconds=monitor.frequency_seconds
+                ),
             )
             if previous is not None:
                 changed, severity = detect_counterparty_changes(previous, stored)
