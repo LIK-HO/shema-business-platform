@@ -118,7 +118,7 @@ class CounterpartyProviderActivationService:
         return self.status()
 
     def provider(self) -> GatedDaDataCounterpartyLookupProvider:
-        return self._gate.provider()
+        return self._gate.provider(configuration=self._configuration)
 
     def status(self) -> CounterpartyProviderActivationResponse:
         state = self._gate.state
