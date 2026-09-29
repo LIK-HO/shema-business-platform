@@ -518,7 +518,7 @@ def test_gigachat_selected_runtime_executes_end_to_end(monkeypatch) -> None:
                 where correlation_id = %s
                   and action = 'ai.run'
                 """,
-                (correlation_id,),
+                (body["correlationId"],),
             ).fetchall()
             assert audit_rows == [
                 (
