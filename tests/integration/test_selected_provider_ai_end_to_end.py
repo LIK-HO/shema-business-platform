@@ -506,7 +506,7 @@ def test_gigachat_selected_runtime_executes_end_to_end(monkeypatch) -> None:
                 "gigachat",
                 "GigaChat-2-Max",
                 "prompt:p37",
-                f"P37 gigachat result:{correlation_id}",
+                f"P37 gigachat result:{body['correlationId']}",
                 12,
                 Decimal("0.02000000"),
             )
