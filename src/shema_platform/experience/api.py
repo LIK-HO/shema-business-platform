@@ -285,6 +285,8 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
                 "/openapi.json",
                 "/health/ready",
                 "/v1/public/intake",
+                "/sw.js",
+                "/manifest.webmanifest",
             }
             or path.startswith("/web/")
         ):
