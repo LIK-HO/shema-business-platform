@@ -8,7 +8,7 @@ import psycopg
 import pytest
 from fastapi.testclient import TestClient
 
-from shema_platform.adapters.ai import production_activation
+from shema_platform.adapters.ai import application_composition
 from shema_platform.adapters.ai.contracts import (
     AIModelProvenance,
     AIProviderActivation,
@@ -344,7 +344,7 @@ def test_assembled_ai_path_fails_closed_for_expired_evidence(monkeypatch) -> Non
     DeterministicYandexGPTProvider.constructions = 0
     DeterministicYandexGPTProvider.invocations = 0
     monkeypatch.setattr(
-        production_activation,
+        application_composition,
         "YandexGPTProvider",
         DeterministicYandexGPTProvider,
     )
