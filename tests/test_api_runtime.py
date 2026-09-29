@@ -43,7 +43,7 @@ from shema_platform.foundation.authentication import (
     AuthenticationRequired,
 )
 from shema_platform.foundation.authorization import Permission
-from shema_platform.foundation.errors import QuarantineRequired
+from shema_platform.foundation.errors import IdempotencyConflict, QuarantineRequired
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
@@ -243,6 +243,39 @@ def client(application: APIApplication | None = None) -> TestClient:
         )
     )
 
+
+
+
+def test_http_errors_redact_provider_and_credential_details() -> None:
+    class LeakingApplication(FakeApplication):
+        def create_order(self, request, context):
+            raise IdempotencyConflict(
+                "Authorization: Bearer super-secret "
+                "url=https://user:password@example.test/api"
+            )
+
+    response = TestClient(
+        create_app(
+            LeakingApplication(),
+            FakeAuthenticator(),
+        )
+    ).post(
+        "/v1/orders",
+        headers={
+            "Authorization": "Bearer test-token",
+            "Idempotency-Key": "redact-api-1",
+        },
+        json={
+            "actionId": "action-1",
+            "lines": [],
+        },
+    )
+
+    assert response.status_code == 409
+    body = response.json()
+    assert body["code"] == "idempotency_conflict"
+    assert "super-secret" not in body["message"]
+    assert "password@" not in body["message"]
 
 def test_runtime_api_propagates_verified_permissions() -> None:
     captured = {}
