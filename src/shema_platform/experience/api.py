@@ -484,10 +484,10 @@ def create_app(
         else NoopTelemetrySink()
     )
     app.state.telemetry = telemetry if telemetry is not None else default_telemetry
-    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(CorrelationMiddleware)
     app.add_middleware(RequestBodySizeLimitMiddleware, max_body_bytes=1_048_576)
+    app.add_middleware(SecurityHeadersMiddleware)
 
     @app.exception_handler(AuthenticationRequired)
     async def authentication_required(
