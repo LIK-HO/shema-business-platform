@@ -17,6 +17,9 @@ from shema_platform.application.counterparty_check import (
     CounterpartyCheckService,
     CounterpartyIdentifierType,
 )
+from shema_platform.application.counterparty_monitoring import (
+    CounterpartyMonitoringService,
+)
 from shema_platform.application.counterparty_lookup import (
     CounterpartyLookupIdentifierType,
     CounterpartyLookupProviderError,
@@ -45,6 +48,11 @@ from shema_platform.experience.api_models import (
     CommunicationResult,
     CounterpartyCheckRequest,
     CounterpartyCheckResponse,
+    CounterpartyFavoriteListResponse,
+    CounterpartyFavoriteResponse,
+    CounterpartyMonitorListResponse,
+    CounterpartyMonitorResponse,
+    CounterpartySubscriptionRequest,
     CounterpartyContradictionResponse,
     CounterpartyProviderActivationRequest,
     CounterpartyProviderActivationResponse,
@@ -774,6 +782,142 @@ def create_app(
             quarantined=result.quarantined,
             operatorBrief=result.operator_brief,
             correlationId=context.correlation_id,
+        )
+
+    @router.post(
+        "/intelligence/counterparties/monitoring",
+        response_model=CounterpartyMonitorResponse,
+    )
+    async def save_counterparty_monitoring(
+        request: Request,
+        payload: CounterpartySubscriptionRequest,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
+    ) -> CounterpartyMonitorResponse:
+        context = _require_permission(
+            request,
+            Permission.COUNTERPARTY_MONITOR_MANAGE,
+            idempotency_key,
+        )
+        service: CounterpartyMonitoringService | None = (
+            request.app.state.counterparty_monitoring
+        )
+        if service is None:
+            raise ApplicationUnavailable(
+                "counterparty monitoring capability is not composed"
+            )
+        result = service.save_monitoring(
+            identifier_type=CounterpartyIdentifierType(payload.identifier_type),
+            identifier=payload.identifier,
+            actor_id=context.actor_id,
+            permissions=context.permissions,
+            idempotency_key=idempotency_key,
+            correlation_id=context.correlation_id,
+            now=datetime.now(UTC),
+        )
+        return CounterpartyMonitorResponse(
+            monitorId=result.monitor_id,
+            actorId=result.actor_id,
+            identifierType=result.identifier_type.value,
+            identifier=result.identifier,
+            status=result.status.value,
+            nextCheckAt=result.next_check_at,
+            lastCheckedAt=result.last_checked_at,
+        )
+
+    @router.get(
+        "/intelligence/counterparties/monitoring",
+        response_model=CounterpartyMonitorListResponse,
+    )
+    async def list_counterparty_monitoring(
+        request: Request,
+    ) -> CounterpartyMonitorListResponse:
+        context = _require_permission(request, Permission.COUNTERPARTY_MONITOR_MANAGE)
+        service: CounterpartyMonitoringService | None = (
+            request.app.state.counterparty_monitoring
+        )
+        if service is None:
+            raise ApplicationUnavailable(
+                "counterparty monitoring capability is not composed"
+            )
+        return CounterpartyMonitorListResponse(
+            monitors=[
+                CounterpartyMonitorResponse(
+                    monitorId=item.monitor_id,
+                    actorId=item.actor_id,
+                    identifierType=item.identifier_type.value,
+                    identifier=item.identifier,
+                    status=item.status.value,
+                    nextCheckAt=item.next_check_at,
+                    lastCheckedAt=item.last_checked_at,
+                )
+                for item in service.list_monitors(context.actor_id, context.permissions)
+            ]
+        )
+
+    @router.post(
+        "/intelligence/counterparties/favorites",
+        response_model=CounterpartyFavoriteResponse,
+    )
+    async def save_counterparty_favorite(
+        request: Request,
+        payload: CounterpartySubscriptionRequest,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
+    ) -> CounterpartyFavoriteResponse:
+        context = _require_permission(
+            request,
+            Permission.COUNTERPARTY_FAVORITE_MANAGE,
+            idempotency_key,
+        )
+        service: CounterpartyMonitoringService | None = (
+            request.app.state.counterparty_monitoring
+        )
+        if service is None:
+            raise ApplicationUnavailable(
+                "counterparty monitoring capability is not composed"
+            )
+        result = service.save_favorite(
+            identifier_type=CounterpartyIdentifierType(payload.identifier_type),
+            identifier=payload.identifier,
+            actor_id=context.actor_id,
+            permissions=context.permissions,
+            idempotency_key=idempotency_key,
+            correlation_id=context.correlation_id,
+            now=datetime.now(UTC),
+        )
+        return CounterpartyFavoriteResponse(
+            favoriteId=result.favorite_id,
+            actorId=result.actor_id,
+            identifierType=result.identifier_type.value,
+            identifier=result.identifier,
+            createdAt=result.created_at,
+        )
+
+    @router.get(
+        "/intelligence/counterparties/favorites",
+        response_model=CounterpartyFavoriteListResponse,
+    )
+    async def list_counterparty_favorites(
+        request: Request,
+    ) -> CounterpartyFavoriteListResponse:
+        context = _require_permission(request, Permission.COUNTERPARTY_FAVORITE_MANAGE)
+        service: CounterpartyMonitoringService | None = (
+            request.app.state.counterparty_monitoring
+        )
+        if service is None:
+            raise ApplicationUnavailable(
+                "counterparty monitoring capability is not composed"
+            )
+        return CounterpartyFavoriteListResponse(
+            favorites=[
+                CounterpartyFavoriteResponse(
+                    favoriteId=item.favorite_id,
+                    actorId=item.actor_id,
+                    identifierType=item.identifier_type.value,
+                    identifier=item.identifier,
+                    createdAt=item.created_at,
+                )
+                for item in service.list_favorites(context.actor_id, context.permissions)
+            ]
         )
 
     @router.post(
