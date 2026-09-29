@@ -38,6 +38,7 @@ def build() -> GigaChatProductionGate:
     return GigaChatProductionGate(
         telemetry=InMemoryTelemetrySink(),
         activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="gigachat-config:v1",
     )
 
 
