@@ -195,6 +195,39 @@ class APIApplication(Protocol):
     def get_diagnostics(self, context: RequestContext) -> DiagnosticsResponse: ...
 
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Browser/HTTP hardening for every response without creating business authority."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        headers = {
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+            "Cross-Origin-Opener-Policy": "same-origin",
+            "Content-Security-Policy": (
+                "default-src 'self'; "
+                "base-uri 'self'; "
+                "connect-src 'self'; "
+                "font-src 'self'; "
+                "form-action 'self'; "
+                "frame-ancestors 'none'; "
+                "img-src 'self' data:; "
+                "object-src 'none'; "
+                "script-src 'self'; "
+                "style-src 'self'"
+            ),
+        }
+        for name, value in headers.items():
+            response.headers[name] = value
+
+        path = request.url.path
+        if path.startswith("/v1/") or path in {"/operator", "/system", "/request", "/max"}:
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
+
 class CorrelationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         correlation_id = str(uuid4())
@@ -451,6 +484,7 @@ def create_app(
         else NoopTelemetrySink()
     )
     app.state.telemetry = telemetry if telemetry is not None else default_telemetry
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(CorrelationMiddleware)
     app.add_middleware(RequestBodySizeLimitMiddleware, max_body_bytes=1_048_576)
