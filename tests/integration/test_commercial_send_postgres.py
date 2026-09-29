@@ -39,6 +39,7 @@ def apply_migrations(connection: psycopg.Connection) -> None:
         "0003_audit_context.sql",
         "0004_commercial_execution.sql",
         "0008_commercial_send_reservation.sql",
+        "0012_resource_owner_scope.sql",
     ):
         for statement in (ROOT / "db/migrations" / name).read_text().split(";"):
             statement = statement.strip()
@@ -64,6 +65,7 @@ def test_postgres_commercial_send_workflow_round_trip() -> None:
         action = CommercialAction(
             action_id=str(uuid4()),
             identity_id="identity:integration",
+            owner_actor_id="operator-1",
             contact_ref="chat:integration",
             channel="max",
             evidence_refs=("evidence:integration",),
@@ -132,6 +134,7 @@ def test_postgres_commercial_send_reservation_reclaims_expired_lease() -> None:
     action = CommercialAction(
         action_id=str(uuid4()),
         identity_id="identity:integration",
+        owner_actor_id="operator-1",
         contact_ref="chat:integration",
         channel="max",
         evidence_refs=("evidence:integration",),
