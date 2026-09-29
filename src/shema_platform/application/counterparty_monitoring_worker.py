@@ -14,7 +14,6 @@ from shema_platform.application.counterparty_monitoring import (
     CounterpartyMonitoringService,
 )
 from shema_platform.foundation.errors import IntegrityViolation
-from shema_platform.foundation.safe_errors import safe_error_detail
 
 
 class BatchStatus(StrEnum):
