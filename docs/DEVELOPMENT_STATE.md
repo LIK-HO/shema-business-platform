@@ -1,3 +1,16 @@
+# Phase 4 global acceptance — active final verification boundary (2026-09-29)
+
+- **Phase:** Phase 4 — Web Operator System.
+- **4A:** CLOSED / VERIFIED.
+- **4B:** CLOSED / VERIFIED.
+- **4C:** CLOSED / VERIFIED.
+- **4D:** CLOSED / VERIFIED.
+- **4E:** implementation complete; final global acceptance gate pending on the post-test HEAD.
+- Latest completed full seven-job gate before global acceptance test: `36587434913` — **7/7 GREEN**.
+- Final global acceptance contract: `tests/test_phase4_global_acceptance.py`.
+- **PR #60:** open / draft / unmerged.
+- **PR #59:** open / draft / unmerged; untouched by Phase 4 work.
+
 # Current Phase 4-4D closure — 2026-09-29
 
 - **Boundary:** Phase 4-4D — Repeat Orders & Business Continuity Web boundary.
