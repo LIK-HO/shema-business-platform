@@ -370,12 +370,12 @@ def test_yandex_selected_runtime_executes_end_to_end(monkeypatch) -> None:
     DeterministicGigaChatProvider.constructions = 0
     DeterministicGigaChatProvider.invocations = 0
     monkeypatch.setattr(
-        production_activation,
+        application_composition,
         "YandexGPTProvider",
         DeterministicYandexGPTProvider,
     )
     monkeypatch.setattr(
-        gigachat_activation,
+        gigachat_application_composition,
         "GigaChatProvider",
         DeterministicGigaChatProvider,
     )
