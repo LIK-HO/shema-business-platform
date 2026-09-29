@@ -29,6 +29,7 @@ from shema_platform.application.counterparty_provider_activation import (
 from shema_platform.application.counterparty_provider_runtime_lookup import (
     CounterpartyProviderRuntimeLookupService,
 )
+from shema_platform.application.resource_read_authorization import ResourceReadAuthorizer
 from shema_platform.application.public_intake import (
     PublicIntakePayload,
     PublicIntakeRateLimited,
@@ -280,6 +281,15 @@ def _require_permission(
     return context
 
 
+def _resource_read_authorizer(request: Request) -> ResourceReadAuthorizer:
+    authorizer = request.app.state.resource_read_authorizer
+    if authorizer is None:
+        raise ApplicationUnavailable(
+            "resource read authorization capability is not composed"
+        )
+    return authorizer
+
+
 def _error(
     request: Request,
     *,
@@ -315,6 +325,7 @@ def create_app(
     operator_notification_reader=None,
     authoritative_counterparty_lookup: AuthoritativeCounterpartyLookup | None = None,
     bot_challenge_verifier: BotChallengeVerifier | None = None,
+    resource_read_authorizer: ResourceReadAuthorizer | None = None,
 ) -> FastAPI:
     runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
@@ -343,6 +354,7 @@ def create_app(
     app.state.operator_notification_reader = operator_notification_reader
     app.state.authoritative_counterparty_lookup = authoritative_counterparty_lookup
     app.state.bot_challenge_verifier = bot_challenge_verifier
+    app.state.resource_read_authorizer = resource_read_authorizer
     default_telemetry: TelemetrySink = (
         StructuredLoggingTelemetrySink()
         if runtime_security.environment == "production"
@@ -951,20 +963,24 @@ def create_app(
         request: Request,
         order_id: str = Path(alias="orderId"),
     ) -> OrderResponse:
-        return services(request).get_order(
-            order_id,
-            _require_permission(request, Permission.ORDER_READ),
+        context = _require_permission(request, Permission.ORDER_READ)
+        _resource_read_authorizer(request).require_order_read(
+            order_id=order_id,
+            actor_id=context.actor_id,
         )
+        return services(request).get_order(order_id, context)
 
     @router.get("/economics/{entityRef}", response_model=EconomicResponse)
     async def get_economics(
         request: Request,
         entity_ref: str = Path(alias="entityRef"),
     ) -> EconomicResponse:
-        return services(request).get_economics(
-            entity_ref,
-            _require_permission(request, Permission.ECONOMICS_READ),
+        context = _require_permission(request, Permission.ECONOMICS_READ)
+        _resource_read_authorizer(request).require_economics_read(
+            entity_ref=entity_ref,
+            actor_id=context.actor_id,
         )
+        return services(request).get_economics(entity_ref, context)
 
     @router.get("/diagnostics", response_model=DiagnosticsResponse)
     async def get_diagnostics(request: Request) -> DiagnosticsResponse:
