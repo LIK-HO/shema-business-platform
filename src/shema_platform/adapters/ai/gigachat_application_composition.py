@@ -11,13 +11,13 @@ from shema_platform.adapters.ai.contracts import (
     AIProviderFailure,
     AIProviderFailureCode,
 )
-from shema_platform.adapters.ai.gigachat_activation import (
-    GigaChatProductionActivationError,
-    GigaChatProductionGate,
-)
 from shema_platform.adapters.ai.gigachat import (
     GigaChatConfiguration,
     GigaChatProvider,
+)
+from shema_platform.adapters.ai.gigachat_activation import (
+    GigaChatProductionActivationError,
+    GigaChatProductionGate,
 )
 from shema_platform.application.ai import AIProvider
 from shema_platform.application.ai_runtime import (
