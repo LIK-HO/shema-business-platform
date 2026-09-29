@@ -536,9 +536,10 @@ class PostgresPublicIntakeRepository:
             where event_id = %s
               and published_at is null
               and delivery_worker_id = %s
+              and delivery_lease_until > %s
             returning event_id
             """,
-            (now, event_id, worker_id),
+            (now, event_id, worker_id, now),
         ).fetchone()
         if updated is None:
             raise IntegrityViolation("intake outbox publication rejected")
