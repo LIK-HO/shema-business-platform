@@ -1,15 +1,58 @@
 (()=>{'use strict';
-const S={token:null,surface:new URLSearchParams(location.search).get('surface')==='max'?'max':'web',route:location.hash.slice(1)||'request',caps:{},notes:[],selected:null,pendingId:''};
+const S={token:null,surface:new URLSearchParams(location.search).get('surface')==='max'?'max':'web',route:location.hash.slice(1)||'request',caps:{},notes:[],selected:null,pendingId:'',pendingQueue:[],online:navigator.onLine};
 const $=(s,r=document)=>r.querySelector(s),view=$('#view'),title=$('#title'),surface=$('#surface'),corr=$('#corr'),count=$('#nav-count');
+const MAX_PENDING=8,MAX_PENDING_BYTES=65536,MAX_PENDING_ATTEMPTS=3,MAX_PENDING_AGE_MS=86400000;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const key=()=>crypto&&crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random();
-const badge=v=>{const x=String(v||'').toLowerCase(),c=['accepted','projected','verified','normal','pass','ready','active','sent','completed'].includes(x)?'ok':['attention','warn','pending','stale','review'].includes(x)?'warn':['blocking','conflicting','fail','failed','rejected','quarantined_spam'].includes(x)?'bad':'';return '<span class="status '+c+'">'+esc(v)+'</span>'};
-async function api(path,opt={}){const h=Object.assign({'Accept':'application/json'},opt.headers||{});if(S.token)h.Authorization='Bearer '+S.token;const r=await fetch(path,Object.assign({},opt,{headers:h}));const c=r.headers.get('X-Correlation-Id');if(c)corr.textContent='correlation: '+c;const ct=r.headers.get('content-type')||'',b=ct.includes('json')?await r.json():await r.text();if(!r.ok){const e=new Error(b&&b.message?b.message:'HTTP '+r.status);e.status=r.status;throw e}return b}
+const badge=v=>{const x=String(v||'').toLowerCase(),c=['accepted','projected','verified','normal','pass','ready','active','sent','completed'].includes(x)?'ok':['attention','warn','pending','stale','review','offline','online'].includes(x)?'warn':['blocking','conflicting','fail','failed','rejected','quarantined_spam'].includes(x)?'bad':'';return '<span class="status '+c+'">'+esc(v)+'</span>'};
+function updateOfflineState(){S.online=navigator.onLine;document.body.classList.toggle('offline',!S.online);const e=$('#network-state');if(e)e.innerHTML=badge(S.online?'online':'offline')+(S.pendingQueue.length?' <span class="muted">· ожидает '+S.pendingQueue.length+'</span>':'')}
+function queueMutation(path,opt){
+  const headers=Object.assign({},opt.headers||{});
+  const auth=Object.keys(headers).find(k=>k.toLowerCase()==='authorization');
+  const idem=Object.keys(headers).find(k=>k.toLowerCase()==='idempotency-key');
+  const body=typeof opt.body==='string'?opt.body:'';
+  if(auth||!idem||path!=='/v1/public/intake'||body.length>MAX_PENDING_BYTES||S.pendingQueue.length>=MAX_PENDING)return null;
+  const item={id:key(),path,method:opt.method||'POST',headers,body,createdAt:Date.now(),attempts:0};
+  S.pendingQueue.push(item);updateOfflineState();return item;
+}
+async function flushPending(){
+  if(!navigator.onLine||!S.pendingQueue.length)return;
+  const now=Date.now(),next=[];
+  for(const item of S.pendingQueue){
+    if(now-item.createdAt>MAX_PENDING_AGE_MS||item.attempts>=MAX_PENDING_ATTEMPTS){toast('Ожидающий запрос истёк и удалён. Отправьте его заново.');continue}
+    item.attempts+=1;
+    try{await api(item.path,{method:item.method,headers:item.headers,body:item.body},{queueOffline:false});toast('Ожидающий запрос доставлен.')}
+    catch(e){if(e.status===409||e.status===412){toast('Конфликт заявки. Требуется повторная отправка.');continue}if(item.attempts<MAX_PENDING_ATTEMPTS)next.push(item)}
+  }
+  S.pendingQueue=next;updateOfflineState();
+}
+async function api(path,opt={},policy={}) {
+  const h=Object.assign({'Accept':'application/json'},opt.headers||{});
+  if(S.token)h.Authorization='Bearer '+S.token;
+  const request=Object.assign({},opt,{headers:h});
+  if(policy.queueOffline&&!navigator.onLine){
+    const queued=queueMutation(path,request);
+    if(queued){const e=new Error('Офлайн: запрос поставлен в ожидающую очередь');e.queued=true;e.pendingId=queued.id;throw e}
+  }
+  try{
+    const r=await fetch(path,request);
+    const c=r.headers.get('X-Correlation-Id');if(c)corr.textContent='correlation: '+c;
+    const ct=r.headers.get('content-type')||'',b=ct.includes('json')?await r.json():await r.text();
+    if(!r.ok){const e=new Error(b&&b.message?b.message:'HTTP '+r.status);e.status=r.status;throw e}
+    return b;
+  }catch(e){
+    if(policy.queueOffline&&!e.status){
+      const queued=queueMutation(path,request);
+      if(queued){const x=new Error('Офлайн: запрос поставлен в ожидающую очередь');x.queued=true;x.pendingId=queued.id;throw x}
+    }
+    throw e;
+  }
+}
 function toast(m){const e=document.createElement('div');e.className='toast';e.textContent=m;$('#toast').appendChild(e);setTimeout(()=>e.remove(),3500)}
 async function caps(){if(!S.token){S.caps={};$('#session').textContent='Гость';return}try{const r=await api('/v1/operator/capabilities');S.caps=r.capabilities||{};$('#session').textContent=r.actorId||'Оператор';document.querySelectorAll('[data-capability]').forEach(x=>x.classList.toggle('hidden',S.caps[x.dataset.capability]!==true))}catch(e){S.token=null;$('#session').textContent='Нет доступа'}}
 async function notes(){if(!S.token||!S.caps.notifications){S.notes=[];count.textContent='0';return}try{const r=await api('/v1/operator/notifications?limit=50');S.notes=r.notifications||[];count.textContent=S.notes.length}catch{S.notes=[];count.textContent='0'}}
 function pub(){surface.textContent=S.surface==='max'?'MAX MINI-APP / PUBLIC':'PUBLIC / WEB';title.textContent='Заявка на услугу';view.innerHTML='<div class="grid"><div class="hero"><div class="eyebrow">PUBLIC CLIENT</div><h2>'+ (S.surface==='max'?'Заявка из MAX через ту же Web-поверхность':'Услуги грузчиков, такелажа и линейного персонала — через единый рабочий контур')+'</h2><p>Заявка проходит canonical API и trust boundary. Сайт, операторский workspace и MAX используют одну серверную бизнес-логику; публичная форма не создаёт живой заказ напрямую.</p><div class="toolbar" style="margin-top:16px;justify-content:flex-start"><span class="status ok">Москва</span><span class="status">Проверка</span><span class="status">Без второго CRM</span></div></div><div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div class="card"><div class="eyebrow">НА ОБЪЕКТ</div><h3>Погрузка и разгрузка</h3><p class="muted">Офисы, магазины, мероприятия, объекты и складские задачи.</p></div><div class="card"><div class="eyebrow">СЛОЖНЫЕ РАБОТЫ</div><h3>Такелаж и подъём</h3><p class="muted">Перемещение тяжёлых/крупногабаритных грузов и подъём материалов.</p></div><div class="card"><div class="eyebrow">ДОПОЛНИТЕЛЬНЫЙ РЕСУРС</div><h3>Линейный персонал</h3><p class="muted">Разнорабочие и рабочие смены под конкретную потребность.</p></div></div><div class="card"><div class="eyebrow">REQUEST INTAKE</div><h2>Что нужно сделать</h2><form id="pf" class="form cols"><label>Услуга<input name="serviceType" required maxlength="120"></label><label>Локация<input name="location" required maxlength="240"></label><label>Дата / период<input name="preferredDateOrPeriod" required maxlength="120"></label><label>Контактное лицо<input name="contactName" required maxlength="200"></label><label class="full">Описание<textarea name="workOrCargoDescription" required maxlength="4000"></textarea></label><label>Контакт<input name="contactChannel" required maxlength="240"></label><label>Объём / вес<input name="approximateVolumeOrWeight" maxlength="500"></label><label>Ограничения по доступу<input name="accessOrLiftingConstraints" maxlength="1000"></label><label>Компания<input name="companyName" maxlength="300"></label><label>ИНН<input name="inn" maxlength="12"></label><label>ОГРН / ОГРНИП<input name="ogrnOrOgrnip" maxlength="15"></label><label class="full">Комментарий<textarea name="comments" maxlength="2000"></textarea></label><input type="hidden" name="entrySurface" value="'+(S.surface==='max'?'max_mini_app':'public_web')+'"><div class="full"><div class="muted">UTM/referrer/correlation/requestId сохраняются сервером. Client text is untrusted data.</div></div><div class="full actions"><button class="primary">Отправить запрос</button></div></form><div id="pres"></div></div></div>';$('#pf').onsubmit=submitPublic}
-async function submitPublic(e){e.preventDefault();const f=e.currentTarget,n=$('#pres'),d=Object.fromEntries(new FormData(f).entries()),u=new URLSearchParams(location.search);d.utmSource=u.get('utm_source');d.utmMedium=u.get('utm_medium');d.utmCampaign=u.get('utm_campaign');d.referrer=document.referrer||null;const h={'Content-Type':'application/json','Idempotency-Key':key(),'Origin':location.origin};if(window.SHEMA_BOT_CHALLENGE_TOKEN)h['X-Bot-Challenge']=window.SHEMA_BOT_CHALLENGE_TOKEN;try{const r=await api('/v1/public/intake',{method:'POST',headers:h,body:JSON.stringify(d)});n.innerHTML='<div class="success"><b>Запрос принят.</b><div class="kv"><b>requestId</b><span>'+esc(r.requestId)+'</span></div><div class="kv"><b>correlation</b><span>'+esc(r.correlationId||S.correlationId||'—')+'</span></div><div>'+badge(r.status)+' · '+badge(r.preflightDecision)+'</div><div class="muted">Источник: '+esc(d.entrySurface)+' · '+esc(d.utmSource||'direct')+'</div></div>';f.reset()}catch(x){n.innerHTML='<div class="error">Запрос не принят: '+esc(x.message)+'</div>'}}
+async function submitPublic(e){e.preventDefault();const f=e.currentTarget,n=$('#pres'),d=Object.fromEntries(new FormData(f).entries()),u=new URLSearchParams(location.search);d.utmSource=u.get('utm_source');d.utmMedium=u.get('utm_medium');d.utmCampaign=u.get('utm_campaign');d.referrer=document.referrer||null;const h={'Content-Type':'application/json','Idempotency-Key':key(),'Origin':location.origin};if(window.SHEMA_BOT_CHALLENGE_TOKEN)h['X-Bot-Challenge']=window.SHEMA_BOT_CHALLENGE_TOKEN;try{const r=await api('/v1/public/intake',{method:'POST',headers:h,body:JSON.stringify(d)},{queueOffline:true});n.innerHTML='<div class="success"><b>Запрос принят.</b><div class="kv"><b>requestId</b><span>'+esc(r.requestId)+'</span></div><div class="kv"><b>correlation</b><span>'+esc(r.correlationId||S.correlationId||'—')+'</span></div><div>'+badge(r.status)+' · '+badge(r.preflightDecision)+'</div><div class="muted">Источник: '+esc(d.entrySurface)+' · '+esc(d.utmSource||'direct')+'</div></div>';f.reset()}catch(x){n.innerHTML='<div class="error">Запрос не принят: '+esc(x.message)+'</div>'}}
 function shell(){surface.textContent='OPERATOR / WORKSPACE';title.textContent='Операторская панель';view.innerHTML='<div class="grid cols3"><div class="card"><div class="eyebrow">Новые заявки</div><div class="kpi">'+S.notes.length+'</div><div class="muted">server queue</div></div><div class="card"><div class="eyebrow">Контрагенты</div><div class="kpi">Проверка</div><div class="muted">evidence / monitoring</div></div><div class="card"><div class="eyebrow">Система</div><div class="kpi">'+(S.caps.diagnostics?'READY':'—')+'</div><div class="muted">server-authoritative</div></div></div><div class="card"><h2>Последние заявки</h2>'+(S.notes.length?'<div class="list">'+S.notes.slice(0,5).map(n=>note(n)).join('')+'</div>':'<div class="empty">Очередь пуста.</div>')+'</div>';bindNote()}
 function note(n){const p=n.payload||{};return '<div class="item"><div class="split"><div><div class="eyebrow">'+esc(n.eventType)+'</div><b>'+esc(p.serviceType||'Новая заявка')+'</b><div class="muted">'+esc(p.location||'—')+' · '+esc(p.contactName||'—')+'</div></div>'+badge(n.severity)+'</div><div class="toolbar"><button class="secondary open" data-id="'+esc(n.eventId)+'">Открыть контекст</button></div></div>'}
 function requests(){surface.textContent='OPERATOR / QUEUE';title.textContent='Новые заявки';view.innerHTML='<div class="card"><div class="eyebrow">INBOX</div><h2>Очередь запросов</h2>'+(S.notes.length?'<div class="list">'+S.notes.map(n=>note(n)).join('')+'</div>':'<div class="empty">Новых заявок нет.</div>')+'</div>';bindNote()}
@@ -42,4 +85,9 @@ async function route(){S.route=location.hash.slice(1)||'request';document.queryS
 function openAuth(){$('#auth-error').classList.add('hidden');$('#token').value='';$('#auth').showModal()}
 $('#auth-form').onsubmit=async e=>{e.preventDefault();S.token=$('#token').value.trim();await caps();if(!S.token||!S.caps.actorId){S.token=null;$('#auth-error').textContent='Сервер не подтвердил сессию';$('#auth-error').classList.remove('hidden');return}$('#auth').close();if(!location.hash)location.hash='requests';await route()}
 $('#login').onclick=openAuth;$('#refresh').onclick=route;window.onhashchange=route;document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(!S.token)return openAuth();location.hash=b.dataset.route});if(S.surface==='max')document.querySelectorAll('nav button,#login').forEach(x=>x.classList.add('hidden'));route();
+
+function registerPwa(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js',{scope:'/'}).then(reg=>{reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller){const e=document.createElement('div');e.className='update-banner';e.innerHTML='<span>Доступно обновление.</span><button class="primary">Обновить</button>';e.querySelector('button').onclick=()=>{w.postMessage({type:'SKIP_WAITING'});e.remove()};document.body.appendChild(e)}})})}).catch(()=>{})}
+window.addEventListener('online',()=>{updateOfflineState();flushPending()});
+window.addEventListener('offline',()=>{updateOfflineState();toast('Соединение потеряно. Публичные заявки можно поставить в ожидающую очередь.')});
+registerPwa();updateOfflineState();
 })();
