@@ -422,6 +422,9 @@ Monitoring is organizationally distinct from favorites:
 ### Exit criteria
 A monitored counterparty has reproducible snapshots, deterministic change detection, severity-aware notifications, checkpointed batch recovery and a direct link back to its dossier/history.
 
+### Implementation synchronization — 2026-09-29
+**Phase 3C-1 — Counterparty Monitoring & Favorites runtime model/persistence is CLOSED / VERIFIED** by full seven-job release-gate CI #2041 (`36561799870`). The verified slice includes actor-scoped monitoring, personal favorites, deterministic identifier validation, snapshot hashing/provenance, change detection, audit/outbox, protected API routes and explicit runtime composition. The remaining Phase 3C exit requirements — checkpointed daily batch, bounded parallelism/backoff, provider-outage semantics, duplicate batch recovery and corrupted-snapshot fail-closed behavior — are assigned to **Phase 3C-2**.
+
 ## 8. Phase 4 — Web Operator System
 
 ### Objective
