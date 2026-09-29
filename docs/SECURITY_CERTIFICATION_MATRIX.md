@@ -12,6 +12,7 @@ A control is considered closed only when:
 
 | Boundary | Runtime enforcement | Adversarial evidence | Current closure rule |
 |---|---|---|---|
+| Web/public/operator trust boundary | same-origin shell/assets only; business API remains server-authenticated; capability visibility is server-advertised; operator token is page-memory only | public shell vs protected API tests; browser-storage and direct-DB negative tests | current-head full release gate |
 | Authentication | OIDC issuer/audience/expiry/sub + algorithm allowlist | JWT negative tests | current-head CI required |
 | Function authorization | explicit Permission checks | authenticated-but-no-permission API tests | current-head CI required |
 | Permission non-escalation | explicit Permission membership; no wildcard/derived capability | permission-combination negative matrix + unknown-permission rejection | current-head CI required |
