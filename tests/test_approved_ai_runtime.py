@@ -92,6 +92,7 @@ def build_gigachat() -> GigaChatRuntimeAssembly:
         trust_resolver=StaticTrustResolver(),
         prompt_renderer=lambda _: "unused",
         cost_estimator=lambda input_tokens, output_tokens: 0.01,
+        activation_state_store=InMemoryProviderActivationStateStore(),
     )
 
 
