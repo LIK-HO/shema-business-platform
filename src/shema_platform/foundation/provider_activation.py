@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
+from .errors import IntegrityViolation
+
 
 @dataclass(frozen=True, slots=True)
 class ProviderActivationState:
@@ -33,6 +35,8 @@ class ProviderActivationStateStore(Protocol):
         rolled_back_by: str,
         rolled_back_at: datetime,
         reason: str,
+        expected_activation_version: str,
+        expected_activated_at: datetime,
     ) -> None: ...
 
 
@@ -58,10 +62,20 @@ class InMemoryProviderActivationStateStore:
         rolled_back_by: str,
         rolled_back_at: datetime,
         reason: str,
+        expected_activation_version: str,
+        expected_activated_at: datetime,
     ) -> None:
         current = self._items.get(provider_id)
         if current is None:
-            raise RuntimeError("provider activation rollback has no state")
+            raise IntegrityViolation("provider activation rollback has no state")
+        if (
+            not current.enabled
+            or current.activation_version != expected_activation_version
+            or current.activated_at != expected_activated_at
+        ):
+            raise IntegrityViolation(
+                "provider activation rollback lost its compare-and-set target"
+            )
         self._items[provider_id] = ProviderActivationState(
             provider_id=provider_id,
             enabled=False,
