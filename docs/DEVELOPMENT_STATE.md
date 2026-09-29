@@ -1,12 +1,14 @@
-# Phase 4 global acceptance — active final verification boundary (2026-09-29)
+# Phase 4 global acceptance — CLOSED / VERIFIED (2026-09-29)
 
 - **Phase:** Phase 4 — Web Operator System.
 - **4A:** CLOSED / VERIFIED.
 - **4B:** CLOSED / VERIFIED.
 - **4C:** CLOSED / VERIFIED.
 - **4D:** CLOSED / VERIFIED.
-- **4E:** implementation complete; final global acceptance gate pending on the post-test HEAD.
-- Latest completed full seven-job gate before global acceptance test: `36587434913` — **7/7 GREEN**.
+- **4E:** CLOSED / VERIFIED.
+- Final global acceptance runtime HEAD: `13de9b974bf59070dfbe2f4cd69f5ec7255c42f4`.
+- Final global acceptance full seven-job gate: `36588002294` — **7/7 GREEN**.
+- No runtime code changes were made after that gate; the present synchronization commit is documentation/security-contract only.
 - Final global acceptance contract: `tests/test_phase4_global_acceptance.py`.
 - **PR #60:** open / draft / unmerged.
 - **PR #59:** open / draft / unmerged; untouched by Phase 4 work.

@@ -1,4 +1,4 @@
-| Phase 4 global acceptance | public/operator surfaces, browser security headers, protected API fail-closed boundary, no client-side business state, same-origin API binding | `tests/test_phase4_global_acceptance.py` + full seven-job release gate | pending final HEAD |
+| Phase 4 global acceptance | public/operator surfaces, browser security headers, protected API fail-closed boundary, no client-side business state, same-origin API binding | `tests/test_phase4_global_acceptance.py` + full seven-job release gate `36588002294` on runtime HEAD `13de9b974bf59070dfbe2f4cd69f5ec7255c42f4` | CLOSED / VERIFIED |
 # Security Evidence Matrix — v1.5 Global Re-baseline
 
 This document is an evidence index, not a certification claim.
@@ -9,7 +9,7 @@ A control is considered closed only when:
 3. the test passes on the current HEAD; and
 4. the full release gate passes after the change.
 
-**Current security re-baseline evidence:** Phase 3C-2 exact implementation HEAD passed full seven-job release-gate CI #2073 (`36577339818`): quality 3.12/3.13, supply-chain, integration 3.12/3.13, backup/recovery and release-contract. This is current implementation-head evidence for the security boundaries recorded below; it does not claim zero vulnerabilities outside the reviewed scope.
+**Current security re-baseline evidence:** Phase 4 final runtime HEAD `13de9b974bf59070dfbe2f4cd69f5ec7255c42f4` passed full seven-job release-gate CI `36588002294`: quality 3.12/3.13, supply-chain, integration 3.12/3.13, backup/recovery and release-contract. This is implementation-head evidence for the reviewed Web/operator boundaries; it does not claim zero vulnerabilities outside the reviewed scope.
 
 | Boundary | Runtime enforcement | Adversarial evidence | Current closure rule |
 |---|---|---|---|

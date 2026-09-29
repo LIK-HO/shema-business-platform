@@ -431,11 +431,11 @@ A monitored counterparty has reproducible snapshots, deterministic change detect
 
 ## 8. Phase 4 — Web Operator System
 
-### Phase 4-4E — IMPLEMENTED / GLOBAL ACCEPTANCE IN PROGRESS
-System/control-plane hardening is implemented and the last pre-acceptance full gate `36587434913` is **7/7 GREEN**. Final acceptance now executes one additional cross-surface contract covering public routes, operator protection, security headers, browser-state prohibition, same-origin API binding and all operator surfaces. Only after that gate is green will Phase 4 be marked **CLOSED / VERIFIED**.
+### Phase 4-4E — CLOSED / VERIFIED
+System/control-plane hardening and the final cross-surface acceptance contract are closed. Runtime HEAD `13de9b974bf59070dfbe2f4cd69f5ec7255c42f4` passed full seven-job CI run `36588002294` — **7/7 GREEN**. Phase 4 therefore closes as **Web Operator System — CLOSED / VERIFIED**. The subsequent synchronization commit changes documentation/security contract only.
 
 ### Phase 4-4D — CLOSED / VERIFIED
-Repeat Orders & Business Continuity are exposed through the canonical Web/API boundary with idempotency, ownership and policy delegated to the existing RepeatOrderService. Capability remains fail-closed until a real server-side revalidator is composed. CI: `36584457696`. Next: **Phase 4-4E — System/control-plane hardening and global acceptance**.
+Repeat Orders & Business Continuity are exposed through the canonical Web/API boundary with idempotency, ownership and policy delegated to the existing RepeatOrderService. Capability remains fail-closed until a real server-side revalidator is composed. CI: `36584780497`. Next: **Phase 4-4E — System/control-plane hardening and global acceptance**.
 
 ### Phase 4-4B — CLOSED / VERIFIED
 Public service/landing + advanced intake, source/UTM attribution, referrer/entry surface, correlation presentation and the same Web projection for MAX are verified on CI run `36582610189`. Next active element: **Phase 4-4C — Operator causal workbench**.
