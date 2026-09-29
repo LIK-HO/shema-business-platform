@@ -8,7 +8,7 @@ import psycopg
 import pytest
 from fastapi.testclient import TestClient
 
-from shema_platform.adapters.ai import gigachat_activation, production_activation
+from shema_platform.adapters.ai import application_composition, gigachat_application_composition
 from shema_platform.adapters.ai.contracts import (
     AIModelProvenance,
     AIProviderActivation,
@@ -457,12 +457,12 @@ def test_gigachat_selected_runtime_executes_end_to_end(monkeypatch) -> None:
     DeterministicGigaChatProvider.constructions = 0
     DeterministicGigaChatProvider.invocations = 0
     monkeypatch.setattr(
-        production_activation,
+        application_composition,
         "YandexGPTProvider",
         DeterministicYandexGPTProvider,
     )
     monkeypatch.setattr(
-        gigachat_activation,
+        gigachat_application_composition,
         "GigaChatProvider",
         DeterministicGigaChatProvider,
     )
@@ -541,7 +541,7 @@ def test_selected_provider_fails_closed_when_not_activated(monkeypatch) -> None:
     DeterministicYandexGPTProvider.constructions = 0
     DeterministicYandexGPTProvider.invocations = 0
     monkeypatch.setattr(
-        production_activation,
+        application_composition,
         "YandexGPTProvider",
         DeterministicYandexGPTProvider,
     )
@@ -596,7 +596,7 @@ def test_selected_provider_fails_closed_for_expired_evidence(monkeypatch) -> Non
     DeterministicGigaChatProvider.constructions = 0
     DeterministicGigaChatProvider.invocations = 0
     monkeypatch.setattr(
-        gigachat_activation,
+        gigachat_application_composition,
         "GigaChatProvider",
         DeterministicGigaChatProvider,
     )
