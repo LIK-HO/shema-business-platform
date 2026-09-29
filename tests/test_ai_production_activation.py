@@ -9,6 +9,9 @@ from shema_platform.adapters.ai.production_activation import (
 )
 from shema_platform.application.ai import AIBudget, AIExecutionContext
 from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.provider_activation import (
+    InMemoryProviderActivationStateStore,
+)
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
@@ -52,7 +55,11 @@ def context(configuration_version: str | None = "cfg:yandexgpt-prod-v1") -> AIEx
 
 def test_activation_is_default_disabled_and_feature_flag_gated() -> None:
     telemetry = InMemoryTelemetrySink()
-    gate = YandexGPTProductionGate(telemetry=telemetry)
+    gate = YandexGPTProductionGate(
+        telemetry=telemetry,
+        activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
 
     assert gate.state.enabled is False
 
@@ -70,7 +77,11 @@ def test_activation_is_default_disabled_and_feature_flag_gated() -> None:
 
 
 def test_activation_requires_production_environment() -> None:
-    gate = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink())
+    gate = YandexGPTProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
 
     with pytest.raises(AIProductionActivationError, match="production environment"):
         gate.activate(
@@ -83,7 +94,11 @@ def test_activation_requires_production_environment() -> None:
 
 
 def test_activation_requires_runtime_secret_and_complete_snapshot() -> None:
-    gate = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink())
+    gate = YandexGPTProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
 
     with pytest.raises(AIProductionActivationError, match="YANDEXGPT_API_KEY"):
         gate.activate(
@@ -116,7 +131,11 @@ def test_activation_requires_runtime_secret_and_complete_snapshot() -> None:
 
 def test_activation_requires_explicit_operator_and_emits_non_authoritative_event() -> None:
     telemetry = InMemoryTelemetrySink()
-    gate = YandexGPTProductionGate(telemetry=telemetry)
+    gate = YandexGPTProductionGate(
+        telemetry=telemetry,
+        activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
 
     with pytest.raises(AIProductionActivationError, match="explicit operator"):
         gate.activate(
@@ -149,7 +168,11 @@ def test_activation_requires_explicit_operator_and_emits_non_authoritative_event
 
 
 def test_gate_blocks_request_when_configuration_version_does_not_match() -> None:
-    gate = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink())
+    gate = YandexGPTProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
     provider = gate.activate(
         snapshot(),
         activated_by="operator-1",
@@ -188,7 +211,11 @@ def test_gate_blocks_request_when_configuration_version_does_not_match() -> None
 
 
 def test_gate_enforces_cost_and_deadline_ceilings() -> None:
-    gate = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink())
+    gate = YandexGPTProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
     provider = gate.activate(
         snapshot(),
         activated_by="operator-1",
@@ -215,7 +242,11 @@ def test_gate_enforces_cost_and_deadline_ceilings() -> None:
 
 def test_rollback_is_reversible_and_blocks_future_traffic() -> None:
     telemetry = InMemoryTelemetrySink()
-    gate = YandexGPTProductionGate(telemetry=telemetry)
+    gate = YandexGPTProductionGate(
+        telemetry=telemetry,
+        activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
     provider = gate.activate(
         snapshot(),
         activated_by="operator-1",
@@ -246,7 +277,11 @@ def test_rollback_is_reversible_and_blocks_future_traffic() -> None:
 
 
 def test_rollback_requires_operator_and_reason() -> None:
-    gate = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink())
+    gate = YandexGPTProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
     gate.activate(
         snapshot(),
         activated_by="operator-1",
@@ -263,7 +298,11 @@ def test_rollback_requires_operator_and_reason() -> None:
 
 
 def test_process_local_gate_starts_disabled_after_new_instance() -> None:
-    first = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink())
+    first = YandexGPTProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
     first.activate(
         snapshot(),
         activated_by="operator-1",
@@ -272,13 +311,21 @@ def test_process_local_gate_starts_disabled_after_new_instance() -> None:
         api_key="runtime-secret",
     )
 
-    second = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink())
+    second = YandexGPTProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
     assert second.state.enabled is False
 
 
 def test_configuration_values_are_immutable_snapshot_inputs() -> None:
     telemetry = InMemoryTelemetrySink()
-    gate = YandexGPTProductionGate(telemetry=telemetry)
+    gate = YandexGPTProductionGate(
+        telemetry=telemetry,
+        activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
     snap = snapshot()
     gate.activate(
         snap,
