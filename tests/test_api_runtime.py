@@ -367,6 +367,39 @@ def test_runtime_api_generates_correlation_id_when_missing() -> None:
     assert response.json()["healthy"] is True
 
 
+class TestResourceReadAuthorizer:
+    def __init__(self, *, allow_order: set[str] | None = None, allow_economics: set[str] | None = None):
+        self.allow_order = allow_order or set()
+        self.allow_economics = allow_economics or set()
+        self.calls: list[tuple[str, str, str]] = []
+
+    def require_order_read(self, *, order_id: str, actor_id: str) -> None:
+        self.calls.append(("order", order_id, actor_id))
+        if order_id not in self.allow_order:
+            from shema_platform.foundation.errors import AuthorizationError
+            raise AuthorizationError("order resource is outside the actor resource scope")
+
+    def require_economics_read(self, *, entity_ref: str, actor_id: str) -> None:
+        self.calls.append(("economics", entity_ref, actor_id))
+        if entity_ref not in self.allow_economics:
+            from shema_platform.foundation.errors import AuthorizationError
+            raise AuthorizationError("economics resource is outside the actor resource scope")
+
+
+class ReadableApplication(FakeApplication):
+    def get_order(self, order_id: str, context: RequestContext) -> OrderResponse:
+        return OrderResponse(
+            orderId=order_id,
+            identityId="identity-1",
+            sourceActionId="action-1",
+            status="completed",
+            lines=[],
+        )
+
+    def get_economics(self, entity_ref: str, context: RequestContext) -> EconomicResponse:
+        return EconomicResponse(entityRef=entity_ref, entries=[])
+
+
 class NoPermissionAuthenticator(AuthenticationPort):
     def authenticate(self, authorization: str | None) -> AuthenticatedActor:
         if authorization == "Bearer no-permission":
@@ -385,6 +418,84 @@ def test_runtime_api_rejects_authenticated_but_unauthorized_search() -> None:
 
     assert response.status_code == 403
     assert response.json()["code"] == "authorization_denied"
+
+
+def test_runtime_api_fails_closed_when_sensitive_read_scope_is_not_composed() -> None:
+    response = TestClient(
+        create_app(ReadableApplication(), FakeAuthenticator())
+    ).get(
+        "/v1/orders/order-1",
+        headers={"Authorization": "Bearer test-token"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "application_unavailable"
+
+
+def test_runtime_api_rejects_foreign_order_read_even_with_permission() -> None:
+    scope = TestResourceReadAuthorizer(allow_order=set())
+    response = TestClient(
+        create_app(
+            ReadableApplication(),
+            FakeAuthenticator(),
+            resource_read_authorizer=scope,
+        )
+    ).get(
+        "/v1/orders/order-foreign",
+        headers={"Authorization": "Bearer test-token"},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "authorization_denied"
+    assert scope.calls == [("order", "order-foreign", "operator-1")]
+
+
+def test_runtime_api_rejects_foreign_economics_read_even_with_permission() -> None:
+    scope = TestResourceReadAuthorizer(allow_economics=set())
+    response = TestClient(
+        create_app(
+            ReadableApplication(),
+            FakeAuthenticator(),
+            resource_read_authorizer=scope,
+        )
+    ).get(
+        "/v1/economics/order-foreign",
+        headers={"Authorization": "Bearer test-token"},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "authorization_denied"
+    assert scope.calls == [("economics", "order-foreign", "operator-1")]
+
+
+def test_runtime_api_allows_owned_sensitive_reads_after_permission_and_scope() -> None:
+    scope = TestResourceReadAuthorizer(
+        allow_order={"order-1"},
+        allow_economics={"order-1"},
+    )
+    api_client = TestClient(
+        create_app(
+            ReadableApplication(),
+            FakeAuthenticator(),
+            resource_read_authorizer=scope,
+        )
+    )
+
+    order_response = api_client.get(
+        "/v1/orders/order-1",
+        headers={"Authorization": "Bearer test-token"},
+    )
+    economics_response = api_client.get(
+        "/v1/economics/order-1",
+        headers={"Authorization": "Bearer test-token"},
+    )
+
+    assert order_response.status_code == 200
+    assert economics_response.status_code == 200
+    assert scope.calls == [
+        ("order", "order-1", "operator-1"),
+        ("economics", "order-1", "operator-1"),
+    ]
 
 
 def test_runtime_api_rejects_authenticated_but_unauthorized_sensitive_read() -> None:
