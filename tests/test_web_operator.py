@@ -69,3 +69,24 @@ def test_public_surface_contains_attribution_and_causal_context_contract() -> No
 
     for service_label in ("Погрузка и разгрузка", "Такелаж и подъём", "Линейный персонал"):
         assert service_label in response.text or service_label in js
+
+def test_operator_workbench_references_existing_canonical_business_endpoints() -> None:
+    client = TestClient(create_app(enable_docs=False))
+    js = client.get("/web/app.js").text
+
+    for endpoint in (
+        "/v1/intelligence/research",
+        "/v1/discovery/evaluate",
+        "/v1/commercial-actions",
+        "/v1/orders",
+        "/v1/economics/",
+    ):
+        assert endpoint in js
+
+def test_operator_workbench_does_not_add_a_second_business_state_store() -> None:
+    client = TestClient(create_app(enable_docs=False))
+    js = client.get("/web/app.js").text.lower()
+    assert "localstorage" not in js
+    assert "sessionstorage" not in js
+    assert "indexeddb" not in js
+    assert "postgres" not in js
