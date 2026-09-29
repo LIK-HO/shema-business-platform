@@ -18,6 +18,13 @@
       "negative_test": "actor with valid permission cannot act on or read a foreign resource"
     },
     {
+      "id": "SI-15",
+      "name": "permission_non_escalation",
+      "class": "authorization",
+      "enforcement": "explicit Permission membership with no derived or wildcard capabilities",
+      "negative_test": "an actor holding arbitrary permission combinations cannot satisfy an ungranted third permission"
+    },
+    {
       "id": "SI-03",
       "name": "client_evidence_not_authoritative",
       "class": "provenance",
