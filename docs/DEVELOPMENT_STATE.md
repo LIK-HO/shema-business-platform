@@ -1,5 +1,14 @@
 # Development State Ledger
 
+# Phase 3B runtime persistence synchronization — 2026-09-29
+
+- **Boundary:** canonical persistence required by Public Intake Data Plane.
+- **Finding:** projection runtime referenced canonical tables absent from migrations 0001–0013.
+- **Fix:** migration `0014_public_intake_projection.sql` creates `public_request_context` and `operator_notification`; PITR drill updated to the new canonical migration 0014.
+- **Verification:** full seven-job CI #2001 (`36558318175`) is GREEN on the exact implementation HEAD before documentation synchronization.
+- **Status:** persistence blocker **CLOSED / VERIFIED**. Full Phase 3B outage/replay/reconstruction exit criterion remains open until the dedicated E2E boundary is completed.
+
+
 # Security re-baseline synchronization — 2026-09-29
 
 - **Security branch:** `security/global-rebaseline-2026-09`.
