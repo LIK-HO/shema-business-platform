@@ -50,6 +50,18 @@ Closure is blocked until:
 “Immortal” is the engineering target in the sense of **survivable architecture**: no designed failure should destroy canonical truth or make deterministic recovery impossible. Literal zero-failure is not asserted; preservation of truth, containment, recovery, audit and learning are.
 
 Machine-readable contract: `architecture/global_adversarial_survivability_gate_contract.json`.
+
+### 1C. Security re-baseline — weakest-link enforcement
+
+Security closure is governed by `SECURITY.md`, `docs/THREAT_MODEL.md` and `architecture/security_invariants_contract.json`.
+
+The mandatory trust chain is:
+**untrusted input → edge/authentication → authorization → resource scope → validation → evidence provenance → policy → transaction/concurrency → external-effect reservation → external call → reconciliation → audit → recovery.**
+
+Documentation, a contract file or a positive-path test never closes a security finding by itself. Closure requires runtime enforcement, an adversarial/negative test, current-HEAD evidence and the full release gate.
+
+The frozen v1.4 kernel remains protected by its independent integrity gate. Security hardening must not silently change frozen kernel semantics.
+
 ## 1A. Цельный образ продукта и баланс стратегии
 
 Shema — это **личная операционная система владельца**, а не урезанная корпоративная CRM/ERP и не SaaS-продукт, который должен догонять коммерческие платформы по числу функций.
