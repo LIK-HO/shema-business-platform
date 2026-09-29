@@ -6,11 +6,7 @@ from typing import TYPE_CHECKING, Protocol, Self
 from shema_platform.domain.commercial_action import CommercialAction
 
 from shema_platform.application.counterparty_monitoring import (
-    CounterpartyChangeEvent,
-    CounterpartyFavorite,
-    CounterpartyMonitor,
     CounterpartyMonitoringRepository,
-    CounterpartySnapshot,
 )
 from shema_platform.domain.economics import EconomicEntry
 from shema_platform.domain.identity import Identity
