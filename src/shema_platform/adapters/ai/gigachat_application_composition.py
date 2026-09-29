@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import os
 
 from shema_platform.adapters.ai.composition import (
     AIProviderCompositionError,
@@ -12,6 +13,11 @@ from shema_platform.adapters.ai.contracts import (
 )
 from shema_platform.adapters.ai.gigachat_activation import (
     GigaChatProductionGate,
+    GigaChatProductionActivationError,
+)
+from shema_platform.adapters.ai.gigachat import (
+    GigaChatConfiguration,
+    GigaChatProvider,
 )
 from shema_platform.application.ai import AIProvider
 from shema_platform.application.ai_runtime import (
@@ -21,6 +27,7 @@ from shema_platform.application.ai_runtime import (
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.policy import PolicyEngine
+from shema_platform.foundation.provider_activation import ProviderActivationStateStore
 from shema_platform.foundation.telemetry import TelemetrySink
 
 
@@ -37,6 +44,7 @@ class GigaChatApplicationComposition:
         prompt_renderer: Callable,
         cost_estimator: Callable[[int, int], float],
         policy: PolicyEngine | None = None,
+        activation_state_store: ProviderActivationStateStore | None = None,
     ) -> None:
         self._snapshot = snapshot
         self._telemetry = telemetry
@@ -45,8 +53,54 @@ class GigaChatApplicationComposition:
         self._prompt_renderer = prompt_renderer
         self._cost_estimator = cost_estimator
         self._policy = policy or PolicyEngine()
-        self._gate = GigaChatProductionGate(telemetry=telemetry)
+        if activation_state_store is None:
+            raise ValueError("GigaChat requires a shared provider activation state store")
+        self._activation_state_store = activation_state_store
+        self._gate = GigaChatProductionGate(
+            telemetry=telemetry,
+            provider_factory=self._build_provider,
+            activation_state_store=activation_state_store,
+            configuration_version=str(
+                snapshot.values["ai.gigachat.configuration_version"]
+            ),
+        )
         self._provider: AIProvider | None = None
+
+    def _build_provider(
+        self,
+        authorization_key: str | None = None,
+        *,
+        requester=None,
+        token_requester=None,
+    ) -> AIProvider:
+        secret = (
+            authorization_key
+            or os.getenv("GIGACHAT_AUTHORIZATION_KEY", "")
+        ).strip()
+        if not secret:
+            raise ValueError("GIGACHAT_AUTHORIZATION_KEY is required")
+        values = self._snapshot.values
+        configuration = GigaChatConfiguration(
+            authorization_key=secret,
+            model=str(values["ai.gigachat.model"]),
+            scope=str(values["ai.gigachat.scope"]),
+            base_url=str(values["ai.gigachat.base_url"]).rstrip("/"),
+            token_url=str(values["ai.gigachat.token_url"]).rstrip("/"),
+            timeout_seconds=float(values["ai.gigachat.timeout_seconds"]),
+            max_response_bytes=int(values["ai.gigachat.max_response_bytes"]),
+            max_input_chars=int(values["ai.gigachat.max_input_chars"]),
+            max_output_tokens=int(values["ai.gigachat.max_output_tokens"]),
+            max_cost=float(values["ai.gigachat.max_cost"]),
+            configuration_version=str(values["ai.gigachat.configuration_version"]),
+            activation_version=str(values["ai.gigachat.activation_version"]),
+        )
+        return GigaChatProvider(
+            configuration,
+            prompt_renderer=self._prompt_renderer,
+            cost_estimator=self._cost_estimator,
+            requester=requester,
+            token_requester=token_requester,
+        )
 
     @property
     def gate(self) -> GigaChatProductionGate:
@@ -91,17 +145,15 @@ class GigaChatApplicationComposition:
         return version
 
     def provider(self) -> AIProvider:
-        provider = self._provider
-        if provider is None:
+        try:
+            return self._gate.provider()
+        except GigaChatProductionActivationError as exc:
             raise AIProviderCompositionError(
                 AIProviderFailure(
                     code=AIProviderFailureCode.NOT_READY,
-                    message=(
-                        "GigaChat production application is not activated"
-                    ),
+                    message=str(exc),
                 )
-            )
-        return provider
+            ) from exc
 
     def service(self) -> AIExecutionService:
         return AIExecutionService(
