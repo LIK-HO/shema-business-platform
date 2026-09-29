@@ -92,7 +92,7 @@ class YandexGPTProductionGate:
         self,
         *,
         telemetry: TelemetrySink,
-        provider_factory,
+        provider_factory=None,
         activation_state_store: ProviderActivationStateStore,
         configuration_version: str,
         provider_id: str = "yandexgpt",
@@ -179,11 +179,18 @@ class YandexGPTProductionGate:
             activation_version=str(values["ai.yandexgpt.activation_version"]),
         )
 
-        provider = self._provider_factory(
-            secret,
-            prompt_renderer=prompt_renderer,
-            cost_estimator=cost_estimator,
-        )
+        if self._provider_factory is None:
+            provider = YandexGPTProvider(
+                configuration,
+                prompt_renderer=prompt_renderer,
+                cost_estimator=cost_estimator,
+            )
+        else:
+            provider = self._provider_factory(
+                secret,
+                prompt_renderer=prompt_renderer,
+                cost_estimator=cost_estimator,
+            )
         readiness = provider.readiness()
         if readiness.state is not AIProviderReadinessState.READY:
             raise AIProductionActivationError(
@@ -293,6 +300,10 @@ class YandexGPTProductionGate:
                 "YandexGPT canonical activation configuration does not match runtime"
             )
         if self._provider is None:
+            if self._provider_factory is None:
+                raise AIProductionActivationError(
+                    "YandexGPT provider composition is unavailable on this replica"
+                )
             provider = self._provider_factory(None)
             readiness = provider.readiness()
             if readiness.state is not AIProviderReadinessState.READY:
