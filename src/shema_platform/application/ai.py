@@ -55,8 +55,6 @@ class AIExecutionContext:
     evidence_level: int
     correlation_id: str | None = None
     configuration_version: str | None = None
-    idempotency_key: str | None = None
-    idempotency_request_hash: str | None = None
 
     def __post_init__(self) -> None:
         if not self.actor_id.strip() or not self.resource_ref.strip():
@@ -184,15 +182,9 @@ class AIGateway:
         # The provider call above is outside the Unit of Work by design.
         with self._unit_of_work_factory() as uow:
             uow.ai_runs.add(run)
-            if context.idempotency_key and context.idempotency_request_hash:
-                uow.idempotency.complete(
-                    context.idempotency_key,
-                    context.idempotency_request_hash,
-                    run.run_id,
-                )
             uow.audits.append(
                 AuditRecord(
-                    audit_id=str(uuid4()),
+                audit_id=str(uuid4()),
                 actor_id=context.actor_id,
                 action="ai.run",
                 resource_type="ai_task",
@@ -211,7 +203,7 @@ class AIGateway:
                     "input_ref_count": len(run.input_refs),
                     "evidence_ref_count": len(run.evidence_refs),
                 },
-                    correlation_id=context.correlation_id,
+                correlation_id=context.correlation_id,
                     configuration_version=context.configuration_version,
                 )
             )
