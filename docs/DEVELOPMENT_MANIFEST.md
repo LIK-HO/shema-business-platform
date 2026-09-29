@@ -1,3 +1,5 @@
+**Final implementation boundary:** **Phase 4 global acceptance**. Phase 4-4A/4B/4C/4D are closed and verified; 4E hardening is implemented and verified by `36587434913`. The remaining gate is the new `tests/test_phase4_global_acceptance.py` on the exact final HEAD. No merge, release, or PR-state change is authorized by this boundary.
+
 **Current implementation boundary:** **Phase 4-4D Repeat Orders & Business Continuity Web boundary — CLOSED / VERIFIED** by full seven-job release-gate CI run `36584780497` on HEAD `f28a8323e2f7b68311df8dbb9f83402fad3a3821`. The next active element is Phase 4-4E system/control-plane hardening and global acceptance.
 
 **Current implementation boundary:** **Phase 4-4B Public Client Intake + Attribution + MAX projection hardening — CLOSED / VERIFIED** by full seven-job release-gate CI run `36582610189` on HEAD `273333d2432abc5ce8318fe58df219ab90f06230`. The next active element is Phase 4-4C.
