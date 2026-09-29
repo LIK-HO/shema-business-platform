@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from hashlib import sha256
 from typing import Protocol
-from uuid import NAMESPACE_URL, uuid5
+from uuid import uuid4
 
 from shema_platform.application.ai import (
     AIBudget,
@@ -145,30 +145,15 @@ class AIExecutionService:
         if not configuration_version.strip():
             raise RuntimeError("AI provider configuration is not active")
 
-        task_id = str(
-            uuid5(
-                NAMESPACE_URL,
-                f"shema-ai:{request.idempotency_key.strip()}:{request.request_hash}",
-            )
-        )
-        pending_ref = f"pending:ai:{task_id}"
-
         with self._unit_of_work_factory() as uow:
+            pending_id = f"pending:ai:{uuid4()}"
             reservation = uow.idempotency.reserve(
                 key=request.idempotency_key.strip(),
                 request_hash=request.request_hash,
-                result_ref=pending_ref,
+                result_ref=pending_id,
             )
-            if reservation.result_ref != pending_ref:
+            if reservation.result_ref != pending_id:
                 if reservation.result_ref.startswith("pending:"):
-                    stored = uow.ai_runs.get_by_task_id(task_id)
-                    if stored is not None:
-                        uow.idempotency.complete(
-                            request.idempotency_key.strip(),
-                            request.request_hash,
-                            stored.run_id,
-                        )
-                        return stored
                     raise IdempotencyConflict(
                         "AI execution has an unknown external outcome and requires reconciliation"
                     )
@@ -187,7 +172,7 @@ class AIExecutionService:
         )
 
         task = AITask(
-            task_id=task_id,
+            task_id=str(uuid4()),
             task_type=request.task_type,
             prompt_version=request.prompt_version,
             evidence_required=request.evidence_required,
@@ -205,6 +190,8 @@ class AIExecutionService:
             evidence_level=trust.evidence_level,
             correlation_id=request.correlation_id,
             configuration_version=configuration_version,
+            idempotency_key=request.idempotency_key.strip(),
+            idempotency_request_hash=request.request_hash,
         )
         if self._scoped_executor is None:
             raise RuntimeError("AI scoped executor is not configured")
@@ -222,10 +209,4 @@ class AIExecutionService:
             # key must not repeat an external call whose outcome is unknown.
             raise
 
-        with self._unit_of_work_factory() as uow:
-            uow.idempotency.complete(
-                request.idempotency_key.strip(),
-                request.request_hash,
-                run.run_id,
-            )
         return run
