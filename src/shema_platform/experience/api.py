@@ -18,13 +18,13 @@ from shema_platform.application.counterparty_check import (
     CounterpartyCheckService,
     CounterpartyIdentifierType,
 )
-from shema_platform.application.counterparty_monitoring import (
-    CounterpartyMonitoringService,
-)
 from shema_platform.application.counterparty_lookup import (
     CounterpartyLookupIdentifierType,
     CounterpartyLookupProviderError,
     CounterpartyLookupQuery,
+)
+from shema_platform.application.counterparty_monitoring import (
+    CounterpartyMonitoringService,
 )
 from shema_platform.application.counterparty_provider_activation import (
     CounterpartyProviderActivationCommand,
@@ -49,12 +49,12 @@ from shema_platform.experience.api_models import (
     CommunicationResult,
     CounterpartyCheckRequest,
     CounterpartyCheckResponse,
+    CounterpartyContradictionResponse,
     CounterpartyFavoriteListResponse,
     CounterpartyFavoriteResponse,
     CounterpartyMonitorListResponse,
     CounterpartyMonitorResponse,
     CounterpartySubscriptionRequest,
-    CounterpartyContradictionResponse,
     CounterpartyProviderActivationRequest,
     CounterpartyProviderActivationResponse,
     CounterpartyProviderLookupRequest,
