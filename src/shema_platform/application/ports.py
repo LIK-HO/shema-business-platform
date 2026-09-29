@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Protocol, Self
 
 from shema_platform.domain.commercial_action import CommercialAction
-
 from shema_platform.application.counterparty_monitoring import (
     CounterpartyMonitoringRepository,
 )
