@@ -20,7 +20,7 @@ const S={
 };
 const $=(s,r=document)=>r.querySelector(s);
 const view=$('#view'),title=$('#title'),surface=$('#surface'),corr=$('#corr'),count=$('#nav-count'),countHeader=$('#nav-count-header');
-const MAX_PENDING=8;
+const MAX_PENDING = 8;
 const MAX_PENDING_BYTES=65536;
 const MAX_PENDING_ATTEMPTS=3;
 const MAX_PENDING_AGE_MS=86400000;
@@ -338,11 +338,13 @@ function handoffs(){
   view.innerHTML='<section class="grid cols2"><div class="card"><div class="eyebrow">BUSINESS PLANE HANDOFF</div><h2>Подготовка передачи</h2><p class="muted">Phase 6 не создаёт второй live business plane. Реальная запись в Bitrix24 будет разрешена только через отдельный provider/integration boundary.</p><div class="kv"><b>Состояние</b><span>'+badge('PREPARED')+'</span></div><div class="kv"><b>Identity</b><span>'+esc(S.identityRef||p.inn||'не определена')+'</span></div><div class="kv"><b>Request</b><span>'+esc(note&&note.requestId||'—')+'</span></div><div class="callout">Execution endpoint не скомпонован в текущем runtime: UI не имитирует ACK, externalEntityRef или успешную передачу.</div></div><div class="card"><div class="eyebrow">RECONCILIATION</div><h2>Безопасность передачи</h2><div class="list"><div class="item">'+stateBadge('ACKNOWLEDGED')+' Только после подтверждения внешней системы.</div><div class="item">'+stateBadge('SENT_UNKNOWN')+' Не повторять запись вслепую; сначала reconciliation.</div><div class="item">'+stateBadge('RECONCILIATION_REQUIRED')+' Несовпадение — ручная сверка, без purge.</div><div class="item">'+stateBadge('HANDOFF_FAILED')+' История Shema сохраняется.</div></div><div class="toolbar start"><button class="secondary" id="handoff-back">Назад к карточке</button></div></div></section>';
   $('#handoff-back').onclick=()=>location.hash='dossier';
 }
+const REPEAT_ORDER_API='/v1/operator/repeat-orders';
 function repeat(){
   setHeader('OPERATOR / CONTINUITY','Повторные заказы');
   if(!S.caps.repeatOrders){view.innerHTML='<div class="card"><div class="eyebrow">REPEAT ORDERS & BUSINESS CONTINUITY</div><h2>Контур подготовлен, но не активирован</h2><div class="callout">Сервер не рекламирует <code>repeatOrders</code>, поэтому UI не создаёт фиктивные планы. Для активации требуется реальный server-side revalidator.</div></div>';return;}
   view.innerHTML='<div class="card"><div class="eyebrow">PLAN</div><h2>Повторные заказы</h2><p class="muted">Операции делегированы существующему RepeatOrderService и защищены Idempotency-Key.</p><div class="callout">Список текущих планов не добавляется без canonical read endpoint: UI не создаёт локальную копию бизнес-состояния.</div></div>';
 }
+function system(){return control();}
 function control(){
   setHeader('OPERATOR / CONTROL PLANE','Контроль');
   view.innerHTML='<section class="grid cols2"><div class="card"><div class="eyebrow">READINESS</div><h2>Готовность</h2><div id="health" class="muted">Проверяем…</div></div><div class="card"><div class="eyebrow">DIAGNOSTICS</div><h2>Диагностика</h2><div id="diag" class="muted">Проверяем…</div></div></section>';
@@ -379,7 +381,7 @@ async function route(){
   if(S.route==='research')return research();
   if(S.route==='repeat')return repeat();
   if(S.route==='handoffs')return handoffs();
-  if(S.route==='control'||S.route==='system')return control();
+  if(S.route==='control'||S.route==='system')return system();
   if(S.route==='dossier')return dossier();
   if(S.route==='operator')return fullWorkbench();
   return workbench();
