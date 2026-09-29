@@ -423,7 +423,11 @@ Monitoring is organizationally distinct from favorites:
 A monitored counterparty has reproducible snapshots, deterministic change detection, severity-aware notifications, checkpointed batch recovery and a direct link back to its dossier/history.
 
 ### Implementation synchronization — 2026-09-29
-**Phase 3C-1 — Counterparty Monitoring & Favorites runtime model/persistence is CLOSED / VERIFIED** by full seven-job release-gate CI #2041 (`36561799870`). The verified slice includes actor-scoped monitoring, personal favorites, deterministic identifier validation, snapshot hashing/provenance, change detection, audit/outbox, protected API routes and explicit runtime composition. The remaining Phase 3C exit requirements — checkpointed daily batch, bounded parallelism/backoff, provider-outage semantics, duplicate batch recovery and corrupted-snapshot fail-closed behavior — are assigned to **Phase 3C-2**.
+**Phase 3C-1 — Counterparty Monitoring & Favorites runtime model/persistence is CLOSED / VERIFIED** by full seven-job release-gate CI #2041 (`36561799870`). The verified slice includes actor-scoped monitoring, personal favorites, deterministic identifier validation, snapshot hashing/provenance, change detection, audit/outbox, protected API routes and explicit runtime composition.
+
+**Phase 3C-2 — Checkpointed Daily Counterparty Monitoring Worker + Provider-Outage/Recovery Semantics is CLOSED / VERIFIED** by full seven-job release-gate CI #2073 (`36577339818`) on the exact implementation HEAD after the final adversarial additions. The verified slice includes durable daily batch checkpoints, bounded parallelism, lease ownership/reclaim CAS semantics, deterministic retry/backoff limits, provider-outage handling without false changes, replay-safe observation idempotency, max-attempt fail-closed behavior and stale-worker negative coverage.
+
+**Phase 3C — Counterparty Verification, Monitoring & Favorites is now CLOSED / VERIFIED.** The complete contract boundary is satisfied without changing frozen kernel semantics. The next implementation boundary is **Phase 4 — Web Operator System**.
 
 ## 8. Phase 4 — Web Operator System
 
