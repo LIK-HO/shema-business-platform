@@ -487,7 +487,7 @@ Build the public and operator surfaces from the same canonical API:
 ### Exit criteria
 The complete public-client + operator path works in one Web surface without bypassing server contracts, while direct search, evidence drill-down, technical diagnostics and safe operator overrides remain available without forcing the operator through a hidden ranking/qualification pipeline.
 
-## 9. Phase 5 — PWA
+## 9. Phase 5 — PWA — CLOSED / VERIFIED
 
 ### Objective
 Provide installable mobile-capable access without creating a second system.
@@ -504,6 +504,11 @@ Provide installable mobile-capable access without creating a second system.
 
 ### Exit criteria
 Temporary network loss does not corrupt canonical state or create duplicate effects.
+
+### Closure evidence — 2026-09-30
+Phase 5 is **CLOSED / VERIFIED** on final implementation HEAD `337b3c3f8465b406d13f6655f8e65910efe4524a` by full seven-job release gate `36635383440` — **7/7 GREEN**. Acceptance contract: `tests/test_phase5_pwa_acceptance.py`. Security invariant: SI-26. A global adversarial review found and required closure of one public-bootstrap trust-boundary defect (PWA worker/manifest routes were not in the unauthenticated allowlist); the allowlist and HTTP-level regression test were added, then the complete gate passed. No P0/P1 findings remain open. No frozen-kernel semantics or second business authority were introduced.
+
+**Next approved boundary:** Phase 6 — Production Web/PWA Consolidation.
 
 ## 10. Phase 6 — Production Web/PWA Consolidation
 
