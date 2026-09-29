@@ -165,6 +165,41 @@ def test_cached_provider_rejects_reactivated_canonical_binding() -> None:
             )
 
 
+def test_reactivation_is_not_blocked_by_stale_local_state_after_remote_rollback() -> None:
+    store = InMemoryProviderActivationStateStore()
+    gate = GigaChatProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=store,
+        configuration_version="gigachat-config:v1",
+    )
+    gate.activate(
+        snapshot(),
+        activated_by="operator",
+        prompt_renderer=lambda _: "unused",
+        cost_estimator=lambda *_: 0.01,
+        authorization_key="secret",
+    )
+    first = gate.state
+    assert first.activated_at is not None
+    store.rollback(
+        provider_id="gigachat",
+        rolled_back_by="remote-operator",
+        rolled_back_at=first.activated_at + timedelta(seconds=1),
+        reason="remote rollback",
+        expected_activation_version=str(first.activation_version),
+        expected_activated_at=first.activated_at,
+    )
+
+    gate.activate(
+        snapshot(),
+        activated_by="operator-2",
+        prompt_renderer=lambda _: "unused",
+        cost_estimator=lambda *_: 0.01,
+        authorization_key="secret",
+    )
+    assert gate.state.enabled is True
+
+
 def test_gate_rollback_disables_future_requests() -> None:
     gate = build()
     gate.activate(
