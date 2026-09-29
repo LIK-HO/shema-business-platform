@@ -11,6 +11,7 @@ from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.jobs import JobRecord, JobState
 from shema_platform.foundation.outbox import OutboxEvent
 from shema_platform.foundation.recovery import RetryPolicy
+from shema_platform.foundation.safe_errors import safe_error_detail
 
 
 class JobHandlerContext:
@@ -129,7 +130,7 @@ class JobRunner:
         except RetryableJobError as exc:
             return self._record_failure(
                 claimed,
-                str(exc),
+                safe_error_detail(exc),
                 retryable=True,
                 now=self._clock(),
             )
@@ -143,7 +144,7 @@ class JobRunner:
         except Exception as exc:
             return self._record_failure(
                 claimed,
-                f"unexpected handler failure: {exc}",
+                safe_error_detail(exc),
                 retryable=True,
                 now=self._clock(),
             )
