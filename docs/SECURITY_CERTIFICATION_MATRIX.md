@@ -22,6 +22,7 @@ A control is considered closed only when:
 | Idempotency | durable reservation before critical effect | replay/conflict/race tests | current-head CI + recovery |
 | External-effect lease ownership | atomic worker+lease guard for UNKNOWN outcome transition | stale-worker/reclaimed-lease negative test + PostgreSQL persistence test | current-head CI + integration/recovery |
 | Public-intake outbox lease ownership | publication requires current worker lease after reclaim protection | stale-worker/reclaimed-event PostgreSQL negative test | current-head CI + integration |
+| Provider activation rollback CAS | rollback requires the currently active activation version and timestamp | stale-rollback after reactivation unit + PostgreSQL persistence test | current-head CI + integration |
 | Outbox | database lease + replay | concurrent-claim/replay tests | integration + recovery |
 | AI execution | provider activation, trust resolution, durable idempotency | AI replay and negative-path tests | current-head CI + release gate |
 | Audit/forensics | server correlation + append-only audit | correlation spoof tests | current-head CI required |
