@@ -177,6 +177,13 @@
       "class": "experience_security",
       "enforcement": "All public, MAX and operator surfaces are same-origin Web surfaces over canonical APIs; protected APIs fail closed without authentication; browser security headers are applied at the outermost HTTP boundary; client-side code cannot persist or originate business truth",
       "negative_test": "global acceptance tests assert public shell availability, protected endpoint rejection, security headers on both success and auth-failure responses, absence of browser persistence/database access in client code, and presence of all required operator surfaces"
+    },
+    {
+      "id": "SI-26",
+      "name": "pwa_offline_layer_cannot_be_business_authority",
+      "class": "experience_security",
+      "enforcement": "service worker caches public shell/assets only; business APIs and protected operator state are network-only; pending mutations are bounded in page memory and require durable idempotency keys",
+      "negative_test": "service worker/network tests prove /v1/* and protected state are never cached, queued entries have no Authorization header and no persistent browser storage is used"
     }
   ],
   "closure": {
