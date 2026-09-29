@@ -40,7 +40,15 @@ def test_service_worker_is_public_only_and_versioned():
 
 def test_client_has_no_persistent_browser_authority():
     js = (WEB / "app.js").read_text(encoding="utf-8").lower()
-    for forbidden in ("localstorage", "sessionstorage", "indexeddb", "document.cookie", "database_url", "postgres"):
+    forbidden_terms = (
+        "localstorage",
+        "sessionstorage",
+        "indexeddb",
+        "document.cookie",
+        "database_url",
+        "postgres",
+    )
+    for forbidden in forbidden_terms:
         assert forbidden not in js
 
 
