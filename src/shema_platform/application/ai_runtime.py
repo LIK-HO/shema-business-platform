@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from hashlib import sha256
@@ -138,8 +139,6 @@ class IdempotentAIExecutionService:
 
 
 def _ai_request_hash(request: AIExecutionRequest) -> str:
-    from hashlib import sha256
-
     payload = {
         "task_type": request.task_type,
         "prompt_version": request.prompt_version,
