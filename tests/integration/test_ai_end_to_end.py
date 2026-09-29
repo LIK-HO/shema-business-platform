@@ -241,7 +241,7 @@ def test_assembled_ai_path_persists_run_audit_and_correlation(monkeypatch) -> No
     DeterministicYandexGPTProvider.constructions = 0
     DeterministicYandexGPTProvider.invocations = 0
     monkeypatch.setattr(
-        production_activation,
+        application_composition,
         "YandexGPTProvider",
         DeterministicYandexGPTProvider,
     )
