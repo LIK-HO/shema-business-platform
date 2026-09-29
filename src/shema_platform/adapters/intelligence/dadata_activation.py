@@ -194,6 +194,20 @@ class DaDataControlledActivationGate:
             )
         return self._provider
 
+    def allows_request(
+        self,
+        *,
+        activation_version: str,
+        activated_at: datetime | None,
+    ) -> bool:
+        state = self._activation_state_store.get(DADATA_PROVIDER_ID)
+        return bool(
+            state
+            and state.enabled
+            and state.activation_version == activation_version
+            and state.activated_at == activated_at
+        )
+
     def activate(
         self,
         configuration: DaDataConfiguration,
