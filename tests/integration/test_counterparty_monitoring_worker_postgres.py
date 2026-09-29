@@ -239,3 +239,59 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
             ).fetchone() == (1,)
     finally:
         cleanup(schema)
+
+def test_postgres_stale_worker_cannot_complete_reclaimed_batch_item():
+    schema = make_schema()
+    try:
+        migrate(schema)
+        uow_factory = factory(schema)
+        service = CounterpartyMonitoringService(uow_factory)
+        monitor = service.save_monitoring(
+            identifier_type=CounterpartyIdentifierType.INN,
+            identifier="7707083893",
+            actor_id="operator-1",
+            permissions=PERMISSIONS,
+            idempotency_key="worker-race-monitor",
+            correlation_id="corr-worker-race",
+            now=NOW,
+        )
+        with uow_factory() as uow:
+            batch = uow.counterparty_monitoring_batches.start_or_resume_daily_batch(
+                batch_key="daily-race",
+                scheduled_at=NOW,
+            )
+            batch = uow.counterparty_monitoring_batches.materialize_due_items(
+                batch.batch_id,
+                scheduled_at=NOW,
+                limit=10,
+            )
+            first_claim = uow.counterparty_monitoring_batches.claim_items(
+                batch.batch_id,
+                "worker-a",
+                lease_seconds=1,
+                now=NOW,
+                limit=1,
+            )
+            assert first_claim[0].monitor_id == monitor.monitor_id
+
+        with uow_factory() as uow:
+            second_claim = uow.counterparty_monitoring_batches.claim_items(
+                batch.batch_id,
+                "worker-b",
+                lease_seconds=60,
+                now=NOW + timedelta(seconds=2),
+                limit=1,
+            )
+            assert second_claim[0].monitor_id == monitor.monitor_id
+
+        with pytest.raises(IntegrityViolation, match="stale or unauthorized"):
+            with uow_factory() as uow:
+                uow.counterparty_monitoring_batches.complete_item(
+                    batch.batch_id,
+                    monitor.monitor_id,
+                    "worker-a",
+                    now=NOW + timedelta(seconds=2),
+                )
+    finally:
+        cleanup(schema)
+
