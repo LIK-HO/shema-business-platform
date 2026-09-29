@@ -13,6 +13,10 @@ from shema_platform.application.counterparty_lookup import (
     CounterpartyLookupQuery,
     CounterpartyProviderRecord,
 )
+from shema_platform.foundation.provider_activation import (
+    ProviderActivationState,
+    ProviderActivationStateStore,
+)
 from shema_platform.foundation.telemetry import TelemetrySink, build_event
 
 DADATA_PROVIDER_ID = "dadata_organization_api"
@@ -104,6 +108,7 @@ class DaDataControlledActivationGate:
         self,
         *,
         telemetry: TelemetrySink,
+        activation_state_store: ProviderActivationStateStore,
         provider_factory: Callable[[DaDataConfiguration], CounterpartyLookupProvider]
         | None = None,
         now: Callable[[], datetime] | None = None,
@@ -111,6 +116,7 @@ class DaDataControlledActivationGate:
         if telemetry is None:
             raise ValueError("telemetry is required")
         self._telemetry = telemetry
+        self._activation_state_store = activation_state_store
         self._provider_factory = provider_factory or (
             lambda configuration: DaDataCounterpartyLookupProvider(configuration)
         )
@@ -120,13 +126,43 @@ class DaDataControlledActivationGate:
 
     @property
     def state(self) -> DaDataActivationState:
-        return self._state
+        canonical = self._activation_state_store.get(DADATA_PROVIDER_ID)
+        if canonical is None:
+            return self._state
+        return DaDataActivationState(
+            enabled=canonical.enabled,
+            provider_id=canonical.provider_id,
+            activated_by=canonical.activated_by,
+            activated_at=canonical.activated_at,
+            configuration_endpoint=canonical.configuration_version,
+            activation_version=canonical.activation_version,
+            rollback_by=canonical.rollback_by,
+            rollback_at=canonical.rollback_at,
+            rollback_reason=canonical.rollback_reason,
+        )
 
-    def provider(self) -> GatedDaDataCounterpartyLookupProvider:
+    def provider(
+        self,
+        *,
+        configuration: DaDataConfiguration | None = None,
+    ) -> GatedDaDataCounterpartyLookupProvider:
+        canonical = self._activation_state_store.get(DADATA_PROVIDER_ID)
+        if canonical is None or not canonical.enabled:
+            raise DaDataActivationError(
+                "DaData provider execution is not active"
+            )
         provider = self._provider
-        if provider is None or not self._state.enabled:
-            raise DaDataActivationError("DaData provider execution is not active")
-        return provider
+        if provider is None:
+            if configuration is None:
+                raise DaDataActivationError(
+                    "DaData provider composition is unavailable on this replica"
+                )
+            provider = self._provider_factory(configuration)
+            self._provider = GatedDaDataCounterpartyLookupProvider(
+                provider,
+                gate=self,
+            )
+        return self._provider
 
     def activate(
         self,
@@ -137,7 +173,8 @@ class DaDataControlledActivationGate:
         activation_version: str,
         correlation_id: str,
     ) -> GatedDaDataCounterpartyLookupProvider:
-        if self._state.enabled:
+        canonical = self._activation_state_store.get(DADATA_PROVIDER_ID)
+        if (canonical is not None and canonical.enabled) or self.state.enabled:
             raise DaDataActivationError("DaData activation is already active")
         if not activated_by.strip():
             raise DaDataActivationError("DaData activation requires an explicit operator")
@@ -154,6 +191,16 @@ class DaDataControlledActivationGate:
 
         provider = self._provider_factory(configuration)
         activation_time = self._now()
+        self._activation_state_store.activate(
+            ProviderActivationState(
+                provider_id=DADATA_PROVIDER_ID,
+                enabled=True,
+                configuration_version=configuration.endpoint,
+                activation_version=activation_version.strip(),
+                activated_by=activated_by.strip(),
+                activated_at=activation_time,
+            )
+        )
         self._state = DaDataActivationState(
             enabled=True,
             activated_by=activated_by.strip(),
@@ -186,12 +233,19 @@ class DaDataControlledActivationGate:
             raise DaDataActivationError("DaData rollback requires a reason")
         if not correlation_id.strip():
             raise DaDataActivationError("DaData rollback requires correlation_id")
-        if not self._state.enabled:
+        canonical = self._activation_state_store.get(DADATA_PROVIDER_ID)
+        if canonical is None or not canonical.enabled:
             return
 
         activation_version = self._state.activation_version
         activation_endpoint = self._state.configuration_endpoint
         rollback_time = self._now()
+        self._activation_state_store.rollback(
+            provider_id=DADATA_PROVIDER_ID,
+            rolled_back_by=rolled_back_by.strip(),
+            rolled_back_at=rollback_time,
+            reason=reason,
+        )
         self._state = DaDataActivationState(
             enabled=False,
             configuration_endpoint=activation_endpoint,
