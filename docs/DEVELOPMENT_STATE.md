@@ -1,3 +1,15 @@
+# Phase 6 Web/PWA Consolidation — CLOSED / VERIFIED (2026-09-30)
+
+- **Boundary:** Phase 6 — Production Web/PWA Consolidation.
+- **Implementation HEAD:** `962bc86c98db6df930b1cf6f61f22a1effea5aac`.
+- **Acceptance:** `tests/test_phase6_operator_consolidation_acceptance.py`.
+- **Full release gate:** CI `36636920565` — **7/7 GREEN** (quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery, release-contract).
+- **Adversarial review:** completed over the full approved architecture. Findings fixed: operator route now fails closed after capability rejection; handoff UI cannot imply a composed/acknowledged external transfer.
+- **Experience contract:** one Web/PWA surface, canonical API/domain semantics, server-authoritative capability visibility, explicit causal/context links, memory-only personal view state and no second business store/rule layer.
+- **Frozen kernel:** unchanged.
+- **PR #62:** open / draft / unmerged.
+- **Next active boundary:** Phase 7 — Yandex Cloud Production Foundation.
+
 # Phase 5 PWA — CLOSED / VERIFIED (2026-09-30)
 
 - **Boundary:** Phase 5 — PWA.
