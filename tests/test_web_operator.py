@@ -49,3 +49,23 @@ def test_public_shell_does_not_bypass_operator_api_authentication() -> None:
 
     assert notifications.status_code in {401, 403, 503}
     assert capabilities.status_code in {401, 403, 503}
+
+def test_public_surface_contains_attribution_and_causal_context_contract() -> None:
+    client = TestClient(create_app(enable_docs=False))
+    response = client.get("/?utm_source=test&utm_medium=cpc&utm_campaign=phase4")
+    assert response.status_code == 200
+
+    js = client.get("/web/app.js").text
+    for token in (
+        "utmSource",
+        "utmMedium",
+        "utmCampaign",
+        "referrer",
+        "correlationId",
+        "Idempotency-Key",
+        "surface=max",
+    ):
+        assert token in js
+
+    for service_label in ("Погрузка и разгрузка", "Такелаж и подъём", "Линейный персонал"):
+        assert service_label in response.text or service_label in js
