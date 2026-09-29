@@ -1016,6 +1016,46 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
             )
         return self._to_action(row)
 
+    def fail_external_effect(
+        self,
+        action_id: str,
+        worker_id: str,
+        *,
+        now: datetime,
+    ) -> CommercialAction | None:
+        if not worker_id.strip():
+            raise ValueError("send worker is required")
+        if now.tzinfo is None:
+            raise ValueError("unknown-effect transition time must be timezone-aware")
+
+        cursor = self._connection.execute(
+            """
+            update commercial_action
+            set status = 'failed',
+                send_worker_id = null,
+                send_lease_until = null,
+                updated_at = %s
+            where action_id = %s
+              and status = 'sending'
+              and send_worker_id = %s
+              and send_lease_until > %s
+            returning
+                action_id,
+                identity_id,
+                contact_ref,
+                channel,
+                evidence_refs,
+                status,
+                owner_actor_id,
+                send_attempt,
+                send_worker_id,
+                send_lease_until
+            """,
+            (now, action_id, worker_id, now),
+        )
+        row = cursor.fetchone()
+        return None if row is None else self._to_action(row)
+
     def complete_send(
         self,
         action_id: str,
