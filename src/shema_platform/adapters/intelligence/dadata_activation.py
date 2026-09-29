@@ -170,15 +170,27 @@ class DaDataControlledActivationGate:
                 "DaData provider execution is not active"
             )
         provider = self._provider
+        if (
+            provider is not None
+            and not provider.binding_matches(
+                activation_version=str(canonical.activation_version),
+                activated_at=canonical.activated_at,
+            )
+        ):
+            provider = None
+            self._provider = None
         if provider is None:
             if configuration is None:
                 raise DaDataActivationError(
-                    "DaData provider composition is unavailable on this replica"
+                    "DaData provider composition is stale on this replica; "
+                    "explicit configuration is required to rebind"
                 )
             provider = self._provider_factory(configuration)
             self._provider = GatedDaDataCounterpartyLookupProvider(
                 provider,
                 gate=self,
+                activation_version=str(canonical.activation_version),
+                activated_at=canonical.activated_at,
             )
         return self._provider
 
