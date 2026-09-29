@@ -18,6 +18,7 @@ class ProviderActivationState:
     rollback_by: str | None = None
     rollback_at: datetime | None = None
     rollback_reason: str | None = None
+    rollback_from_configuration_version: str | None = None
 
 
 class ProviderActivationStateStore(Protocol):
