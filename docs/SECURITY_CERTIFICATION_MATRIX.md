@@ -12,6 +12,7 @@ A control is considered closed only when:
 |---|---|---|---|
 | Authentication | OIDC issuer/audience/expiry/sub + algorithm allowlist | JWT negative tests | current-head CI required |
 | Function authorization | explicit Permission checks | authenticated-but-no-permission API tests | current-head CI required |
+| Permission non-escalation | explicit Permission membership; no wildcard/derived capability | permission-combination negative matrix + unknown-permission rejection | current-head CI required |
 | Object authorization | canonical owner scope on sensitive resources and resource reads | foreign-owner/BOLA tests, resource-read API negatives and persistence tests | current-head CI + persistence tests |
 | Evidence provenance | server-side authoritative provider boundary | client-evidence rejection tests | current-head CI required |
 | Public identity | trusted peer identity | rotating client-key attack test | current-head CI required |
