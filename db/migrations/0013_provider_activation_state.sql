@@ -20,10 +20,14 @@ create table if not exists provider_activation_state (
             and activation_version is not null
             and activated_by is not null
             and activated_at is not null
-            and max_cost is not null
-            and max_cost > 0
-            and max_duration_seconds is not null
-            and max_duration_seconds > 0
+            and (
+                max_cost is null
+                or (
+                    max_cost > 0
+                    and max_duration_seconds is not null
+                    and max_duration_seconds > 0
+                )
+            )
         )
     )
 );
