@@ -72,6 +72,8 @@ class GigaChatApplicationComposition:
         *,
         requester=None,
         token_requester=None,
+        prompt_renderer=None,
+        cost_estimator=None,
     ) -> AIProvider:
         secret = (
             authorization_key
@@ -96,8 +98,8 @@ class GigaChatApplicationComposition:
         )
         return GigaChatProvider(
             configuration,
-            prompt_renderer=self._prompt_renderer,
-            cost_estimator=self._cost_estimator,
+            prompt_renderer=prompt_renderer or self._prompt_renderer,
+            cost_estimator=cost_estimator or self._cost_estimator,
             requester=requester,
             token_requester=token_requester,
         )
