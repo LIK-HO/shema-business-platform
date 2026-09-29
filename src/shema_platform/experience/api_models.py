@@ -108,6 +108,37 @@ class CounterpartyCheckRequest(APIModel):
     identifier: str = Field(min_length=1, max_length=32)
 
 
+class CounterpartySubscriptionRequest(APIModel):
+    identifier_type: Literal["INN", "OGRN", "OGRNIP"] = Field(alias="identifierType")
+    identifier: str = Field(min_length=1, max_length=32)
+
+
+class CounterpartyMonitorResponse(APIModel):
+    monitor_id: str = Field(alias="monitorId")
+    actor_id: str = Field(alias="actorId")
+    identifier_type: Literal["INN", "OGRN", "OGRNIP"] = Field(alias="identifierType")
+    identifier: str
+    status: Literal["active", "paused"]
+    next_check_at: datetime = Field(alias="nextCheckAt")
+    last_checked_at: datetime | None = Field(default=None, alias="lastCheckedAt")
+
+
+class CounterpartyMonitorListResponse(APIModel):
+    monitors: list[CounterpartyMonitorResponse]
+
+
+class CounterpartyFavoriteResponse(APIModel):
+    favorite_id: str = Field(alias="favoriteId")
+    actor_id: str = Field(alias="actorId")
+    identifier_type: Literal["INN", "OGRN", "OGRNIP"] = Field(alias="identifierType")
+    identifier: str
+    created_at: datetime = Field(alias="createdAt")
+
+
+class CounterpartyFavoriteListResponse(APIModel):
+    favorites: list[CounterpartyFavoriteResponse]
+
+
 
 
 class CounterpartyContradictionResponse(APIModel):
