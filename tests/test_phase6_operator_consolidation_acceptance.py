@@ -66,8 +66,8 @@ def test_phase6_public_surfaces_do_not_expose_operator_navigation() -> None:
     assert "setSurfaceMode(true)" in js
     assert "public-mode" in css
     assert "body.public-mode .side nav" in css
-    assert ".public-mode .global-search" in css
-    assert ".public-mode .header-tools #notifications" in css
+    assert "body.public-mode .header-tools .global-search" in css
+    assert "body.public-mode .header-tools #notifications" in css
 
 
 def test_phase6_capability_visibility_and_business_authority_rules() -> None:
