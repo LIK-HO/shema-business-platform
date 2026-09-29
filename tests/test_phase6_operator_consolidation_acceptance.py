@@ -145,3 +145,26 @@ def test_phase6_contracts_remain_compatible() -> None:
         is True
     )
     assert public_contract["non_goals"].count("second_crm") == 1
+
+
+def test_phase6_operator_route_fails_closed_after_capability_rejection() -> None:
+    js = (WEB / "app.js").read_text(encoding="utf-8")
+    assert "const authorized=await loadCapabilities();" in js
+    assert "if(!authorized||!S.token)" in js
+    assert "Сессия оператора недействительна. Доступ закрыт." in js
+
+
+def test_phase6_responsive_and_offline_boundaries_are_explicit() -> None:
+    js = (WEB / "app.js").read_text(encoding="utf-8")
+    css = (WEB / "style.css").read_text(encoding="utf-8")
+    for token in (
+        "navigator.onLine",
+        "pendingQueue",
+        "Idempotency-Key",
+        "flushPending",
+        "409",
+        "412",
+    ):
+        assert token in js
+    assert "@media" in css
+    assert "min-height:42px" in css
