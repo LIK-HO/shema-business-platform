@@ -91,8 +91,11 @@ def test_activation_and_rollback_are_global_across_replicas() -> None:
         configuration_version="shared-config:v1",
     )
 
-    snapshot = {
-        "environment": "production",
+    from shema_platform.foundation.configuration import ConfigurationSnapshot
+
+    snapshot = ConfigurationSnapshot(
+        version="shared-runtime:v1",
+        environment="production",
         "values": {
             "ai.yandexgpt.model_uri": "gpt://test/model",
             "ai.yandexgpt.base_url": "https://ai.api.cloud.yandex.net/v1",
@@ -104,13 +107,22 @@ def test_activation_and_rollback_are_global_across_replicas() -> None:
             "ai.yandexgpt.configuration_version": "shared-config:v1",
             "ai.yandexgpt.activation_version": "shared-activation:v1",
         },
-        "feature_flags": {"ai.yandexgpt.production.enabled": True},
-    }
-
-    from shema_platform.foundation.configuration import ConfigurationSnapshot
+        feature_flags={"ai.yandexgpt.production.enabled": True},
+        values={
+            "ai.yandexgpt.model_uri": "gpt://test/model",
+            "ai.yandexgpt.base_url": "https://ai.api.cloud.yandex.net/v1",
+            "ai.yandexgpt.timeout_seconds": 10,
+            "ai.yandexgpt.max_response_bytes": 1024,
+            "ai.yandexgpt.max_input_chars": 1024,
+            "ai.yandexgpt.max_output_tokens": 128,
+            "ai.yandexgpt.max_cost": 1,
+            "ai.yandexgpt.configuration_version": "shared-config:v1",
+            "ai.yandexgpt.activation_version": "shared-activation:v1",
+        },
+    )
 
     gate_a.activate(
-        ConfigurationSnapshot(**snapshot),
+        snapshot,
         activated_by="operator-a",
         prompt_renderer=lambda _: "unused",
         cost_estimator=lambda *_: 0.01,
