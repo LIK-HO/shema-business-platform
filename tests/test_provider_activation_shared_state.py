@@ -1,7 +1,5 @@
 from datetime import UTC, datetime
 
-from datetime import UTC, datetime
-
 import pytest
 
 from shema_platform.adapters.ai.production_activation import (
