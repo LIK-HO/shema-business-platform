@@ -93,6 +93,10 @@ async function flushPending(){
   }
   S.pendingQueue=next;updateOfflineState();
 }
+function setSurfaceMode(publicMode){
+  document.body.classList.toggle('public-mode',publicMode);
+  if(publicMode){S.token=null;S.caps={};}
+}
 function setHeader(mode,pageTitle){
   surface.textContent=mode;title.textContent=pageTitle;
   document.querySelectorAll('nav button').forEach(button=>button.classList.toggle('active',button.dataset.route===S.route));
@@ -132,6 +136,7 @@ function noteCard(note){
   '</article>';
 }
 function pub(){
+  setSurfaceMode(true);
   setHeader(S.surface==='max'?'MAX MINI-APP / PUBLIC':'PUBLIC / WEB','Заявка на услугу');
   view.innerHTML='<div class="grid">'+
     '<section class="hero"><div class="eyebrow">PUBLIC CLIENT</div><h2>'+(S.surface==='max'?'Заявка из MAX через ту же Web-поверхность':'Услуги грузчиков, такелажа и линейного персонала через единый рабочий контур')+'</h2><p>Сайт и MAX используют тот же canonical API. Публичная форма создаёт только заявку-наблюдение и не создаёт живой заказ напрямую.</p><div class="toolbar start">'+badge('Москва')+' '+badge('server-authoritative')+'</div></section>'+
@@ -359,8 +364,9 @@ async function handleAuth(event){
 }
 async function route(){
   S.route=location.hash.slice(1)||'request';
-  document.querySelectorAll('nav button').forEach(button=>button.classList.toggle('active',button.dataset.route===S.route));
   if(S.route==='request')return pub();
+  setSurfaceMode(false);
+  document.querySelectorAll('nav button').forEach(button=>button.classList.toggle('active',button.dataset.route===S.route));
   if(!requireOperator())return;
   await loadCapabilities();await loadNotifications();
   if(S.route==='workbench')return workbench();
