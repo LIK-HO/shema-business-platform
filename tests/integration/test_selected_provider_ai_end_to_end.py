@@ -34,8 +34,10 @@ from shema_platform.foundation.authentication import (
 )
 from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.provider_activation import (
+    InMemoryProviderActivationStateStore,
+)
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
-from shema_platform.foundation.provider_activation import InMemoryProviderActivationStateStore
 from shema_platform.platform.ai_trust import PostgresAIExecutionTrustResolver
 from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
 from shema_platform.platform.postgres import PostgresUnitOfWork
@@ -233,6 +235,7 @@ def build_runtimes(telemetry: InMemoryTelemetrySink):
         ),
         prompt_renderer=lambda request: "P37 deterministic prompt",
         cost_estimator=lambda input_tokens, output_tokens: 0.02,
+        activation_state_store=InMemoryProviderActivationStateStore(),
     )
     return yandex, gigachat
 
