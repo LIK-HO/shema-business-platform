@@ -7,7 +7,7 @@
     "path": "/v1/ai/run",
     "authentication": "existing_API_authentication_middleware",
     "authorization": "application_boundary",
-    "correlation_id": "existing_X-Correlation-Id_boundary",
+    "correlation_id": "server_generated_correlation_id",
     "client_controls": [
       "task_type",
       "prompt_version",
@@ -27,7 +27,8 @@
       "resource_trust_level",
       "evidence_level",
       "production_activation_state",
-      "provider_credentials"
+      "provider_credentials",
+      "correlation_id"
     ]
   },
   "composition_boundary": {
