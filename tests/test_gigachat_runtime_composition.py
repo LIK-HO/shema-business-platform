@@ -7,6 +7,7 @@ from shema_platform.experience.gigachat_runtime_composition import (
 )
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
+from shema_platform.foundation.provider_activation import InMemoryProviderActivationStateStore
 
 
 class StaticTrustResolver:
