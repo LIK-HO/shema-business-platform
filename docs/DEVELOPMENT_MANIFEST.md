@@ -63,6 +63,13 @@ Documentation, a contract file or a positive-path test never closes a security f
 The frozen v1.4 kernel remains protected by its independent integrity gate. Security hardening must not silently change frozen kernel semantics.
 
 
+### 1C-PERM. Permission non-escalation sub-boundary — 2026-09-29
+
+- **Implemented:** authorization remains an explicit membership check; permission combinations do not synthesize a third capability and wildcard/unknown permissions remain rejected at IAM materialization.
+- Adversarial matrix covers cross-domain combinations including commercial action create/send, provider activate/lookup/rollback, order read/create and public-review/diagnostics/AI.
+- This is an authorization-model proof boundary; no role hierarchy or implicit capability inference was introduced.
+- Full release verification is required on the exact post-change HEAD before this sub-boundary is considered VERIFIED.
+
 ### 1C-READ. Resource-read authorization sub-boundary — 2026-09-29
 
 - **Implemented / VERIFIED:** sensitive resource reads now require both the explicit route permission and a server-side `ResourceReadAuthorizer` check on the concrete `orderId` / `entityRef`.
