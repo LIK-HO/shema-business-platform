@@ -98,7 +98,7 @@ class GigaChatProductionGate:
         self,
         *,
         telemetry: TelemetrySink,
-        provider_factory,
+        provider_factory=None,
         activation_state_store: ProviderActivationStateStore,
         configuration_version: str,
         provider_id: str = "gigachat",
@@ -203,13 +203,22 @@ class GigaChatProductionGate:
             ),
         )
 
-        provider = self._provider_factory(
-            secret,
-            requester=requester,
-            token_requester=token_requester,
-            prompt_renderer=prompt_renderer,
-            cost_estimator=cost_estimator,
-        )
+        if self._provider_factory is None:
+            provider = GigaChatProvider(
+                configuration,
+                prompt_renderer=prompt_renderer,
+                cost_estimator=cost_estimator,
+                requester=requester,
+                token_requester=token_requester,
+            )
+        else:
+            provider = self._provider_factory(
+                secret,
+                requester=requester,
+                token_requester=token_requester,
+                prompt_renderer=prompt_renderer,
+                cost_estimator=cost_estimator,
+            )
         readiness = provider.readiness()
         if readiness.state is not AIProviderReadinessState.READY:
             raise GigaChatProductionActivationError(
@@ -321,6 +330,10 @@ class GigaChatProductionGate:
                 "GigaChat canonical activation configuration does not match runtime"
             )
         if self._provider is None:
+            if self._provider_factory is None:
+                raise GigaChatProductionActivationError(
+                    "GigaChat provider composition is unavailable on this replica"
+                )
             provider = self._provider_factory(None)
             readiness = provider.readiness()
             if readiness.state is not AIProviderReadinessState.READY:
