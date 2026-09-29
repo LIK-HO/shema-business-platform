@@ -1,3 +1,12 @@
+# Current Phase 4-4B closure — 2026-09-29
+
+- **Boundary:** Phase 4-4B — Public Client Intake + Attribution + MAX projection hardening.
+- **Status:** **CLOSED / VERIFIED** on exact implementation HEAD `273333d2432abc5ce8318fe58df219ab90f06230` by full seven-job CI run `36582610189`.
+- Public surface now combines company/service landing content with advanced request intake while preserving canonical API/trust-boundary semantics.
+- UTM source/medium/campaign, referrer and entry surface are captured; correlation lineage is displayed server-authoritatively; MAX uses the same Web app through the same static origin.
+- No public browser action creates an authoritative live order.
+- **Next active boundary:** Phase 4-4C — Operator causal workbench.
+
 # Current Phase 4-4A closure — 2026-09-29
 
 - **Boundary:** Phase 4-4A — Canonical Web/Public + Protected Operator Shell.
