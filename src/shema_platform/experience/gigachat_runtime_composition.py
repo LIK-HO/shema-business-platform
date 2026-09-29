@@ -12,6 +12,7 @@ from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api import APIApplication, create_app
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.policy import PolicyEngine
+from shema_platform.foundation.provider_activation import ProviderActivationStateStore
 from shema_platform.foundation.telemetry import TelemetrySink
 
 
@@ -74,6 +75,7 @@ def compose_gigachat_runtime(
     prompt_renderer: Callable,
     cost_estimator: Callable[[int, int], float],
     policy: PolicyEngine | None = None,
+    activation_state_store: ProviderActivationStateStore | None = None,
 ) -> GigaChatRuntimeAssembly:
     """Build the explicit GigaChat runtime assembly without activation."""
     return GigaChatRuntimeAssembly(
@@ -85,5 +87,6 @@ def compose_gigachat_runtime(
             prompt_renderer=prompt_renderer,
             cost_estimator=cost_estimator,
             policy=policy,
+            activation_state_store=activation_state_store,
         )
     )
