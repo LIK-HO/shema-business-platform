@@ -62,6 +62,7 @@ class PostgresUnitOfWork:
         self.orders: OrderRepository | None = None
         self.repeat_orders: RepeatOrderRepository | None = None
         self.monitoring: CounterpartyMonitoringRepository | None = None
+        self.counterparty_monitoring_batches: CounterpartyMonitoringBatchRepository | None = None
         self.economics: EconomicEntryRepository | None = None
         self.ai_runs: AIRunRepository | None = None
 
@@ -78,6 +79,9 @@ class PostgresUnitOfWork:
 
         from shema_platform.platform.counterparty_monitoring_postgres import (
             PostgresCounterpartyMonitoringRepository,
+        )
+        from shema_platform.platform.counterparty_monitoring_batch_postgres import (
+            PostgresCounterpartyMonitoringBatchRepository,
         )
         from shema_platform.platform.postgres_repositories import (
             PostgresAIRunRepository,
@@ -106,6 +110,7 @@ class PostgresUnitOfWork:
         self.orders = PostgresOrderRepository(connection)
         self.repeat_orders = PostgresRepeatOrderRepository(connection)
         self.monitoring = PostgresCounterpartyMonitoringRepository(connection)
+        self.counterparty_monitoring_batches = PostgresCounterpartyMonitoringBatchRepository(connection)
         self.economics = PostgresEconomicEntryRepository(connection)
         self.ai_runs = PostgresAIRunRepository(connection)
         return self
@@ -124,6 +129,7 @@ class PostgresUnitOfWork:
         self.orders = None
         self.repeat_orders = None
         self.monitoring = None
+        self.counterparty_monitoring_batches = None
         self.economics = None
         self.ai_runs = None
         if connection is None:
