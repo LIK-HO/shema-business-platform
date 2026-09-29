@@ -63,7 +63,7 @@ def test_public_surface_contains_attribution_and_causal_context_contract() -> No
         "referrer",
         "correlationId",
         "Idempotency-Key",
-        "surface=max",
+        "get('surface')",
     ):
         assert token in js
 
