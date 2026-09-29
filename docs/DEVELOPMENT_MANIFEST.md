@@ -63,6 +63,14 @@ Documentation, a contract file or a positive-path test never closes a security f
 The frozen v1.4 kernel remains protected by its independent integrity gate. Security hardening must not silently change frozen kernel semantics.
 
 
+### 1C-BINDING. Cached provider stale-binding sub-boundary — 2026-09-29
+
+- Finding: a runtime replica could retain a cached provider object after global rollback and later reuse it after re-activation when configuration (and even activation_version) was reused.
+- Fix: provider instances are now bound to the exact canonical `(activation_version, activated_at)` pair; cached instances are invalidated before reuse, and every external execution rechecks the canonical binding.
+- Evidence: adversarial unit tests cover YandexGPT, GigaChat and DaData reactivation with reused configuration/activation version and a new activation timestamp; the old provider object is rejected.
+- No schema or frozen-kernel change.
+- Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
+
 ### 1C-ACTIVATION. Provider rollback stale-activation sub-boundary — 2026-09-29
 
 - Finding: provider rollback previously targeted only the provider_id, so a stale rollback could disable a provider after a newer activation had already taken ownership of the canonical kill-switch state.
