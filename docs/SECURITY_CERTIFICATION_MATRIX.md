@@ -8,6 +8,8 @@ A control is considered closed only when:
 3. the test passes on the current HEAD; and
 4. the full release gate passes after the change.
 
+**Current security re-baseline evidence:** exact HEAD `b8983dcf16630869db1318746edc93298ea8c333` passed full seven-job release-gate CI #1994 (`36556900641`): quality 3.12/3.13, supply-chain, integration 3.12/3.13, backup/recovery and release-contract. This is current-head evidence for the security boundaries recorded below; it does not claim zero vulnerabilities outside the reviewed scope.
+
 | Boundary | Runtime enforcement | Adversarial evidence | Current closure rule |
 |---|---|---|---|
 | Authentication | OIDC issuer/audience/expiry/sub + algorithm allowlist | JWT negative tests | current-head CI required |
