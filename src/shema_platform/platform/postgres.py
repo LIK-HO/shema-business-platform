@@ -75,6 +75,9 @@ class PostgresUnitOfWork:
             raise RuntimeError("unit of work is already active")
         self._connection = self._connection_factory()
 
+        from shema_platform.platform.counterparty_monitoring_postgres import (
+            PostgresCounterpartyMonitoringRepository,
+        )
         from shema_platform.platform.postgres_repositories import (
             PostgresAIRunRepository,
             PostgresAuditRepository,
@@ -88,9 +91,6 @@ class PostgresUnitOfWork:
             PostgresOutboxRepository,
             PostgresQuarantineRepository,
             PostgresRepeatOrderRepository,
-        )
-        from shema_platform.platform.counterparty_monitoring_postgres import (
-            PostgresCounterpartyMonitoringRepository,
         )
 
         connection = self.connection
