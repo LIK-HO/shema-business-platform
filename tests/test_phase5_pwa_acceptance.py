@@ -1,6 +1,10 @@
 import json
 from pathlib import Path
 
+from fastapi.testclient import TestClient
+
+from shema_platform.experience.api import create_app
+
 ROOT = Path(__file__).parents[1]
 WEB = ROOT / "src" / "shema_platform" / "experience" / "web"
 CONTRACT = ROOT / "architecture" / "pwa_contract.json"
@@ -68,3 +72,13 @@ def test_web_surface_exposes_manifest_and_service_worker():
     assert "navigator.serviceWorker.register('/sw.js'" in app_js
     assert '"/sw.js"' in web_py
     assert '"/manifest.webmanifest"' in web_py
+
+
+def test_pwa_bootstrap_routes_are_public():
+    client = TestClient(create_app(enable_docs=False))
+    manifest = client.get("/manifest.webmanifest")
+    worker = client.get("/sw.js")
+    assert manifest.status_code == 200
+    assert manifest.headers["content-type"].startswith("application/manifest+json")
+    assert worker.status_code == 200
+    assert worker.headers["content-type"].startswith("application/javascript")
