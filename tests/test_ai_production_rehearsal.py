@@ -209,8 +209,14 @@ def test_gigachat_activation_and_rollback_rehearsal_has_no_external_traffic() ->
 
 
 def test_rehearsal_requires_explicit_activation_for_each_provider() -> None:
-    yandex = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink(), activation_state_store=InMemoryProviderActivationStateStore())
-    gigachat = GigaChatProductionGate(telemetry=InMemoryTelemetrySink(), activation_state_store=InMemoryProviderActivationStateStore())
+    yandex = YandexGPTProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
+    )
+    gigachat = GigaChatProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
+    )
 
     assert yandex.state.enabled is False
     assert gigachat.state.enabled is False
