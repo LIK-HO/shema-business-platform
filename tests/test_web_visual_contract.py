@@ -21,6 +21,7 @@ def test_critical_visual_contract_regions() -> None:
         "system()",
         "dossier()",
         "workbench()",
+        "repeat()",
     ]:
         assert token in js
     assert "localStorage" not in js
