@@ -72,26 +72,25 @@ class CommercialActionSendWorkflow:
         error: ExternalEffectUnknown,
     ) -> None:
         with self._unit_of_work_factory() as uow:
+            failed = uow.commercial_actions.fail_external_effect(
+                action_id,
+                worker_id,
+                now=utc_now(),
+            )
             current = uow.commercial_actions.get(action_id)
             if current is None:
                 raise KeyError(f"unknown commercial action: {action_id}")
 
-            failed = CommercialAction(
-                action_id=current.action_id,
-                identity_id=current.identity_id,
-                owner_actor_id=current.owner_actor_id,
-                contact_ref=current.contact_ref,
-                channel=current.channel,
-                evidence_refs=current.evidence_refs,
-                status=CommercialActionStatus.FAILED,
-                send_attempt=current.send_attempt,
+            stale_worker = failed is None
+            quarantine_reason = (
+                "external_effect_unknown_stale_worker"
+                if stale_worker
+                else "external_effect_unknown"
             )
-            uow.commercial_actions.save(failed)
-
             uow.quarantine.add(
                 object_type="commercial_action",
                 object_ref=action_id,
-                reason_code="external_effect_unknown",
+                reason_code=quarantine_reason,
                 payload={
                     "request_hash": request_hash,
                     "command_idempotency_key": idempotency_key,
@@ -99,12 +98,15 @@ class CommercialActionSendWorkflow:
                         action_id
                     ),
                     "send_attempt": current.send_attempt,
+                    "observed_worker_id": worker_id,
+                    "current_worker_id": current.send_worker_id,
+                    "current_status": current.status.value,
                 },
             )
 
             event_key = (
                 "commercial-action.external-effect-unknown:"
-                f"{action_id}:{request_hash}"
+                f"{action_id}:{request_hash}:{worker_id}"
             )
             occurred_at = utc_now()
             uow.outbox.append(
@@ -116,8 +118,11 @@ class CommercialActionSendWorkflow:
                     payload={
                         "action_id": action_id,
                         "channel": current.channel,
-                        "reason_code": "external_effect_unknown",
+                        "reason_code": quarantine_reason,
                         "request_hash": request_hash,
+                        "observed_worker_id": worker_id,
+                        "current_worker_id": current.send_worker_id,
+                        "current_status": current.status.value,
                     },
                     occurred_at=occurred_at,
                 )
@@ -135,6 +140,8 @@ class CommercialActionSendWorkflow:
                         "channel": current.channel,
                         "send_attempt": current.send_attempt,
                         "worker_id": worker_id,
+                        "current_worker_id": current.send_worker_id,
+                        "current_status": current.status.value,
                         "error_type": type(error).__name__,
                     },
                 )
