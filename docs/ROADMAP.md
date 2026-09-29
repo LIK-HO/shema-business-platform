@@ -431,6 +431,9 @@ A monitored counterparty has reproducible snapshots, deterministic change detect
 
 ## 8. Phase 4 — Web Operator System
 
+### Phase 4-4B — CLOSED / VERIFIED
+Public service/landing + advanced intake, source/UTM attribution, referrer/entry surface, correlation presentation and the same Web projection for MAX are verified on CI run `36582610189`. Next active element: **Phase 4-4C — Operator causal workbench**.
+
 ### Phase 4-4A — CLOSED / VERIFIED
 The first Web Operator boundary is verified on CI run `36581745238`: same-origin Web shell/assets, protected operator API boundary, public intake shell, MAX static projection, capability-aware navigation and client-side no-persistence safeguards. The next active boundary is **Phase 4-4B — Public Client Intake + Attribution + MAX projection hardening**.
 
