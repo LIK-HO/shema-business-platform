@@ -368,7 +368,12 @@ def test_runtime_api_generates_correlation_id_when_missing() -> None:
 
 
 class TestResourceReadAuthorizer:
-    def __init__(self, *, allow_order: set[str] | None = None, allow_economics: set[str] | None = None):
+    def __init__(
+        self,
+        *,
+        allow_order: set[str] | None = None,
+        allow_economics: set[str] | None = None,
+    ):
         self.allow_order = allow_order or set()
         self.allow_economics = allow_economics or set()
         self.calls: list[tuple[str, str, str]] = []
