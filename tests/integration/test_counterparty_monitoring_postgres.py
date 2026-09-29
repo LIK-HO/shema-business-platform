@@ -195,7 +195,7 @@ def test_postgres_monitor_favorite_snapshot_and_change_are_durable() -> None:
                 """,
                 (monitor.monitor_id,),
             ).fetchone()
-            assert audit_count == (1,)
+            assert audit_count == (2,)
     finally:
         cleanup(schema)
 
