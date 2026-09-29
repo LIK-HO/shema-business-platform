@@ -19,7 +19,6 @@ from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.errors import AuthorizationError, IntegrityViolation
 from shema_platform.foundation.idempotency import IdempotencyRecord
 
-
 NOW = datetime(2026, 9, 29, 12, tzinfo=UTC)
 PERMISSIONS = frozenset(
     {
