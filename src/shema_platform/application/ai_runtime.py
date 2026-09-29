@@ -145,13 +145,13 @@ class AIExecutionService:
         if not configuration_version.strip():
             raise RuntimeError("AI provider configuration is not active")
 
-        with self._unit_of_work_factory() as uow:
-            task_id = str(
-                uuid5(
-                    NAMESPACE_URL,
-                    f"shema-ai:{request.idempotency_key.strip()}:{request.request_hash}",
-                )
+        task_id = str(
+            uuid5(
+                NAMESPACE_URL,
+                f"shema-ai:{request.idempotency_key.strip()}:{request.request_hash}",
             )
+        )
+        with self._unit_of_work_factory() as uow:
             pending_id = f"pending:ai:{task_id}"
             reservation = uow.idempotency.reserve(
                 key=request.idempotency_key.strip(),
@@ -207,20 +207,14 @@ class AIExecutionService:
         )
         if self._scoped_executor is None:
             raise RuntimeError("AI scoped executor is not configured")
-        try:
-            run = self._scoped_executor(
-                gateway,
-                task,
-                input_refs=request.input_refs,
-                evidence_refs=request.evidence_refs,
-                context=context,
-                budget=budget,
-            )
-        except Exception:
-            # The reservation intentionally remains pending. A retry with the same
-            # key may reconcile a persisted AIRun, but never repeats an unknown effect.
-            raise
-
+        run = self._scoped_executor(
+            gateway,
+            task,
+            input_refs=request.input_refs,
+            evidence_refs=request.evidence_refs,
+            context=context,
+            budget=budget,
+        )
         with self._unit_of_work_factory() as uow:
             uow.idempotency.complete(
                 request.idempotency_key.strip(),
