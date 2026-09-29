@@ -1,3 +1,5 @@
+**Current implementation boundary:** **Phase 4-4B Public Client Intake + Attribution + MAX projection hardening — CLOSED / VERIFIED** by full seven-job release-gate CI run `36582610189` on HEAD `273333d2432abc5ce8318fe58df219ab90f06230`. The next active element is Phase 4-4C.
+
 **Current implementation boundary:** **Phase 4-4A Canonical Web/Public + Protected Operator Shell — CLOSED / VERIFIED** by full seven-job release-gate CI run `36581745238`. The frozen kernel is unchanged. The current active work is Phase 4 Web Operator System; only one substantial capability boundary is active at a time.
 
 # СХЕМА Business Platform — Development Manifest
