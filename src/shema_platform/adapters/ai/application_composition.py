@@ -23,6 +23,7 @@ from shema_platform.application.ai import AIProvider
 from shema_platform.application.ai_runtime import (
     AIExecutionService,
     AIExecutionTrustResolver,
+    IdempotentAIExecutionService,
 )
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.foundation.configuration import ConfigurationSnapshot
@@ -146,12 +147,15 @@ class YandexGPTApplicationComposition:
                 )
             ) from exc
 
-    def service(self) -> AIExecutionService:
-        return AIExecutionService(
-            provider_factory=self.provider,
+    def service(self) -> IdempotentAIExecutionService:
+        return IdempotentAIExecutionService(
+            service=AIExecutionService(
+                provider_factory=self.provider,
+                unit_of_work_factory=self._unit_of_work_factory,
+                trust_resolver=self._trust_resolver,
+                configuration_version_provider=self.configuration_version,
+                policy=self._policy,
+                scoped_executor=execute_scoped_ai,
+            ),
             unit_of_work_factory=self._unit_of_work_factory,
-            trust_resolver=self._trust_resolver,
-            configuration_version_provider=self.configuration_version,
-            policy=self._policy,
-            scoped_executor=execute_scoped_ai,
         )

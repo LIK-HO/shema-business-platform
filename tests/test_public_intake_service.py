@@ -112,7 +112,7 @@ class MemoryPublicIntakeRepository:
     def get_by_idempotency_key(self, key):
         return self.requests.get(key)
 
-    def get_preflight_cache(self, cache_key, *, now):
+    def get_preflight_cache(self, cache_key, now):
         item = self.cache.get(cache_key)
         if item and item.expires_at > now:
             return item
@@ -125,7 +125,7 @@ class MemoryPublicIntakeRepository:
         if current >= limit:
             from shema_platform.application.public_intake import PublicIntakeRateLimited
 
-            raise PublicIntakeRateLimited("rate limit", budget=budget)
+            raise PublicIntakeRateLimited(f"{budget} rate limit exceeded", budget=budget)
         self.budgets[key] = current + 1
 
     def save_preflight_cache(self, cache_key, snapshot):

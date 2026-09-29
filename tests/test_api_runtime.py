@@ -404,7 +404,7 @@ def test_runtime_api_hard_limits_request_body() -> None:
         create_app(FakeApplication(), FakeAuthenticator())
     ).post(
         "/v1/search",
-        headers={"Authorization": "Bearer test-token"},
+        headers={"Authorization": "Bearer test-token", "Idempotency-Key": "api-ai-test-1"},
         content=b"x" * (1_048_576 + 1),
     )
 
