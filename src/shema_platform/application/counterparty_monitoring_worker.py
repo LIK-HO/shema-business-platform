@@ -202,7 +202,10 @@ class CounterpartyMonitoringWorker:
     ) -> CounterpartyMonitoringRunSummary:
         scheduled = scheduled_at or self._clock()
         self._validate_time(scheduled)
-        daily_key = batch_key or f"counterparty-monitor:{scheduled.astimezone(UTC).date().isoformat()}"
+        daily_key = batch_key or (
+            "counterparty-monitor:"
+            f"{scheduled.astimezone(UTC).date().isoformat()}"
+        )
 
         with self._unit_of_work_factory() as uow:
             batch = uow.counterparty_monitoring_batches.start_or_resume_daily_batch(
@@ -405,7 +408,9 @@ class CounterpartyMonitoringWorker:
             audit_id=str(
                 uuid5(
                     NAMESPACE_URL,
-                    f"counterparty-monitor-worker:{batch_id}:{monitor_id}:{error_code}:{occurred_at.isoformat()}",
+                    "counterparty-monitor-worker:"
+                    f"{batch_id}:{monitor_id}:{error_code}:"
+                    f"{occurred_at.isoformat()}",
                 )
             ),
             actor_id=actor_id,
