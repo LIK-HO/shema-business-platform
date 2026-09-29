@@ -66,6 +66,6 @@ def test_phase4_global_acceptance_uses_one_same_origin_web_application() -> None
 
     assert '/web/app.js' in html
     assert '/web/style.css' in html
-    assert "fetch('/v1/" in js
+    assert "api('/v1/" in js
     assert "window.SHEMA_BOT_CHALLENGE_TOKEN" in js
     assert "location.origin" in js
