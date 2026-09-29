@@ -48,7 +48,7 @@ def test_environment_configuration_requires_api_token(monkeypatch) -> None:
 
 
 def test_configuration_rejects_non_https_base_url() -> None:
-    with pytest.raises(ValueError, match="pinned official host"):
+    with pytest.raises(ValueError, match="must use HTTPS|pinned official host"):
         OpenCorporatesConfiguration(
             api_token="secret",
             base_url="http://api.opencorporates.com",
