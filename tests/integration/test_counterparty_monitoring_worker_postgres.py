@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from uuid import uuid4
 
 import psycopg
 import pytest
@@ -22,7 +23,6 @@ from shema_platform.application.counterparty_monitoring import CounterpartyMonit
 from shema_platform.foundation.authorization import Permission
 from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
 from shema_platform.platform.postgres import PostgresUnitOfWork
-from shema_platform.application.counterparty_check import CounterpartyIdentifierType
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
@@ -53,7 +53,7 @@ def connection(schema: str) -> psycopg.Connection:
 
 
 def make_schema() -> str:
-    return "counterparty_monitor_worker_" + __import__("uuid").uuid4().hex
+    return "counterparty_monitor_worker_" + uuid4().hex
 
 
 def migrate(schema: str) -> None:
