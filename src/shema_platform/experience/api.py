@@ -33,10 +33,10 @@ from shema_platform.application.counterparty_provider_activation import (
     CounterpartyProviderActivationCommand,
     CounterpartyProviderActivationService,
 )
+from shema_platform.application.commands import Actor
 from shema_platform.application.counterparty_provider_runtime_lookup import (
     CounterpartyProviderRuntimeLookupService,
 )
-from shema_platform.application.commands import Actor
 from shema_platform.application.public_intake import (
     PublicIntakePayload,
     PublicIntakeRateLimited,
@@ -44,7 +44,11 @@ from shema_platform.application.public_intake import (
     PublicIntakeService,
 )
 from shema_platform.application.resource_read_authorization import ResourceReadAuthorizer
-from shema_platform.domain.repeat_order import RepeatCadence, RepeatCadenceUnit, RepeatOrderContext
+from shema_platform.domain.repeat_order import (
+    RepeatCadence,
+    RepeatCadenceUnit,
+    RepeatOrderContext,
+)
 from shema_platform.experience.api_models import (
     AIRunRequest,
     AIRunResponse,
