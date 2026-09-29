@@ -27,6 +27,8 @@ A control is considered closed only when:
 | Recovery | backup/PITR + replay-safe workers | restore/replay drill | backup-recovery gate |
 
 ## Control names retained for compatibility
+Fail-closed / failure behavior; Executable evidence; Release gate.
+
 
 The following labels are retained only as evidence-matrix identifiers for existing
 maturity tests and release documentation. They do not constitute certification:
