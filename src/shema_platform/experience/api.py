@@ -44,7 +44,6 @@ from shema_platform.application.public_intake import (
     PublicIntakeService,
 )
 from shema_platform.application.resource_read_authorization import ResourceReadAuthorizer
-from shema_platform.application.repeat_order import RepeatOrderService
 from shema_platform.domain.repeat_order import RepeatCadence, RepeatCadenceUnit, RepeatOrderContext
 from shema_platform.experience.api_models import (
     AIRunRequest,
@@ -80,9 +79,7 @@ from shema_platform.experience.api_models import (
     PublicIntakeResponse,
     ResearchRequest,
     ResearchResponse,
-    RepeatCadenceRequest,
     RepeatContextRequest,
-    RepeatPlanActionRequest,
     RepeatPlanConfirmRequest,
     RepeatPlanCreateRequest,
     RepeatPlanEditRequest,
