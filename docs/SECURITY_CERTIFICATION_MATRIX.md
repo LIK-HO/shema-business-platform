@@ -26,6 +26,15 @@ A control is considered closed only when:
 | CI supply chain | immutable action SHAs + dependency audit | CI supply-chain job | full release gate |
 | Recovery | backup/PITR + replay-safe workers | restore/replay drill | backup-recovery gate |
 
+## Control names retained for compatibility
+
+The following labels are retained only as evidence-matrix identifiers for existing
+maturity tests and release documentation. They do not constitute certification:
+OIDC issuer HTTPS; OIDC JWKS HTTPS; Explicit asymmetric JWT algorithms;
+Permission materialization; Production docs disabled; Telemetry allow-list redaction;
+Authorization headers excluded from telemetry; Dependency vulnerability gate;
+Production PITR recovery.
+
 ## Explicit non-claims
 
 This matrix does not claim zero vulnerabilities, exploit-proof software, or literal immortality. It records security invariants and the evidence required to close them.
