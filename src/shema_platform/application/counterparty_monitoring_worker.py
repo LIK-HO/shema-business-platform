@@ -278,6 +278,13 @@ class CounterpartyMonitoringWorker:
     ) -> CounterpartyMonitoringBatchItem:
         now = self._clock().astimezone(UTC)
         try:
+            if item.attempt > self._max_attempts:
+                return self._fail(
+                    item,
+                    retryable=False,
+                    error_code="MAX_ATTEMPTS_EXCEEDED",
+                    now=now,
+                )
             with self._unit_of_work_factory() as uow:
                 monitor = uow.monitoring.get_monitor(item.monitor_id)
             if monitor is None or monitor.status.value != "active":
