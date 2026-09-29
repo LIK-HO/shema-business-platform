@@ -43,3 +43,6 @@ where = ["src"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["shema_platform"]
+
+[tool.setuptools.package-data]
+shema_platform = ["experience/web/*"]
