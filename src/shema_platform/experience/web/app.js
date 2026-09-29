@@ -1,7 +1,10 @@
 (()=>{'use strict';
 const S={token:null,surface:new URLSearchParams(location.search).get('surface')==='max'?'max':'web',route:location.hash.slice(1)||'request',caps:{},notes:[],selected:null,pendingId:'',pendingQueue:[],online:navigator.onLine};
 const $=(s,r=document)=>r.querySelector(s),view=$('#view'),title=$('#title'),surface=$('#surface'),corr=$('#corr'),count=$('#nav-count');
-const MAX_PENDING=8,MAX_PENDING_BYTES=65536,MAX_PENDING_ATTEMPTS=3,MAX_PENDING_AGE_MS=86400000;
+const MAX_PENDING=8;
+const MAX_PENDING_BYTES=65536;
+const MAX_PENDING_ATTEMPTS=3;
+const MAX_PENDING_AGE_MS=86400000;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const key=()=>crypto&&crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random();
 const badge=v=>{const x=String(v||'').toLowerCase(),c=['accepted','projected','verified','normal','pass','ready','active','sent','completed'].includes(x)?'ok':['attention','warn','pending','stale','review','offline','online'].includes(x)?'warn':['blocking','conflicting','fail','failed','rejected','quarantined_spam'].includes(x)?'bad':'';return '<span class="status '+c+'">'+esc(v)+'</span>'};
