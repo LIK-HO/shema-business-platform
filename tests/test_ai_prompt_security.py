@@ -2,10 +2,7 @@ from __future__ import annotations
 
 import json
 
-from shema_platform.adapters.ai.contracts import (
-    AIProviderRequest,
-    AIProviderResourceLimits,
-)
+from shema_platform.adapters.ai.contracts import AIProviderRequest
 from shema_platform.application.ai import (
     AIBudget,
     AIExecutionContext,
