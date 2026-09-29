@@ -12,9 +12,7 @@ from shema_platform.application.counterparty_check import (
 from shema_platform.application.counterparty_monitoring import (
     ChangeSeverity,
     CounterpartyMonitoringService,
-    MonitoringStatus,
     detect_counterparty_changes,
-    snapshot_from_observation,
     snapshot_payload_hash,
 )
 from shema_platform.foundation.authorization import Permission
