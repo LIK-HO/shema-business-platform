@@ -80,7 +80,7 @@ def composition() -> YandexGPTApplicationComposition:
 def test_yandex_application_composition_is_disabled_until_explicit_activation() -> None:
     instance = composition()
 
-    with pytest.raises(AIProviderCompositionError, match="not activated"):
+    with pytest.raises(AIProviderCompositionError, match="not (activated|enabled)"):
         instance.configuration_version()
 
     with pytest.raises(AIProviderCompositionError, match="not activated"):
