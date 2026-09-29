@@ -124,9 +124,10 @@ class YandexGPTConfiguration:
         if len(self.model_uri.split("/")) < 4:
             raise ValueError("model_uri must identify a folder and model")
         parsed_base = urlsplit(self.base_url)
+        if parsed_base.scheme != "https":
+            raise ValueError("YandexGPT base_url must use HTTPS")
         if (
-            parsed_base.scheme != "https"
-            or parsed_base.hostname != _ALLOWED_BASE_HOST
+            parsed_base.hostname != _ALLOWED_BASE_HOST
             or parsed_base.port is not None
             or parsed_base.query
             or parsed_base.fragment
