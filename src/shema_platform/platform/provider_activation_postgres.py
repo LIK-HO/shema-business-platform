@@ -30,7 +30,8 @@ class PostgresProviderActivationStateStore(ProviderActivationStateStore):
                     max_duration_seconds,
                     rollback_by,
                     rollback_at,
-                    rollback_reason
+                    rollback_reason,
+                    rollback_from_configuration_version
                 from provider_activation_state
                 where provider_id = %s
                 """,
@@ -55,9 +56,10 @@ class PostgresProviderActivationStateStore(ProviderActivationStateStore):
                     max_duration_seconds,
                     rollback_by,
                     rollback_at,
-                    rollback_reason
+                    rollback_reason,
+                    rollback_from_configuration_version
                 )
-                values (%s, true, %s, %s, %s, %s, %s, %s, null, null, null)
+                values (%s, true, %s, %s, %s, %s, %s, %s, null, null, %s, null)
                 on conflict (provider_id) do update
                 set enabled = true,
                     configuration_version = excluded.configuration_version,
@@ -69,6 +71,7 @@ class PostgresProviderActivationStateStore(ProviderActivationStateStore):
                     rollback_by = null,
                     rollback_at = null,
                     rollback_reason = null,
+                    rollback_from_configuration_version = null,
                     updated_at = now()
                 where provider_activation_state.enabled = false
                 returning provider_id
@@ -105,6 +108,7 @@ class PostgresProviderActivationStateStore(ProviderActivationStateStore):
                     rollback_by = %s,
                     rollback_at = %s,
                     rollback_reason = %s,
+                    rollback_from_configuration_version = configuration_version,
                     updated_at = now()
                 where provider_id = %s
                 returning provider_id
@@ -162,6 +166,11 @@ class PostgresProviderActivationStateStore(ProviderActivationStateStore):
             rollback_reason=(
                 str(rollback_reason)
                 if rollback_reason is not None
+                else None
+            ),
+            rollback_from_configuration_version=(
+                str(rollback_from_configuration_version)
+                if rollback_from_configuration_version is not None
                 else None
             ),
         )
