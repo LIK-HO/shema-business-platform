@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from decimal import Decimal
+import hashlib
+import json
 from time import monotonic
 from typing import Protocol
 from uuid import uuid4
@@ -33,6 +36,7 @@ from shema_platform.application.counterparty_provider_activation import (
 from shema_platform.application.counterparty_provider_runtime_lookup import (
     CounterpartyProviderRuntimeLookupService,
 )
+from shema_platform.application.commands import Actor
 from shema_platform.application.public_intake import (
     PublicIntakePayload,
     PublicIntakeRateLimited,
@@ -40,6 +44,8 @@ from shema_platform.application.public_intake import (
     PublicIntakeService,
 )
 from shema_platform.application.resource_read_authorization import ResourceReadAuthorizer
+from shema_platform.application.repeat_order import RepeatOrderService
+from shema_platform.domain.repeat_order import RepeatCadence, RepeatCadenceUnit, RepeatOrderContext
 from shema_platform.experience.api_models import (
     AIRunRequest,
     AIRunResponse,
@@ -74,6 +80,13 @@ from shema_platform.experience.api_models import (
     PublicIntakeResponse,
     ResearchRequest,
     ResearchResponse,
+    RepeatCadenceRequest,
+    RepeatContextRequest,
+    RepeatPlanActionRequest,
+    RepeatPlanConfirmRequest,
+    RepeatPlanCreateRequest,
+    RepeatPlanEditRequest,
+    RepeatPlanResponse,
     SearchRequest,
     SearchResponse,
 )
@@ -269,6 +282,59 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
         request.state.actor = actor
         return await call_next(request)
+
+
+def _repeat_plan_response(plan) -> RepeatPlanResponse:
+    return RepeatPlanResponse(
+        planId=plan.plan_id,
+        sourceOrderId=plan.source_order_id,
+        identityId=plan.identity_id,
+        ownerActorId=plan.owner_actor_id,
+        cadenceUnit=plan.cadence.unit.value,
+        cadenceInterval=plan.cadence.interval,
+        scheduledFor=plan.context.scheduled_for,
+        serviceScope=plan.context.service_scope,
+        capacityUnits=str(plan.context.capacity_units),
+        status=plan.status.value,
+        pendingOrderId=plan.pending_order_id,
+        lastOrderId=plan.last_order_id,
+        skippedOccurrences=plan.skipped_occurrences,
+        revision=plan.revision,
+    )
+
+
+async def _repeat_mutation(
+    request: Request,
+    plan_id: str,
+    operation: str,
+    idempotency_key: str,
+) -> RepeatPlanResponse:
+    context = _context(request, idempotency_key)
+    service = request.app.state.repeat_order_service
+    if service is None:
+        raise ApplicationUnavailable("repeat order capability is not composed")
+    actor = Actor(
+        actor_id=context.actor_id,
+        trust_level=context.trust_level,
+        permissions=context.permissions,
+    )
+    request_hash = hashlib.sha256(
+        json.dumps({"planId": plan_id, "operation": operation}, sort_keys=True).encode()
+    ).hexdigest()
+    method = {
+        "pause": service.pause_plan,
+        "resume": service.resume_plan,
+        "skip": service.skip_once,
+        "cancel": service.cancel_plan,
+    }[operation]
+    plan = method(
+        actor=actor,
+        plan_id=plan_id,
+        request_hash=request_hash,
+        idempotency_key=idempotency_key,
+        correlation_id=context.correlation_id,
+    )
+    return _repeat_plan_response(plan)
 
 
 def _context(
@@ -670,6 +736,218 @@ def create_app(
             actorId=context.actor_id,
             capabilities=capabilities,
         )
+
+    @router.post(
+        "/operator/repeat-orders",
+        response_model=RepeatPlanResponse,
+    )
+    async def create_repeat_plan(
+        body: RepeatPlanCreateRequest,
+        request: Request,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
+    ) -> RepeatPlanResponse:
+        context = _context(request, idempotency_key)
+        service = request.app.state.repeat_order_service
+        if service is None:
+            raise ApplicationUnavailable("repeat order capability is not composed")
+        payload = body.model_dump(by_alias=True)
+        request_hash = hashlib.sha256(
+            json.dumps(payload, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()
+        plan = service.create_plan(
+            plan_id=body.plan_id,
+            source_order_id=body.source_order_id,
+            actor=Actor(
+                actor_id=context.actor_id,
+                trust_level=context.trust_level,
+                permissions=context.permissions,
+            ),
+            cadence=RepeatCadence(
+                unit=RepeatCadenceUnit(body.cadence.unit),
+                interval=body.cadence.interval,
+            ),
+            context=RepeatOrderContext(
+                scheduled_for=body.context.scheduled_for,
+                service_scope=body.context.service_scope,
+                capacity_units=Decimal(str(body.context.capacity_units)),
+            ),
+            request_hash=request_hash,
+            idempotency_key=idempotency_key,
+            correlation_id=context.correlation_id,
+        )
+        return RepeatPlanResponse(
+            planId=plan.plan_id,
+            sourceOrderId=plan.source_order_id,
+            identityId=plan.identity_id,
+            ownerActorId=plan.owner_actor_id,
+            cadenceUnit=plan.cadence.unit.value,
+            cadenceInterval=plan.cadence.interval,
+            scheduledFor=plan.context.scheduled_for,
+            serviceScope=plan.context.service_scope,
+            capacityUnits=str(plan.context.capacity_units),
+            status=plan.status.value,
+            pendingOrderId=plan.pending_order_id,
+            lastOrderId=plan.last_order_id,
+            skippedOccurrences=plan.skipped_occurrences,
+            revision=plan.revision,
+        )
+
+    @router.post(
+        "/operator/repeat-orders/{plan_id}/next",
+        response_model=OrderResponse,
+    )
+    async def create_repeat_next(
+        plan_id: str,
+        request: Request,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
+    ) -> OrderResponse:
+        context = _context(request, idempotency_key)
+        service = request.app.state.repeat_order_service
+        if service is None:
+            raise ApplicationUnavailable("repeat order capability is not composed")
+        actor = Actor(
+            actor_id=context.actor_id,
+            trust_level=context.trust_level,
+            permissions=context.permissions,
+        )
+        result = service.create_next_repeat_order(
+            actor=actor,
+            plan_id=plan_id,
+            request_hash=hashlib.sha256(plan_id.encode()).hexdigest(),
+            idempotency_key=idempotency_key,
+            correlation_id=context.correlation_id,
+        )
+        return OrderResponse(
+            orderId=result.order_id,
+            identityId=result.identity_id,
+            sourceActionId=result.source_action_id,
+            status=result.status.value,
+            lines=[
+                {
+                    "lineId": line.line_id,
+                    "description": line.description,
+                    "quantity": str(line.quantity),
+                    "unitPrice": {
+                        "amount": str(line.unit_price.amount),
+                        "currency": line.unit_price.currency,
+                    },
+                }
+                for line in result.lines
+            ],
+        )
+
+    @router.post(
+        "/operator/repeat-orders/{plan_id}/confirm",
+        response_model=OrderResponse,
+    )
+    async def confirm_repeat(
+        plan_id: str,
+        body: RepeatPlanConfirmRequest,
+        request: Request,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
+    ) -> OrderResponse:
+        context = _context(request, idempotency_key)
+        service = request.app.state.repeat_order_service
+        if service is None:
+            raise ApplicationUnavailable("repeat order capability is not composed")
+        actor = Actor(
+            actor_id=context.actor_id,
+            trust_level=context.trust_level,
+            permissions=context.permissions,
+        )
+        result = service.confirm_repeat_order(
+            actor=actor,
+            plan_id=plan_id,
+            order_id=body.order_id,
+            request_hash=hashlib.sha256(
+                json.dumps(body.model_dump(by_alias=True), sort_keys=True, default=str).encode()
+            ).hexdigest(),
+            idempotency_key=idempotency_key,
+            correlation_id=context.correlation_id,
+        )
+        return OrderResponse(
+            orderId=result.order_id,
+            identityId=result.identity_id,
+            sourceActionId=result.source_action_id,
+            status=result.status.value,
+            lines=[
+                {
+                    "lineId": line.line_id,
+                    "description": line.description,
+                    "quantity": str(line.quantity),
+                    "unitPrice": {
+                        "amount": str(line.unit_price.amount),
+                        "currency": line.unit_price.currency,
+                    },
+                }
+                for line in result.lines
+            ],
+        )
+
+    @router.post("/operator/repeat-orders/{plan_id}/pause", response_model=RepeatPlanResponse)
+    async def pause_repeat(
+        plan_id: str,
+        request: Request,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
+    ) -> RepeatPlanResponse:
+        return await _repeat_mutation(request, plan_id, "pause", idempotency_key)
+
+    @router.post("/operator/repeat-orders/{plan_id}/resume", response_model=RepeatPlanResponse)
+    async def resume_repeat(
+        plan_id: str,
+        request: Request,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
+    ) -> RepeatPlanResponse:
+        return await _repeat_mutation(request, plan_id, "resume", idempotency_key)
+
+    @router.post("/operator/repeat-orders/{plan_id}/skip", response_model=RepeatPlanResponse)
+    async def skip_repeat(
+        plan_id: str,
+        request: Request,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
+    ) -> RepeatPlanResponse:
+        return await _repeat_mutation(request, plan_id, "skip", idempotency_key)
+
+    @router.post("/operator/repeat-orders/{plan_id}/cancel", response_model=RepeatPlanResponse)
+    async def cancel_repeat(
+        plan_id: str,
+        request: Request,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
+    ) -> RepeatPlanResponse:
+        return await _repeat_mutation(request, plan_id, "cancel", idempotency_key)
+
+    @router.put("/operator/repeat-orders/{plan_id}/context", response_model=RepeatPlanResponse)
+    async def edit_repeat_context(
+        plan_id: str,
+        body: RepeatPlanEditRequest,
+        request: Request,
+        idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
+    ) -> RepeatPlanResponse:
+        context = _context(request, idempotency_key)
+        service = request.app.state.repeat_order_service
+        if service is None:
+            raise ApplicationUnavailable("repeat order capability is not composed")
+        actor = Actor(
+            actor_id=context.actor_id,
+            trust_level=context.trust_level,
+            permissions=context.permissions,
+        )
+        payload = body.model_dump(by_alias=True)
+        plan = service.edit_context(
+            actor=actor,
+            plan_id=plan_id,
+            context=RepeatOrderContext(
+                scheduled_for=body.context.scheduled_for,
+                service_scope=body.context.service_scope,
+                capacity_units=Decimal(str(body.context.capacity_units)),
+            ),
+            request_hash=hashlib.sha256(
+                json.dumps(payload, sort_keys=True, default=str).encode()
+            ).hexdigest(),
+            idempotency_key=idempotency_key,
+            correlation_id=context.correlation_id,
+        )
+        return _repeat_plan_response(plan)
 
     @router.get(
         "/operator/notifications",
