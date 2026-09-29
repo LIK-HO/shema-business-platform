@@ -63,6 +63,14 @@ Documentation, a contract file or a positive-path test never closes a security f
 The frozen v1.4 kernel remains protected by its independent integrity gate. Security hardening must not silently change frozen kernel semantics.
 
 
+### 1C-ACTIVATION. Provider rollback stale-activation sub-boundary — 2026-09-29
+
+- Finding: provider rollback previously targeted only the provider_id, so a stale rollback could disable a provider after a newer activation had already taken ownership of the canonical kill-switch state.
+- Fix: rollback is now an atomic compare-and-set on both activation_version and activated_at; stale commands fail without mutating the newer activation.
+- Evidence: deterministic unit test plus PostgreSQL persistence test prove that a stale rollback cannot disable a reactivated provider.
+- No schema or frozen-kernel change.
+- Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
+
 ### 1C-OUTBOX. Public-intake outbox stale-worker sub-boundary — 2026-09-29
 
 - Finding: public-intake outbox publication checked worker identity but not the current delivery lease, so a stale worker could potentially mark a reclaimed event as published.
