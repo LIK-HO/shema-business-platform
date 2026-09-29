@@ -100,7 +100,7 @@ class GigaChatProductionGate:
         telemetry: TelemetrySink,
         provider_factory=None,
         activation_state_store: ProviderActivationStateStore,
-        configuration_version: str,
+        configuration_version: str = "gigachat-config:v1",
         provider_id: str = "gigachat",
     ) -> None:
         self._telemetry = telemetry
