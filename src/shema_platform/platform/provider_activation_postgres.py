@@ -99,6 +99,8 @@ class PostgresProviderActivationStateStore(ProviderActivationStateStore):
         rolled_back_by: str,
         rolled_back_at: datetime,
         reason: str,
+        expected_activation_version: str,
+        expected_activated_at: datetime,
     ) -> None:
         with self._connection_factory() as connection:
             updated = connection.execute(
@@ -111,13 +113,23 @@ class PostgresProviderActivationStateStore(ProviderActivationStateStore):
                     rollback_from_configuration_version = configuration_version,
                     updated_at = now()
                 where provider_id = %s
+                  and enabled = true
+                  and activation_version = %s
+                  and activated_at = %s
                 returning provider_id
                 """,
-                (rolled_back_by, rolled_back_at, reason[:256], provider_id),
+                (
+                    rolled_back_by,
+                    rolled_back_at,
+                    reason[:256],
+                    provider_id,
+                    expected_activation_version,
+                    expected_activated_at,
+                ),
             ).fetchone()
             if updated is None:
                 raise IntegrityViolation(
-                    "provider activation rollback has no canonical state"
+                    "provider activation rollback lost its compare-and-set target"
                 )
             connection.commit()
 
