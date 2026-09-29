@@ -437,7 +437,7 @@ def test_yandex_selected_runtime_executes_end_to_end(monkeypatch) -> None:
                 (
                     "ai.run",
                     "success",
-                    correlation_id,
+                    body["correlationId"],
                     "p37-yandex-config:v1",
                 )
             ]
@@ -524,7 +524,7 @@ def test_gigachat_selected_runtime_executes_end_to_end(monkeypatch) -> None:
                 (
                     "ai.run",
                     "success",
-                    correlation_id,
+                    body["correlationId"],
                     "p37-gigachat-config:v1",
                 )
             ]
