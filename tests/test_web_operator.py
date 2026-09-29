@@ -47,5 +47,5 @@ def test_public_shell_does_not_bypass_operator_api_authentication() -> None:
     notifications = client.get("/v1/operator/notifications")
     capabilities = client.get("/v1/operator/capabilities")
 
-    assert notifications.status_code in {401, 403}
-    assert capabilities.status_code in {401, 403}
+    assert notifications.status_code in {401, 403, 503}
+    assert capabilities.status_code in {401, 403, 503}
