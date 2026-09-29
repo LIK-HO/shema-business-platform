@@ -231,6 +231,30 @@ def test_oidc_configuration_loads_from_environment(monkeypatch) -> None:
     assert configuration.jwks_url.endswith("/.well-known/jwks.json")
 
 
+def test_oidc_rejects_jwks_host_not_matching_issuer() -> None:
+    with pytest.raises(ValueError, match="JWKS URL host must match"):
+        OIDCConfiguration(
+            issuer="https://issuer.example.test",
+            audience="shema-business-platform",
+            jwks_url="https://attacker.example.test/.well-known/jwks.json",
+        )
+
+
+def test_oidc_forbids_explicit_ports_and_credentials() -> None:
+    with pytest.raises(ValueError, match="explicit port"):
+        OIDCConfiguration(
+            issuer="https://issuer.example.test:443",
+            audience="shema-business-platform",
+            jwks_url="https://issuer.example.test/.well-known/jwks.json",
+        )
+    with pytest.raises(ValueError, match="credentials"):
+        OIDCConfiguration(
+            issuer="https://user:pass@issuer.example.test",
+            audience="shema-business-platform",
+            jwks_url="https://issuer.example.test/.well-known/jwks.json",
+        )
+
+
 def test_oidc_configuration_rejects_missing_environment(monkeypatch) -> None:
     for name in ("OIDC_ISSUER", "OIDC_AUDIENCE", "OIDC_JWKS_URL"):
         monkeypatch.delenv(name, raising=False)
