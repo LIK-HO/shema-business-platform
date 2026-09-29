@@ -256,6 +256,8 @@ class GigaChatProductionGate:
         self._provider = GatedGigaChatProvider(
             ScopedAIProvider(provider, telemetry=self._telemetry),
             gate=self,
+            activation_version=new_state.activation_version,
+            activated_at=new_state.activated_at,
         )
         self._emit(
             name="ai.production.activated",
