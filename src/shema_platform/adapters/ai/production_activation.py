@@ -327,6 +327,8 @@ class YandexGPTProductionGate:
             self._provider = GatedYandexGPTProvider(
                 ScopedAIProvider(provider, telemetry=self._telemetry),
                 gate=self,
+                activation_version=str(canonical.activation_version),
+                activated_at=canonical.activated_at,
             )
         self._state = AIProductionActivationState(
             enabled=True,
