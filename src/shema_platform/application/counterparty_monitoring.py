@@ -138,6 +138,39 @@ class CounterpartyMonitoringRepository(Protocol):
     def add_change_event(self, event: CounterpartyChangeEvent) -> None: ...
 
 
+def validate_counterparty_identifier(
+    identifier_type: CounterpartyIdentifierType,
+    identifier: str,
+) -> str:
+    normalized = "".join(ch for ch in identifier if ch.isdigit())
+    if normalized != identifier.strip():
+        raise ValueError("counterparty identifier must contain digits only")
+
+    if identifier_type is CounterpartyIdentifierType.INN:
+        if len(normalized) == 10:
+            weights = (2, 4, 10, 3, 5, 9, 4, 6, 8)
+            checksum = sum(int(d) * w for d, w in zip(normalized[:-1], weights, strict=True)) % 11 % 10
+            if checksum != int(normalized[-1]):
+                raise ValueError("invalid INN checksum")
+        elif len(normalized) == 12:
+            weights_1 = (7, 2, 4, 10, 3, 5, 9, 4, 6, 8, 0)
+            weights_2 = (3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8, 0)
+            c1 = sum(int(d) * w for d, w in zip(normalized[:-2], weights_1, strict=True)) % 11 % 10
+            c2 = sum(int(d) * w for d, w in zip(normalized[:-1], weights_2, strict=True)) % 11 % 10
+            if (c1, c2) != (int(normalized[-2]), int(normalized[-1])):
+                raise ValueError("invalid INN checksum")
+        else:
+            raise ValueError("invalid INN length")
+    elif identifier_type is CounterpartyIdentifierType.OGRN:
+        if len(normalized) != 13 or (int(normalized[:-1]) % 11) % 10 != int(normalized[-1]):
+            raise ValueError("invalid OGRN")
+    elif identifier_type is CounterpartyIdentifierType.OGRNIP:
+        if len(normalized) != 15 or (int(normalized[:-1]) % 13) % 10 != int(normalized[-1]):
+            raise ValueError("invalid OGRNIP")
+
+    return normalized
+
+
 def snapshot_payload_hash(payload: dict[str, str]) -> str:
     encoded = json.dumps(
         dict(sorted(payload.items())),
@@ -245,7 +278,7 @@ class CounterpartyMonitoringService:
         now: datetime,
     ) -> CounterpartyMonitor:
         self._authorize(actor_id, permissions, Permission.COUNTERPARTY_MONITOR_MANAGE)
-        normalized = identifier.strip()
+        normalized = validate_counterparty_identifier(identifier_type, identifier)
         request_hash = self._idempotency_hash(
             "counterparty.monitor", actor_id, identifier_type.value, normalized
         )
