@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 _WEB_ROOT = Path(__file__).resolve().parent / "web"
-_PUBLIC_ROUTES = ("/", "/request", "/operator", "/max", "/system")
+_PUBLIC_ROUTES = ("/", "/request", "/operator", "/max", "/system")\n_PWA_MANIFEST = _WEB_ROOT / "manifest.webmanifest"\n_PWA_SERVICE_WORKER = _WEB_ROOT / "sw.js"
 
 
 def install_web_operator_surface(app: FastAPI) -> None:
