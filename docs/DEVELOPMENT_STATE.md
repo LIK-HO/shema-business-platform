@@ -1,3 +1,14 @@
+# Phase 5 PWA — IN_PROGRESS (2026-09-30)
+
+- **Boundary:** Phase 5 — PWA.
+- **Sub-boundaries:** installability; service-worker lifecycle; public-only offline shell cache; bounded memory-only pending mutation queue; reconnect/conflict handling; safe update/rollback behavior.
+- **Base:** Phase 4 final synchronized HEAD `853280bc96307a8e5023b8f65dbc8de667f5c5cb`.
+- **Current branch:** `phase5/pwa-20260930`.
+- **Implementation contract:** `architecture/pwa_contract.json`.
+- **Acceptance contract:** `tests/test_phase5_pwa_acceptance.py`.
+- **Invariant:** SI-26 — PWA offline/cache layer cannot become business authority.
+- **Status:** implementation in progress; closure blocked until targeted tests, global adversarial review, documentation synchronization and full seven-job release gate pass on final HEAD.
+
 # Phase 4 global acceptance — CLOSED / VERIFIED (2026-09-29)
 
 - **Phase:** Phase 4 — Web Operator System.
