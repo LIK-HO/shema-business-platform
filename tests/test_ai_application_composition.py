@@ -144,7 +144,7 @@ def test_ai_only_api_application_keeps_uncomposed_capabilities_unavailable() -> 
 
     response = client.get(
         "/v1/diagnostics",
-        headers={"Authorization": "Bearer test"},
+        headers={"Authorization": "Bearer test", "Idempotency-Key": "ai-composition-test"},
     )
 
     assert response.status_code == 403
