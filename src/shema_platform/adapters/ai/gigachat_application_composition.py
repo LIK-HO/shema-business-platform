@@ -153,7 +153,7 @@ class GigaChatApplicationComposition:
             raise AIProviderCompositionError(
                 AIProviderFailure(
                     code=AIProviderFailureCode.NOT_READY,
-                    message=str(exc),
+                    message=f"GigaChat production provider is not activated: {exc}",
                 )
             ) from exc
 
