@@ -534,7 +534,6 @@ print("INTAKE_OUTBOX_REPLAY=PASS")
 PY
 
 docker exec -e PGPASSWORD=postgres "$RESTORE_CONTAINER"   psql -U postgres -d postgres -v ON_ERROR_STOP=1   -c 'drop database shema_public_intake_restore'
-PY
 
 echo "PITR_DRILL=PASS"
 echo "PITR_TARGET_TIME=$SENTINEL1_TIME"
