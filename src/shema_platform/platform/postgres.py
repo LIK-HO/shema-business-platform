@@ -60,6 +60,7 @@ class PostgresUnitOfWork:
         self.commercial_actions: CommercialActionRepository | None = None
         self.orders: OrderRepository | None = None
         self.repeat_orders: RepeatOrderRepository | None = None
+        self.monitoring: CounterpartyMonitoringRepository | None = None
         self.economics: EconomicEntryRepository | None = None
         self.ai_runs: AIRunRepository | None = None
 
@@ -88,6 +89,9 @@ class PostgresUnitOfWork:
             PostgresQuarantineRepository,
             PostgresRepeatOrderRepository,
         )
+        from shema_platform.platform.counterparty_monitoring_postgres import (
+            PostgresCounterpartyMonitoringRepository,
+        )
 
         connection = self.connection
         self.identities = PostgresIdentityRepository(connection)
@@ -100,6 +104,7 @@ class PostgresUnitOfWork:
         self.commercial_actions = PostgresCommercialActionRepository(connection)
         self.orders = PostgresOrderRepository(connection)
         self.repeat_orders = PostgresRepeatOrderRepository(connection)
+        self.monitoring = PostgresCounterpartyMonitoringRepository(connection)
         self.economics = PostgresEconomicEntryRepository(connection)
         self.ai_runs = PostgresAIRunRepository(connection)
         return self
@@ -117,6 +122,7 @@ class PostgresUnitOfWork:
         self.commercial_actions = None
         self.orders = None
         self.repeat_orders = None
+        self.monitoring = None
         self.economics = None
         self.ai_runs = None
         if connection is None:
