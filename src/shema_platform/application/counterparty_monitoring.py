@@ -487,7 +487,6 @@ class CounterpartyMonitoringService:
                 snapshot.snapshot_id,
                 snapshot.payload_hash,
             )
-            reservation = None
             if idempotency_key:
                 reservation = uow.idempotency.reserve(
                     f"counterparty.observation:{monitor_id}:{idempotency_key}",
