@@ -12,6 +12,7 @@ create table if not exists provider_activation_state (
     rollback_by text,
     rollback_at timestamptz,
     rollback_reason text,
+    rollback_from_configuration_version text,
     updated_at timestamptz not null default now(),
     check (
         (enabled = false)
