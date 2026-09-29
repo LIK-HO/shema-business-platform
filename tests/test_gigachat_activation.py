@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 
 from shema_platform.adapters.ai.gigachat_activation import (
@@ -7,6 +9,7 @@ from shema_platform.adapters.ai.gigachat_activation import (
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.provider_activation import (
     InMemoryProviderActivationStateStore,
+    ProviderActivationState,
 )
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
@@ -101,6 +104,65 @@ def test_gate_activation_does_not_make_http_traffic() -> None:
     assert gate.state.enabled is True
     assert provider.provider_id == "gigachat"
     assert calls == 0
+
+
+def test_cached_provider_rejects_reactivated_canonical_binding() -> None:
+    store = InMemoryProviderActivationStateStore()
+    gate = GigaChatProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=store,
+        configuration_version="gigachat-config:v1",
+    )
+    provider = gate.activate(
+        snapshot(),
+        activated_by="operator",
+        prompt_renderer=lambda _: "unused",
+        cost_estimator=lambda *_: 0.01,
+        authorization_key="secret",
+    )
+    first = gate.state
+    assert first.activated_at is not None
+
+    gate.rollback(
+        rolled_back_by="operator",
+        reason="rebind test",
+    )
+    store.activate(
+        ProviderActivationState(
+            provider_id="gigachat",
+            enabled=True,
+            configuration_version=first.configuration_version,
+            activation_version=first.activation_version,
+            activated_by="operator-2",
+            activated_at=first.activated_at + timedelta(seconds=1),
+            max_cost=first.max_cost,
+            max_duration_seconds=first.max_duration_seconds,
+        )
+    )
+
+    from shema_platform.adapters.ai.composition import bind_ai_execution_scope
+    from shema_platform.application.ai import AIBudget, AIExecutionContext, AITask
+
+    context = AIExecutionContext(
+        actor_id="operator-1",
+        resource_ref="identity:1",
+        actor_trust_level=2,
+        resource_trust_level=2,
+        evidence_level=2,
+        correlation_id="corr-stale-provider",
+        configuration_version=first.configuration_version,
+    )
+    with bind_ai_execution_scope(
+        evidence_refs=("evidence:1",),
+        context=context,
+        budget=AIBudget(100, 0.10, 5),
+        deadline_seconds=5,
+    ):
+        with pytest.raises(RuntimeError, match="configuration"):
+            provider.run(
+                AITask("task:stale-provider", "classification", "prompt:v1"),
+                input_refs=("identity:1",),
+            )
 
 
 def test_gate_rollback_disables_future_requests() -> None:
