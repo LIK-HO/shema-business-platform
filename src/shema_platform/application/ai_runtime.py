@@ -58,6 +58,7 @@ class AIExecutionRequest:
     actor_trust_level: int
     permissions: frozenset[Permission]
     correlation_id: str
+    idempotency_key: str
 
     def __post_init__(self) -> None:
         if not self.task_type.strip() or not self.prompt_version.strip():
@@ -66,6 +67,8 @@ class AIExecutionRequest:
             raise ValueError("resource_ref and actor_id are required")
         if not self.correlation_id.strip():
             raise ValueError("correlation_id is required")
+        if not 8 <= len(self.idempotency_key.strip()) <= 128:
+            raise ValueError("idempotency_key must be 8-128 characters")
         if not self.input_refs or len(self.input_refs) > 64:
             raise ValueError("input_refs must contain 1..64 references")
         if not self.evidence_refs or len(self.evidence_refs) > 64:
