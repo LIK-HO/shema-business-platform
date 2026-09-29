@@ -190,7 +190,6 @@ def test_postgres_stale_worker_cannot_quarantine_newer_send_lease() -> None:
 
     with psycopg.connect(DATABASE_URL) as first, psycopg.connect(DATABASE_URL) as second:
         apply_migrations(first)
-        from shema_platform.foundation.errors import IntegrityViolation
         from shema_platform.platform.postgres_repositories import (
             PostgresCommercialActionRepository,
         )
