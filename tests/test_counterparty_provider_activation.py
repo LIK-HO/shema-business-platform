@@ -93,6 +93,54 @@ def request(*, authorized: bool = True) -> CounterpartyProviderActivationCommand
     )
 
 
+
+
+def test_dadata_activation_and_rollback_are_global_across_replicas() -> None:
+    store = InMemoryProviderActivationStateStore()
+
+    gate_a = DaDataControlledActivationGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=store,
+        provider_factory=lambda _configuration: FakeProvider(),
+        now=lambda: datetime(2026, 9, 27, 12, 0, tzinfo=UTC),
+    )
+    gate_b = DaDataControlledActivationGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=store,
+        provider_factory=lambda _configuration: FakeProvider(),
+        now=lambda: datetime(2026, 9, 27, 12, 0, tzinfo=UTC),
+    )
+    configuration = DaDataConfiguration(
+        api_key="test-secret",
+        enabled=True,
+    )
+
+    gate_a.activate(
+        configuration,
+        readiness=readiness(),
+        activated_by="operator-1",
+        activation_version="shared-dadata:v1",
+        correlation_id="corr-shared-1",
+    )
+
+    replica_b_provider = gate_b.provider(configuration=configuration)
+    assert replica_b_provider.lookup(
+        CounterpartyLookupQuery(
+            identifier_type=CounterpartyLookupIdentifierType.INN,
+            identifier="7707083893",
+        )
+    ).canonical_name == "ООО ТЕСТ"
+
+    gate_a.rollback(
+        rolled_back_by="operator-2",
+        reason="global kill switch",
+        correlation_id="corr-shared-2",
+    )
+
+    assert gate_b.state.enabled is False
+    with pytest.raises(DaDataActivationError, match="not active"):
+        gate_b.provider(configuration=configuration)
+
 def test_activation_is_fail_closed_without_explicit_authorization() -> None:
     _, gate, service = gate_and_service()
 
