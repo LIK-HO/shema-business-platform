@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
+from shema_platform.application.counterparty_check import CounterpartyIdentifierType
 from shema_platform.application.counterparty_monitoring import (
     CounterpartyChangeEvent,
     CounterpartyFavorite,
@@ -11,7 +12,6 @@ from shema_platform.application.counterparty_monitoring import (
     CounterpartySnapshot,
     MonitoringStatus,
 )
-from shema_platform.application.counterparty_check import CounterpartyIdentifierType
 from shema_platform.foundation.errors import IdempotencyConflict, IntegrityViolation
 from shema_platform.platform.postgres import DBConnection
 
