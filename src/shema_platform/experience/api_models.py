@@ -416,5 +416,10 @@ class OperatorNotificationResponse(APIModel):
     created_at: str = Field(alias="createdAt")
 
 
+class OperatorCapabilitiesResponse(APIModel):
+    actor_id: str = Field(alias="actorId")
+    capabilities: dict[str, bool]
+
+
 class OperatorNotificationListResponse(APIModel):
     notifications: list[OperatorNotificationResponse]
