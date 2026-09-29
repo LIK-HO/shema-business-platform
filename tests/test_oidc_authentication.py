@@ -89,7 +89,10 @@ def test_unknown_kid_jwks_refresh_is_rate_limited(monkeypatch) -> None:
     with pytest.raises(jwt.PyJWKClientError, match="cooldown"):
         client.get_signing_key("attacker-kid")
 
-    assert refresh_calls == [False, True]
+    # The second False entry is a cache-read check; only the True entry
+    # represents a forced network refresh. The cooldown blocks a second forced
+    # refresh for the attacker-controlled kid.
+    assert refresh_calls == [False, True, False]
 
 def test_oidc_authentication_verifies_signature_issuer_audience_and_claims(authenticator) -> None:
     verifier, private_key = authenticator
