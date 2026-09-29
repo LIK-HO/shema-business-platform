@@ -1212,6 +1212,10 @@ class PostgresOrderRepository(OrderRepository):
         row = cursor.fetchone()
         if row is None:
             raise KeyError(f"unknown order: {order.order_id}")
+        if row[4] != order.owner_actor_id:
+            raise IntegrityViolation(
+                "order owner scope is immutable"
+            )
 
         line_cursor = self._connection.execute(
             """
@@ -1240,10 +1244,6 @@ class PostgresOrderRepository(OrderRepository):
             owner_actor_id=str(row[4]) if row[4] is not None else None,
         )
 
-        if current.owner_actor_id != order.owner_actor_id:
-            raise IntegrityViolation(
-                "order owner scope is immutable"
-            )
         if (
             current.identity_id != order.identity_id
             or current.source_action_id != order.source_action_id
