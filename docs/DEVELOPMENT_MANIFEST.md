@@ -122,6 +122,21 @@ The frozen v1.4 kernel remains protected by its independent integrity gate. Secu
 - Full seven-job release gate CI #2041 (`36561799870`) is GREEN on the exact implementation HEAD; no frozen-kernel semantic change.
 - Scope limit: daily checkpointed batch monitoring, bounded parallelism/backoff, provider-outage handling and recovery checkpoint semantics remain the separate **3C-2** boundary.
 
+### 3C-2. Checkpointed Counterparty Monitoring Worker & Recovery boundary — 2026-09-29 — CLOSED / VERIFIED by CI #2073 (`36577339818`)
+
+- **Implemented:** durable daily batch and item checkpoints; bounded parallel provider execution; PostgreSQL `FOR UPDATE SKIP LOCKED` claiming; exact worker/lease CAS on completion/failure; checkpointed reclaim after worker loss; deterministic exponential backoff with bounded attempt budget.
+- **Provider-outage semantics:** provider-unavailable, timeout and connection failure paths become retryable item state with no snapshot/change event; successful recovery clears the monitor error and advances the next check only after authoritative observation.
+- **Replay integrity:** observation idempotency is bound to the batch command identity, so a replay returns the durable snapshot instead of creating a second snapshot/change event.
+- **Fail-closed:** corrupted/tampered snapshots remain rejected by snapshot integrity validation; exhausted attempt items fail without another provider call.
+- **Adversarial evidence:** unit + PostgreSQL integration cover outage/no-false-change, duplicate batch replay, stale-worker completion after lease reclaim, max-attempt provider suppression and bounded parallelism.
+- **Recovery evidence:** PITR drill validates canonical migration 0016 and the complete seven-job gate #2073 is GREEN on the exact implementation HEAD.
+- **Scope:** no frozen-kernel semantic change; no production provider activation or merge is implied by this closure.
+
+### 3C-E2E. Counterparty Verification, Monitoring & Favorites phase boundary — 2026-09-29 — CLOSED / VERIFIED
+
+- Phase 3C combines the verified 3C-1 runtime/persistence boundary with the verified 3C-2 checkpointed worker/recovery boundary.
+- Required behavior is now durable from exact identifier → monitoring subscription → authoritative snapshot → deterministic change event → recoverable daily batch processing.
+- Next implementation boundary: **Phase 4 — Web Operator System**.
 ### 3B-E2E. Public-intake outage → replay → reconstruction boundary — 2026-09-29 — CLOSED / VERIFIED by CI #2004 (`36558811275`)
 
 - Boundary proof: accepted public intake is durably retained in the dedicated intake database when canonical Shema projection is unavailable.
