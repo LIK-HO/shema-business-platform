@@ -31,7 +31,16 @@ def test_phase6_operator_navigation_matches_contract_scope() -> None:
 def test_phase6_shell_and_work_queue_primitives_are_present() -> None:
     html = (WEB / "index.html").read_text(encoding="utf-8")
     js = (WEB / "app.js").read_text(encoding="utf-8")
-    for token in ("global-search", "notifications", "network-state", "workbench", "requests", "clients", "handoffs"):
+    required_shell_tokens = (
+        "global-search",
+        "notifications",
+        "network-state",
+        "workbench",
+        "requests",
+        "clients",
+        "handoffs",
+    )
+    for token in required_shell_tokens:
         assert token in html or token in js
     for token in ("preferences", "query", "severity", "sort", "selected", "session"):
         assert token in js
@@ -118,9 +127,21 @@ def test_phase6_contracts_remain_compatible() -> None:
         (ROOT / "architecture" / "operator_interface_contract.json").read_text(encoding="utf-8")
     )
     public_contract = json.loads(
-        (ROOT / "architecture" / "public_client_experience_contract.json").read_text(encoding="utf-8")
+        (
+            ROOT / "architecture" / "public_client_experience_contract.json"
+        ).read_text(encoding="utf-8")
     )
     assert operator_contract["experience_surfaces"]["operator_pwa"]["same_canonical_api"] is True
-    assert operator_contract["experience_surfaces"]["operator_pwa"]["no_second_business_rule_implementation"] is True
-    assert public_contract["experience_surfaces"]["max_mini_app"]["uses_same_public_web_application"] is True
+    assert (
+        operator_contract["experience_surfaces"]["operator_pwa"][
+            "no_second_business_rule_implementation"
+        ]
+        is True
+    )
+    assert (
+        public_contract["experience_surfaces"]["max_mini_app"][
+            "uses_same_public_web_application"
+        ]
+        is True
+    )
     assert public_contract["non_goals"].count("second_crm") == 1
