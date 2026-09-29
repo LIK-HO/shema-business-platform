@@ -1,0 +1,241 @@
+from __future__ import annotations
+
+import os
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
+import psycopg
+import pytest
+
+from shema_platform.application.counterparty_check import (
+    CounterpartyIdentifierType,
+    CounterpartyObservation,
+    SourceReliability,
+)
+from shema_platform.application.counterparty_monitoring_worker import (
+    BatchItemState,
+    BatchStatus,
+    CounterpartyMonitoringProviderError,
+    CounterpartyMonitoringWorker,
+)
+from shema_platform.application.counterparty_monitoring import CounterpartyMonitoringService
+from shema_platform.foundation.authorization import Permission
+from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
+from shema_platform.platform.postgres import PostgresUnitOfWork
+from shema_platform.application.counterparty_check import CounterpartyIdentifierType
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    pytest.skip("DATABASE_URL is not configured", allow_module_level=True)
+
+ROOT = Path(__file__).resolve().parents[2]
+NOW = datetime(2026, 9, 29, 15, tzinfo=UTC)
+PERMISSIONS = frozenset({Permission.COUNTERPARTY_MONITOR_MANAGE})
+
+
+class ScriptedProvider:
+    def __init__(self, values):
+        self.values = list(values)
+        self.calls = 0
+
+    def observe(self, monitor, *, now):
+        value = self.values[min(self.calls, len(self.values) - 1)]
+        self.calls += 1
+        if isinstance(value, Exception):
+            raise value
+        return value
+
+
+def connection(schema: str) -> psycopg.Connection:
+    conn = psycopg.connect(DATABASE_URL)
+    conn.execute('set search_path to "' + schema + '"')
+    return conn
+
+
+def make_schema() -> str:
+    return "counterparty_monitor_worker_" + __import__("uuid").uuid4().hex
+
+
+def migrate(schema: str) -> None:
+    with psycopg.connect(DATABASE_URL) as bootstrap:
+        bootstrap.execute('create schema "' + schema + '"')
+        bootstrap.commit()
+    plan = MigrationPlan.from_directory(ROOT / "db" / "migrations")
+    MigrationRunner(lambda: connection(schema), plan).apply()
+
+
+def cleanup(schema: str) -> None:
+    with psycopg.connect(DATABASE_URL) as conn:
+        conn.execute('drop schema "' + schema + '" cascade')
+        conn.commit()
+
+
+def factory(schema: str):
+    return lambda: PostgresUnitOfWork(lambda: connection(schema))
+
+
+def observation(observed_at: datetime = NOW) -> CounterpartyObservation:
+    return CounterpartyObservation(
+        identifier_type=CounterpartyIdentifierType.INN,
+        identifier="7707083893",
+        canonical_name='ООО "Пример"',
+        tax_id="7707083893",
+        registration_id="1027700132195",
+        legal_status="ACTIVE",
+        source_ref="https://pb.nalog.ru/",
+        source_reliability=SourceReliability.AUTHORITATIVE,
+        claim_confidence=1.0,
+        observed_at=observed_at,
+        expires_at=observed_at + timedelta(days=1),
+    )
+
+
+def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
+    schema = make_schema()
+    try:
+        migrate(schema)
+        uow_factory = factory(schema)
+        service = CounterpartyMonitoringService(uow_factory)
+        monitor = service.save_monitoring(
+            identifier_type=CounterpartyIdentifierType.INN,
+            identifier="7707083893",
+            actor_id="operator-1",
+            permissions=PERMISSIONS,
+            idempotency_key="worker-monitor-1",
+            correlation_id="corr-worker-1",
+            now=NOW,
+        )
+
+        provider = ScriptedProvider(
+            [
+                CounterpartyMonitoringProviderError(
+                    "PROVIDER_UNAVAILABLE",
+                    "registry unavailable",
+                    retryable=True,
+                ),
+                observation(),
+                observation(),
+            ]
+        )
+
+        worker = CounterpartyMonitoringWorker(
+            uow_factory,
+            provider,
+            worker_id="worker-1",
+            permissions=PERMISSIONS,
+            max_parallelism=2,
+            lease_seconds=60,
+            max_attempts=3,
+            backoff_seconds=1,
+            max_backoff_seconds=8,
+            materialization_limit=100,
+            clock=lambda: NOW,
+        )
+
+        first = worker.run_once(
+            scheduled_at=NOW,
+            batch_key="daily-2026-09-29",
+        )
+        assert first.batch_status is BatchStatus.RUNNING
+        assert first.retryable == 1
+
+        with connection(schema) as conn:
+            assert conn.execute(
+                "select count(*) from counterparty_snapshot where monitor_id = %s",
+                (monitor.monitor_id,),
+            ).fetchone() == (0,)
+            item = conn.execute(
+                """
+                select state, last_error_code
+                from counterparty_monitoring_batch_item
+                where batch_id = %s and monitor_id = %s
+                """,
+                (first.batch_id, monitor.monitor_id),
+            ).fetchone()
+            assert item == (BatchItemState.RETRYABLE.value, "PROVIDER_UNAVAILABLE")
+
+        recovery = CounterpartyMonitoringWorker(
+            uow_factory,
+            provider,
+            worker_id="worker-2",
+            permissions=PERMISSIONS,
+            max_parallelism=1,
+            lease_seconds=60,
+            max_attempts=3,
+            backoff_seconds=1,
+            max_backoff_seconds=8,
+            materialization_limit=100,
+            clock=lambda: NOW + timedelta(seconds=2),
+        )
+        second = recovery.run_once(
+            scheduled_at=NOW + timedelta(seconds=2),
+            batch_key="daily-2026-09-29",
+        )
+        assert second.batch_status is BatchStatus.COMPLETED
+        assert second.completed == 1
+
+        with connection(schema) as conn:
+            assert conn.execute(
+                "select count(*) from counterparty_snapshot where monitor_id = %s",
+                (monitor.monitor_id,),
+            ).fetchone() == (1,)
+            assert conn.execute(
+                "select count(*) from counterparty_change_event where monitor_id = %s",
+                (monitor.monitor_id,),
+            ).fetchone() == (0,)
+            assert conn.execute(
+                "select last_error_code from counterparty_monitor where monitor_id = %s",
+                (monitor.monitor_id,),
+            ).fetchone() == (None,)
+
+        duplicate = recovery.run_once(
+            scheduled_at=NOW + timedelta(seconds=2),
+            batch_key="daily-2026-09-29",
+        )
+        assert duplicate.claimed == 0
+        assert provider.calls == 2
+
+        with connection(schema) as conn:
+            conn.execute(
+                """
+                update counterparty_monitoring_batch_item
+                set state = 'running',
+                    lease_worker_id = 'dead-worker',
+                    lease_until = %s
+                where batch_id = %s and monitor_id = %s
+                """,
+                (
+                    NOW - timedelta(seconds=1),
+                    second.batch_id,
+                    monitor.monitor_id,
+                ),
+            )
+            conn.commit()
+
+        replay = CounterpartyMonitoringWorker(
+            uow_factory,
+            provider,
+            worker_id="recovery-worker",
+            permissions=PERMISSIONS,
+            max_parallelism=1,
+            lease_seconds=60,
+            max_attempts=3,
+            backoff_seconds=1,
+            max_backoff_seconds=8,
+            materialization_limit=100,
+            clock=lambda: NOW,
+        )
+        replay_result = replay.run_once(
+            scheduled_at=NOW,
+            batch_key="daily-2026-09-29",
+        )
+        assert replay_result.completed == 1
+        assert replay_result.batch_status is BatchStatus.COMPLETED
+
+        with connection(schema) as conn:
+            assert conn.execute(
+                "select count(*) from counterparty_snapshot where monitor_id = %s",
+                (monitor.monitor_id,),
+            ).fetchone() == (1,)
+    finally:
+        cleanup(schema)
