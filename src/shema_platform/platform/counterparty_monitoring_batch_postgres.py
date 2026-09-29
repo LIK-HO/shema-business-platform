@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import NAMESPACE_URL, uuid5
 
 from shema_platform.application.counterparty_monitoring_worker import (
@@ -169,9 +169,7 @@ class PostgresCounterpartyMonitoringBatchRepository(
             (batch_id, now, now, limit),
         ).fetchall()
         result: list[CounterpartyMonitoringBatchItem] = []
-        lease_until = now.replace() + __import__("datetime").timedelta(
-            seconds=lease_seconds
-        )
+        lease_until = now + timedelta(seconds=lease_seconds)
         for row in rows:
             monitor_id = str(row[1])
             updated = self._connection.execute(
