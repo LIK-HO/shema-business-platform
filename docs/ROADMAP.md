@@ -431,6 +431,9 @@ A monitored counterparty has reproducible snapshots, deterministic change detect
 
 ## 8. Phase 4 — Web Operator System
 
+### Phase 4-4A — CLOSED / VERIFIED
+The first Web Operator boundary is verified on CI run `36580831730`: same-origin Web shell/assets, protected operator API boundary, public intake shell, MAX static projection, capability-aware navigation and client-side no-persistence safeguards. The next active boundary is **Phase 4-4B — Public Client Intake + Attribution + MAX projection hardening**.
+
 ### Objective
 Create the primary human operating surface over proven B2B workflows and consolidate the vertical slices into one coherent operator system. This is not the first appearance of UI; earlier phases already include minimal operator surfaces for validation.
 
