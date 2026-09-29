@@ -1,6 +1,6 @@
+import os
 from datetime import UTC, datetime
 from pathlib import Path
-import os
 
 import psycopg
 import pytest
