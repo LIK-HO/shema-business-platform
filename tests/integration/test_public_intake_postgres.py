@@ -173,75 +173,73 @@ def test_public_intake_database_is_isolated_durable_and_idempotent() -> None:
 
 
 def test_public_intake_stale_outbox_worker_cannot_mark_reclaimed_event_published() -> None:
+    database = f"shema_intake_{uuid4().hex[:12]}"
     event_id = f"stale-outbox:{uuid4()}"
     occurred_at = datetime.now(UTC)
-    from shema_platform.foundation.errors import IntegrityViolation
-    from shema_platform.platform.public_intake_postgres import (
-        PostgresPublicIntakeRepository,
-    )
+    try:
+        create_database(database)
+        migrate(database)
 
-    with PostgresPublicIntakeRepository(
-        lambda: psycopg.connect(DATABASE_URL)
-    ) as repository:
-        repository.append_outbox(
-            event_id=event_id,
-            request_id=f"request:{uuid4()}",
-            event_type="new_client_request",
-            payload={"test": True},
-            occurred_at=occurred_at,
-            notify_operator=True,
-        )
-
-    with PostgresPublicIntakeRepository(
-        lambda: psycopg.connect(DATABASE_URL)
-    ) as old:
-        old_claim = old.claim_pending(
-            "worker-old",
-            lease_seconds=1,
-            now=occurred_at,
-            limit=1,
-        )
-        assert len(old_claim) == 1
-
-    with PostgresPublicIntakeRepository(
-        lambda: psycopg.connect(DATABASE_URL)
-    ) as new:
-        new_claim = new.claim_pending(
-            "worker-new",
-            lease_seconds=60,
-            now=occurred_at + timedelta(seconds=2),
-            limit=1,
-        )
-        assert len(new_claim) == 1
-
-    with PostgresPublicIntakeRepository(
-        lambda: psycopg.connect(DATABASE_URL)
-    ) as stale:
-        with pytest.raises(IntegrityViolation, match="publication rejected"):
-            stale.mark_outbox_published(
-                event_id,
-                worker_id="worker-old",
-                now=occurred_at + timedelta(seconds=2),
+        with PostgresPublicIntakeRepository(
+            intake_factory(database)
+        ) as repository:
+            repository.append_outbox(
+                event_id=event_id,
+                request_id=f"request:{uuid4()}",
+                event_type="new_client_request",
+                payload={"test": True},
+                occurred_at=occurred_at,
+                notify_operator=True,
             )
 
-    with psycopg.connect(DATABASE_URL) as check:
-        row = check.execute(
-            """
-            select published_at, delivery_worker_id
-            from intake_outbox_event
-            where event_id = %s
-            """,
-            (event_id,),
-        ).fetchone()
-        assert row is not None
-        assert row[0] is None
-        assert row[1] == "worker-new"
-        check.execute(
-            "delete from intake_outbox_event where event_id = %s",
-            (event_id,),
-        )
-        check.commit()
+        with PostgresPublicIntakeRepository(
+            intake_factory(database)
+        ) as old:
+            old_claim = old.claim_pending(
+                "worker-old",
+                lease_seconds=1,
+                now=occurred_at,
+                limit=1,
+            )
+            assert len(old_claim) == 1
 
+        with PostgresPublicIntakeRepository(
+            intake_factory(database)
+        ) as new:
+            new_claim = new.claim_pending(
+                "worker-new",
+                lease_seconds=60,
+                now=occurred_at + timedelta(seconds=2),
+                limit=1,
+            )
+            assert len(new_claim) == 1
+
+        with PostgresPublicIntakeRepository(
+            intake_factory(database)
+        ) as stale:
+            from shema_platform.foundation.errors import IntegrityViolation
+
+            with pytest.raises(IntegrityViolation, match="publication rejected"):
+                stale.mark_outbox_published(
+                    event_id,
+                    worker_id="worker-old",
+                    now=occurred_at + timedelta(seconds=2),
+                )
+
+        with psycopg.connect(admin_dsn(database)) as check:
+            row = check.execute(
+                """
+                select published_at, delivery_worker_id
+                from intake_outbox_event
+                where event_id = %s
+                """,
+                (event_id,),
+            ).fetchone()
+            assert row is not None
+            assert row[0] is None
+            assert row[1] == "worker-new"
+    finally:
+        drop_database(database)
 
 def test_public_intake_migration_can_be_adopted_by_a_fresh_database() -> None:
     database = f"shema_intake_{uuid4().hex[:12]}"
