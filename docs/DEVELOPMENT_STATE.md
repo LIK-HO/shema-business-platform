@@ -1,4 +1,16 @@
 # Development State Ledger
+
+# Security re-baseline synchronization — 2026-09-29
+
+- **Security branch:** `security/global-rebaseline-2026-09`.
+- **PR:** #59 remains open and draft; merge/production authorization is not implied.
+- **Current HEAD:** resolved live from GitHub; this ledger does not store a static commit pointer.
+- **Security trust-chain doctrine:** untrusted input → edge/authentication → authorization → resource scope → validation → evidence provenance → policy → transaction/concurrency → external-effect reservation → external call → reconciliation → audit → recovery.
+- **Implemented current security sub-boundaries:** resource-read scope (1C-READ), permission non-escalation (1C-PERM), commercial external-effect stale-worker protection (1C-EFFECT), public-intake outbox stale-worker protection (1C-OUTBOX), provider rollback CAS (1C-ACTIVATION), cached provider binding (1C-BINDING), and stale local activation-state recovery (1C-ACTIVE-STATE).
+- **Current verification status:** these later Security boundaries remain unverified as a set until the exact current HEAD passes the full seven-job release gate. Prior green runs on earlier HEADs are historical evidence only.
+- **Latest CI failure corrected:** run #1990 exposed only a stale manifest-window assertion plus import-order/duplicate-import test defects; all were corrected. No new runtime failure was reported by that run.
+- **Next required closure:** current-head unit + integration + supply-chain + backup/PITR + release-contract must all be green; then re-run the global adversarial review and synchronize final evidence.
+
 ## Current development-session synchronization — 2026-09-28
 
 - **Phase 3A — Repeat Orders & Business Continuity: CLOSED / VERIFIED.**
