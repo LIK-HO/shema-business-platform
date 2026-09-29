@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import os
 
 from shema_platform.adapters.ai.composition import (
     AIProviderCompositionError,
@@ -11,7 +12,12 @@ from shema_platform.adapters.ai.contracts import (
     AIProviderFailureCode,
 )
 from shema_platform.adapters.ai.production_activation import (
+    AIProductionActivationError,
     YandexGPTProductionGate,
+)
+from shema_platform.adapters.ai.yandexgpt import (
+    YandexGPTConfiguration,
+    YandexGPTProvider,
 )
 from shema_platform.application.ai import AIProvider
 from shema_platform.application.ai_runtime import (
@@ -21,6 +27,7 @@ from shema_platform.application.ai_runtime import (
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.policy import PolicyEngine
+from shema_platform.foundation.provider_activation import ProviderActivationStateStore
 from shema_platform.foundation.telemetry import TelemetrySink
 
 
@@ -37,6 +44,7 @@ class YandexGPTApplicationComposition:
         prompt_renderer: Callable,
         cost_estimator: Callable[[int, int], float],
         policy: PolicyEngine | None = None,
+        activation_state_store: ProviderActivationStateStore | None = None,
     ) -> None:
         self._snapshot = snapshot
         self._telemetry = telemetry
@@ -45,8 +53,41 @@ class YandexGPTApplicationComposition:
         self._prompt_renderer = prompt_renderer
         self._cost_estimator = cost_estimator
         self._policy = policy or PolicyEngine()
-        self._gate = YandexGPTProductionGate(telemetry=telemetry)
+        if activation_state_store is None:
+            raise ValueError("YandexGPT requires a shared provider activation state store")
+        self._activation_state_store = activation_state_store
+        self._gate = YandexGPTProductionGate(
+            telemetry=telemetry,
+            provider_factory=self._build_provider,
+            activation_state_store=activation_state_store,
+            configuration_version=str(
+                snapshot.values["ai.yandexgpt.configuration_version"]
+            ),
+        )
         self._provider: AIProvider | None = None
+
+    def _build_provider(self, api_key: str | None = None) -> AIProvider:
+        secret = (api_key or os.getenv("YANDEXGPT_API_KEY", "")).strip()
+        if not secret:
+            raise ValueError("YANDEXGPT_API_KEY is required")
+        values = self._snapshot.values
+        configuration = YandexGPTConfiguration(
+            api_key=secret,
+            model_uri=str(values["ai.yandexgpt.model_uri"]),
+            base_url=str(values["ai.yandexgpt.base_url"]).rstrip("/"),
+            timeout_seconds=float(values["ai.yandexgpt.timeout_seconds"]),
+            max_response_bytes=int(values["ai.yandexgpt.max_response_bytes"]),
+            max_input_chars=int(values["ai.yandexgpt.max_input_chars"]),
+            max_output_tokens=int(values["ai.yandexgpt.max_output_tokens"]),
+            max_cost=float(values["ai.yandexgpt.max_cost"]),
+            configuration_version=str(values["ai.yandexgpt.configuration_version"]),
+            activation_version=str(values["ai.yandexgpt.activation_version"]),
+        )
+        return YandexGPTProvider(
+            configuration,
+            prompt_renderer=self._prompt_renderer,
+            cost_estimator=self._cost_estimator,
+        )
 
     @property
     def gate(self) -> YandexGPTProductionGate:
@@ -86,15 +127,15 @@ class YandexGPTApplicationComposition:
         return version
 
     def provider(self) -> AIProvider:
-        provider = self._provider
-        if provider is None:
+        try:
+            return self._gate.provider()
+        except AIProductionActivationError as exc:
             raise AIProviderCompositionError(
                 AIProviderFailure(
                     code=AIProviderFailureCode.NOT_READY,
-                    message="YandexGPT production application is not activated",
+                    message=str(exc),
                 )
-            )
-        return provider
+            ) from exc
 
     def service(self) -> AIExecutionService:
         return AIExecutionService(
