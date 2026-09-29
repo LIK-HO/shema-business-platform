@@ -478,6 +478,8 @@ class GatedGigaChatProvider:
         configuration_version = scope.context.configuration_version
         if not configuration_version or not self._gate.allows_request(
             configuration_version=configuration_version,
+            activation_version=self._activation_version,
+            activated_at=self._activated_at,
         ):
             raise AIProviderCompositionError(
                 AIProviderFailure(
