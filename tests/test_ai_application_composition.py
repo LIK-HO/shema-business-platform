@@ -20,6 +20,7 @@ from shema_platform.foundation.authentication import (
 from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.policy import PolicyEngine
+from shema_platform.foundation.provider_activation import InMemoryProviderActivationStateStore
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
@@ -50,7 +51,7 @@ def snapshot() -> ConfigurationSnapshot:
         environment="production",
         values={
             "ai.yandexgpt.model_uri": "gpt://folder/yandexgpt/latest",
-            "ai.yandexgpt.base_url": "https://ai.example.test/v1",
+            "ai.yandexgpt.base_url": "https://ai.api.cloud.yandex.net/v1",
             "ai.yandexgpt.timeout_seconds": 10,
             "ai.yandexgpt.max_response_bytes": 1_048_576,
             "ai.yandexgpt.max_input_chars": 32_768,
@@ -72,6 +73,7 @@ def composition() -> YandexGPTApplicationComposition:
         prompt_renderer=lambda request: "unused",
         cost_estimator=lambda input_tokens, output_tokens: 0.01,
         policy=PolicyEngine(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
     )
 
 
