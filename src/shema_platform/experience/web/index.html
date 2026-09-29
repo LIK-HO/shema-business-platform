@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="СХЕМА — единая публичная и операторская web-поверхность">
+<link rel="stylesheet" href="/web/style.css"><title>СХЕМА</title>
+</head><body>
+<div class="shell">
+<aside class="side">
+  <div class="brand"><b>С</b><div><strong>СХЕМА</strong><small>Business Platform</small></div></div>
+  <nav id="nav">
+    <button data-route="requests">Новые заявки <span id="nav-count">0</span></button>
+    <button data-route="search">Поиск</button>
+    <button data-route="counterparties">Контрагенты</button>
+    <button data-route="repeat" data-capability="repeatOrders">Повторные заказы</button>
+    <button data-route="system" data-capability="diagnostics">Система</button>
+  </nav>
+  <div class="side-foot"><span id="session">Гость</span><button id="login" class="secondary">Войти оператору</button></div>
+</aside>
+<main>
+<header><div><small id="surface">PUBLIC / WEB</small><h1 id="title">Заявка на услугу</h1></div><div><code id="corr">correlation: —</code><button id="refresh" class="ghost">Обновить</button></div></header>
+<section id="view"></section>
+</main>
+</div>
+<dialog id="auth"><form id="auth-form">
+<h2>Сессия оператора</h2><p class="muted">Bearer token хранится только в памяти страницы.</p>
+<label>Токен<input id="token" type="password" autocomplete="off"></label><div id="auth-error" class="error hidden"></div>
+<div class="actions"><button value="cancel" class="secondary">Отмена</button><button class="primary">Проверить</button></div>
+</form></dialog>
+<div id="toast"></div>
+<script src="/web/app.js" defer></script>
+</body></html>
