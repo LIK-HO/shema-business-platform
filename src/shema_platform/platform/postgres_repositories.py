@@ -1065,6 +1065,14 @@ class PostgresCommercialActionRepository(CommercialActionRepository):
             raise IntegrityViolation(
                 "commercial action SENT state requires lease-guarded completion"
             )
+        current = self.get(action.action_id)
+        if current is None:
+            raise KeyError(f"unknown commercial action: {action.action_id}")
+        if current.owner_actor_id != action.owner_actor_id:
+            raise IntegrityViolation(
+                "commercial action owner scope is immutable"
+            )
+
         cursor = self._connection.execute(
             """
             update commercial_action
@@ -1232,6 +1240,10 @@ class PostgresOrderRepository(OrderRepository):
             owner_actor_id=str(row[4]) if row[4] is not None else None,
         )
 
+        if current.owner_actor_id != order.owner_actor_id:
+            raise IntegrityViolation(
+                "order owner scope is immutable"
+            )
         if (
             current.identity_id != order.identity_id
             or current.source_action_id != order.source_action_id
@@ -1422,6 +1434,10 @@ class PostgresRepeatOrderRepository(RepeatOrderRepository):
         if current.revision != expected_revision:
             raise IntegrityViolation(
                 "repeat plan revision conflict: stale operator state"
+            )
+        if current.owner_actor_id != plan.owner_actor_id:
+            raise IntegrityViolation(
+                "repeat order plan owner scope is immutable"
             )
         if (
             current.source_order_id != plan.source_order_id
