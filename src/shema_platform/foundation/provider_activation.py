@@ -74,4 +74,5 @@ class InMemoryProviderActivationStateStore:
             rollback_by=rolled_back_by,
             rollback_at=rolled_back_at,
             rollback_reason=reason[:256],
+            rollback_from_configuration_version=current.configuration_version,
         )
