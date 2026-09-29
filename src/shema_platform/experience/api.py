@@ -328,6 +328,7 @@ def create_app(
     telemetry: TelemetrySink | None = None,
     provider_health: ProviderHealthRegistry | None = None,
     counterparty_checker: CounterpartyCheckService | None = None,
+    counterparty_monitoring: CounterpartyMonitoringService | None = None,
     counterparty_provider_activation: CounterpartyProviderActivationService | None = None,
     counterparty_provider_lookup: CounterpartyProviderRuntimeLookupService | None = None,
     public_intake: PublicIntakeService | None = None,
