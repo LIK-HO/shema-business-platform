@@ -18,6 +18,13 @@
       "negative_test": "actor with valid permission cannot act on or read a foreign resource"
     },
     {
+      "id": "SI-17",
+      "name": "public_intake_outbox_stale_worker_denied",
+      "class": "concurrency",
+      "enforcement": "public-intake outbox publication requires current worker lease",
+      "negative_test": "a stale public-intake outbox worker cannot mark a reclaimed event published"
+    },
+    {
       "id": "SI-16",
       "name": "stale_worker_cannot_overwrite_newer_send",
       "class": "concurrency",
