@@ -1,7 +1,7 @@
 (()=>{'use strict';
 const S={token:null,surface:new URLSearchParams(location.search).get('surface')==='max'?'max':'web',route:location.hash.slice(1)||'request',caps:{},notes:[],selected:null,pendingId:'',pendingQueue:[],online:navigator.onLine};
 const $=(s,r=document)=>r.querySelector(s),view=$('#view'),title=$('#title'),surface=$('#surface'),corr=$('#corr'),count=$('#nav-count');
-const MAX_PENDING=8;
+const MAX_PENDING = 8;
 const MAX_PENDING_BYTES=65536;
 const MAX_PENDING_ATTEMPTS=3;
 const MAX_PENDING_AGE_MS=86400000;
