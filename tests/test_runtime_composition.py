@@ -5,8 +5,10 @@ from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api_models import SearchResponse
 from shema_platform.experience.runtime_composition import (
     CounterpartyMonitoringRuntimeAssembly,
+    CounterpartyMonitoringWorkerRuntimeAssembly,
     YandexGPTRuntimeAssembly,
     compose_counterparty_monitoring_runtime,
+    compose_counterparty_monitoring_worker_runtime,
     compose_yandexgpt_runtime,
 )
 from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
@@ -82,6 +84,26 @@ def build() -> YandexGPTRuntimeAssembly:
     )
 
 
+
+
+class NoTrafficMonitoringProvider:
+    def observe(self, monitor, *, now):
+        raise AssertionError("provider must not be contacted during assembly")
+
+
+def test_counterparty_monitoring_worker_runtime_is_explicit_and_lazy() -> None:
+    def forbidden_uow():
+        raise AssertionError("database must not be touched during worker assembly")
+
+    assembly = compose_counterparty_monitoring_worker_runtime(
+        unit_of_work_factory=forbidden_uow,
+        provider=NoTrafficMonitoringProvider(),
+        worker_id="worker-1",
+        permissions=frozenset({Permission.COUNTERPARTY_MONITOR_MANAGE}),
+    )
+
+    assert isinstance(assembly, CounterpartyMonitoringWorkerRuntimeAssembly)
+    assert assembly.monitoring._unit_of_work_factory is forbidden_uow
 
 
 def test_counterparty_monitoring_runtime_is_explicit_and_db_lazy() -> None:
