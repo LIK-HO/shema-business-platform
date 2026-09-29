@@ -1,5 +1,15 @@
 # Development State Ledger
 
+# Current Phase 3C-2 closure — 2026-09-29
+
+- **Boundary:** Phase 3C-2 — Checkpointed Daily Counterparty Monitoring Worker + Provider-Outage/Recovery Semantics.
+- **Status:** **CLOSED / VERIFIED** on exact implementation HEAD after full current-head verification.
+- **Evidence:** full seven-job release-gate CI #2073 (`36577339818`) GREEN: quality 3.12/3.13, supply-chain, integration 3.12/3.13, backup/PITR and release-contract.
+- **Implemented:** durable daily batch/checkpoint state; bounded worker parallelism; lease ownership with PostgreSQL CAS/reclaim semantics; deterministic retry/backoff budget; provider-outage handling without false changes; replay-safe observation idempotency; max-attempt fail-closed behavior; explicit worker runtime composition.
+- **Adversarial result:** stale workers cannot complete reclaimed items; outage leaves no snapshot/change; duplicate batch replay converges; exhausted attempts do not call the provider; PostgreSQL and unit tests cover these boundaries.
+- **Phase 3C status:** **CLOSED / VERIFIED**. The 3C contract now has its required reproducible snapshots, deterministic change detection, severity-aware change events, checkpointed batch recovery and direct monitor resource lineage.
+- **Next implementation boundary:** **Phase 4 — Web Operator System**.
+
 # Current Phase 3C-1 closure — 2026-09-29
 
 - **Boundary:** Phase 3C-1 — Counterparty Monitoring & Favorites runtime model/persistence.
