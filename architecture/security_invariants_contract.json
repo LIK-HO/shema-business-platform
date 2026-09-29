@@ -170,6 +170,13 @@
       "class": "business_continuity_security",
       "enforcement": "Repeat-order Web/API capability is advertised only when a server-composed RepeatOrderService exists; that service requires a RepeatOrderRevalidator and validates counterparty, service scope, pricing, date/capacity and evidence freshness before creating or confirming repeat orders",
       "negative_test": "without composed RepeatOrderService the capability is false and repeat UI/API fails closed; client JavaScript contains no alternate business validation or local repeat-order state store"
+    },
+    {
+      "id": "SI-25",
+      "name": "phase4_global_acceptance_surface_integrity",
+      "class": "experience_security",
+      "enforcement": "All public, MAX and operator surfaces are same-origin Web surfaces over canonical APIs; protected APIs fail closed without authentication; browser security headers are applied at the outermost HTTP boundary; client-side code cannot persist or originate business truth",
+      "negative_test": "global acceptance tests assert public shell availability, protected endpoint rejection, security headers on both success and auth-failure responses, absence of browser persistence/database access in client code, and presence of all required operator surfaces"
     }
   ],
   "closure": {
