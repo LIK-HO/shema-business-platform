@@ -478,6 +478,60 @@ def test_duplicate_processing_after_worker_crash_is_idempotent():
     assert provider.calls == 1
 
 
+def test_worker_does_not_call_provider_after_max_attempts() -> None:
+    _, batches, factory, service = make_monitoring()
+    monitor = service.save_monitoring(
+        identifier_type=CounterpartyIdentifierType.INN,
+        identifier="7707083893",
+        actor_id="operator-1",
+        permissions=PERMISSIONS,
+        idempotency_key="monitor-max-attempts",
+        correlation_id="corr-max-attempts",
+        now=NOW,
+    )
+    batches, _, _, _ = make_monitoring()
+    # The test uses a direct claimed item to prove the fail-closed admission gate.
+    monitoring, batches, factory, service = make_monitoring()
+    monitor = service.save_monitoring(
+        identifier_type=CounterpartyIdentifierType.INN,
+        identifier="7707083893",
+        actor_id="operator-1",
+        permissions=PERMISSIONS,
+        idempotency_key="monitor-max-attempts-2",
+        correlation_id="corr-max-attempts-2",
+        now=NOW,
+    )
+    provider = ScriptedProvider([observation()])
+    worker = CounterpartyMonitoringWorker(
+        factory,
+        provider,
+        worker_id="worker-max",
+        permissions=PERMISSIONS,
+        max_parallelism=1,
+        lease_seconds=60,
+        max_attempts=1,
+        backoff_seconds=1,
+        max_backoff_seconds=8,
+        materialization_limit=100,
+        clock=lambda: NOW,
+    )
+    first = worker.run_once(scheduled_at=NOW, batch_key="daily-max-attempts")
+    assert first.completed == 1
+    item = batches.items[(first.batch_id, monitor.monitor_id)]
+    batches.items[(first.batch_id, monitor.monitor_id)] = replace(
+        item,
+        state=BatchItemState.RUNNING,
+        lease_worker_id="dead-worker",
+        lease_until=NOW - timedelta(seconds=1),
+        attempt=1,
+    )
+    provider.calls = 0
+    replay = worker.run_once(scheduled_at=NOW, batch_key="daily-max-attempts")
+    assert replay.completed == 0
+    assert replay.failed == 1
+    assert provider.calls == 0
+
+
 def test_worker_bounds_provider_parallelism():
     monitoring, _, factory, service = make_monitoring()
     service.save_monitoring(
