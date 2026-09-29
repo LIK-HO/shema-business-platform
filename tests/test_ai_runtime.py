@@ -7,6 +7,7 @@ from shema_platform.application.ai_runtime import (
     AIExecutionRequest,
     AIExecutionService,
     AIExecutionTrust,
+    IdempotentAIExecutionService,
 )
 from shema_platform.application.ports import AIRunRepository
 from shema_platform.foundation.audit import AuditRecord
@@ -157,7 +158,11 @@ def test_ai_application_service_reuses_completed_idempotent_run() -> None:
             provider_calls += 1
             return super().run(task, input_refs=input_refs)
 
-    instance = service(provider_factory=CountingProvider)
+    frozen_service = service(provider_factory=CountingProvider)
+    instance = IdempotentAIExecutionService(
+        service=frozen_service,
+        unit_of_work_factory=frozen_service._unit_of_work_factory,
+    )
     first = instance.execute(request())
     second = instance.execute(request())
 
