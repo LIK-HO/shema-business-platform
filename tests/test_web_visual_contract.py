@@ -13,7 +13,15 @@ def test_critical_visual_contract_regions() -> None:
         assert token in html
     for token in [".shell",".side","header",".card",".hero",".table","@media"]:
         assert token in css
-    for token in ["pub()","requests()","searchView()","counterparties()","system()","dossier()","workbench()"]:
+    for token in [
+        "pub()",
+        "requests()",
+        "searchView()",
+        "counterparties()",
+        "system()",
+        "dossier()",
+        "workbench()",
+    ]:
         assert token in js
     assert "localStorage" not in js
     assert "sessionStorage" not in js
