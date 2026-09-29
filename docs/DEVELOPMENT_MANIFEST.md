@@ -1,4 +1,4 @@
-**Current implementation boundary:** **Phase 4-4D Repeat Orders & Business Continuity Web boundary — CLOSED / VERIFIED** by full seven-job release-gate CI run `36584457696` on HEAD `5f552f2389040de7c14011f66d746f20ece66bb4`. The next active element is Phase 4-4E system/control-plane hardening and global acceptance.
+**Current implementation boundary:** **Phase 4-4D Repeat Orders & Business Continuity Web boundary — CLOSED / VERIFIED** by full seven-job release-gate CI run `36584780497` on HEAD `f28a8323e2f7b68311df8dbb9f83402fad3a3821`. The next active element is Phase 4-4E system/control-plane hardening and global acceptance.
 
 **Current implementation boundary:** **Phase 4-4B Public Client Intake + Attribution + MAX projection hardening — CLOSED / VERIFIED** by full seven-job release-gate CI run `36582610189` on HEAD `273333d2432abc5ce8318fe58df219ab90f06230`. The next active element is Phase 4-4C.
 
