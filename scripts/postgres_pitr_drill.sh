@@ -74,8 +74,8 @@ runner = MigrationRunner(
     plan,
 )
 report = runner.apply()
-assert report.current_version == 12
-assert report.applied == tuple(range(1, 13))
+assert report.current_version == 13
+assert report.applied == tuple(range(1, 14))
 PY
 
 python - <<'PY'
@@ -462,6 +462,67 @@ if [[ "$CANONICAL" != "$EXPECTED" ]]; then
   docker logs "$RESTORE_CONTAINER" >&2 || true
   exit 1
 fi
+
+python - <<'PY'
+import os
+import psycopg
+
+from shema_platform.platform.public_intake_postgres import (
+    PostgresPublicIntakeRepository,
+    PublicIntakeOutboxDispatcher,
+)
+
+
+class RestoreProjector:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def project(self, record) -> None:
+        self.calls.append(record.request_id)
+
+
+projector = RestoreProjector()
+
+
+def connection_factory():
+    return psycopg.connect(
+        "postgresql://postgres:postgres@127.0.0.1:55433/shema_public_intake_restore"
+    )
+
+
+dispatcher = PublicIntakeOutboxDispatcher(
+    connection_factory,
+    projector,
+    worker_id="pitr-replay-worker",
+    lease_seconds=30,
+)
+
+first = dispatcher.dispatch_pending(limit=10)
+second = dispatcher.dispatch_pending(limit=10)
+
+assert first == 1, f"expected one replayed intake event, got {first}"
+assert second == 0, f"replay must converge after publication, got {second}"
+assert projector.calls == ["pitr-intake-request"], projector.calls
+
+with connection_factory() as connection:
+    row = connection.execute(
+        """
+        select
+            published_at,
+            delivery_worker_id,
+            delivery_lease_until
+        from intake_outbox_event
+        where event_id = 'pitr-intake-event'
+        """
+    ).fetchone()
+
+assert row is not None
+assert row[0] is not None
+assert row[1] is None
+assert row[2] is None
+
+print("INTAKE_OUTBOX_REPLAY=PASS")
+PY
 
 echo "PITR_DRILL=PASS"
 echo "PITR_TARGET_TIME=$SENTINEL1_TIME"
