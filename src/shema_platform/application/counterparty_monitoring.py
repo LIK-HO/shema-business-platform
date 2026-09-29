@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Protocol
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from shema_platform.application.counterparty_check import (
     CounterpartyIdentifierType,
@@ -254,6 +254,10 @@ def detect_counterparty_changes(
 class CounterpartyMonitoringService:
     """Durable monitoring/favorites control over the canonical counterparty boundary."""
 
+    @staticmethod
+    def _outbox_event_id(value: str) -> str:
+        return str(uuid5(NAMESPACE_URL, value))
+
     def __init__(self, unit_of_work_factory) -> None:
         self._unit_of_work_factory = unit_of_work_factory
 
@@ -341,7 +345,9 @@ class CounterpartyMonitoringService:
             )
             uow.outbox.append(
                 OutboxEvent(
-                    event_id=f"counterparty-monitor:{monitor.monitor_id}",
+                    event_id=self._outbox_event_id(
+                        f"counterparty-monitor:{monitor.monitor_id}"
+                    ),
                     event_type="counterparty.monitor.created",
                     aggregate_type="counterparty_monitor",
                     aggregate_id=monitor.monitor_id,
@@ -421,7 +427,9 @@ class CounterpartyMonitoringService:
             )
             uow.outbox.append(
                 OutboxEvent(
-                    event_id=f"counterparty-favorite:{favorite.favorite_id}",
+                    event_id=self._outbox_event_id(
+                        f"counterparty-favorite:{favorite.favorite_id}"
+                    ),
                     event_type="counterparty.favorite.created",
                     aggregate_type="counterparty_favorite",
                     aggregate_id=favorite.favorite_id,
@@ -507,7 +515,7 @@ class CounterpartyMonitoringService:
                     uow.monitoring.add_change_event(event)
                     uow.outbox.append(
                         OutboxEvent(
-                            event_id=notification_id,
+                            event_id=self._outbox_event_id(notification_id),
                             event_type="counterparty.change.detected",
                             aggregate_type="counterparty_monitor",
                             aggregate_id=monitor_id,
