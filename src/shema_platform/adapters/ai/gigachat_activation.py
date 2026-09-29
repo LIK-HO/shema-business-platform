@@ -21,6 +21,10 @@ from shema_platform.adapters.ai.gigachat import (
 )
 from shema_platform.application.ai import AIRun, AITask
 from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.provider_activation import (
+    ProviderActivationState,
+    ProviderActivationStateStore,
+)
 from shema_platform.foundation.telemetry import TelemetrySink, build_event
 
 PRODUCTION_FEATURE_FLAG = "ai.gigachat.production.enabled"
@@ -90,12 +94,23 @@ class GigaChatProductionActivationState:
 class GigaChatProductionGate:
     """Explicit, reversible, process-local production gate for GigaChat."""
 
-    def __init__(self, *, telemetry: TelemetrySink) -> None:
+    def __init__(
+        self,
+        *,
+        telemetry: TelemetrySink,
+        provider_factory,
+        activation_state_store: ProviderActivationStateStore,
+        configuration_version: str,
+        provider_id: str = "gigachat",
+    ) -> None:
         self._telemetry = telemetry
+        self._provider_factory = provider_factory
+        self._activation_state_store = activation_state_store
+        self._configuration_version = configuration_version
+        self._provider_id = provider_id
         self._state = GigaChatProductionActivationState(
             enabled=False,
-            provider_id="gigachat",
-        )
+            provider_id=provider_id,        )
         self._provider: GatedGigaChatProvider | None = None
 
     @property
@@ -171,10 +186,8 @@ class GigaChatProductionGate:
             ),
         )
 
-        provider = GigaChatProvider(
-            configuration,
-            prompt_renderer=prompt_renderer,
-            cost_estimator=cost_estimator,
+        provider = self._provider_factory(
+            secret,
             requester=requester,
             token_requester=token_requester,
         )
@@ -186,9 +199,9 @@ class GigaChatProductionGate:
 
         activation_time = datetime.now(UTC)
         previous_config = self._state.configuration_version
-        self._state = GigaChatProductionActivationState(
+        new_state = GigaChatProductionActivationState(
             enabled=True,
-            provider_id="gigachat",
+            provider_id=self._provider_id,
             configuration_version=configuration.configuration_version,
             activation_version=configuration.activation_version,
             activated_by=activated_by,
@@ -197,6 +210,19 @@ class GigaChatProductionGate:
             max_duration_seconds=configuration.timeout_seconds,
             rollback_from_configuration_version=previous_config,
         )
+        self._activation_state_store.activate(
+            ProviderActivationState(
+                provider_id=new_state.provider_id,
+                enabled=True,
+                configuration_version=new_state.configuration_version,
+                activation_version=new_state.activation_version,
+                activated_by=new_state.activated_by,
+                activated_at=new_state.activated_at,
+                max_cost=new_state.max_cost,
+                max_duration_seconds=new_state.max_duration_seconds,
+            )
+        )
+        self._state = new_state
         self._provider = GatedGigaChatProvider(
             ScopedAIProvider(provider, telemetry=self._telemetry),
             gate=self,
@@ -224,9 +250,15 @@ class GigaChatProductionGate:
             return
 
         rollback_time = datetime.now(UTC)
+        self._activation_state_store.rollback(
+            provider_id=self._provider_id,
+            rolled_back_by=rolled_back_by,
+            rolled_back_at=rollback_time,
+            reason=reason,
+        )
         self._state = GigaChatProductionActivationState(
             enabled=False,
-            provider_id="gigachat",
+            provider_id=self._provider_id,
             rollback_from_configuration_version=previous.configuration_version,
             rollback_by=rolled_back_by,
             rollback_at=rollback_time,
@@ -257,6 +289,42 @@ class GigaChatProductionGate:
                 + ", ".join(missing)
             )
         return {key: snapshot.values[key] for key in _REQUIRED_CONFIG_KEYS}
+
+    def provider(self) -> GatedGigaChatProvider:
+        canonical = self._activation_state_store.get(self._provider_id)
+        if canonical is None or not canonical.enabled:
+            raise GigaChatProductionActivationError(
+                "GigaChat production activation is not enabled in canonical state"
+            )
+        if canonical.configuration_version != self._configuration_version:
+            raise GigaChatProductionActivationError(
+                "GigaChat canonical activation configuration does not match runtime"
+            )
+        if self._provider is None:
+            provider = self._provider_factory(None)
+            readiness = provider.readiness()
+            if readiness.state is not AIProviderReadinessState.READY:
+                raise GigaChatProductionActivationError(
+                    "GigaChat provider is not ready for canonical activation"
+                )
+            self._provider = GatedGigaChatProvider(
+                ScopedAIProvider(provider, telemetry=self._telemetry),
+                gate=self,
+            )
+        self._state = GigaChatProductionActivationState(
+            enabled=True,
+            provider_id=self._provider_id,
+            configuration_version=canonical.configuration_version,
+            activation_version=canonical.activation_version,
+            activated_by=canonical.activated_by,
+            activated_at=canonical.activated_at,
+            max_cost=canonical.max_cost,
+            max_duration_seconds=canonical.max_duration_seconds,
+            rollback_by=canonical.rollback_by,
+            rollback_at=canonical.rollback_at,
+            rollback_reason=canonical.rollback_reason,
+        )
+        return self._provider
 
     def allows_request(self, *, configuration_version: str) -> bool:
         state = self._state
