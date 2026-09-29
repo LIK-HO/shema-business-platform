@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
 
+from datetime import UTC, datetime
+
 import pytest
 
 from shema_platform.adapters.ai.production_activation import (
@@ -122,6 +124,7 @@ def test_activation_and_rollback_are_global_across_replicas() -> None:
 
     assert gate_b.state.enabled is True
     assert gate_b.provider() is not None
+    active_state = gate_b.state
 
     gate_a.rollback(
         rolled_back_by="operator-a",
@@ -129,7 +132,14 @@ def test_activation_and_rollback_are_global_across_replicas() -> None:
     )
 
     assert gate_b.state.enabled is False
-    assert gate_b.allows_request(configuration_version="shared-config:v1") is False
+    assert (
+        gate_b.allows_request(
+            configuration_version="shared-config:v1",
+            activation_version=str(active_state.activation_version),
+            activated_at=active_state.activated_at,
+        )
+        is False
+    )
 
     with pytest.raises(AIProductionActivationError):
         gate_b.provider()
