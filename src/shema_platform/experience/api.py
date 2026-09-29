@@ -83,7 +83,6 @@ from shema_platform.experience.api_models import (
     PublicIntakeResponse,
     ResearchRequest,
     ResearchResponse,
-    RepeatContextRequest,
     RepeatPlanConfirmRequest,
     RepeatPlanCreateRequest,
     RepeatPlanEditRequest,
