@@ -245,6 +245,8 @@ class DaDataControlledActivationGate:
             rolled_back_by=rolled_back_by.strip(),
             rolled_back_at=rollback_time,
             reason=reason,
+            expected_activation_version=str(canonical.activation_version),
+            expected_activated_at=canonical.activated_at,
         )
         self._state = DaDataActivationState(
             enabled=False,
