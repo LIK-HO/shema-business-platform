@@ -20,6 +20,9 @@ from shema_platform.foundation.authentication import (
     AuthenticationRequired,
 )
 from shema_platform.foundation.authorization import Permission
+from shema_platform.foundation.provider_activation import (
+    InMemoryProviderActivationStateStore,
+)
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
@@ -129,6 +132,7 @@ def build():
         configuration=DaDataConfiguration(api_key="test-secret", enabled=True),
         readiness=ready(),
         telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
         provider_factory=lambda _configuration: FakeProvider(),
         unit_of_work_factory=lambda: state,
         max_attempts=1,
