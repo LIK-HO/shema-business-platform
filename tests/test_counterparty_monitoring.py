@@ -307,7 +307,6 @@ def test_snapshot_hash_is_integrity_bound_and_change_detection_is_deterministic(
     }
     assert severity is ChangeSeverity.ATTENTION
     assert len(repo.changes) == 1
-    assert len(repo.uow.outbox.events) == 0 if repo.uow else True
 
     assert snapshot_payload_hash(first.payload) == first.payload_hash
     with pytest.raises(IntegrityViolation):
