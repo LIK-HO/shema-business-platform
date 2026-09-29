@@ -260,7 +260,7 @@ function research(){
   $('#research-form').onsubmit=submitResearch;
 }
 async function submitResearch(event){
-  event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget).entries()),node=$('#research-result');
+  event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget).entries()),node=$('#research-result')||$('#rr');
   node.innerHTML='<div class="muted">Запрашиваем evidence…</div>';
   try{
     const response=await api('/v1/intelligence/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
@@ -290,7 +290,16 @@ function fullWorkbench(){
   view.innerHTML='<section class="grid cols2"><section class="card"><div class="eyebrow">EVIDENCE</div><h2>Разведка</h2><form id="rf" class="form"><label>SubjectRef<input name="subjectRef" value="'+esc(seed)+'" required></label><label>Тип компании<input name="companyType" value="organization" required></label><label>Глубина<select name="depth"><option>R1_IDENTITY</option><option>R2_CONTEXT</option><option>R3_DEEP</option><option>R4_INVESTIGATIVE</option></select></label><label>Запрос<textarea name="query" required>Проверить контекст, связи и актуальные открытые источники по контрагенту.</textarea></label><div class="actions"><button class="primary">Получить evidence</button></div></form><div id="rr"></div></section><section class="card"><div class="eyebrow">QUALIFICATION</div><h2>Квалификация</h2><form id="qf" class="form"><label>CandidateRef<input name="candidateRef" value="'+esc(seed)+'" required></label><label><span><input name="serviceFit" type="checkbox" checked> Соответствует услуге</span></label><label><span><input name="economicFit" type="checkbox"> Экономическая пригодность подтверждена</span></label><div class="actions"><button class="primary">Оценить</button></div></form><div id="qr"></div></section><section class="card"><div class="eyebrow">CONTACT PREPARATION</div><h2>Подготовка контакта</h2><form id="af" class="form"><label>Identity ID<input name="identityId" value="'+esc(S.identityRef||'')+'" required></label><label>ContactRef<input name="contactRef" value="'+esc(p.contactChannel||'')+'" required></label><label>Канал<input name="channel" value="telegram" required></label><label>Evidence IDs<input name="evidenceRefs" value="'+esc((S.evidenceIds||[]).join(', '))+'" required></label><div class="actions"><button class="primary">Создать action</button></div></form><div id="ar">'+actionResult()+'</div><div id="sendbox"></div></section><section class="card"><div class="eyebrow">RESULT</div><h2>Заказ и экономика</h2><form id="of" class="form"><label>Action ID<input name="actionId" value="'+esc(S.lastActionId)+'" required></label><label>Описание строки<input name="description" value="'+esc(p.serviceType||'Услуга')+'" required></label><label>Количество<input name="quantity" value="1" required></label><label>Цена<input name="amount" placeholder="0" required></label><label>Валюта<input name="currency" value="RUB" maxlength="3" required></label><div class="actions"><button class="primary">Создать order draft</button></div></form><div id="or"></div><form id="ef" class="form"><label>EntityRef<input name="entityRef" value="'+esc(S.identityRef||seed)+'" required></label><div class="actions"><button class="ghost">Загрузить economics</button></div></form><div id="er"></div></section></section>';
   $('#rf').onsubmit=submitResearchWorkbench;$('#qf').onsubmit=submitQualification;$('#af').onsubmit=submitAction;$('#of').onsubmit=submitOrder;$('#ef').onsubmit=loadEconomics;
 }
-async function submitResearchWorkbench(event){event.preventDefault();await submitResearch(event);}
+async function submitResearchWorkbench(event){
+  event.preventDefault();
+  const data=Object.fromEntries(new FormData(event.currentTarget).entries()),node=$('#rr');
+  node.innerHTML='<div class="muted">Запрашиваем evidence…</div>';
+  try{
+    const response=await api('/v1/intelligence/research',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':key()},body:JSON.stringify(data)});
+    S.evidenceIds=(response.evidence||[]).map(item=>item.evidenceId);
+    node.innerHTML=(response.evidence||[]).map(item=>'<article class="item"><div class="split"><b>'+esc(item.claim)+'</b>'+badge(item.trustLevel)+'</div><div class="muted">'+esc(item.sourceRef)+' · confidence '+esc(item.confidence)+'</div><code>'+esc(item.evidenceId)+'</code></article>').join('')||'<div class="empty">Evidence не возвращены.</div>';
+  }catch(err){node.innerHTML='<div class="error">'+esc(err.message)+'</div>';}
+}
 async function submitQualification(event){
   event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget).entries()),node=$('#qr');node.innerHTML='<div class="muted">Проверяем…</div>';
   try{const response=await api('/v1/discovery/evaluate',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':key()},body:JSON.stringify({candidateRef:data.candidateRef,serviceFit:data.serviceFit==='on',economicFit:data.economicFit==='on'})});node.innerHTML='<div class="callout">'+badge(response.qualification)+'<div>'+esc((response.reasons||[]).join(' · '))+'</div></div>';}catch(err){node.innerHTML='<div class="error">'+esc(err.message)+'</div>';}
