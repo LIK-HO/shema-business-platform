@@ -394,6 +394,9 @@ Accept real B2B client demand through the public site while isolating raw submis
 ### Exit criteria
 A request survives Shema outages after accepted intake, produces exactly-once operator-visible notification semantics under retries, and can be reconstructed from intake record → preflight snapshot → Shema request context → outcome.
 
+### Implementation synchronization — 2026-09-29
+The canonical projection persistence blocker is CLOSED / VERIFIED by full seven-job CI #2001 (`36558318175`): migration `0014_public_intake_projection.sql` creates the canonical request-context and operator-notification tables, projection is replay-safe, and the PITR drill verifies recovery through migration 0014. The full Phase 3B exit criterion above remains open until the dedicated outage → replay → reconstruction E2E boundary is verified.
+
 ## 7C. Phase 3C — Counterparty Verification, Monitoring & Favorites
 
 ### Objective
