@@ -135,6 +135,7 @@ class PostgresProviderActivationStateStore(ProviderActivationStateStore):
             rollback_by,
             rollback_at,
             rollback_reason,
+            rollback_from_configuration_version,
         ) = row
         return ProviderActivationState(
             provider_id=str(provider_id),
