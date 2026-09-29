@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 import pytest
 
 from shema_platform.adapters.ai.production_activation import (
@@ -11,6 +13,7 @@ from shema_platform.application.ai import AIBudget, AIExecutionContext
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.provider_activation import (
     InMemoryProviderActivationStateStore,
+    ProviderActivationState,
 )
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
@@ -274,6 +277,56 @@ def test_rollback_is_reversible_and_blocks_future_traffic() -> None:
     assert events[1].attributes["operator"] == "operator-2"
     assert events[1].attributes["configuration_version"] == "cfg:yandexgpt-prod-v1"
     assert events[1].attributes["error_code"] == "production_activation_rolled_back"
+
+
+def test_cached_provider_rejects_reactivated_canonical_binding() -> None:
+    store = InMemoryProviderActivationStateStore()
+    gate = YandexGPTProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=store,
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
+    provider = gate.activate(
+        snapshot(),
+        activated_by="operator-1",
+        prompt_renderer=lambda _: "prompt",
+        cost_estimator=lambda _input, _output: 0.01,
+        api_key="runtime-secret",
+    )
+    first = gate.state
+    assert first.activated_at is not None
+
+    gate.rollback(
+        rolled_back_by="operator-2",
+        reason="rebind test",
+    )
+    store.activate(
+        ProviderActivationState(
+            provider_id="yandexgpt",
+            enabled=True,
+            configuration_version=first.configuration_version,
+            activation_version=first.activation_version,
+            activated_by="operator-3",
+            activated_at=first.activated_at + timedelta(seconds=1),
+            max_cost=first.max_cost,
+            max_duration_seconds=first.max_duration_seconds,
+        )
+    )
+
+    from shema_platform.adapters.ai.composition import bind_ai_execution_scope
+    from shema_platform.application.ai import AITask
+
+    with bind_ai_execution_scope(
+        evidence_refs=("evidence:1",),
+        context=context(first.configuration_version),
+        budget=AIBudget(100, 0.10, 5),
+        deadline_seconds=5,
+    ):
+        with pytest.raises(RuntimeError, match="configuration"):
+            provider.run(
+                AITask("task:stale-provider", "classification", "prompt:v1"),
+                input_refs=("identity:1",),
+            )
 
 
 def test_rollback_requires_operator_and_reason() -> None:
