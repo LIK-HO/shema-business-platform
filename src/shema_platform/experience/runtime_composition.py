@@ -13,6 +13,7 @@ from shema_platform.adapters.intelligence.dadata_activation import (
 )
 from shema_platform.application.ai_runtime import AIExecutionTrustResolver
 from shema_platform.application.counterparty_lookup import CounterpartyLookupProvider
+from shema_platform.application.counterparty_monitoring import CounterpartyMonitoringService
 from shema_platform.application.counterparty_provider_activation import (
     CounterpartyProviderActivationService,
 )
@@ -198,6 +199,39 @@ class YandexGPTRuntimeAssembly:
             reason=reason,
         )
 
+
+
+@dataclass(frozen=True, slots=True)
+class CounterpartyMonitoringRuntimeAssembly:
+    """Explicit monitoring/favorites composition over the canonical PostgreSQL UoW."""
+
+    monitoring: CounterpartyMonitoringService
+
+    def create_http_app(
+        self,
+        *,
+        application: APIApplication | None = None,
+        authenticator=None,
+        enable_docs: bool = True,
+        telemetry: TelemetrySink | None = None,
+    ):
+        return create_app(
+            application=application,
+            authenticator=authenticator,
+            enable_docs=enable_docs,
+            telemetry=telemetry,
+            counterparty_monitoring=self.monitoring,
+        )
+
+
+def compose_counterparty_monitoring_runtime(
+    *,
+    unit_of_work_factory: Callable[[], UnitOfWork],
+) -> CounterpartyMonitoringRuntimeAssembly:
+    """Compose monitoring without opening the database or querying a provider."""
+    return CounterpartyMonitoringRuntimeAssembly(
+        monitoring=CounterpartyMonitoringService(unit_of_work_factory)
+    )
 
 
 @dataclass(frozen=True, slots=True)
