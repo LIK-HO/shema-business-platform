@@ -9,6 +9,7 @@ from shema_platform.application.counterparty_monitoring import (
     CounterpartyChangeEvent,
     CounterpartyFavorite,
     CounterpartyMonitor,
+    CounterpartyMonitoringRepository,
     CounterpartySnapshot,
 )
 from shema_platform.domain.economics import EconomicEntry
@@ -139,32 +140,6 @@ class JobRepository(Protocol):
         now: datetime,
     ) -> JobRecord: ...
 
-
-class CounterpartyMonitoringRepository(Protocol):
-    """Durable monitoring and personal favorites persistence."""
-
-    def add_monitor(self, monitor: CounterpartyMonitor) -> None: ...
-    def get_monitor(self, monitor_id: str) -> CounterpartyMonitor | None: ...
-    def get_monitor_for_actor(
-        self,
-        monitor_id: str,
-        actor_id: str,
-    ) -> CounterpartyMonitor | None: ...
-    def list_monitors(self, actor_id: str) -> tuple[CounterpartyMonitor, ...]: ...
-    def add_favorite(self, favorite: CounterpartyFavorite) -> None: ...
-    def get_favorite(self, favorite_id: str) -> CounterpartyFavorite | None: ...
-    def list_favorites(self, actor_id: str) -> tuple[CounterpartyFavorite, ...]: ...
-    def get_latest_snapshot(self, monitor_id: str) -> CounterpartySnapshot | None: ...
-    def add_snapshot(self, snapshot: CounterpartySnapshot) -> CounterpartySnapshot: ...
-    def set_last_snapshot(
-        self,
-        monitor_id: str,
-        *,
-        snapshot_id: str,
-        checked_at: datetime,
-        next_check_at: datetime,
-    ) -> None: ...
-    def add_change_event(self, event: CounterpartyChangeEvent) -> None: ...
 
 
 class CommercialActionRepository(Protocol):
