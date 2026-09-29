@@ -3,14 +3,14 @@ from __future__ import annotations
 import json
 
 from shema_platform.adapters.ai.contracts import AIProviderRequest
+from shema_platform.adapters.ai.prompt_security import (
+    AI_SYSTEM_INSTRUCTION,
+    build_secure_messages,
+)
 from shema_platform.application.ai import (
     AIBudget,
     AIExecutionContext,
     AITask,
-)
-from shema_platform.adapters.ai.prompt_security import (
-    AI_SYSTEM_INSTRUCTION,
-    build_secure_messages,
 )
 
 
