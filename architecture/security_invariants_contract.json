@@ -46,6 +46,13 @@
       "negative_test": "a replica with stale local enabled state can reactivate after another replica has performed a canonical rollback"
     },
     {
+      "id": "SI-21",
+      "name": "counterparty_monitoring_actor_scope_and_integrity",
+      "class": "authorization",
+      "enforcement": "counterparty monitoring/favorites require explicit permissions, are scoped to actor_id, and observations are bound to the subscribed identifier with hashed provenance",
+      "negative_test": "an actor without the capability or outside the subscription owner cannot read/write the monitoring resource; tampered snapshot payloads and invalid identifiers are rejected"
+    },
+    {
       "id": "SI-16",
       "name": "stale_worker_cannot_overwrite_newer_send",
       "class": "concurrency",
