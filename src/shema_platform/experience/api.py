@@ -65,6 +65,7 @@ from shema_platform.experience.api_models import (
     DiscoveryResponse,
     EconomicResponse,
     ErrorEnvelope,
+    OperatorCapabilitiesResponse,
     OperatorNotificationListResponse,
     OperatorNotificationResponse,
     OrderCreateRequest,
@@ -96,6 +97,7 @@ from shema_platform.foundation.http_security import (
 from shema_platform.foundation.provider_health import ProviderHealthRegistry
 from shema_platform.foundation.runtime_security import RuntimeSecurityConfiguration
 from shema_platform.foundation.safe_errors import safe_error_detail
+from shema_platform.experience.web import install_web_operator_surface
 from shema_platform.foundation.telemetry import (
     NoopTelemetrySink,
     StructuredLoggingTelemetrySink,
@@ -336,6 +338,7 @@ def create_app(
     authoritative_counterparty_lookup: AuthoritativeCounterpartyLookup | None = None,
     bot_challenge_verifier: BotChallengeVerifier | None = None,
     resource_read_authorizer: ResourceReadAuthorizer | None = None,
+    repeat_order_service=None,
 ) -> FastAPI:
     runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
@@ -366,6 +369,7 @@ def create_app(
     app.state.authoritative_counterparty_lookup = authoritative_counterparty_lookup
     app.state.bot_challenge_verifier = bot_challenge_verifier
     app.state.resource_read_authorizer = resource_read_authorizer
+    app.state.repeat_order_service = repeat_order_service
     default_telemetry: TelemetrySink = (
         StructuredLoggingTelemetrySink()
         if runtime_security.environment == "production"
@@ -635,6 +639,28 @@ def create_app(
             deduplicated=result.deduplicated,
         )
 
+
+    @router.get(
+        "/operator/capabilities",
+        response_model=OperatorCapabilitiesResponse,
+    )
+    async def operator_capabilities(request: Request) -> OperatorCapabilitiesResponse:
+        context = _context(request, None)
+        capabilities = {
+            "publicIntake": request.app.state.public_intake is not None,
+            "notifications": request.app.state.operator_notification_reader is not None,
+            "counterpartyWorkspace": (
+                request.app.state.counterparty_checker is not None
+                or request.app.state.counterparty_monitoring is not None
+            ),
+            "search": request.app.state.application is not None,
+            "repeatOrders": request.app.state.repeat_order_service is not None,
+            "diagnostics": request.app.state.application is not None,
+        }
+        return OperatorCapabilitiesResponse(
+            actorId=context.actor_id,
+            capabilities=capabilities,
+        )
 
     @router.get(
         "/operator/notifications",
@@ -1136,6 +1162,7 @@ def create_app(
         )
 
     app.include_router(router)
+    install_web_operator_surface(app)
     return app
 
 
