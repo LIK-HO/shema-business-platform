@@ -6,9 +6,9 @@ from urllib.parse import urlsplit, urlunsplit
 _MAX_ERROR_CHARS = 1024
 
 _SECRET_PATTERNS = (
-    re.compile(r"(?i)(authorization\s*[:=]\s*)([^\s,;]+)"),
     re.compile(r"(?i)(bearer\s+)([^\s,;]+)"),
     re.compile(r"(?i)(basic\s+)([^\s,;]+)"),
+    re.compile(r"(?i)(authorization\s*[:=]\s*)([^\s,;]+)"),
     re.compile(r"(?i)(token\s+)([^\s,;]+)"),
     re.compile(r"(?i)(api[-_ ]?key\s*[:=]\s*)([^\s,;]+)"),
     re.compile(r"(?i)(secret\s*[:=]\s*)([^\s,;]+)"),
