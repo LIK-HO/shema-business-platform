@@ -147,7 +147,7 @@ class GigaChatProductionGate:
         token_requester=None,
     ) -> GatedGigaChatProvider:
         canonical = self._activation_state_store.get(self._provider_id)
-        if (canonical is not None and canonical.enabled) or self._state.enabled:
+        if canonical is not None and canonical.enabled:
             raise GigaChatProductionActivationError(
                 "GigaChat production activation is already active"
             )
