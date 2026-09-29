@@ -172,6 +172,83 @@ def test_public_intake_database_is_isolated_durable_and_idempotent() -> None:
         drop_database(database)
 
 
+def test_public_intake_stale_outbox_worker_cannot_mark_reclaimed_event_published() -> None:
+    with psycopg.connect(DATABASE_URL) as first, psycopg.connect(DATABASE_URL) as second:
+        apply_migrations(first)
+        from shema_platform.foundation.errors import IntegrityViolation
+
+        event_id = f"stale-outbox:{uuid4()}"
+        occurred_at = datetime.now(UTC)
+        from shema_platform.platform.public_intake_postgres import (
+            PostgresPublicIntakeRepository,
+        )
+
+        repository = PostgresPublicIntakeRepository(lambda: first)
+        repository._connection = first
+        repository.append_outbox(
+            event_id=event_id,
+            request_id=f"request:{uuid4()}",
+            event_type="new_client_request",
+            payload={"test": True},
+            occurred_at=occurred_at,
+            notify_operator=True,
+        )
+        first.commit()
+        repository._connection = None
+
+        old = PostgresPublicIntakeRepository(lambda: first)
+        old._connection = first
+        old_claim = old.claim_pending(
+            "worker-old",
+            lease_seconds=1,
+            now=occurred_at,
+            limit=1,
+        )
+        assert len(old_claim) == 1
+        first.commit()
+        old._connection = None
+
+        new = PostgresPublicIntakeRepository(lambda: second)
+        new._connection = second
+        new_claim = new.claim_pending(
+            "worker-new",
+            lease_seconds=60,
+            now=occurred_at + timedelta(seconds=2),
+            limit=1,
+        )
+        assert len(new_claim) == 1
+        second.commit()
+
+        stale = PostgresPublicIntakeRepository(lambda: first)
+        stale._connection = first
+        with pytest.raises(IntegrityViolation, match="publication rejected"):
+            stale.mark_outbox_published(
+                event_id,
+                worker_id="worker-old",
+                now=occurred_at + timedelta(seconds=2),
+            )
+        first.rollback()
+        stale._connection = None
+
+        current = new
+        row = second.execute(
+            """
+            select published_at, delivery_worker_id
+            from intake_outbox_event
+            where event_id = %s
+            """,
+            (event_id,),
+        ).fetchone()
+        assert row is not None
+        assert row[0] is None
+        assert row[1] == "worker-new"
+        second.execute(
+            "delete from intake_outbox_event where event_id = %s",
+            (event_id,),
+        )
+        second.commit()
+
+
 def test_public_intake_migration_can_be_adopted_by_a_fresh_database() -> None:
     database = f"shema_intake_{uuid4().hex[:12]}"
     try:
