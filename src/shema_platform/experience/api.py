@@ -29,13 +29,13 @@ from shema_platform.application.counterparty_provider_activation import (
 from shema_platform.application.counterparty_provider_runtime_lookup import (
     CounterpartyProviderRuntimeLookupService,
 )
-from shema_platform.application.resource_read_authorization import ResourceReadAuthorizer
 from shema_platform.application.public_intake import (
     PublicIntakePayload,
     PublicIntakeRateLimited,
     PublicIntakeSecurityRejected,
     PublicIntakeService,
 )
+from shema_platform.application.resource_read_authorization import ResourceReadAuthorizer
 from shema_platform.experience.api_models import (
     AIRunRequest,
     AIRunResponse,
