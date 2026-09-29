@@ -101,3 +101,20 @@ def test_repeat_order_surface_is_capability_gated_and_fail_closed() -> None:
         "Idempotency-Key",
     ):
         assert token in js
+
+def test_phase4_security_headers_are_present_on_public_and_operator_surfaces() -> None:
+    client = TestClient(create_app(enable_docs=False))
+
+    public = client.get("/")
+    operator = client.get("/operator")
+    protected_api = client.get("/v1/operator/capabilities")
+
+    for response in (public, operator, protected_api):
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["X-Frame-Options"] == "DENY"
+        assert response.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
+        assert "frame-ancestors 'none'" in response.headers["Content-Security-Policy"]
+
+    assert operator.headers["Cache-Control"] == "no-store"
+    assert "connect-src 'self'" in public.headers["Content-Security-Policy"]
+    assert protected_api.status_code in {401, 403, 503}
