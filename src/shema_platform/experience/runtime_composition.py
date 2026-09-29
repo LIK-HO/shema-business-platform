@@ -36,13 +36,13 @@ from shema_platform.foundation.http_security import BotChallengeVerifier
 from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.foundation.provider_activation import ProviderActivationStateStore
 from shema_platform.foundation.telemetry import TelemetrySink
-from shema_platform.platform.resource_read_authorization import (
-    PostgresResourceReadAuthorizer,
-)
 from shema_platform.platform.public_intake_postgres import (
     PostgresOperatorNotificationReader,
     PostgresPublicIntakeRepository,
     PostgresPublicRequestProjection,
+)
+from shema_platform.platform.resource_read_authorization import (
+    PostgresResourceReadAuthorizer,
 )
 
 
