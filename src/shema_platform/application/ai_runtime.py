@@ -146,7 +146,13 @@ class AIExecutionService:
             raise RuntimeError("AI provider configuration is not active")
 
         with self._unit_of_work_factory() as uow:
-            pending_id = f"pending:ai:{uuid4()}"
+            task_id = str(
+                uuid5(
+                    NAMESPACE_URL,
+                    f"shema-ai:{request.idempotency_key.strip()}:{request.request_hash}",
+                )
+            )
+            pending_id = f"pending:ai:{task_id}"
             reservation = uow.idempotency.reserve(
                 key=request.idempotency_key.strip(),
                 request_hash=request.request_hash,
@@ -154,6 +160,14 @@ class AIExecutionService:
             )
             if reservation.result_ref != pending_id:
                 if reservation.result_ref.startswith("pending:"):
+                    reconciled = uow.ai_runs.get_by_task_id(task_id)
+                    if reconciled is not None:
+                        uow.idempotency.complete(
+                            request.idempotency_key.strip(),
+                            request.request_hash,
+                            reconciled.run_id,
+                        )
+                        return reconciled
                     raise IdempotencyConflict(
                         "AI execution has an unknown external outcome and requires reconciliation"
                     )
@@ -172,7 +186,7 @@ class AIExecutionService:
         )
 
         task = AITask(
-            task_id=str(uuid4()),
+            task_id=task_id,
             task_type=request.task_type,
             prompt_version=request.prompt_version,
             evidence_required=request.evidence_required,
@@ -190,8 +204,6 @@ class AIExecutionService:
             evidence_level=trust.evidence_level,
             correlation_id=request.correlation_id,
             configuration_version=configuration_version,
-            idempotency_key=request.idempotency_key.strip(),
-            idempotency_request_hash=request.request_hash,
         )
         if self._scoped_executor is None:
             raise RuntimeError("AI scoped executor is not configured")
@@ -206,7 +218,13 @@ class AIExecutionService:
             )
         except Exception:
             # The reservation intentionally remains pending. A retry with the same
-            # key must not repeat an external call whose outcome is unknown.
+            # key may reconcile a persisted AIRun, but never repeats an unknown effect.
             raise
 
+        with self._unit_of_work_factory() as uow:
+            uow.idempotency.complete(
+                request.idempotency_key.strip(),
+                request.request_hash,
+                run.run_id,
+            )
         return run
