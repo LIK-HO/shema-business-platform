@@ -70,42 +70,27 @@ def token(private_key, *, headers=None, **overrides) -> str:
 
 
 def test_unknown_kid_jwks_refresh_is_rate_limited(monkeypatch) -> None:
-    class FakeClient:
-        def __init__(self, *args, **kwargs):
-            self.refresh_calls = 0
+    from shema_platform.adapters.iam.oidc import _BoundedPyJWKClient
 
-        def get_signing_keys(self, refresh=False):
-            return []
-
-        def get_signing_key_from_jwt(self, token):
-            self.refresh_calls += 1
-            raise jwt.PyJWKClientError("unknown key")
-
-    client = FakeClient()
-    monkeypatch.setattr(
-        jwt,
-        "PyJWKClient",
-        lambda *args, **kwargs: client,
-    )
-    provider = PyJWTSigningKeyProvider(
+    client = _BoundedPyJWKClient(
         "https://issuer.example.test/.well-known/jwks.json",
         cache_seconds=300,
     )
-    unknown = token(
-        rsa.generate_private_key(
-            public_exponent=65537,
-            key_size=2048,
-        ),
-        headers={"kid": "attacker-kid"},
-    )
+    refresh_calls = []
 
-    with pytest.raises(jwt.PyJWKClientError, match="unknown key"):
-        provider.signing_key(unknown)
-    with pytest.raises(jwt.PyJWKClientError, match="rate limited"):
-        provider.signing_key(unknown)
+    def fake_get_signing_keys(*, refresh=False):
+        refresh_calls.append(refresh)
+        return []
 
-    assert client.refresh_calls == 1
+    monkeypatch.setattr(client, "get_signing_keys", fake_get_signing_keys)
 
+    with pytest.raises(jwt.PyJWKClientError, match="matches"):
+        client.get_signing_key("attacker-kid")
+
+    with pytest.raises(jwt.PyJWKClientError, match="cooldown"):
+        client.get_signing_key("attacker-kid")
+
+    assert refresh_calls == [False, True]
 
 def test_oidc_authentication_verifies_signature_issuer_audience_and_claims(authenticator) -> None:
     verifier, private_key = authenticator
