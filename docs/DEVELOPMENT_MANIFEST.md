@@ -63,6 +63,14 @@ Documentation, a contract file or a positive-path test never closes a security f
 The frozen v1.4 kernel remains protected by its independent integrity gate. Security hardening must not silently change frozen kernel semantics.
 
 
+### 1C-ACTIVE-STATE. Stale local activation-state sub-boundary — 2026-09-29
+
+- Finding: after a remote canonical rollback, YandexGPT/GigaChat replicas retained local enabled state and could reject a legitimate reactivation even though canonical state was disabled.
+- Fix: activation admission now trusts canonical shared state; stale local enabled flags no longer block reactivation.
+- Evidence: YandexGPT and GigaChat negative tests perform canonical rollback outside the local gate, then prove the stale replica can reactivate.
+- No schema or frozen-kernel change.
+- Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
+
 ### 1C-BINDING. Cached provider stale-binding sub-boundary — 2026-09-29
 
 - Finding: a runtime replica could retain a cached provider object after global rollback and later reuse it after re-activation when configuration (and even activation_version) was reused.
