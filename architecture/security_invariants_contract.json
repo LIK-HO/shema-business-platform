@@ -156,6 +156,13 @@
       "class": "concurrency",
       "enforcement": "daily monitoring uses durable batch/item checkpoints, bounded leases with worker ownership CAS, deterministic command idempotency and fail-closed provider/snapshot handling",
       "negative_test": "a stale worker cannot complete a reclaimed item; provider outage creates no snapshot/change; replay converges to the existing snapshot; exhausted attempts do not call the provider; tampered snapshots are rejected"
+    },
+    {
+      "id": "SI-23",
+      "name": "web_operator_client_cannot_be_business_authority",
+      "class": "experience_security",
+      "enforcement": "Web shell and assets are public, while all business state access remains behind canonical authenticated APIs; browser storage does not persist operator credentials",
+      "negative_test": "unauthenticated requests can fetch only shell/assets/public intake; protected operator APIs reject absent authentication; client source contains no direct database access and no persistent operator token storage"
     }
   ],
   "closure": {
