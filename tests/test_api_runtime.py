@@ -44,6 +44,9 @@ from shema_platform.foundation.authentication import (
 )
 from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.errors import IdempotencyConflict, QuarantineRequired
+from shema_platform.foundation.provider_activation import (
+    InMemoryProviderActivationStateStore,
+)
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
@@ -607,7 +610,10 @@ def _activation_service() -> CounterpartyProviderActivationService:
         rollback_without_schema_change=True,
         full_release_ci=True,
     )
-    gate = DaDataControlledActivationGate(telemetry=InMemoryTelemetrySink())
+    gate = DaDataControlledActivationGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
+    )
     return CounterpartyProviderActivationService(
         gate=gate,
         configuration=DaDataConfiguration(api_key="test-secret", enabled=True),
