@@ -510,7 +510,7 @@ Phase 5 is **CLOSED / VERIFIED** on final implementation HEAD `337b3c3f8465b406d
 
 **Next approved boundary:** Phase 6 — Production Web/PWA Consolidation.
 
-## 10. Phase 6 — Production Web/PWA Consolidation
+## 10. Phase 6 — Production Web/PWA Consolidation — CLOSED / VERIFIED
 
 ### Objective
 Finish the primary operator experience on Web and PWA. Android is explicitly removed from the approved roadmap.
