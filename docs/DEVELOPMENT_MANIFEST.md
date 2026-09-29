@@ -1,8 +1,8 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / P47 Strategy Boundary Closed / Operator Interface Contract Closed / Phase 3A Repeat Orders Closed / **Phase 3B Public Intake Data Plane — CLOSED / VERIFIED / Global Security Re-baseline — CLOSED / VERIFIED / MAX Evidence Hold**
-**Current verified boundary:** **Phase 3B Public Intake Data Plane + Trust Boundary + Counterparty Preflight — CLOSED / VERIFIED** by full seven-job release-gate CI #2004 (`36558811275`) on exact E2E implementation HEAD `254f7467e05fd92d0c594558f6a4263684040557`; **Global Security Re-baseline and Phase 3A Repeat Orders & Business Continuity remain CLOSED / VERIFIED**. The frozen v1.4 kernel remains unchanged. The verified security chain covers resource-read scope, permission non-escalation, external-effect stale-worker protection, public-intake outbox lease ownership, provider rollback CAS, exact provider binding and stale-local activation recovery.
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / P47 Strategy Boundary Closed / Operator Interface Contract Closed / Phase 3A Repeat Orders Closed / **Phase 3B Public Intake Data Plane — CLOSED / VERIFIED / Phase 3C-1 Counterparty Monitoring & Favorites — CLOSED / VERIFIED / Global Security Re-baseline — CLOSED / VERIFIED / MAX Evidence Hold**
+**Current verified boundary:** **Phase 3C-1 Counterparty Monitoring & Favorites — CLOSED / VERIFIED** by full seven-job release-gate CI #2041 (`36561799870`); **Phase 3B Public Intake Data Plane, Global Security Re-baseline and Phase 3A Repeat Orders & Business Continuity remain CLOSED / VERIFIED**. The frozen v1.4 kernel remains unchanged. The verified security chain covers resource-read scope, permission non-escalation, external-effect stale-worker protection, public-intake outbox lease ownership, provider rollback CAS, exact provider binding and stale-local activation recovery.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -110,6 +110,17 @@ The frozen v1.4 kernel remains protected by its independent integrity gate. Secu
 - Adversarial matrix covers cross-domain combinations including commercial action create/send, provider activate/lookup/rollback, order read/create and public-review/diagnostics/AI.
 - This is an authorization-model proof boundary; no role hierarchy or implicit capability inference was introduced.
 - Full release verification is required on the exact post-change HEAD before this sub-boundary is considered VERIFIED.
+
+### 3C-1. Counterparty Monitoring & Favorites runtime boundary — 2026-09-29 — CLOSED / VERIFIED by CI #2041 (`36561799870`)
+
+- Runtime boundary: exact INN/OGRN/OGRNIP subscriptions can be persisted as actor-scoped Monitoring and personal Favorites without creating a second search engine or changing frozen kernel semantics.
+- Authorization: separate `COUNTERPARTY_MONITOR_MANAGE` and `COUNTERPARTY_FAVORITE_MANAGE` capabilities; monitoring/favorite reads and observation writes are actor-scoped.
+- Integrity: identifier checksum validation, idempotent commands, snapshot payload hashing, provenance/source version, deterministic snapshot IDs and deterministic snapshot-to-snapshot change detection.
+- Reliability: duplicate-safe PostgreSQL uniqueness, transactional audit/outbox facts, deterministic UUID outbox identifiers and replay-safe persistence.
+- API/composition: protected monitoring/favorites endpoints plus explicit `compose_counterparty_monitoring_runtime()`; database is not touched during composition.
+- Adversarial evidence: invalid identifiers, missing permissions, actor-scope violations, duplicate subscriptions, snapshot tampering, personal-favorite isolation, severity classification and PostgreSQL persistence were exercised.
+- Full seven-job release gate CI #2041 (`36561799870`) is GREEN on the exact implementation HEAD; no frozen-kernel semantic change.
+- Scope limit: daily checkpointed batch monitoring, bounded parallelism/backoff, provider-outage handling and recovery checkpoint semantics remain the separate **3C-2** boundary.
 
 ### 3B-E2E. Public-intake outage → replay → reconstruction boundary — 2026-09-29 — CLOSED / VERIFIED by CI #2004 (`36558811275`)
 
