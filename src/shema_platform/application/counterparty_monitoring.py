@@ -149,7 +149,14 @@ def validate_counterparty_identifier(
     if identifier_type is CounterpartyIdentifierType.INN:
         if len(normalized) == 10:
             weights = (2, 4, 10, 3, 5, 9, 4, 6, 8)
-            checksum = sum(int(d) * w for d, w in zip(normalized[:-1], weights, strict=True)) % 11 % 10
+            checksum = (
+                sum(
+                    int(d) * w
+                    for d, w in zip(normalized[:-1], weights, strict=True)
+                )
+                % 11
+                % 10
+            )
             if checksum != int(normalized[-1]):
                 raise ValueError("invalid INN checksum")
         elif len(normalized) == 12:
@@ -200,9 +207,7 @@ def snapshot_from_observation(
     }
     payload_hash = snapshot_payload_hash(payload)
     snapshot_id = hashlib.sha256(
-        f"{monitor.monitor_id}|{observation.observed_at.isoformat()}|{payload_hash}".encode(
-            "utf-8"
-        )
+        f"{monitor.monitor_id}|{observation.observed_at.isoformat()}|{payload_hash}".encode()
     ).hexdigest()
     return CounterpartySnapshot(
         snapshot_id=f"cps:{snapshot_id}",
@@ -289,10 +294,14 @@ class CounterpartyMonitoringService:
             reservation = uow.idempotency.reserve(idem_key, request_hash, pending_ref)
             if reservation.result_ref != pending_ref:
                 if reservation.result_ref.startswith("pending:"):
-                    raise IdempotencyConflict("counterparty monitoring request is already in progress")
+                    raise IdempotencyConflict(
+                        "counterparty monitoring request is already in progress"
+                    )
                 stored = uow.monitoring.get_monitor(reservation.result_ref)
                 if stored is None:
-                    raise IntegrityViolation("completed monitoring reservation references missing monitor")
+                    raise IntegrityViolation(
+                        "completed monitoring reservation references missing monitor"
+                    )
                 return stored
             for item in uow.monitoring.list_monitors(actor_id):
                 if item.identifier_type is identifier_type and item.identifier == normalized:
@@ -370,10 +379,14 @@ class CounterpartyMonitoringService:
             reservation = uow.idempotency.reserve(idem_key, request_hash, pending_ref)
             if reservation.result_ref != pending_ref:
                 if reservation.result_ref.startswith("pending:"):
-                    raise IdempotencyConflict("counterparty favorite request is already in progress")
+                    raise IdempotencyConflict(
+                        "counterparty favorite request is already in progress"
+                    )
                 stored = uow.monitoring.get_favorite(reservation.result_ref)
                 if stored is None:
-                    raise IntegrityViolation("completed favorite reservation references missing favorite")
+                    raise IntegrityViolation(
+                        "completed favorite reservation references missing favorite"
+                    )
                 return stored
             for item in uow.monitoring.list_favorites(actor_id):
                 if item.identifier_type is identifier_type and item.identifier == normalized:
