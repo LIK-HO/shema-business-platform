@@ -2,7 +2,7 @@
 ## Формальный манифест зрелого ядра и рациональной разработки
 
 **Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / P47 Strategy Boundary Closed / Operator Interface Contract Closed / Phase 3A Repeat Orders Closed / **Global Security Re-baseline — CLOSED / VERIFIED / MAX Evidence Hold**
-**Current verified boundary:** **Global Security Re-baseline — CLOSED / VERIFIED** on exact HEAD `b8983dcf16630869db1318746edc93298ea8c333` by full seven-job release-gate CI #1994 (`36556900641`). The frozen v1.4 kernel remains unchanged. The verified security chain covers resource-read scope, permission non-escalation, external-effect stale-worker protection, public-intake outbox lease ownership, provider rollback CAS, exact provider binding and stale-local activation recovery.
+**Current verified boundary:** **Global Security Re-baseline — CLOSED / VERIFIED** on exact HEAD `b8983dcf16630869db1318746edc93298ea8c333` by full seven-job release-gate CI #1994 (`36556900641`); **Phase 3A Repeat Orders & Business Continuity remains CLOSED / VERIFIED**. The frozen v1.4 kernel remains unchanged. The verified security chain covers resource-read scope, permission non-escalation, external-effect stale-worker protection, public-intake outbox lease ownership, provider rollback CAS, exact provider binding and stale-local activation recovery.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
