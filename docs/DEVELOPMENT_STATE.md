@@ -1,3 +1,16 @@
+# Phase 5 PWA — CLOSED / VERIFIED (2026-09-30)
+
+- **Boundary:** Phase 5 — PWA.
+- **Implementation HEAD:** `337b3c3f8465b406d13f6655f8e65910efe4524a`.
+- **Acceptance:** `tests/test_phase5_pwa_acceptance.py`.
+- **Security invariant:** SI-26.
+- **Full release gate:** CI `36635383440` — **7/7 GREEN** (quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery, release-contract).
+- **Global adversarial review:** completed on the full approved architecture. One trust-boundary defect was found in review: root PWA bootstrap routes required explicit unauthenticated allowlisting. Fixed in `src/shema_platform/experience/api.py` and covered by an HTTP-level acceptance test. No P0/P1 findings remain open.
+- **Safety properties:** public-only service-worker cache; business APIs/protected state network-only; pending public mutations are bounded and memory-only, require Idempotency-Key, reject Authorization-bearing entries, and fail closed on conflicts.
+- **Frozen kernel:** unchanged.
+- **Next active boundary:** Phase 6 — Production Web/PWA Consolidation.
+- **PR #61:** open / draft / unmerged.
+
 # Phase 5 PWA — IN_PROGRESS (2026-09-30)
 
 - **Boundary:** Phase 5 — PWA.
