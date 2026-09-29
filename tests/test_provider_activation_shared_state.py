@@ -6,8 +6,10 @@ from shema_platform.adapters.ai.production_activation import (
     AIProductionActivationError,
     YandexGPTProductionGate,
 )
+from shema_platform.foundation.errors import IntegrityViolation
 from shema_platform.foundation.provider_activation import (
     InMemoryProviderActivationStateStore,
+    ProviderActivationState,
 )
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
@@ -131,3 +133,56 @@ def test_activation_and_rollback_are_global_across_replicas() -> None:
 
     with pytest.raises(AIProductionActivationError):
         gate_b.provider()
+
+
+def test_stale_rollback_cannot_disable_reactivated_provider() -> None:
+    store = InMemoryProviderActivationStateStore()
+    first_at = datetime(2026, 9, 29, 10, 0, tzinfo=UTC)
+    second_at = datetime(2026, 9, 29, 10, 0, 1, tzinfo=UTC)
+
+    store.activate(
+        ProviderActivationState(
+            provider_id="shared-provider",
+            enabled=True,
+            configuration_version="cfg:v1",
+            activation_version="activation:v1",
+            activated_by="operator-a",
+            activated_at=first_at,
+        )
+    )
+    stale = store.get("shared-provider")
+    assert stale is not None
+
+    store.rollback(
+        provider_id="shared-provider",
+        rolled_back_by="operator-a",
+        rolled_back_at=first_at,
+        reason="controlled rollback",
+        expected_activation_version="activation:v1",
+        expected_activated_at=first_at,
+    )
+    store.activate(
+        ProviderActivationState(
+            provider_id="shared-provider",
+            enabled=True,
+            configuration_version="cfg:v2",
+            activation_version="activation:v2",
+            activated_by="operator-b",
+            activated_at=second_at,
+        )
+    )
+
+    with pytest.raises(IntegrityViolation, match="compare-and-set"):
+        store.rollback(
+            provider_id="shared-provider",
+            rolled_back_by="stale-operator",
+            rolled_back_at=second_at,
+            reason="stale rollback",
+            expected_activation_version=str(stale.activation_version),
+            expected_activated_at=stale.activated_at,
+        )
+
+    current = store.get("shared-provider")
+    assert current is not None
+    assert current.enabled is True
+    assert current.activation_version == "activation:v2"
