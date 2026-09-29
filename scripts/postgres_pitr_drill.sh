@@ -417,15 +417,15 @@ done
 
 RESTORE_END_NS="$(date +%s%N)"
 
-docker exec -e PGPASSWORD=postgres "$RESTORE_CONTAINER"   psql -U postgres -d postgres -v ON_ERROR_STOP=1   -c 'create database shema_public_intake_restore'
-docker cp "$WORK_ROOT/shema_public_intake.dump" "$RESTORE_CONTAINER:/tmp/shema_public_intake.dump"
-docker exec -e PGPASSWORD=postgres "$RESTORE_CONTAINER"   pg_restore -U postgres -d shema_public_intake_restore   /tmp/shema_public_intake.dump
-
 if [[ "$RECOVERED" != "t" ]]; then
   docker logs "$RESTORE_CONTAINER" >&2 || true
   echo "PostgreSQL PITR restore did not promote within 180 seconds" >&2
   exit 1
 fi
+
+docker exec -e PGPASSWORD=postgres "$RESTORE_CONTAINER"   psql -U postgres -d postgres -v ON_ERROR_STOP=1   -c 'create database shema_public_intake_restore'
+docker cp "$WORK_ROOT/shema_public_intake.dump" "$RESTORE_CONTAINER:/tmp/shema_public_intake.dump"
+docker exec -e PGPASSWORD=postgres "$RESTORE_CONTAINER"   pg_restore -U postgres -d shema_public_intake_restore   /tmp/shema_public_intake.dump
 
 RTO_SECONDS="$(python - <<PY
 start = int("$RESTORE_START_NS")
@@ -458,7 +458,7 @@ select
     (select count(*) from audit_log where audit_id = '00000000-0000-0000-0000-000000000502'),
     (select count(*) from audit_log where audit_id = '00000000-0000-0000-0000-000000000503'),
     (select count(*) from audit_log where audit_id = '00000000-0000-0000-0000-000000000504'),
-    (select count(*) from schema_migration where version = 10)
+    (select count(*) from schema_migration where version = 13)
 ")"
 
 EXPECTED="1|1|1|1|1|1|1|0|1"
