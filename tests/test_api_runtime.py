@@ -270,7 +270,14 @@ def test_http_errors_redact_provider_and_credential_details() -> None:
         },
         json={
             "actionId": "action-1",
-            "lines": [],
+            "lines": [
+                {
+                    "lineId": "line-1",
+                    "description": "Погрузка",
+                    "quantity": "1",
+                    "unitPrice": {"amount": "1000", "currency": "RUB"},
+                }
+            ],
         },
     )
 
