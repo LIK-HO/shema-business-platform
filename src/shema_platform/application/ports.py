@@ -6,6 +6,9 @@ from typing import TYPE_CHECKING, Protocol, Self
 from shema_platform.application.counterparty_monitoring import (
     CounterpartyMonitoringRepository,
 )
+from shema_platform.application.counterparty_monitoring_worker import (
+    CounterpartyMonitoringBatchRepository,
+)
 from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.economics import EconomicEntry
 from shema_platform.domain.identity import Identity
@@ -226,6 +229,7 @@ class UnitOfWork(Protocol):
     outbox: OutboxRepository
     jobs: JobRepository
     monitoring: CounterpartyMonitoringRepository
+    counterparty_monitoring_batches: CounterpartyMonitoringBatchRepository
     commercial_actions: CommercialActionRepository
     orders: OrderRepository
     repeat_orders: RepeatOrderRepository
