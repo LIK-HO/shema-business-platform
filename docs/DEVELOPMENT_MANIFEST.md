@@ -62,6 +62,16 @@ Documentation, a contract file or a positive-path test never closes a security f
 
 The frozen v1.4 kernel remains protected by its independent integrity gate. Security hardening must not silently change frozen kernel semantics.
 
+
+### 1C-READ. Resource-read authorization sub-boundary — 2026-09-29
+
+- **Implemented / VERIFIED:** sensitive resource reads now require both the explicit route permission and a server-side `ResourceReadAuthorizer` check on the concrete `orderId` / `entityRef`.
+- `GET /v1/orders/{orderId}` and `GET /v1/economics/{entityRef}` fail closed when the resource-scope capability is not composed.
+- The PostgreSQL-backed scope implementation resolves canonical ownership from the Order resource; Phase 3A economics currently bind `entity_ref` to `order_id`, so no new Order/Economics kernel field is introduced.
+- Foreign-resource reads are denied even when the actor has the corresponding read permission; missing-owner state also fails closed.
+- Evidence: adversarial API tests, resource-scope unit tests, Python 3.12/3.13 quality, integration, supply-chain, backup/PITR and release-contract all passed on exact HEAD `7e2f46aadec3aa0d977ea90ee31139aba1511670` in CI run #1934 (`36551109926`).
+- This closes the **resource-read BOLA sub-boundary**, not the entire global Security re-baseline. The remaining Security campaign continues from this exact boundary.
+
 ## 1A. Цельный образ продукта и баланс стратегии
 
 Shema — это **личная операционная система владельца**, а не урезанная корпоративная CRM/ERP и не SaaS-продукт, который должен догонять коммерческие платформы по числу функций.
