@@ -1,5 +1,16 @@
 # Development State Ledger
 
+# Current Phase 3C-1 closure — 2026-09-29
+
+- **Boundary:** Phase 3C-1 — Counterparty Monitoring & Favorites runtime model/persistence.
+- **Status:** **CLOSED / VERIFIED** on exact implementation HEAD resolved live from GitHub.
+- **Evidence:** full seven-job release-gate CI #2041 (`36561799870`) GREEN: quality 3.12/3.13, supply-chain, integration 3.12/3.13, backup/PITR and release-contract.
+- **Implemented:** actor-scoped Monitoring and personal Favorites; checksum validation; idempotent commands; PostgreSQL persistence; snapshot hash/provenance; deterministic change detection; audit/outbox; protected API routes; explicit runtime composition.
+- **Adversarial result:** invalid identifiers, authorization absence, cross-actor access, duplicate commands and snapshot tampering are rejected by runtime/tests. No unresolved P0/P1 found inside 3C-1 scope.
+- **Next implementation boundary:** **Phase 3C-2 — Checkpointed Daily Counterparty Monitoring Worker + Provider-Outage/Recovery Semantics.**
+- Full Phase 3C exit criterion remains open until 3C-2 and the contract's batch/recovery requirements are implemented and verified.
+
+
 # Current Phase 3B closure — 2026-09-29
 
 - **Boundary:** Phase 3B — Public Intake Data Plane + Trust Boundary + Counterparty Preflight.
