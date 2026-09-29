@@ -178,6 +178,65 @@ def test_postgres_commercial_send_reservation_reclaims_expired_lease() -> None:
         first.commit()
 
 
+def test_postgres_stale_worker_cannot_quarantine_newer_send_lease() -> None:
+    action = CommercialAction(
+        action_id=str(uuid4()),
+        identity_id="identity:integration",
+        owner_actor_id="operator-1",
+        contact_ref="chat:integration",
+        channel="max",
+        evidence_refs=("evidence:integration",),
+    ).mark_ready()
+
+    with psycopg.connect(DATABASE_URL) as first, psycopg.connect(DATABASE_URL) as second:
+        apply_migrations(first)
+        from shema_platform.foundation.errors import IntegrityViolation
+        from shema_platform.platform.postgres_repositories import (
+            PostgresCommercialActionRepository,
+        )
+
+        repository = PostgresCommercialActionRepository(first)
+        repository.add(action)
+        first.commit()
+
+        start = datetime.now(UTC)
+        repository.claim_for_send(
+            action.action_id,
+            "worker-old",
+            lease_until=start + timedelta(seconds=1),
+            now=start,
+        )
+        first.commit()
+
+        second_repository = PostgresCommercialActionRepository(second)
+        reclaimed = second_repository.claim_for_send(
+            action.action_id,
+            "worker-new",
+            lease_until=start + timedelta(seconds=60),
+            now=start + timedelta(seconds=2),
+        )
+        assert reclaimed.send_worker_id == "worker-new"
+        second.commit()
+
+        stale = repository.fail_external_effect(
+            action.action_id,
+            "worker-old",
+            now=start + timedelta(seconds=2),
+        )
+        assert stale is None
+        first.rollback()
+
+        current = second_repository.get(action.action_id)
+        assert current is not None
+        assert current.status is CommercialActionStatus.SENDING
+        assert current.send_worker_id == "worker-new"
+        second.execute(
+            "delete from commercial_action where action_id = %s",
+            (action.action_id,),
+        )
+        second.commit()
+
+
 def test_postgres_commercial_send_completion_requires_current_lease() -> None:
     action = CommercialAction(
         action_id=str(uuid4()),
