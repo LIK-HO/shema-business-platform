@@ -14,6 +14,9 @@ from shema_platform.experience.runtime_composition import (
     compose_yandexgpt_runtime,
 )
 from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.provider_activation import (
+    InMemoryProviderActivationStateStore,
+)
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
@@ -77,6 +80,7 @@ def build_yandex() -> YandexGPTRuntimeAssembly:
         trust_resolver=StaticTrustResolver(),
         prompt_renderer=lambda _: "unused",
         cost_estimator=lambda input_tokens, output_tokens: 0.01,
+        activation_state_store=InMemoryProviderActivationStateStore(),
     )
 
 
