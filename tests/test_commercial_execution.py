@@ -163,7 +163,7 @@ class AmbiguousAdapter(CommunicationAdapter):
 
 @dataclass
 class StaleWorkerAmbiguousAdapter(CommunicationAdapter):
-    uow: MemoryUow
+    uow: "MemoryUow"
     channel: str = "max"
     calls: int = 0
 
