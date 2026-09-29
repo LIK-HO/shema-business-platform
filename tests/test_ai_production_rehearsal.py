@@ -116,10 +116,12 @@ def test_green_promotion_approval_does_not_activate_either_provider() -> None:
     yandex = YandexGPTProductionGate(
         telemetry=InMemoryTelemetrySink(),
         activation_state_store=store_yandex,
+        configuration_version="p40-yandex-config:v1",
     )
     gigachat = GigaChatProductionGate(
         telemetry=InMemoryTelemetrySink(),
         activation_state_store=store_gigachat,
+        configuration_version="p40-gigachat-config:v1",
     )
 
     assert yandex.state.enabled is False
