@@ -329,6 +329,41 @@ def test_cached_provider_rejects_reactivated_canonical_binding() -> None:
             )
 
 
+def test_reactivation_is_not_blocked_by_stale_local_state_after_remote_rollback() -> None:
+    store = InMemoryProviderActivationStateStore()
+    gate = YandexGPTProductionGate(
+        telemetry=InMemoryTelemetrySink(),
+        activation_state_store=store,
+        configuration_version="cfg:yandexgpt-prod-v1",
+    )
+    gate.activate(
+        snapshot(),
+        activated_by="operator-1",
+        prompt_renderer=lambda _: "prompt",
+        cost_estimator=lambda _input, _output: 0.01,
+        api_key="runtime-secret",
+    )
+    first = gate.state
+    assert first.activated_at is not None
+    store.rollback(
+        provider_id="yandexgpt",
+        rolled_back_by="operator-2",
+        rolled_back_at=first.activated_at + timedelta(seconds=1),
+        reason="remote rollback",
+        expected_activation_version=str(first.activation_version),
+        expected_activated_at=first.activated_at,
+    )
+
+    gate.activate(
+        snapshot(),
+        activated_by="operator-3",
+        prompt_renderer=lambda _: "prompt",
+        cost_estimator=lambda _input, _output: 0.01,
+        api_key="runtime-secret",
+    )
+    assert gate.state.enabled is True
+
+
 def test_rollback_requires_operator_and_reason() -> None:
     gate = YandexGPTProductionGate(
         telemetry=InMemoryTelemetrySink(),
