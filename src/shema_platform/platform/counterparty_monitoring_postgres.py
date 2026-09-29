@@ -233,6 +233,19 @@ class PostgresCounterpartyMonitoringRepository(CounterpartyMonitoringRepository)
         ).fetchone()
         return None if row is None else _snapshot_from_row(row)
 
+    def get_snapshot(self, snapshot_id: str) -> CounterpartySnapshot | None:
+        row = self._connection.execute(
+            """
+            select
+                snapshot_id, monitor_id, observed_at, source_ref,
+                source_version, payload, payload_hash
+            from counterparty_snapshot
+            where snapshot_id = %s
+            """,
+            (snapshot_id,),
+        ).fetchone()
+        return None if row is None else _snapshot_from_row(row)
+
     def add_snapshot(self, snapshot: CounterpartySnapshot) -> CounterpartySnapshot:
         self._connection.execute(
             """
