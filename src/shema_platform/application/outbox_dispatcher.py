@@ -8,6 +8,7 @@ from uuid import NAMESPACE_URL, uuid5
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.outbox import OutboxDelivery, OutboxEvent
+from shema_platform.foundation.safe_errors import safe_error_detail
 
 
 class OutboxPublisher(Protocol):
@@ -117,7 +118,7 @@ class OutboxDispatcher:
                             "aggregate_type": delivery.event.aggregate_type,
                             "aggregate_id": delivery.event.aggregate_id,
                             "delivery_attempt": delivery.attempt,
-                            "error": str(error),
+                            "error": safe_error_detail(error),
                         },
                     )
                 )
