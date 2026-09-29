@@ -32,6 +32,13 @@
       "negative_test": "a rollback command based on a prior activation cannot disable a provider that was reactivated after the command read state"
     },
     {
+      "id": "SI-19",
+      "name": "stale_provider_binding_denied",
+      "class": "concurrency",
+      "enforcement": "provider instances are bound to the exact canonical activation version and activation timestamp; cached instances are invalidated before traffic",
+      "negative_test": "a provider object from a prior activation cannot execute traffic after canonical rollback and reactivation, even when configuration and activation version are reused"
+    },
+    {
       "id": "SI-16",
       "name": "stale_worker_cannot_overwrite_newer_send",
       "class": "concurrency",
