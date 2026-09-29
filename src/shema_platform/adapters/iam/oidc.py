@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from threading import Lock
 from time import monotonic
 from typing import Any, NoReturn, Protocol
+from urllib.parse import urlsplit
 
 import jwt
 
