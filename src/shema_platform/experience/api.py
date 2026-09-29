@@ -77,6 +77,7 @@ from shema_platform.experience.api_models import (
     SearchRequest,
     SearchResponse,
 )
+from shema_platform.experience.web import install_web_operator_surface
 from shema_platform.foundation.authentication import (
     AuthenticatedActor,
     AuthenticationPort,
@@ -96,7 +97,6 @@ from shema_platform.foundation.http_security import (
 )
 from shema_platform.foundation.provider_health import ProviderHealthRegistry
 from shema_platform.foundation.runtime_security import RuntimeSecurityConfiguration
-from shema_platform.experience.web import install_web_operator_surface
 from shema_platform.foundation.safe_errors import safe_error_detail
 from shema_platform.foundation.telemetry import (
     NoopTelemetrySink,
