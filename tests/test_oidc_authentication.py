@@ -9,7 +9,6 @@ from packaging.version import Version
 from shema_platform.adapters.iam.oidc import (
     OIDCConfiguration,
     OIDCJWTAuthenticator,
-    PyJWTSigningKeyProvider,
 )
 from shema_platform.foundation.authentication import AuthenticationRequired
 from shema_platform.foundation.authorization import Permission
