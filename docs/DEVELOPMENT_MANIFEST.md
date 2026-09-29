@@ -63,6 +63,14 @@ Documentation, a contract file or a positive-path test never closes a security f
 The frozen v1.4 kernel remains protected by its independent integrity gate. Security hardening must not silently change frozen kernel semantics.
 
 
+### 1C-EFFECT. External-effect stale-worker sub-boundary — 2026-09-29
+
+- Finding: an ExternalEffectUnknown arriving from a worker after lease loss could previously overwrite a newer worker's SENDING state through an unguarded persistence save.
+- Fix: the unknown-effect transition is now an atomic persistence operation requiring the same worker_id, status='sending' and an unexpired lease. A stale worker can only create a reconciliation/quarantine fact; it cannot mutate the newer send state.
+- Evidence: unit test covers reclaimed lease; PostgreSQL integration test proves stale worker returns no transition and the newer worker remains owner of the send lease.
+- No schema or frozen-kernel change.
+- Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
+
 ### 1C-PERM. Permission non-escalation sub-boundary — 2026-09-29
 
 - **Implemented:** authorization remains an explicit membership check; permission combinations do not synthesize a third capability and wildcard/unknown permissions remain rejected at IAM materialization.
