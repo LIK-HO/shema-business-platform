@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 import os
+from collections.abc import Callable
 
 from shema_platform.adapters.ai.composition import (
     AIProviderCompositionError,
