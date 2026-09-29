@@ -358,6 +358,7 @@ def create_app(
     app.state.authenticator = authenticator
     app.state.provider_health = provider_health or ProviderHealthRegistry()
     app.state.counterparty_checker = counterparty_checker
+    app.state.counterparty_monitoring = counterparty_monitoring
     app.state.counterparty_provider_activation = counterparty_provider_activation
     app.state.counterparty_provider_lookup = counterparty_provider_lookup
     app.state.public_intake = public_intake
