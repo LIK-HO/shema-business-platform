@@ -1,8 +1,8 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / P47 Strategy Boundary Closed / Operator Interface Contract Closed / **Phase 3A Repeat Orders Closed / MAX Evidence Hold**
-**Current verified boundary:** **Phase 3A Repeat Orders & Business Continuity — CLOSED / VERIFIED** after implementation, global adversarial review and full seven-job release-gate CI #1628 (`36402645839`). The frozen v1.4 kernel remains unchanged; Web/PWA, public intake, Bitrix24 live handoff and MAX activation remain later separately gated boundaries.
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / P47 Strategy Boundary Closed / Operator Interface Contract Closed / Phase 3A Repeat Orders Closed / **Global Security Re-baseline — CLOSED / VERIFIED / MAX Evidence Hold**
+**Current verified boundary:** **Global Security Re-baseline — CLOSED / VERIFIED** on exact HEAD `b8983dcf16630869db1318746edc93298ea8c333` by full seven-job release-gate CI #1994 (`36556900641`). The frozen v1.4 kernel remains unchanged. The verified security chain covers resource-read scope, permission non-escalation, external-effect stale-worker protection, public-intake outbox lease ownership, provider rollback CAS, exact provider binding and stale-local activation recovery.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -64,15 +64,15 @@ Documentation, a contract file or a positive-path test never closes a security f
 The frozen v1.4 kernel remains protected by its independent integrity gate. Security hardening must not silently change frozen kernel semantics.
 
 
-### 1C-ACTIVE-STATE. Stale local activation-state sub-boundary — 2026-09-29
+### 1C-ACTIVE-STATE. Stale local activation-state sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
 
 - Finding: after a remote canonical rollback, YandexGPT/GigaChat replicas retained local enabled state and could reject a legitimate reactivation even though canonical state was disabled.
 - Fix: activation admission now trusts canonical shared state; stale local enabled flags no longer block reactivation.
 - Evidence: YandexGPT and GigaChat negative tests perform canonical rollback outside the local gate, then prove the stale replica can reactivate.
 - No schema or frozen-kernel change.
-- Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
+- Verification: full seven-job release gate CI #1994 (`36556900641`) is GREEN on exact HEAD `b8983dcf16630869db1318746edc93298ea8c333`.
 
-### 1C-BINDING. Cached provider stale-binding sub-boundary — 2026-09-29
+### 1C-BINDING. Cached provider stale-binding sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
 
 - Finding: a runtime replica could retain a cached provider object after global rollback and later reuse it after re-activation when configuration (and even activation_version) was reused.
 - Fix: provider instances are now bound to the exact canonical `(activation_version, activated_at)` pair; cached instances are invalidated before reuse, and every external execution rechecks the canonical binding.
@@ -80,7 +80,7 @@ The frozen v1.4 kernel remains protected by its independent integrity gate. Secu
 - No schema or frozen-kernel change.
 - Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
 
-### 1C-ACTIVATION. Provider rollback stale-activation sub-boundary — 2026-09-29
+### 1C-ACTIVATION. Provider rollback stale-activation sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
 
 - Finding: provider rollback previously targeted only the provider_id, so a stale rollback could disable a provider after a newer activation had already taken ownership of the canonical kill-switch state.
 - Fix: rollback is now an atomic compare-and-set on both activation_version and activated_at; stale commands fail without mutating the newer activation.
@@ -88,7 +88,7 @@ The frozen v1.4 kernel remains protected by its independent integrity gate. Secu
 - No schema or frozen-kernel change.
 - Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
 
-### 1C-OUTBOX. Public-intake outbox stale-worker sub-boundary — 2026-09-29
+### 1C-OUTBOX. Public-intake outbox stale-worker sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
 
 - Finding: public-intake outbox publication checked worker identity but not the current delivery lease, so a stale worker could potentially mark a reclaimed event as published.
 - Fix: publication is now an atomic update requiring the same worker_id, unpublished state and an unexpired delivery lease.
@@ -96,7 +96,7 @@ The frozen v1.4 kernel remains protected by its independent integrity gate. Secu
 - No schema or frozen-kernel change.
 - Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
 
-### 1C-EFFECT. External-effect stale-worker sub-boundary — 2026-09-29
+### 1C-EFFECT. External-effect stale-worker sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
 
 - Finding: an ExternalEffectUnknown arriving from a worker after lease loss could previously overwrite a newer worker's SENDING state through an unguarded persistence save.
 - Fix: the unknown-effect transition is now an atomic persistence operation requiring the same worker_id, status='sending' and an unexpired lease. A stale worker can only create a reconciliation/quarantine fact; it cannot mutate the newer send state.
@@ -104,14 +104,14 @@ The frozen v1.4 kernel remains protected by its independent integrity gate. Secu
 - No schema or frozen-kernel change.
 - Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
 
-### 1C-PERM. Permission non-escalation sub-boundary — 2026-09-29
+### 1C-PERM. Permission non-escalation sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
 
 - **Implemented:** authorization remains an explicit membership check; permission combinations do not synthesize a third capability and wildcard/unknown permissions remain rejected at IAM materialization.
 - Adversarial matrix covers cross-domain combinations including commercial action create/send, provider activate/lookup/rollback, order read/create and public-review/diagnostics/AI.
 - This is an authorization-model proof boundary; no role hierarchy or implicit capability inference was introduced.
 - Full release verification is required on the exact post-change HEAD before this sub-boundary is considered VERIFIED.
 
-### 1C-READ. Resource-read authorization sub-boundary — 2026-09-29
+### 1C-READ. Resource-read authorization sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
 
 - **Implemented / VERIFIED:** sensitive resource reads now require both the explicit route permission and a server-side `ResourceReadAuthorizer` check on the concrete `orderId` / `entityRef`.
 - `GET /v1/orders/{orderId}` and `GET /v1/economics/{entityRef}` fail closed when the resource-scope capability is not composed.
