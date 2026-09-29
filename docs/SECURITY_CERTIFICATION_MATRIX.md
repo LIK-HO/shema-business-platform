@@ -20,6 +20,7 @@ A control is considered closed only when:
 | Resource bounds | HTTP body/provider/AI/queue limits | oversized/retry/resource tests | current-head CI required |
 | SSRF | pinned integration hosts + no redirect following | attacker-host/redirect tests | current-head CI required |
 | Idempotency | durable reservation before critical effect | replay/conflict/race tests | current-head CI + recovery |
+| External-effect lease ownership | atomic worker+lease guard for UNKNOWN outcome transition | stale-worker/reclaimed-lease negative test + PostgreSQL persistence test | current-head CI + integration/recovery |
 | Outbox | database lease + replay | concurrent-claim/replay tests | integration + recovery |
 | AI execution | provider activation, trust resolution, durable idempotency | AI replay and negative-path tests | current-head CI + release gate |
 | Audit/forensics | server correlation + append-only audit | correlation spoof tests | current-head CI required |
