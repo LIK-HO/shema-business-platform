@@ -1,3 +1,4 @@
+| Phase 4 global acceptance | public/operator surfaces, browser security headers, protected API fail-closed boundary, no client-side business state, same-origin API binding | `tests/test_phase4_global_acceptance.py` + full seven-job release gate | pending final HEAD |
 # Security Evidence Matrix — v1.5 Global Re-baseline
 
 This document is an evidence index, not a certification claim.
