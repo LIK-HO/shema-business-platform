@@ -20,7 +20,6 @@ from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
 from shema_platform.platform.postgres import PostgresUnitOfWork
 from shema_platform.platform.public_intake_postgres import (
     PostgresOperatorNotificationReader,
-    PostgresPublicIntakeOutboxEvent,
     PostgresPublicIntakeRepository,
     PostgresPublicRequestProjection,
     PublicIntakeOutboxDispatcher,
@@ -127,9 +126,12 @@ def test_public_intake_survives_shema_outage_and_replays_exactly_once() -> None:
         migrate(intake_database, ROOT / "db" / "public_intake_migrations")
         migrate(canonical_database, ROOT / "db" / "migrations")
 
-        intake_factory = lambda: PostgresPublicIntakeRepository(
-            lambda: connection(intake_database)
-        )
+        def intake_connection() -> psycopg.Connection:
+            return connection(intake_database)
+
+        def intake_factory() -> PostgresPublicIntakeRepository:
+            return PostgresPublicIntakeRepository(intake_connection)
+
 
         service = PublicIntakeService(
             intake_factory,
