@@ -14,6 +14,9 @@ from shema_platform.foundation.authentication import (
 )
 from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.provider_activation import (
+    InMemoryProviderActivationStateStore,
+)
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
@@ -73,6 +76,7 @@ def build() -> YandexGPTRuntimeAssembly:
         trust_resolver=StaticTrustResolver(),
         prompt_renderer=lambda request: "unused",
         cost_estimator=lambda input_tokens, output_tokens: 0.01,
+        activation_state_store=InMemoryProviderActivationStateStore(),
     )
 
 
@@ -109,7 +113,7 @@ def test_runtime_assembly_is_explicit_and_does_not_activate_provider() -> None:
     assert isinstance(assembly, YandexGPTRuntimeAssembly)
     assert isinstance(assembly.api_application(), AIOnlyAPIApplication)
     assert assembly.ai.gate.state.enabled is False
-    with pytest.raises(Exception, match="not activated"):
+    with pytest.raises(Exception, match="not (activated|enabled)"):
         assembly.ai.configuration_version()
 
 
