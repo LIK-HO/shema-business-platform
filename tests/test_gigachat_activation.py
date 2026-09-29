@@ -6,6 +6,7 @@ from shema_platform.adapters.ai.gigachat_activation import (
 )
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
+from shema_platform.foundation.provider_activation import InMemoryProviderActivationStateStore
 
 
 def snapshot(scope: str = "GIGACHAT_API_B2B") -> ConfigurationSnapshot:
@@ -32,7 +33,7 @@ def snapshot(scope: str = "GIGACHAT_API_B2B") -> ConfigurationSnapshot:
 
 
 def build() -> GigaChatProductionGate:
-    return GigaChatProductionGate(telemetry=InMemoryTelemetrySink())
+    return GigaChatProductionGate(telemetry=InMemoryTelemetrySink(), activation_state_store=InMemoryProviderActivationStateStore())
 
 
 def test_gate_is_disabled_by_default() -> None:
@@ -131,7 +132,7 @@ def test_gate_fails_closed_without_runtime_secret() -> None:
 
 def test_activation_and_rollback_telemetry_is_redacted() -> None:
     telemetry = InMemoryTelemetrySink()
-    gate = GigaChatProductionGate(telemetry=telemetry)
+    gate = GigaChatProductionGate(telemetry=telemetry, activation_state_store=InMemoryProviderActivationStateStore())
 
     gate.activate(
         snapshot(),
