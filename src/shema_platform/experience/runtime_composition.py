@@ -254,6 +254,7 @@ def compose_counterparty_provider_runtime(
     configuration: DaDataConfiguration,
     readiness: DaDataActivationReadiness,
     telemetry: TelemetrySink,
+    activation_state_store: ProviderActivationStateStore,
     provider_factory: Callable[[DaDataConfiguration], CounterpartyLookupProvider] | None = None,
     unit_of_work_factory: Callable[[], UnitOfWork] | None = None,
     max_attempts: int = 3,
@@ -263,6 +264,7 @@ def compose_counterparty_provider_runtime(
     """Compose the control-plane without activating or connecting to DaData."""
     gate = DaDataControlledActivationGate(
         telemetry=telemetry,
+        activation_state_store=activation_state_store,
         provider_factory=provider_factory,
     )
     activation = CounterpartyProviderActivationService(
@@ -274,7 +276,7 @@ def compose_counterparty_provider_runtime(
     if unit_of_work_factory is not None:
         lookup = CounterpartyProviderRuntimeLookupService(
             provider_id="dadata_organization_api",
-            provider_resolver=gate.provider,
+            provider_resolver=lambda: gate.provider(configuration=configuration),
             evidence_service=CounterpartyProviderEvidenceService(unit_of_work_factory),
             max_attempts=max_attempts,
             backoff_seconds=backoff_seconds,
