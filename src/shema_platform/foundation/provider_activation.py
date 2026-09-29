@@ -33,3 +33,44 @@ class ProviderActivationStateStore(Protocol):
         rolled_back_at: datetime,
         reason: str,
     ) -> None: ...
+
+
+class InMemoryProviderActivationStateStore:
+    """Deterministic test-only store implementing the shared-state contract."""
+
+    def __init__(self) -> None:
+        self._items: dict[str, ProviderActivationState] = {}
+
+    def get(self, provider_id: str) -> ProviderActivationState | None:
+        return self._items.get(provider_id)
+
+    def activate(self, state: ProviderActivationState) -> None:
+        existing = self._items.get(state.provider_id)
+        if existing is not None and existing.enabled:
+            raise RuntimeError("provider activation already enabled")
+        self._items[state.provider_id] = state
+
+    def rollback(
+        self,
+        *,
+        provider_id: str,
+        rolled_back_by: str,
+        rolled_back_at: datetime,
+        reason: str,
+    ) -> None:
+        current = self._items.get(provider_id)
+        if current is None:
+            raise RuntimeError("provider activation rollback has no state")
+        self._items[provider_id] = ProviderActivationState(
+            provider_id=provider_id,
+            enabled=False,
+            configuration_version=current.configuration_version,
+            activation_version=current.activation_version,
+            activated_by=current.activated_by,
+            activated_at=current.activated_at,
+            max_cost=current.max_cost,
+            max_duration_seconds=current.max_duration_seconds,
+            rollback_by=rolled_back_by,
+            rollback_at=rolled_back_at,
+            rollback_reason=reason[:256],
+        )
