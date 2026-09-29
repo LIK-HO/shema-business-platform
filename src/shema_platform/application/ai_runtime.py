@@ -84,7 +84,7 @@ class IdempotentAIExecutionService:
     def __init__(
         self,
         *,
-        service: "AIExecutionService",
+        service: AIExecutionService,
         unit_of_work_factory: Callable[[], UnitOfWork],
     ) -> None:
         self._service = service
@@ -138,7 +138,6 @@ class IdempotentAIExecutionService:
 
 def _ai_request_hash(request: AIExecutionRequest) -> str:
     from hashlib import sha256
-    import json
 
     payload = {
         "task_type": request.task_type,
