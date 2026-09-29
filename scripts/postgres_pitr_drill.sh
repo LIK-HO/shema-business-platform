@@ -189,6 +189,7 @@ with psycopg.connect(os.environ["PUBLIC_INTAKE_DATABASE_URL"]) as connection:
 PY
 
 docker exec -e PGPASSWORD=postgres "$SOURCE_CONTAINER"   pg_dump -Fc -U postgres -d shema_public_intake   -f /tmp/shema_public_intake.dump
+docker cp "$SOURCE_CONTAINER:/tmp/shema_public_intake.dump" "$WORK_ROOT/shema_public_intake.dump"
 
 docker exec -e PGPASSWORD=postgres "$SOURCE_CONTAINER"   psql -U postgres -d postgres -v ON_ERROR_STOP=1   -c 'create database shema_public_intake_restore'
 
@@ -416,6 +417,10 @@ done
 
 RESTORE_END_NS="$(date +%s%N)"
 
+docker exec -e PGPASSWORD=postgres "$RESTORE_CONTAINER"   psql -U postgres -d postgres -v ON_ERROR_STOP=1   -c 'create database shema_public_intake_restore'
+docker cp "$WORK_ROOT/shema_public_intake.dump" "$RESTORE_CONTAINER:/tmp/shema_public_intake.dump"
+docker exec -e PGPASSWORD=postgres "$RESTORE_CONTAINER"   pg_restore -U postgres -d shema_public_intake_restore   /tmp/shema_public_intake.dump
+
 if [[ "$RECOVERED" != "t" ]]; then
   docker logs "$RESTORE_CONTAINER" >&2 || true
   echo "PostgreSQL PITR restore did not promote within 180 seconds" >&2
@@ -522,6 +527,9 @@ assert row[1] is None
 assert row[2] is None
 
 print("INTAKE_OUTBOX_REPLAY=PASS")
+PY
+
+docker exec -e PGPASSWORD=postgres "$RESTORE_CONTAINER"   psql -U postgres -d postgres -v ON_ERROR_STOP=1   -c 'drop database shema_public_intake_restore'
 PY
 
 echo "PITR_DRILL=PASS"
