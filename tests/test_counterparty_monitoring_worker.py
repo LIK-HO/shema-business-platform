@@ -11,7 +11,6 @@ from shema_platform.application.counterparty_check import (
     SourceReliability,
 )
 from shema_platform.application.counterparty_monitoring import (
-    CounterpartyMonitor,
     CounterpartyMonitoringService,
     MonitoringStatus,
 )
