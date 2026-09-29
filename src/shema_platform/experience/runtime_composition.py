@@ -33,6 +33,7 @@ from shema_platform.experience.search_composition import SearchAugmentedAPIAppli
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.http_security import BotChallengeVerifier
 from shema_platform.foundation.policy import PolicyEngine
+from shema_platform.foundation.provider_activation import ProviderActivationStateStore
 from shema_platform.foundation.telemetry import TelemetrySink
 from shema_platform.platform.public_intake_postgres import (
     PostgresOperatorNotificationReader,
@@ -230,6 +231,7 @@ def compose_yandexgpt_runtime(
     prompt_renderer: Callable,
     cost_estimator: Callable[[int, int], float],
     policy: PolicyEngine | None = None,
+    activation_state_store: ProviderActivationStateStore | None = None,
 ) -> YandexGPTRuntimeAssembly:
     """Build the explicit runtime assembly without activating YandexGPT."""
     return YandexGPTRuntimeAssembly(
@@ -241,6 +243,7 @@ def compose_yandexgpt_runtime(
             prompt_renderer=prompt_renderer,
             cost_estimator=cost_estimator,
             policy=policy,
+            activation_state_store=activation_state_store,
         )
     )
 
