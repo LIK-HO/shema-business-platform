@@ -286,7 +286,11 @@ class BatchRepo:
         )
         result = replace(
             batch,
-            status=BatchStatus.COMPLETED if batch.collection_complete and not active else BatchStatus.RUNNING,
+            status=(
+                BatchStatus.COMPLETED
+                if batch.collection_complete and not active
+                else BatchStatus.RUNNING
+            ),
             completed_at=now if batch.collection_complete and not active else None,
         )
         self.batches[batch_id] = result
