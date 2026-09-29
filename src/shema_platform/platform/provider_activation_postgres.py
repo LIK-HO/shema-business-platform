@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from shema_platform.foundation.provider_activation import ProviderActivationState, ProviderActivationStateStore
 from shema_platform.foundation.errors import IntegrityViolation
-from shema_platform.platform.postgres import DBConnection
+from shema_platform.foundation.provider_activation import (
+    ProviderActivationState,
+    ProviderActivationStateStore,
+)
 
 
 class PostgresProviderActivationStateStore(ProviderActivationStateStore):
