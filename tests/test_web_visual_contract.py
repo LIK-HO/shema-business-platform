@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def _root() -> Path:
     return Path(__file__).resolve().parents[1] / "src" / "shema_platform" / "experience" / "web"
 
