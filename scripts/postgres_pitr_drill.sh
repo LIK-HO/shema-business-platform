@@ -495,8 +495,12 @@ def connection_factory():
     )
 
 
+def repository_factory():
+    return PostgresPublicIntakeRepository(connection_factory)
+
+
 dispatcher = PublicIntakeOutboxDispatcher(
-    connection_factory,
+    repository_factory,
     projector,
     worker_id="pitr-replay-worker",
     lease_seconds=30,
