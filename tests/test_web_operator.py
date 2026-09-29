@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from shema_platform.experience.api import create_app
 
+
 def test_web_routes_are_same_origin_and_public() -> None:
     c=TestClient(create_app(enable_docs=False))
     for path in ("/","/request","/operator","/max"):
