@@ -1,4 +1,4 @@
-**Current implementation boundary:** **Phase 4-4A Canonical Web/Public + Protected Operator Shell — CLOSED / VERIFIED** by full seven-job release-gate CI run `36580831730`. The frozen kernel is unchanged. The current active work is Phase 4 Web Operator System; only one substantial capability boundary is active at a time.
+**Current implementation boundary:** **Phase 4-4A Canonical Web/Public + Protected Operator Shell — CLOSED / VERIFIED** by full seven-job release-gate CI run `36581452677`. The frozen kernel is unchanged. The current active work is Phase 4 Web Operator System; only one substantial capability boundary is active at a time.
 
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
