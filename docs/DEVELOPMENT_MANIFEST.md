@@ -111,6 +111,14 @@ The frozen v1.4 kernel remains protected by its independent integrity gate. Secu
 - This is an authorization-model proof boundary; no role hierarchy or implicit capability inference was introduced.
 - Full release verification is required on the exact post-change HEAD before this sub-boundary is considered VERIFIED.
 
+### 3B-PERSIST. Public-intake canonical projection persistence sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #2001 (`36558318175`)
+
+- Finding: `PostgresPublicRequestProjection` and `PostgresOperatorNotificationReader` referenced `public_request_context` and `operator_notification`, but the canonical migration chain ended at 0013 without creating either table.
+- Fix: added `db/migrations/0014_public_intake_projection.sql` with projection context, durable operator notifications and unread/request indexes.
+- Evidence: PostgreSQL integration test proves migration creation, canonical projection, notification creation and replay-safe duplicate projection; PITR recovery CI verifies migration 0014 survives recovery.
+- This closes the persistence/schema blocker only. The full Phase 3B outage → replay → operator reconstruction exit criterion remains a separate boundary.
+- No frozen-kernel semantic change.
+
 ### 1C-READ. Resource-read authorization sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
 
 - **Implemented / VERIFIED:** sensitive resource reads now require both the explicit route permission and a server-side `ResourceReadAuthorizer` check on the concrete `orderId` / `entityRef`.
