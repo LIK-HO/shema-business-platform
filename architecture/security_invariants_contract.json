@@ -184,6 +184,13 @@
       "class": "experience_security",
       "enforcement": "service worker caches public shell/assets only; business APIs and protected operator state are network-only; pending mutations are bounded in page memory and require durable idempotency keys",
       "negative_test": "service worker/network tests prove /v1/* and protected state are never cached, queued entries have no Authorization header and no persistent browser storage is used"
+    },
+    {
+      "id": "SI-27",
+      "name": "phase6_operator_experience_cannot_create_second_authority",
+      "class": "experience_security",
+      "enforcement": "Consolidated Web/PWA navigation, context and handoff surfaces use canonical APIs; protected capabilities remain server-authoritative; no local business store/rules or implied external success state are permitted.",
+      "negative_test": "Phase 6 acceptance proves protected route rejection, absence of browser persistence/database authority, approved navigation scope, and NOT_COMPOSED handoff behavior when no integration provider is composed."
     }
   ],
   "closure": {
