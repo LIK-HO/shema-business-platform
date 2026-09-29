@@ -121,9 +121,10 @@ class GigaChatConfiguration:
         if self.scope not in ALLOWED_SCOPES:
             raise ValueError("GIGACHAT_SCOPE is invalid")
         parsed_base = urlsplit(self.base_url)
+        if parsed_base.scheme != "https":
+            raise ValueError("GigaChat base_url must use HTTPS")
         if (
-            parsed_base.scheme != "https"
-            or parsed_base.hostname != _ALLOWED_BASE_HOST
+            parsed_base.hostname != _ALLOWED_BASE_HOST
             or parsed_base.port is not None
             or parsed_base.query
             or parsed_base.fragment
@@ -131,9 +132,10 @@ class GigaChatConfiguration:
             raise ValueError("GigaChat base_url must target the pinned official host")
 
         parsed_token = urlsplit(self.token_url)
+        if parsed_token.scheme != "https":
+            raise ValueError("GigaChat token_url must use HTTPS")
         if (
-            parsed_token.scheme != "https"
-            or parsed_token.hostname != _ALLOWED_TOKEN_HOST
+            parsed_token.hostname != _ALLOWED_TOKEN_HOST
             or parsed_token.port != 9443
             or parsed_token.query
             or parsed_token.fragment
