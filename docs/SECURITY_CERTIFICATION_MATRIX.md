@@ -24,6 +24,7 @@ A control is considered closed only when:
 | Public-intake outbox lease ownership | publication requires current worker lease after reclaim protection | stale-worker/reclaimed-event PostgreSQL negative test | current-head CI + integration |
 | Provider activation rollback CAS | rollback requires the currently active activation version and timestamp | stale-rollback after reactivation unit + PostgreSQL persistence test | current-head CI + integration |
 | Stale provider binding | provider instances require exact activation version and timestamp; stale caches are rejected | YandexGPT/GigaChat/DaData reactivation negative tests | current-head CI + unit |
+| Stale local activation state | canonical rollback clears the authoritative gate even when a replica cache remains enabled | YandexGPT/GigaChat remote-rollback reactivation negative tests | current-head CI + unit |
 | Outbox | database lease + replay | concurrent-claim/replay tests | integration + recovery |
 | AI execution | provider activation, trust resolution, durable idempotency | AI replay and negative-path tests | current-head CI + release gate |
 | Audit/forensics | server correlation + append-only audit | correlation spoof tests | current-head CI required |
