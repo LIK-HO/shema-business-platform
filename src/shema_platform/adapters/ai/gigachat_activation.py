@@ -92,7 +92,7 @@ class GigaChatProductionActivationState:
 
 
 class GigaChatProductionGate:
-    """Explicit, reversible, process-local production gate for GigaChat."""
+    """Explicit production gate backed by canonical shared activation state."""
 
     def __init__(
         self,
@@ -115,7 +115,23 @@ class GigaChatProductionGate:
 
     @property
     def state(self) -> GigaChatProductionActivationState:
-        return self._state
+        canonical = self._activation_state_store.get(self._provider_id)
+        if canonical is None:
+            return self._state
+        return GigaChatProductionActivationState(
+            enabled=canonical.enabled,
+            provider_id=canonical.provider_id,
+            configuration_version=canonical.configuration_version,
+            activation_version=canonical.activation_version,
+            activated_by=canonical.activated_by,
+            activated_at=canonical.activated_at,
+            max_cost=canonical.max_cost,
+            max_duration_seconds=canonical.max_duration_seconds,
+            rollback_from_configuration_version=canonical.rollback_by,
+            rollback_by=canonical.rollback_by,
+            rollback_at=canonical.rollback_at,
+            rollback_reason=canonical.rollback_reason,
+        )
 
     def activate(
         self,
@@ -128,7 +144,8 @@ class GigaChatProductionGate:
         requester=None,
         token_requester=None,
     ) -> GatedGigaChatProvider:
-        if self._state.enabled:
+        canonical = self._activation_state_store.get(self._provider_id)
+        if (canonical is not None and canonical.enabled) or self._state.enabled:
             raise GigaChatProductionActivationError(
                 "GigaChat production activation is already active"
             )
@@ -190,6 +207,8 @@ class GigaChatProductionGate:
             secret,
             requester=requester,
             token_requester=token_requester,
+            prompt_renderer=prompt_renderer,
+            cost_estimator=cost_estimator,
         )
         readiness = provider.readiness()
         if readiness.state is not AIProviderReadinessState.READY:
@@ -245,8 +264,9 @@ class GigaChatProductionGate:
             raise GigaChatProductionActivationError(
                 "GigaChat rollback requires a reason"
             )
-        previous = self._state
-        if not previous.enabled:
+        canonical = self._activation_state_store.get(self._provider_id)
+        previous = self.state
+        if canonical is None or not canonical.enabled:
             return
 
         rollback_time = datetime.now(UTC)
