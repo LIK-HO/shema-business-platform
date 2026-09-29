@@ -1,14 +1,14 @@
-# Development State Ledger
+# Current Phase 4-4A closure — 2026-09-29
 
-# Current Phase 3C-2 closure — 2026-09-29
-
-- **Boundary:** Phase 3C-2 — Checkpointed Daily Counterparty Monitoring Worker + Provider-Outage/Recovery Semantics.
-- **Status:** **CLOSED / VERIFIED** on exact implementation HEAD after full current-head verification.
-- **Evidence:** full seven-job release-gate CI #2073 (`36577339818`) GREEN: quality 3.12/3.13, supply-chain, integration 3.12/3.13, backup/PITR and release-contract.
-- **Implemented:** durable daily batch/checkpoint state; bounded worker parallelism; lease ownership with PostgreSQL CAS/reclaim semantics; deterministic retry/backoff budget; provider-outage handling without false changes; replay-safe observation idempotency; max-attempt fail-closed behavior; explicit worker runtime composition.
-- **Adversarial result:** stale workers cannot complete reclaimed items; outage leaves no snapshot/change; duplicate batch replay converges; exhausted attempts do not call the provider; PostgreSQL and unit tests cover these boundaries.
-- **Phase 3C status:** **CLOSED / VERIFIED**. The 3C contract now has its required reproducible snapshots, deterministic change detection, severity-aware change events, checkpointed batch recovery and direct monitor resource lineage.
-- **Next implementation boundary:** **Phase 4 — Web Operator System**.
+- **Boundary:** Phase 4-4A — Canonical Web/Public + Protected Operator Shell.
+- **Status:** **CLOSED / VERIFIED** on current implementation HEAD.
+- Implemented: same-origin Web shell/assets, responsive operator workspace shell, server-side operator capability advertisement, protected business APIs, public request surface, MAX projection through the same static Web application.
+- Security boundary: HTML/CSS/JS routes are public shell only; business APIs remain behind authentication/authorization. Operator credentials are held only in page memory; browser storage is not used.
+- Contract evidence: `architecture/operator_interface_contract.json`, `architecture/public_client_experience_contract.json`, `architecture/security_invariants_contract.json`.
+- Tests: Web route/assets contract tests, client-state/direct-DB negative tests, visual-structure contract tests.
+- **CI:** run `36580831730` — quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/PITR and release-contract all **GREEN**.
+- PR #60 remains **OPEN / DRAFT / UNMERGED**. PR #59 remains untouched and **OPEN / DRAFT / UNMERGED**.
+- **Next active boundary:** Phase 4-4B — Public Client Intake + Attribution + MAX projection hardening.
 
 # Current Phase 3C-1 closure — 2026-09-29
 
