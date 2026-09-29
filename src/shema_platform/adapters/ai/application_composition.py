@@ -66,7 +66,15 @@ class YandexGPTApplicationComposition:
         )
         self._provider: AIProvider | None = None
 
-    def _build_provider(self, api_key: str | None = None) -> AIProvider:
+    def _build_provider(
+        self,
+        api_key: str | None = None,
+        *,
+        prompt_renderer=None,
+        cost_estimator=None,
+        requester=None,
+        token_requester=None,
+    ) -> AIProvider:
         secret = (api_key or os.getenv("YANDEXGPT_API_KEY", "")).strip()
         if not secret:
             raise ValueError("YANDEXGPT_API_KEY is required")
@@ -85,8 +93,9 @@ class YandexGPTApplicationComposition:
         )
         return YandexGPTProvider(
             configuration,
-            prompt_renderer=self._prompt_renderer,
-            cost_estimator=self._cost_estimator,
+            prompt_renderer=prompt_renderer or self._prompt_renderer,
+            cost_estimator=cost_estimator or self._cost_estimator,
+            requester=requester,
         )
 
     @property
