@@ -8,7 +8,7 @@ from shema_platform.application.ai import (
     AIExecutionContext,
     AITask,
 )
-from shema_platform.foundation.ai_prompt_security import (
+from shema_platform.adapters.ai.prompt_security import (
     AI_SYSTEM_INSTRUCTION,
     build_secure_messages,
 )
