@@ -1,12 +1,18 @@
 from pathlib import Path
-from fastapi.testclient import TestClient
-from shema_platform.experience.api import create_app
 
-def test_web_visual_contract_duplicate_removed() -> None:
-    c=TestClient(create_app(enable_docs=False))
-    for path in ("/","/request","/operator","/max"):
-        r=c.get(path)
-        assert r.status_code==200
-        assert "/web/style.css" in r.text
-        assert "/web/app.js" in r.text
+def _root() -> Path:
+    return Path(__file__).resolve().parents[1] / "src" / "shema_platform" / "experience" / "web"
 
+def test_critical_visual_contract_regions() -> None:
+    root=_root()
+    html=(root/"index.html").read_text()
+    css=(root/"style.css").read_text()
+    js=(root/"app.js").read_text()
+    for token in ['id="nav"','id="surface"','id="title"','id="view"','id="auth"','id="toast"']:
+        assert token in html
+    for token in [".shell",".side","header",".card",".hero",".table","@media"]:
+        assert token in css
+    for token in ["pub()","requests()","searchView()","counterparties()","system()","dossier()"]:
+        assert token in js
+    assert "localStorage" not in js
+    assert "sessionStorage" not in js
