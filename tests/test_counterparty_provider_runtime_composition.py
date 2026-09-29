@@ -24,6 +24,9 @@ from shema_platform.foundation.authentication import (
     AuthenticationRequired,
 )
 from shema_platform.foundation.authorization import Permission
+from shema_platform.foundation.provider_activation import (
+    InMemoryProviderActivationStateStore,
+)
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
@@ -102,6 +105,7 @@ def runtime(*, readiness: DaDataActivationReadiness) -> CounterpartyProviderRunt
         ),
         readiness=readiness,
         telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
         provider_factory=lambda _configuration: FakeProvider(),
     )
 
@@ -126,6 +130,7 @@ def test_runtime_composition_does_not_construct_provider_before_activation() -> 
         configuration=DaDataConfiguration(api_key="test-secret", enabled=True),
         readiness=ready_witness(),
         telemetry=InMemoryTelemetrySink(),
+        activation_state_store=InMemoryProviderActivationStateStore(),
         provider_factory=factory,
     )
 
