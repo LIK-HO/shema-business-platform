@@ -317,7 +317,7 @@ def test_assembled_ai_path_persists_run_audit_and_correlation(monkeypatch) -> No
                 where correlation_id = %s
                   and action = 'ai.run'
                 """,
-                (correlation_id,),
+                (body["correlationId"],),
             ).fetchall()
             assert audit_rows == [
                 (
