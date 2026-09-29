@@ -8,6 +8,7 @@ if TYPE_CHECKING:
         AIRunRepository,
         AuditRepository,
         CommercialActionRepository,
+        CounterpartyMonitoringRepository,
         EconomicEntryRepository,
         EvidenceRepository,
         IdempotencyRepository,
