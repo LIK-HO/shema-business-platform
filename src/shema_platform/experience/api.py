@@ -228,13 +228,22 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
 
 class AuthenticationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.url.path in {
-            "/docs",
-            "/redoc",
-            "/openapi.json",
-            "/health/ready",
-            "/v1/public/intake",
-        }:
+        path = request.url.path
+        if (
+            path in {
+                "/",
+                "/request",
+                "/operator",
+                "/max",
+                "/system",
+                "/docs",
+                "/redoc",
+                "/openapi.json",
+                "/health/ready",
+                "/v1/public/intake",
+            }
+            or path.startswith("/web/")
+        ):
             return await call_next(request)
 
         authenticator: AuthenticationPort | None = request.app.state.authenticator
