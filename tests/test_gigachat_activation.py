@@ -176,10 +176,13 @@ def test_gate_rollback_disables_future_requests() -> None:
     )
 
     assert gate.state.enabled is True
+    active_state = gate.state
     gate.rollback(rolled_back_by="operator", reason="test rollback")
     assert gate.state.enabled is False
     assert gate.allows_request(
-        configuration_version="gigachat-config:v1"
+        configuration_version="gigachat-config:v1",
+        activation_version=str(active_state.activation_version),
+        activated_at=active_state.activated_at,
     ) is False
 
 
