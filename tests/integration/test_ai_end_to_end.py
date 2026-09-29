@@ -58,7 +58,15 @@ class DeterministicYandexGPTProvider:
     constructions = 0
     invocations = 0
 
-    def __init__(self, configuration, *, prompt_renderer, cost_estimator) -> None:
+    def __init__(
+        self,
+        configuration,
+        *,
+        prompt_renderer,
+        cost_estimator,
+        requester=None,
+        **_,
+    ) -> None:
         type(self).constructions += 1
         self._configuration = configuration
         self._prompt_renderer = prompt_renderer
@@ -327,7 +335,7 @@ def test_assembled_ai_path_persists_run_audit_and_correlation(monkeypatch) -> No
                 (
                     "ai.run",
                     "success",
-                    correlation_id,
+                    body["correlationId"],
                     "p32-yandexgpt-config:v1",
                 )
             ]
