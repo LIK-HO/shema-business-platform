@@ -380,7 +380,12 @@ async function route(){
   setSurfaceMode(false);
   document.querySelectorAll('nav button').forEach(button=>button.classList.toggle('active',button.dataset.route===S.route));
   if(!requireOperator())return;
-  await loadCapabilities();await loadNotifications();
+  const authorized=await loadCapabilities();
+  if(!authorized||!S.token){
+    view.innerHTML='<div class="card empty">Сессия оператора недействительна. Доступ закрыт.</div>';
+    return;
+  }
+  await loadNotifications();
   if(S.route==='workbench')return workbench();
   if(S.route==='clients')return clients();
   if(S.route==='requests')return requests();
