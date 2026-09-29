@@ -1,5 +1,16 @@
 # Development State Ledger
 
+# Current Phase 3B closure — 2026-09-29
+
+- **Boundary:** Phase 3B — Public Intake Data Plane + Trust Boundary + Counterparty Preflight.
+- **Status:** **CLOSED / VERIFIED** on exact E2E implementation HEAD `254f7467e05fd92d0c594558f6a4263684040557`.
+- **Evidence:** full seven-job release-gate CI #2004 (`36558811275`) GREEN: quality 3.12/3.13, supply-chain, integration 3.12/3.13, backup/PITR and release-contract.
+- **E2E proof:** accepted intake survives simulated canonical Shema outage; later outbox replay reconstructs canonical request context and operator notification; replay converges without duplicate notification/projection.
+- **Persistence correction:** migration 0014 creates the canonical projection/notification schema and is included in PITR recovery.
+- **Adversarial result:** no unresolved P0/P1 found in the reviewed Phase 3B scope after the final E2E boundary.
+- **Next implementation boundary:** Phase 3C — Counterparty Verification, Monitoring & Favorites.
+
+
 # Phase 3B runtime persistence synchronization — 2026-09-29
 
 - **Boundary:** canonical persistence required by Public Intake Data Plane.
