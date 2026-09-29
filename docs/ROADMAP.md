@@ -431,6 +431,9 @@ A monitored counterparty has reproducible snapshots, deterministic change detect
 
 ## 8. Phase 4 — Web Operator System
 
+### Phase 4-4E — IMPLEMENTED / GLOBAL ACCEPTANCE IN PROGRESS
+System/control-plane hardening is implemented and the last pre-acceptance full gate `36587434913` is **7/7 GREEN**. Final acceptance now executes one additional cross-surface contract covering public routes, operator protection, security headers, browser-state prohibition, same-origin API binding and all operator surfaces. Only after that gate is green will Phase 4 be marked **CLOSED / VERIFIED**.
+
 ### Phase 4-4D — CLOSED / VERIFIED
 Repeat Orders & Business Continuity are exposed through the canonical Web/API boundary with idempotency, ownership and policy delegated to the existing RepeatOrderService. Capability remains fail-closed until a real server-side revalidator is composed. CI: `36584457696`. Next: **Phase 4-4E — System/control-plane hardening and global acceptance**.
 
