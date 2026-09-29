@@ -420,9 +420,24 @@ class GatedYandexGPTProvider:
         provider: ScopedAIProvider,
         *,
         gate: YandexGPTProductionGate,
+        activation_version: str,
+        activated_at: datetime | None,
     ) -> None:
         self._provider = provider
         self._gate = gate
+        self._activation_version = activation_version
+        self._activated_at = activated_at
+
+    def binding_matches(
+        self,
+        *,
+        activation_version: str,
+        activated_at: datetime | None,
+    ) -> bool:
+        return (
+            self._activation_version == activation_version
+            and self._activated_at == activated_at
+        )
 
     def run(
         self,
