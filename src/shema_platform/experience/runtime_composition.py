@@ -23,6 +23,7 @@ from shema_platform.application.counterparty_provider_runtime_lookup import (
     CounterpartyProviderRuntimeLookupService,
 )
 from shema_platform.application.ports import UnitOfWork
+from shema_platform.application.resource_read_authorization import ResourceReadAuthorizer
 from shema_platform.application.public_intake import PublicIntakeService
 from shema_platform.application.public_preflight import (
     PublicCounterpartyPreflightService,
@@ -35,6 +36,7 @@ from shema_platform.foundation.http_security import BotChallengeVerifier
 from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.foundation.provider_activation import ProviderActivationStateStore
 from shema_platform.foundation.telemetry import TelemetrySink
+from shema_platform.platform.resource_read_authorization import PostgresResourceReadAuthorizer
 from shema_platform.platform.public_intake_postgres import (
     PostgresOperatorNotificationReader,
     PostgresPublicIntakeRepository,
@@ -144,6 +146,7 @@ class YandexGPTRuntimeAssembly:
     """Explicit composition root; construction never activates provider traffic."""
 
     ai: YandexGPTApplicationComposition
+    resource_read_authorizer: ResourceReadAuthorizer | None = None
 
     def api_application(
         self,
@@ -168,6 +171,7 @@ class YandexGPTRuntimeAssembly:
             authenticator=authenticator,
             enable_docs=enable_docs,
             telemetry=telemetry,
+            resource_read_authorizer=self.resource_read_authorizer,
         )
 
     def activate_yandexgpt(
@@ -235,6 +239,7 @@ def compose_yandexgpt_runtime(
 ) -> YandexGPTRuntimeAssembly:
     """Build the explicit runtime assembly without activating YandexGPT."""
     return YandexGPTRuntimeAssembly(
+        resource_read_authorizer=PostgresResourceReadAuthorizer(unit_of_work_factory),
         ai=YandexGPTApplicationComposition(
             snapshot=snapshot,
             telemetry=telemetry,
