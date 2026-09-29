@@ -84,8 +84,8 @@ from shema_platform.foundation.http_security import (
     trusted_peer_identity,
 )
 from shema_platform.foundation.provider_health import ProviderHealthRegistry
-from shema_platform.foundation.safe_errors import safe_error_detail
 from shema_platform.foundation.runtime_security import RuntimeSecurityConfiguration
+from shema_platform.foundation.safe_errors import safe_error_detail
 from shema_platform.foundation.telemetry import (
     NoopTelemetrySink,
     StructuredLoggingTelemetrySink,
