@@ -24,10 +24,10 @@ from shema_platform.application.counterparty_provider_runtime_lookup import (
 )
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.application.public_intake import PublicIntakeService
-from shema_platform.application.resource_read_authorization import ResourceReadAuthorizer
 from shema_platform.application.public_preflight import (
     PublicCounterpartyPreflightService,
 )
+from shema_platform.application.resource_read_authorization import ResourceReadAuthorizer
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api import APIApplication, create_app
 from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
