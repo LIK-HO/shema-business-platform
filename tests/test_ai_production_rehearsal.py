@@ -133,6 +133,7 @@ def test_yandex_activation_and_rollback_rehearsal_has_no_external_traffic() -> N
     gate = YandexGPTProductionGate(
         telemetry=telemetry,
         activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="p40-yandex-config:v1",
     )
 
     provider = gate.activate(
@@ -175,6 +176,7 @@ def test_gigachat_activation_and_rollback_rehearsal_has_no_external_traffic() ->
     gate = GigaChatProductionGate(
         telemetry=telemetry,
         activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="p40-gigachat-config:v1",
     )
 
     provider = gate.activate(
@@ -212,10 +214,12 @@ def test_rehearsal_requires_explicit_activation_for_each_provider() -> None:
     yandex = YandexGPTProductionGate(
         telemetry=InMemoryTelemetrySink(),
         activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="p40-yandex-config:v1",
     )
     gigachat = GigaChatProductionGate(
         telemetry=InMemoryTelemetrySink(),
         activation_state_store=InMemoryProviderActivationStateStore(),
+        configuration_version="p40-gigachat-config:v1",
     )
 
     assert yandex.state.enabled is False
