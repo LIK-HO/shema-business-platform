@@ -191,7 +191,7 @@ def test_http_correlation_reaches_audit_and_telemetry() -> None:
                 """,
                 ("action-b6-correlation-1",),
             ).fetchone()
-            assert audit == (response.json()["correlationId"],)
+            assert audit == (response.headers["X-Correlation-Id"],)
 
             assert conn.execute(
                 """
