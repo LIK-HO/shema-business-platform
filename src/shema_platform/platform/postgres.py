@@ -17,6 +17,7 @@ if TYPE_CHECKING:
         OutboxRepository,
         QuarantineRepository,
         RepeatOrderRepository,
+        CounterpartyMonitoringRepository,
     )
 
 
