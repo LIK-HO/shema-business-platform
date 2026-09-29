@@ -1,8 +1,8 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / P47 Strategy Boundary Closed / Operator Interface Contract Closed / Phase 3A Repeat Orders Closed / **Global Security Re-baseline — CLOSED / VERIFIED / MAX Evidence Hold**
-**Current verified boundary:** **Global Security Re-baseline — CLOSED / VERIFIED** on exact HEAD `b8983dcf16630869db1318746edc93298ea8c333` by full seven-job release-gate CI #1994 (`36556900641`); **Phase 3A Repeat Orders & Business Continuity remains CLOSED / VERIFIED**. The frozen v1.4 kernel remains unchanged. The verified security chain covers resource-read scope, permission non-escalation, external-effect stale-worker protection, public-intake outbox lease ownership, provider rollback CAS, exact provider binding and stale-local activation recovery.
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / P47 Strategy Boundary Closed / Operator Interface Contract Closed / Phase 3A Repeat Orders Closed / **Phase 3B Public Intake Data Plane — CLOSED / VERIFIED / Global Security Re-baseline — CLOSED / VERIFIED / MAX Evidence Hold**
+**Current verified boundary:** **Phase 3B Public Intake Data Plane + Trust Boundary + Counterparty Preflight — CLOSED / VERIFIED** by full seven-job release-gate CI #2004 (`36558811275`) on exact E2E implementation HEAD `254f7467e05fd92d0c594558f6a4263684040557`; **Global Security Re-baseline and Phase 3A Repeat Orders & Business Continuity remain CLOSED / VERIFIED**. The frozen v1.4 kernel remains unchanged. The verified security chain covers resource-read scope, permission non-escalation, external-effect stale-worker protection, public-intake outbox lease ownership, provider rollback CAS, exact provider binding and stale-local activation recovery.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
@@ -111,12 +111,21 @@ The frozen v1.4 kernel remains protected by its independent integrity gate. Secu
 - This is an authorization-model proof boundary; no role hierarchy or implicit capability inference was introduced.
 - Full release verification is required on the exact post-change HEAD before this sub-boundary is considered VERIFIED.
 
+### 3B-E2E. Public-intake outage → replay → reconstruction boundary — 2026-09-29 — CLOSED / VERIFIED by CI #2004 (`36558811275`)
+
+- Boundary proof: accepted public intake is durably retained in the dedicated intake database when canonical Shema projection is unavailable.
+- Recovery proof: the durable intake outbox is claimed by a later worker, projected into canonical Shema, and published only after successful projection.
+- Reconstruction proof: canonical `public_request_context` and `operator_notification` are recreated from the accepted intake record with correlation, preflight result and source attribution preserved.
+- Replay safety: a second dispatcher pass produces no second notification and no duplicate canonical projection.
+- Adversarial review: edge identity/rate limits, idempotency reservation, stale outbox lease handling, projection idempotency, data minimization and canonical authority boundaries were rechecked read-only; no unresolved P0/P1 was identified in the Phase 3B scope.
+- No frozen-kernel semantic change.
+
 ### 3B-PERSIST. Public-intake canonical projection persistence sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #2001 (`36558318175`)
 
 - Finding: `PostgresPublicRequestProjection` and `PostgresOperatorNotificationReader` referenced `public_request_context` and `operator_notification`, but the canonical migration chain ended at 0013 without creating either table.
 - Fix: added `db/migrations/0014_public_intake_projection.sql` with projection context, durable operator notifications and unread/request indexes.
 - Evidence: PostgreSQL integration test proves migration creation, canonical projection, notification creation and replay-safe duplicate projection; PITR recovery CI verifies migration 0014 survives recovery.
-- This closes the persistence/schema blocker only. The full Phase 3B outage → replay → operator reconstruction exit criterion remains a separate boundary.
+- This persistence boundary is part of the now-verified Phase 3B runtime exit.
 - No frozen-kernel semantic change.
 
 ### 1C-READ. Resource-read authorization sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
