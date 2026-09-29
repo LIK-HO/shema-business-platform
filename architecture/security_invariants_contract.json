@@ -18,6 +18,13 @@
       "negative_test": "actor with valid permission cannot act on or read a foreign resource"
     },
     {
+      "id": "SI-16",
+      "name": "stale_worker_cannot_overwrite_newer_send",
+      "class": "concurrency",
+      "enforcement": "lease-guarded atomic external-effect unknown transition",
+      "negative_test": "a worker that lost its send lease cannot move a newer worker's SENDING action to FAILED"
+    },
+    {
       "id": "SI-15",
       "name": "permission_non_escalation",
       "class": "authorization",
