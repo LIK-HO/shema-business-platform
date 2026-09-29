@@ -14,8 +14,8 @@
       "id": "SI-02",
       "name": "foreign_object_denied",
       "class": "BOLA",
-      "enforcement": "resource owner scope on commercial_action/order/repeat_order",
-      "negative_test": "actor with valid role cannot act on foreign resource"
+      "enforcement": "resource owner scope on commercial_action/order/repeat_order and sensitive reads via ResourceReadAuthorizer",
+      "negative_test": "actor with valid permission cannot act on or read a foreign resource"
     },
     {
       "id": "SI-03",
