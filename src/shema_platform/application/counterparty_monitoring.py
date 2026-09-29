@@ -436,6 +436,24 @@ class CounterpartyMonitoringService:
             )
             return favorite
 
+    def list_monitors(
+        self,
+        actor_id: str,
+        permissions: frozenset[Permission],
+    ) -> tuple[CounterpartyMonitor, ...]:
+        self._authorize(actor_id, permissions, Permission.COUNTERPARTY_MONITOR_MANAGE)
+        with self._unit_of_work_factory() as uow:
+            return uow.monitoring.list_monitors(actor_id)
+
+    def list_favorites(
+        self,
+        actor_id: str,
+        permissions: frozenset[Permission],
+    ) -> tuple[CounterpartyFavorite, ...]:
+        self._authorize(actor_id, permissions, Permission.COUNTERPARTY_FAVORITE_MANAGE)
+        with self._unit_of_work_factory() as uow:
+            return uow.monitoring.list_favorites(actor_id)
+
     def record_observation(
         self,
         *,
