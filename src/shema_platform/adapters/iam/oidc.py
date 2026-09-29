@@ -61,12 +61,22 @@ class OIDCConfiguration:
         return cls(**values)
 
     def __post_init__(self) -> None:
-        if not self.issuer.startswith("https://"):
+        issuer_url = urlsplit(self.issuer)
+        jwks_url = urlsplit(self.jwks_url)
+        if issuer_url.scheme != "https" or not issuer_url.hostname:
             raise ValueError("OIDC issuer must use HTTPS")
+        if issuer_url.username or issuer_url.password or issuer_url.port:
+            raise ValueError("OIDC issuer must not contain credentials or an explicit port")
         if not self.audience.strip():
             raise ValueError("OIDC audience is required")
-        if not self.jwks_url.startswith("https://"):
+        if jwks_url.scheme != "https" or not jwks_url.hostname:
             raise ValueError("OIDC JWKS URL must use HTTPS")
+        if jwks_url.username or jwks_url.password or jwks_url.port:
+            raise ValueError("OIDC JWKS URL must not contain credentials or an explicit port")
+        if jwks_url.hostname != issuer_url.hostname:
+            raise ValueError(
+                "OIDC JWKS URL host must match the configured issuer host"
+            )
         if not self.algorithms or any(
             algorithm not in _SAFE_ASYMMETRIC_ALGORITHMS for algorithm in self.algorithms
         ):
@@ -84,18 +94,56 @@ class OIDCConfiguration:
                 raise ValueError("OIDC claim names are required")
 
 
+class _BoundedPyJWKClient(jwt.PyJWKClient):
+    """Bound forced JWKS refreshes caused by attacker-controlled unknown kid values."""
+
+    def __init__(self, uri: str, cache_seconds: int) -> None:
+        super().__init__(
+            uri,
+            cache_jwk_set=True,
+            lifespan=cache_seconds,
+            cache_keys=True,
+            max_cached_keys=16,
+        )
+        self._refresh_lock = Lock()
+        self._next_forced_refresh_at = 0.0
+        self._refresh_cooldown_seconds = float(cache_seconds)
+
+    def get_signing_key(self, kid: str):  # type: ignore[override]
+        signing_keys = self.get_signing_keys()
+        signing_key = self.match_kid(signing_keys, kid)
+        if signing_key is not None:
+            return signing_key
+
+        now = monotonic()
+        with self._refresh_lock:
+            now = monotonic()
+            if now < self._next_forced_refresh_at:
+                raise jwt.PyJWKClientError(
+                    "JWKS forced-refresh cooldown is active"
+                )
+            self._next_forced_refresh_at = (
+                now + self._refresh_cooldown_seconds
+            )
+            signing_keys = self.get_signing_keys(refresh=True)
+
+        signing_key = self.match_kid(signing_keys, kid)
+        if signing_key is None:
+            raise jwt.PyJWKClientError(
+                f'Unable to find a signing key that matches: "{kid}"'
+            )
+        return signing_key
+
+
 class PyJWTSigningKeyProvider:
     """Production JWKS resolver with bounded cache and unknown-kid refresh rate limiting."""
 
     UNKNOWN_KID_REFRESH_COOLDOWN_SECONDS = 5.0
 
     def __init__(self, jwks_url: str, cache_seconds: int) -> None:
-        self._client = jwt.PyJWKClient(
+        self._client = _BoundedPyJWKClient(
             jwks_url,
-            cache_jwk_set=True,
-            lifespan=cache_seconds,
-            cache_keys=True,
-            max_cached_keys=16,
+            cache_seconds,
         )
         self._refresh_lock = Lock()
         self._last_unknown_kid_refresh_at = 0.0
