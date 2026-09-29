@@ -163,6 +163,13 @@
       "class": "experience_security",
       "enforcement": "Web shell and assets are public, while all business state access remains behind canonical authenticated APIs; browser storage does not persist operator credentials",
       "negative_test": "unauthenticated requests can fetch only shell/assets/public intake; protected operator APIs reject absent authentication; client source contains no direct database access and no persistent operator token storage"
+    },
+    {
+      "id": "SI-24",
+      "name": "repeat_order_capability_requires_real_revalidator",
+      "class": "business_continuity_security",
+      "enforcement": "Repeat-order Web/API capability is advertised only when a server-composed RepeatOrderService exists; that service requires a RepeatOrderRevalidator and validates counterparty, service scope, pricing, date/capacity and evidence freshness before creating or confirming repeat orders",
+      "negative_test": "without composed RepeatOrderService the capability is false and repeat UI/API fails closed; client JavaScript contains no alternate business validation or local repeat-order state store"
     }
   ],
   "closure": {
