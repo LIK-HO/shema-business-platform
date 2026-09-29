@@ -8,8 +8,10 @@ from shema_platform.adapters.ai.gigachat_application_composition import (
     GigaChatApplicationComposition,
 )
 from shema_platform.foundation.configuration import ConfigurationSnapshot
+from shema_platform.foundation.provider_activation import (
+    InMemoryProviderActivationStateStore,
+)
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
-from shema_platform.foundation.provider_activation import InMemoryProviderActivationStateStore
 
 
 def snapshot() -> ConfigurationSnapshot:
