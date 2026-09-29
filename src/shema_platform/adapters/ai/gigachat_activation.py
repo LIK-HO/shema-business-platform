@@ -375,11 +375,20 @@ class GigaChatProductionGate:
         )
         return self._provider
 
-    def allows_request(self, *, configuration_version: str) -> bool:
-        state = self._state
+    def allows_request(
+        self,
+        *,
+        configuration_version: str,
+        activation_version: str,
+        activated_at: datetime | None,
+    ) -> bool:
+        state = self._activation_state_store.get(self._provider_id)
         return bool(
-            state.enabled
+            state
+            and state.enabled
             and state.configuration_version == configuration_version
+            and state.activation_version == activation_version
+            and state.activated_at == activated_at
         )
 
     def budget_allows(
