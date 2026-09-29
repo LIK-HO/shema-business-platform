@@ -63,6 +63,14 @@ Documentation, a contract file or a positive-path test never closes a security f
 The frozen v1.4 kernel remains protected by its independent integrity gate. Security hardening must not silently change frozen kernel semantics.
 
 
+### 1C-OUTBOX. Public-intake outbox stale-worker sub-boundary — 2026-09-29
+
+- Finding: public-intake outbox publication checked worker identity but not the current delivery lease, so a stale worker could potentially mark a reclaimed event as published.
+- Fix: publication is now an atomic update requiring the same worker_id, unpublished state and an unexpired delivery lease.
+- Evidence: PostgreSQL integration test proves a reclaimed event remains owned by the newer worker when the stale worker attempts publication.
+- No schema or frozen-kernel change.
+- Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
+
 ### 1C-EFFECT. External-effect stale-worker sub-boundary — 2026-09-29
 
 - Finding: an ExternalEffectUnknown arriving from a worker after lease loss could previously overwrite a newer worker's SENDING state through an unguarded persistence save.
