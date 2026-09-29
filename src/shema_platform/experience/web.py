@@ -20,6 +20,19 @@ def install_web_operator_surface(app: FastAPI) -> None:
     async def serve_index() -> FileResponse:
         return FileResponse(_WEB_ROOT / "index.html")
 
+    app.add_api_route(
+        "/sw.js",
+        lambda: FileResponse(_PWA_SERVICE_WORKER, media_type="application/javascript"),
+        methods=["GET"],
+        include_in_schema=False,
+    )
+    app.add_api_route(
+        "/manifest.webmanifest",
+        lambda: FileResponse(_PWA_MANIFEST, media_type="application/manifest+json"),
+        methods=["GET"],
+        include_in_schema=False,
+    )
+
     for route in _PUBLIC_ROUTES:
         app.add_api_route(
             route,
