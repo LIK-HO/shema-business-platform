@@ -84,6 +84,7 @@ from shema_platform.foundation.http_security import (
     trusted_peer_identity,
 )
 from shema_platform.foundation.provider_health import ProviderHealthRegistry
+from shema_platform.foundation.safe_errors import safe_error_detail
 from shema_platform.foundation.runtime_security import RuntimeSecurityConfiguration
 from shema_platform.foundation.telemetry import (
     NoopTelemetrySink,
@@ -397,7 +398,7 @@ def create_app(
             request,
             status_code=403,
             code="policy_denied",
-            message=str(exc),
+            message=safe_error_detail(exc),
         )
 
     @app.exception_handler(IdempotencyConflict)
@@ -409,7 +410,7 @@ def create_app(
             request,
             status_code=409,
             code="idempotency_conflict",
-            message=str(exc),
+            message=safe_error_detail(exc),
         )
 
     @app.exception_handler(PublicIntakeSecurityRejected)
@@ -421,7 +422,7 @@ def create_app(
             request,
             status_code=400,
             code="public_intake_security_rejected",
-            message=str(exc),
+            message=safe_error_detail(exc),
         )
 
     @app.exception_handler(PublicIntakeRateLimited)
@@ -433,7 +434,7 @@ def create_app(
             request,
             status_code=429,
             code="public_intake_rate_limited",
-            message=str(exc),
+            message=safe_error_detail(exc),
             details={"budget": exc.budget},
         )
 
@@ -446,7 +447,7 @@ def create_app(
             request,
             status_code=423,
             code="review_required",
-            message=str(exc),
+            message=safe_error_detail(exc),
         )
 
     @app.exception_handler(CounterpartyLookupProviderError)
@@ -465,7 +466,7 @@ def create_app(
             request,
             status_code=status_code,
             code=exc.code.lower(),
-            message=str(exc),
+            message=safe_error_detail(exc),
             details={"retryable": exc.retryable},
         )
 
@@ -478,7 +479,7 @@ def create_app(
             request,
             status_code=409,
             code="provider_activation_blocked",
-            message=str(exc),
+            message=safe_error_detail(exc),
         )
 
     @app.exception_handler(AIProviderCompositionError)
@@ -490,7 +491,7 @@ def create_app(
             request,
             status_code=503,
             code="ai_provider_unavailable",
-            message=exc.failure.message,
+            message=safe_error_detail(exc.failure.message),
             details={"failureCode": exc.failure.code.value},
         )
 
@@ -503,7 +504,7 @@ def create_app(
             request,
             status_code=404,
             code="not_found",
-            message=str(exc),
+            message=safe_error_detail(exc),
         )
 
     def services(request: Request) -> APIApplication:
