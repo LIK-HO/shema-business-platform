@@ -1,3 +1,13 @@
+# Current Phase 4-4D closure — 2026-09-29
+
+- **Boundary:** Phase 4-4D — Repeat Orders & Business Continuity Web boundary.
+- **Status:** **CLOSED / VERIFIED** on exact implementation HEAD `5f552f2389040de7c14011f66d746f20ece66bb4` by full seven-job CI run `36584457696`.
+- Implemented: authenticated repeat-plan create/next/confirm/pause/resume/skip/cancel/context-edit API surface, idempotency-bound command handling, capability-gated Web operator workspace, and fail-closed behavior when no real server-side `RepeatOrderRevalidator` is composed.
+- The client never substitutes its own price/policy/date/capacity/evidence validation and never persists repeat-order business truth locally.
+- Existing RepeatOrderService/domain remain canonical; Web is only an experience layer.
+- Security evidence: repeat-order capability is advertised only when server-side service composition exists; absent composition returns a controlled capability-unavailable response.
+- **Next active boundary:** Phase 4-4E — System/control-plane hardening and Phase 4 global acceptance.
+
 # Current Phase 4-4B closure — 2026-09-29
 
 - **Boundary:** Phase 4-4B — Public Client Intake + Attribution + MAX projection hardening.
