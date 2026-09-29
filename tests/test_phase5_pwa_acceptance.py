@@ -32,7 +32,7 @@ def test_service_worker_is_public_only_and_versioned():
     sw = (WEB / "sw.js").read_text(encoding="utf-8")
     assert 'CACHE_VERSION = "shema-pwa-v1"' in sw
     assert '"/v1/"' in sw
-    assert 'url.pathname.startsWith("/health/")' in sw
+    assert 'pathname.startsWith("/health/")' in sw
     assert 'self.skipWaiting()' in sw
     assert 'event.request' in sw
     assert 'request.mode === "navigate"' in sw
@@ -64,6 +64,6 @@ def test_web_surface_exposes_manifest_and_service_worker():
     html = (WEB / "index.html").read_text(encoding="utf-8")
     web_py = (ROOT / "src" / "shema_platform" / "experience" / "web.py").read_text(encoding="utf-8")
     assert 'rel="manifest"' in html
-    assert "/sw.js" in html
+    assert "navigator.serviceWorker.register('/sw.js'" in (WEB / "app.js").read_text(encoding="utf-8")
     assert '"/sw.js"' in web_py
     assert '"/manifest.webmanifest"' in web_py
