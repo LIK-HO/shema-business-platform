@@ -9,6 +9,7 @@ from shema_platform.adapters.ai.gigachat_application_composition import (
 )
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
+from shema_platform.foundation.provider_activation import InMemoryProviderActivationStateStore
 
 
 def snapshot() -> ConfigurationSnapshot:
@@ -44,6 +45,7 @@ def build() -> GigaChatApplicationComposition:
         trust_resolver=lambda **_: None,
         prompt_renderer=lambda _: "unused",
         cost_estimator=lambda *_: 0.01,
+        activation_state_store=InMemoryProviderActivationStateStore(),
     )
 
 
