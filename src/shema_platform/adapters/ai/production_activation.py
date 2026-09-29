@@ -86,7 +86,7 @@ class AIProductionActivationState:
 
 
 class YandexGPTProductionGate:
-    """Explicit, reversible, process-local production gate for one approved provider."""
+    """Explicit production gate backed by canonical shared activation state."""
 
     def __init__(
         self,
@@ -110,7 +110,23 @@ class YandexGPTProductionGate:
 
     @property
     def state(self) -> AIProductionActivationState:
-        return self._state
+        canonical = self._activation_state_store.get(self._provider_id)
+        if canonical is None:
+            return self._state
+        return AIProductionActivationState(
+            enabled=canonical.enabled,
+            provider_id=canonical.provider_id,
+            configuration_version=canonical.configuration_version,
+            activation_version=canonical.activation_version,
+            activated_by=canonical.activated_by,
+            activated_at=canonical.activated_at,
+            max_cost=canonical.max_cost,
+            max_duration_seconds=canonical.max_duration_seconds,
+            rollback_from_configuration_version=None,
+            rollback_by=canonical.rollback_by,
+            rollback_at=canonical.rollback_at,
+            rollback_reason=canonical.rollback_reason,
+        )
 
     def activate(
         self,
@@ -121,7 +137,8 @@ class YandexGPTProductionGate:
         cost_estimator,
         api_key: str | None = None,
     ) -> GatedYandexGPTProvider:
-        if self._state.enabled:
+        canonical = self._activation_state_store.get(self._provider_id)
+        if (canonical is not None and canonical.enabled) or self._state.enabled:
             raise AIProductionActivationError(
                 "YandexGPT production activation is already active"
             )
@@ -162,7 +179,11 @@ class YandexGPTProductionGate:
             activation_version=str(values["ai.yandexgpt.activation_version"]),
         )
 
-        provider = self._provider_factory(secret)
+        provider = self._provider_factory(
+            secret,
+            prompt_renderer=prompt_renderer,
+            cost_estimator=cost_estimator,
+        )
         readiness = provider.readiness()
         if readiness.state is not AIProviderReadinessState.READY:
             raise AIProductionActivationError(
@@ -217,8 +238,9 @@ class YandexGPTProductionGate:
             raise AIProductionActivationError(
                 "YandexGPT rollback requires a reason"
             )
-        previous = self._state
-        if not previous.enabled:
+        canonical = self._activation_state_store.get(self._provider_id)
+        previous = self.state
+        if canonical is None or not canonical.enabled:
             return
 
         rollback_time = datetime.now(UTC)
