@@ -222,9 +222,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         for name, value in headers.items():
             response.headers[name] = value
 
-        path = request.url.path
-        if path.startswith("/v1/") or path in {"/operator", "/system", "/request", "/max"}:
-            response.headers["Cache-Control"] = "no-store"
+        response.headers["Cache-Control"] = "no-store"
         return response
 
 
