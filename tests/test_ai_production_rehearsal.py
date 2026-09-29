@@ -13,6 +13,7 @@ from shema_platform.adapters.ai.production_activation import (
 from shema_platform.application.ai import AIBudget, AIExecutionContext, AITask
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
+from shema_platform.foundation.provider_activation import InMemoryProviderActivationStateStore
 from shema_platform.platform.ai_promotion_gate import (
     approve_ai_promotion,
     assess_ai_promotion,
@@ -108,8 +109,8 @@ def test_green_promotion_approval_does_not_activate_either_provider() -> None:
 
     assert approval.approved_by == "p40-operator"
 
-    yandex = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink())
-    gigachat = GigaChatProductionGate(telemetry=InMemoryTelemetrySink())
+    yandex = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink(), activation_state_store=InMemoryProviderActivationStateStore())
+    gigachat = GigaChatProductionGate(telemetry=InMemoryTelemetrySink(), activation_state_store=InMemoryProviderActivationStateStore())
 
     assert yandex.state.enabled is False
     assert gigachat.state.enabled is False
@@ -119,7 +120,7 @@ def test_yandex_activation_and_rollback_rehearsal_has_no_external_traffic() -> N
     calls = 0
 
     telemetry = InMemoryTelemetrySink()
-    gate = YandexGPTProductionGate(telemetry=telemetry)
+    gate = YandexGPTProductionGate(telemetry=telemetry, activation_state_store=InMemoryProviderActivationStateStore())
 
     provider = gate.activate(
         yandex_snapshot(),
@@ -158,7 +159,7 @@ def test_gigachat_activation_and_rollback_rehearsal_has_no_external_traffic() ->
         return 500, b"unexpected external call"
 
     telemetry = InMemoryTelemetrySink()
-    gate = GigaChatProductionGate(telemetry=telemetry)
+    gate = GigaChatProductionGate(telemetry=telemetry, activation_state_store=InMemoryProviderActivationStateStore())
 
     provider = gate.activate(
         gigachat_snapshot(),
@@ -192,8 +193,8 @@ def test_gigachat_activation_and_rollback_rehearsal_has_no_external_traffic() ->
 
 
 def test_rehearsal_requires_explicit_activation_for_each_provider() -> None:
-    yandex = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink())
-    gigachat = GigaChatProductionGate(telemetry=InMemoryTelemetrySink())
+    yandex = YandexGPTProductionGate(telemetry=InMemoryTelemetrySink(), activation_state_store=InMemoryProviderActivationStateStore())
+    gigachat = GigaChatProductionGate(telemetry=InMemoryTelemetrySink(), activation_state_store=InMemoryProviderActivationStateStore())
 
     assert yandex.state.enabled is False
     assert gigachat.state.enabled is False
