@@ -14,7 +14,7 @@ const S={
   lastActionId:'',
   ct:'check',
   preferences:{
-    requests:{query:'',severity:'ALL',sort:'newest',view:'list'},
+    requests:{query:'',severity:'ALL',sort:'newest',view:'list',savedFilter:null,scrollY:0},
     search:{region:'Москва',industries:'',limit:30}
   }
 };
@@ -179,15 +179,22 @@ function workbench(){
   '</section>';
   bindNoteButtons();
 }
+function saveRequestContext(){
+  if(S.route==='requests')S.preferences.requests.scrollY=window.scrollY;
+}
+function restoreRequestContext(){
+  if(S.route==='requests')window.setTimeout(()=>window.scrollTo(0,S.preferences.requests.scrollY||0),0);
+}
 function requests(){
   setHeader('OPERATOR / REQUESTS','Новые заявки');
   const pref=S.preferences.requests;
   let items=S.notes.filter(note=>{const q=pref.query.trim().toLowerCase();const p=note.payload||{};const text=(note.eventType+' '+notificationText(note)).toLowerCase();return (!q||text.includes(q))&&(pref.severity==='ALL'||note.severity===pref.severity);});
   items.sort((a,b)=>pref.sort==='oldest'?String(a.createdAt).localeCompare(String(b.createdAt)):String(b.createdAt).localeCompare(String(a.createdAt)));
-  view.innerHTML='<section class="card"><div class="split"><div><div class="eyebrow">INBOX</div><h2>Новые заявки</h2><div class="muted">Серверное состояние; личные фильтры действуют только в памяти страницы.</div></div><div class="toolbar"><button class="ghost" id="notif-open">Уведомления</button><button class="primary" id="requests-refresh">Обновить</button></div></div><div class="toolbar start" style="margin-top:14px"><label style="min-width:240px">Фильтр<input id="rq" value="'+esc(pref.query)+'" placeholder="услуга, компания, локация"></label><label style="min-width:180px">Состояние<select id="rsev"><option>ALL</option><option>LOW</option><option>INFO</option><option>ATTENTION</option><option>HIGH</option><option>CRITICAL</option></select></label><label style="min-width:160px">Сортировка<select id="rsort"><option value="newest">Новые</option><option value="oldest">Старые</option></select></label></div><div id="request-list" class="list" style="margin-top:14px">'+(items.map(noteCard).join('')||'<div class="empty">Подходящих заявок нет.</div>')+'</div></section>';
+  view.innerHTML='<section class="card"><div class="split"><div><div class="eyebrow">INBOX</div><h2>Новые заявки</h2><div class="muted">Серверное состояние; личные фильтры действуют только в памяти страницы.</div></div><div class="toolbar"><button class="ghost" id="notif-open">Уведомления</button><button class="secondary" id="save-filter">Сохранить фильтр</button><button class="primary" id="requests-refresh">Обновить</button></div></div><div class="toolbar start" style="margin-top:14px"><label style="min-width:240px">Фильтр<input id="rq" value="'+esc(pref.query)+'" placeholder="услуга, компания, локация"></label><label style="min-width:180px">Состояние<select id="rsev"><option>ALL</option><option>LOW</option><option>INFO</option><option>ATTENTION</option><option>HIGH</option><option>CRITICAL</option></select></label><label style="min-width:160px">Сортировка<select id="rsort"><option value="newest">Новые</option><option value="oldest">Старые</option></select></label></div><div id="request-list" class="list" style="margin-top:14px">'+(items.map(noteCard).join('')||'<div class="empty">Подходящих заявок нет.</div>')+'</div></section>';
   $('#rsev').value=pref.severity;$('#rsort').value=pref.sort;
   $('#rq').oninput=e=>{pref.query=e.target.value;renderRequestsList(items)};$('#rsev').onchange=e=>{pref.severity=e.target.value;requests();};$('#rsort').onchange=e=>{pref.sort=e.target.value;requests();};
-  $('#requests-refresh').onclick=async()=>{await loadNotifications();requests();};$('#notif-open').onclick=showNotifications;bindNoteButtons();
+  $('#save-filter').onclick=()=>{pref.savedFilter={query:pref.query,severity:pref.severity,sort:pref.sort};toast('Фильтр сохранён только в памяти этой страницы.');};
+  $('#requests-refresh').onclick=async()=>{await loadNotifications();requests();};$('#notif-open').onclick=showNotifications;bindNoteButtons();restoreRequestContext();
 }
 function renderRequestsList(){requests();}
 function bindNoteButtons(){
@@ -335,7 +342,7 @@ async function loadEconomics(event){
 function handoffs(){
   setHeader('OPERATOR / HANDOFF','Передача');
   const note=S.selected,p=note?note.payload||{}:{};
-  view.innerHTML='<section class="grid cols2"><div class="card"><div class="eyebrow">BUSINESS PLANE HANDOFF</div><h2>Подготовка передачи</h2><p class="muted">Phase 6 не создаёт второй live business plane. Реальная запись в Bitrix24 будет разрешена только через отдельный provider/integration boundary.</p><div class="kv"><b>Состояние</b><span>'+badge('PREPARED')+'</span></div><div class="kv"><b>Identity</b><span>'+esc(S.identityRef||p.inn||'не определена')+'</span></div><div class="kv"><b>Request</b><span>'+esc(note&&note.requestId||'—')+'</span></div><div class="callout">Execution endpoint не скомпонован в текущем runtime: UI не имитирует ACK, externalEntityRef или успешную передачу.</div></div><div class="card"><div class="eyebrow">RECONCILIATION</div><h2>Безопасность передачи</h2><div class="list"><div class="item">'+stateBadge('ACKNOWLEDGED')+' Только после подтверждения внешней системы.</div><div class="item">'+stateBadge('SENT_UNKNOWN')+' Не повторять запись вслепую; сначала reconciliation.</div><div class="item">'+stateBadge('RECONCILIATION_REQUIRED')+' Несовпадение — ручная сверка, без purge.</div><div class="item">'+stateBadge('HANDOFF_FAILED')+' История Shema сохраняется.</div></div><div class="toolbar start"><button class="secondary" id="handoff-back">Назад к карточке</button></div></div></section>';
+  view.innerHTML='<section class="grid cols2"><div class="card"><div class="eyebrow">BUSINESS PLANE HANDOFF</div><h2>Подготовка передачи</h2><p class="muted">Phase 6 не создаёт второй live business plane. Реальная запись в Bitrix24 будет разрешена только через отдельный provider/integration boundary.</p><div class="kv"><b>Состояние</b><span>'+badge('NOT_COMPOSED')+'</span></div><div class="kv"><b>Identity</b><span>'+esc(S.identityRef||p.inn||'не определена')+'</span></div><div class="kv"><b>Request</b><span>'+esc(note&&note.requestId||'—')+'</span></div><div class="callout">Execution endpoint не скомпонован в текущем runtime: UI не имитирует ACK, externalEntityRef или успешную передачу.</div></div><div class="card"><div class="eyebrow">RECONCILIATION</div><h2>Безопасность передачи</h2><div class="list"><div class="item">'+stateBadge('ACKNOWLEDGED')+' Только после подтверждения внешней системы.</div><div class="item">'+stateBadge('SENT_UNKNOWN')+' Не повторять запись вслепую; сначала reconciliation.</div><div class="item">'+stateBadge('RECONCILIATION_REQUIRED')+' Несовпадение — ручная сверка, без purge.</div><div class="item">'+stateBadge('HANDOFF_FAILED')+' История Shema сохраняется.</div></div><div class="toolbar start"><button class="secondary" id="handoff-back">Назад к карточке</button></div></div></section>';
   $('#handoff-back').onclick=()=>location.hash='dossier';
 }
 const REPEAT_ORDER_API='/v1/operator/repeat-orders';
@@ -367,6 +374,7 @@ async function handleAuth(event){
   $('#auth').close();await loadNotifications();if(!location.hash)location.hash='requests';await route();
 }
 async function route(){
+  saveRequestContext();
   S.route=location.hash.slice(1)||'request';
   if(S.route==='request')return pub();
   setSurfaceMode(false);
