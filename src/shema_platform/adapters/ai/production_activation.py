@@ -140,7 +140,7 @@ class YandexGPTProductionGate:
         api_key: str | None = None,
     ) -> GatedYandexGPTProvider:
         canonical = self._activation_state_store.get(self._provider_id)
-        if (canonical is not None and canonical.enabled) or self._state.enabled:
+        if canonical is not None and canonical.enabled:
             raise AIProductionActivationError(
                 "YandexGPT production activation is already active"
             )
