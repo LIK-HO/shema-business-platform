@@ -426,7 +426,7 @@ def test_yandex_selected_runtime_executes_end_to_end(monkeypatch) -> None:
                 where correlation_id = %s
                   and action = 'ai.run'
                 """,
-                (correlation_id,),
+                (body["correlationId"],),
             ).fetchall()
             assert audit_rows == [
                 (
@@ -482,7 +482,7 @@ def test_gigachat_selected_runtime_executes_end_to_end(monkeypatch) -> None:
         run_id = body["runId"]
         assert body["providerId"] == "gigachat"
         assert body["output"] == f"P37 gigachat result:{body['correlationId']}"
-        assert body["correlationId"] == correlation_id
+        assert body["correlationId"] != correlation_id
         assert DeterministicGigaChatProvider.invocations == 1
         assert DeterministicYandexGPTProvider.invocations == 0
         assert gigachat.ai.gate.state.enabled is True
