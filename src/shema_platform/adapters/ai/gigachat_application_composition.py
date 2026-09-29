@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 import os
+from collections.abc import Callable
 
 from shema_platform.adapters.ai.composition import (
     AIProviderCompositionError,
@@ -12,8 +12,8 @@ from shema_platform.adapters.ai.contracts import (
     AIProviderFailureCode,
 )
 from shema_platform.adapters.ai.gigachat_activation import (
-    GigaChatProductionGate,
     GigaChatProductionActivationError,
+    GigaChatProductionGate,
 )
 from shema_platform.adapters.ai.gigachat import (
     GigaChatConfiguration,
