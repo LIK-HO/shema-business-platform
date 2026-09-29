@@ -13,13 +13,13 @@ from shema_platform.application.counterparty_check import (
     CounterpartyObservation,
     SourceReliability,
 )
+from shema_platform.application.counterparty_monitoring import CounterpartyMonitoringService
 from shema_platform.application.counterparty_monitoring_worker import (
     BatchItemState,
     BatchStatus,
     CounterpartyMonitoringProviderError,
     CounterpartyMonitoringWorker,
 )
-from shema_platform.application.counterparty_monitoring import CounterpartyMonitoringService
 from shema_platform.foundation.authorization import Permission
 from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
 from shema_platform.platform.postgres import PostgresUnitOfWork
