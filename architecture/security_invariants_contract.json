@@ -25,6 +25,13 @@
       "negative_test": "a stale public-intake outbox worker cannot mark a reclaimed event published"
     },
     {
+      "id": "SI-18",
+      "name": "provider_rollback_stale_activation_denied",
+      "class": "concurrency",
+      "enforcement": "provider activation rollback uses compare-and-set on the currently active activation version and activation timestamp",
+      "negative_test": "a rollback command based on a prior activation cannot disable a provider that was reactivated after the command read state"
+    },
+    {
       "id": "SI-16",
       "name": "stale_worker_cannot_overwrite_newer_send",
       "class": "concurrency",
