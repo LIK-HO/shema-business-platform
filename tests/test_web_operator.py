@@ -37,3 +37,15 @@ def test_visual_contract_regions_exist() -> None:
         assert token in css
     for token in ["pub()","requests()","searchView()","counterparties()","system()","dossier()"]:
         assert token in js
+
+def test_public_shell_does_not_bypass_operator_api_authentication() -> None:
+    client = TestClient(create_app(enable_docs=False))
+
+    assert client.get("/operator").status_code == 200
+    assert client.get("/web/app.js").status_code == 200
+
+    notifications = client.get("/v1/operator/notifications")
+    capabilities = client.get("/v1/operator/capabilities")
+
+    assert notifications.status_code in {401, 403}
+    assert capabilities.status_code in {401, 403}
