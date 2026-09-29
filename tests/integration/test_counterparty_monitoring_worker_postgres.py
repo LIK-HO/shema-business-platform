@@ -21,6 +21,7 @@ from shema_platform.application.counterparty_monitoring_worker import (
     CounterpartyMonitoringWorker,
 )
 from shema_platform.foundation.authorization import Permission
+from shema_platform.foundation.errors import IntegrityViolation
 from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
 from shema_platform.platform.postgres import PostgresUnitOfWork
 
