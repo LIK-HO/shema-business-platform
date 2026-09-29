@@ -157,6 +157,14 @@ class CommercialActionRepository(Protocol):
         now: datetime,
     ) -> CommercialAction: ...
 
+    def fail_external_effect(
+        self,
+        action_id: str,
+        worker_id: str,
+        *,
+        now: datetime,
+    ) -> CommercialAction | None: ...
+
     def save(self, action: CommercialAction) -> None: ...
 
 
