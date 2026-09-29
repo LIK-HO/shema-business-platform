@@ -179,7 +179,7 @@ class PyJWTSigningKeyProvider:
                 )
 
             self._last_unknown_kid_refresh_at = now
-            return self._client.get_signing_key_from_jwt(token)
+            return self._client.get_signing_key(kid)
 
 
 @dataclass(frozen=True, slots=True)
