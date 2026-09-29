@@ -26,6 +26,7 @@ from shema_platform.adapters.ai.contracts import (
     validate_provider_activation,
     validate_provider_response,
 )
+from shema_platform.foundation.ai_prompt_security import build_secure_messages
 from shema_platform.foundation.secure_http import secure_urlopen
 
 DEFAULT_BASE_URL = "https://ai.api.cloud.yandex.net/v1"
@@ -331,7 +332,7 @@ class YandexGPTProvider(AIProviderAdapter):
 
         payload = {
             "model": self._configuration.model_uri,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": build_secure_messages(request, prompt),
             "max_tokens": min(
                 request.budget.max_tokens,
                 self._configuration.max_output_tokens,
