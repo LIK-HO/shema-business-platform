@@ -294,12 +294,12 @@ class BatchRepo:
 
 
 class UOW:
-    def __init__(self, monitoring, batches):
+    def __init__(self, monitoring, batches, idempotency, audits, outbox):
         self.monitoring = monitoring
         self.counterparty_monitoring_batches = batches
-        self.idempotency = Idempotency()
-        self.audits = Audit()
-        self.outbox = Outbox()
+        self.idempotency = idempotency
+        self.audits = audits
+        self.outbox = outbox
 
     def __enter__(self):
         return self
@@ -312,8 +312,12 @@ def make_monitoring():
     monitoring = MonitoringRepo()
     batches = BatchRepo(monitoring)
 
+    idempotency = Idempotency()
+    audits = Audit()
+    outbox = Outbox()
+
     def factory():
-        return UOW(monitoring, batches)
+        return UOW(monitoring, batches, idempotency, audits, outbox)
 
     service = CounterpartyMonitoringService(factory)
     return monitoring, batches, factory, service
