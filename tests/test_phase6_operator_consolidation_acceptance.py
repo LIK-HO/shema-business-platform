@@ -111,7 +111,7 @@ def test_phase6_pwa_reuses_the_same_web_surface() -> None:
     assert "location.origin" in js
 
 
-def test_phase6_public_bootstrap_remains_same_origin_and_protected_business_api_remains_closed() -> None:
+def test_phase6_public_bootstrap_and_api_boundary() -> None:
     client = TestClient(create_app(enable_docs=False))
     for path in ("/", "/request", "/max", "/sw.js", "/manifest.webmanifest"):
         response = client.get(path)
