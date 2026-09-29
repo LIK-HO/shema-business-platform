@@ -14,6 +14,10 @@ from shema_platform.adapters.intelligence.dadata_activation import (
 from shema_platform.application.ai_runtime import AIExecutionTrustResolver
 from shema_platform.application.counterparty_lookup import CounterpartyLookupProvider
 from shema_platform.application.counterparty_monitoring import CounterpartyMonitoringService
+from shema_platform.application.counterparty_monitoring_worker import (
+    CounterpartyMonitoringProvider,
+    CounterpartyMonitoringWorker,
+)
 from shema_platform.application.counterparty_provider_activation import (
     CounterpartyProviderActivationService,
 )
@@ -231,6 +235,47 @@ def compose_counterparty_monitoring_runtime(
     """Compose monitoring without opening the database or querying a provider."""
     return CounterpartyMonitoringRuntimeAssembly(
         monitoring=CounterpartyMonitoringService(unit_of_work_factory)
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class CounterpartyMonitoringWorkerRuntimeAssembly:
+    """Explicit checkpointed monitoring-worker composition; no provider traffic at assembly."""
+
+    monitoring: CounterpartyMonitoringService
+    worker: CounterpartyMonitoringWorker
+
+
+def compose_counterparty_monitoring_worker_runtime(
+    *,
+    unit_of_work_factory: Callable[[], UnitOfWork],
+    provider: CounterpartyMonitoringProvider,
+    worker_id: str,
+    permissions,
+    max_parallelism: int = 4,
+    lease_seconds: int = 120,
+    max_attempts: int = 3,
+    backoff_seconds: float = 5.0,
+    max_backoff_seconds: float = 300.0,
+    materialization_limit: int = 100,
+) -> CounterpartyMonitoringWorkerRuntimeAssembly:
+    """Compose the worker without opening the database or contacting the provider."""
+    monitoring = CounterpartyMonitoringService(unit_of_work_factory)
+    worker = CounterpartyMonitoringWorker(
+        unit_of_work_factory,
+        provider,
+        worker_id=worker_id,
+        permissions=permissions,
+        max_parallelism=max_parallelism,
+        lease_seconds=lease_seconds,
+        max_attempts=max_attempts,
+        backoff_seconds=backoff_seconds,
+        max_backoff_seconds=max_backoff_seconds,
+        materialization_limit=materialization_limit,
+    )
+    return CounterpartyMonitoringWorkerRuntimeAssembly(
+        monitoring=monitoring,
+        worker=worker,
     )
 
 
