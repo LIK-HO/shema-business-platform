@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import json
 from collections.abc import Callable
 from dataclasses import dataclass
-from hashlib import sha256
 from typing import Protocol
-from uuid import NAMESPACE_URL, uuid5
+from uuid import uuid4
 
 from shema_platform.application.ai import (
     AIBudget,
@@ -21,7 +19,6 @@ from shema_platform.foundation.authorization import (
     Permission,
     RBACAuthorizer,
 )
-from shema_platform.foundation.errors import IdempotencyConflict
 from shema_platform.foundation.policy import PolicyEngine
 
 
@@ -59,7 +56,6 @@ class AIExecutionRequest:
     actor_trust_level: int
     permissions: frozenset[Permission]
     correlation_id: str
-    idempotency_key: str
 
     def __post_init__(self) -> None:
         if not self.task_type.strip() or not self.prompt_version.strip():
@@ -68,8 +64,6 @@ class AIExecutionRequest:
             raise ValueError("resource_ref and actor_id are required")
         if not self.correlation_id.strip():
             raise ValueError("correlation_id is required")
-        if not 8 <= len(self.idempotency_key.strip()) <= 128:
-            raise ValueError("idempotency_key must be 8-128 characters")
         if not self.input_refs or len(self.input_refs) > 64:
             raise ValueError("input_refs must contain 1..64 references")
         if not self.evidence_refs or len(self.evidence_refs) > 64:
@@ -83,27 +77,88 @@ class AIExecutionRequest:
         if self.actor_trust_level < 0:
             raise ValueError("actor_trust_level cannot be negative")
 
-    @property
-    def request_hash(self) -> str:
-        payload = {
-            "task_type": self.task_type,
-            "prompt_version": self.prompt_version,
-            "resource_ref": self.resource_ref,
-            "input_refs": self.input_refs,
-            "evidence_refs": self.evidence_refs,
-            "evidence_required": self.evidence_required,
-            "max_tokens": self.max_tokens,
-            "max_cost": self.max_cost,
-            "max_duration_seconds": self.max_duration_seconds,
-            "actor_id": self.actor_id,
-        }
-        encoded = json.dumps(
-            payload,
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-        ).encode()
-        return sha256(encoded).hexdigest()
+
+class IdempotentAIExecutionService:
+    """Durable idempotency wrapper around the frozen AI execution kernel."""
+
+    def __init__(
+        self,
+        *,
+        service: "AIExecutionService",
+        unit_of_work_factory: Callable[[], UnitOfWork],
+    ) -> None:
+        self._service = service
+        self._unit_of_work_factory = unit_of_work_factory
+
+    def execute(self, request: AIExecutionRequest) -> AIRun:
+        key = getattr(request, "idempotency_key", "").strip()
+        if not 8 <= len(key) <= 128:
+            raise ValueError("idempotency_key must be 8-128 characters")
+
+        request_hash = _ai_request_hash(request)
+        pending_id = f"pending:ai:{uuid4()}"
+
+        with self._unit_of_work_factory() as uow:
+            reservation = uow.idempotency.reserve(
+                key=key,
+                request_hash=request_hash,
+                result_ref=pending_id,
+            )
+            if reservation.result_ref != pending_id:
+                if reservation.result_ref.startswith("pending:"):
+                    from shema_platform.foundation.errors import IdempotencyConflict
+
+                    raise IdempotencyConflict(
+                        "AI execution has an unknown external outcome and requires reconciliation"
+                    )
+                stored = uow.ai_runs.get(reservation.result_ref)
+                if stored is None:
+                    from shema_platform.foundation.errors import IdempotencyConflict
+
+                    raise IdempotencyConflict(
+                        "AI idempotency reservation references a missing result"
+                    )
+                return stored
+
+        try:
+            run = self._service.execute(request)
+        except Exception:
+            # The pending reservation is deliberately retained. A retry with
+            # the same key must not silently issue another external call.
+            raise
+
+        with self._unit_of_work_factory() as uow:
+            uow.idempotency.complete(
+                key,
+                request_hash,
+                run.run_id,
+            )
+        return run
+
+
+def _ai_request_hash(request: AIExecutionRequest) -> str:
+    from hashlib import sha256
+    import json
+
+    payload = {
+        "task_type": request.task_type,
+        "prompt_version": request.prompt_version,
+        "resource_ref": request.resource_ref,
+        "input_refs": request.input_refs,
+        "evidence_refs": request.evidence_refs,
+        "evidence_required": request.evidence_required,
+        "max_tokens": request.max_tokens,
+        "max_cost": request.max_cost,
+        "max_duration_seconds": request.max_duration_seconds,
+        "actor_id": request.actor_id,
+    }
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    return sha256(encoded).hexdigest()
 
 
 class AIExecutionService:
@@ -145,39 +200,6 @@ class AIExecutionService:
         if not configuration_version.strip():
             raise RuntimeError("AI provider configuration is not active")
 
-        task_id = str(
-            uuid5(
-                NAMESPACE_URL,
-                f"shema-ai:{request.idempotency_key.strip()}:{request.request_hash}",
-            )
-        )
-        with self._unit_of_work_factory() as uow:
-            pending_id = f"pending:ai:{task_id}"
-            reservation = uow.idempotency.reserve(
-                key=request.idempotency_key.strip(),
-                request_hash=request.request_hash,
-                result_ref=pending_id,
-            )
-            if reservation.result_ref != pending_id:
-                if reservation.result_ref.startswith("pending:"):
-                    reconciled = uow.ai_runs.get_by_task_id(task_id)
-                    if reconciled is not None:
-                        uow.idempotency.complete(
-                            request.idempotency_key.strip(),
-                            request.request_hash,
-                            reconciled.run_id,
-                        )
-                        return reconciled
-                    raise IdempotencyConflict(
-                        "AI execution has an unknown external outcome and requires reconciliation"
-                    )
-                stored = uow.ai_runs.get(reservation.result_ref)
-                if stored is None:
-                    raise IdempotencyConflict(
-                        "AI idempotency reservation references a missing result"
-                    )
-                return stored
-
         gateway = AIGateway(
             self._provider_factory(),
             authorizer,
@@ -186,7 +208,7 @@ class AIExecutionService:
         )
 
         task = AITask(
-            task_id=task_id,
+            task_id=str(uuid4()),
             task_type=request.task_type,
             prompt_version=request.prompt_version,
             evidence_required=request.evidence_required,
@@ -207,7 +229,7 @@ class AIExecutionService:
         )
         if self._scoped_executor is None:
             raise RuntimeError("AI scoped executor is not configured")
-        run = self._scoped_executor(
+        return self._scoped_executor(
             gateway,
             task,
             input_refs=request.input_refs,
@@ -215,10 +237,3 @@ class AIExecutionService:
             context=context,
             budget=budget,
         )
-        with self._unit_of_work_factory() as uow:
-            uow.idempotency.complete(
-                request.idempotency_key.strip(),
-                request.request_hash,
-                run.run_id,
-            )
-        return run
