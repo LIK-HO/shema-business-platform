@@ -89,14 +89,32 @@ class GatedDaDataCounterpartyLookupProvider:
         provider: CounterpartyLookupProvider,
         *,
         gate: DaDataControlledActivationGate,
+        activation_version: str,
+        activated_at: datetime | None,
     ) -> None:
         self._provider = provider
         self._gate = gate
+        self._activation_version = activation_version
+        self._activated_at = activated_at
+
+    def binding_matches(
+        self,
+        *,
+        activation_version: str,
+        activated_at: datetime | None,
+    ) -> bool:
+        return (
+            self._activation_version == activation_version
+            and self._activated_at == activated_at
+        )
 
     def lookup(self, query: CounterpartyLookupQuery) -> CounterpartyProviderRecord:
-        if not self._gate.state.enabled:
+        if not self._gate.allows_request(
+            activation_version=self._activation_version,
+            activated_at=self._activated_at,
+        ):
             raise DaDataActivationError(
-                "DaData provider execution is disabled by kill-switch"
+                "DaData provider binding is stale or disabled"
             )
         return self._provider.lookup(query)
 
