@@ -18,7 +18,12 @@ from shema_platform.foundation.errors import AuthorizationError
             Permission.COMMERCIAL_ACTION_SEND,
         ),
         (
-            frozenset({Permission.INTELLIGENCE_PROVIDER_ACTIVATE, Permission.INTELLIGENCE_PROVIDER_LOOKUP}),
+            frozenset(
+                {
+                    Permission.INTELLIGENCE_PROVIDER_ACTIVATE,
+                    Permission.INTELLIGENCE_PROVIDER_LOOKUP,
+                }
+            ),
             Permission.INTELLIGENCE_PROVIDER_ROLLBACK,
         ),
         (
@@ -31,7 +36,7 @@ from shema_platform.foundation.errors import AuthorizationError
         ),
     ),
 )
-def test_permission_combinations_do_not_imply_unGranted_capability(
+def test_permission_combinations_do_not_imply_ungranted_capability(
     granted: frozenset[Permission],
     forbidden: Permission,
 ) -> None:
