@@ -7,9 +7,9 @@
 - **Current HEAD:** resolved live from GitHub; this ledger does not store a static commit pointer.
 - **Security trust-chain doctrine:** untrusted input → edge/authentication → authorization → resource scope → validation → evidence provenance → policy → transaction/concurrency → external-effect reservation → external call → reconciliation → audit → recovery.
 - **Implemented current security sub-boundaries:** resource-read scope (1C-READ), permission non-escalation (1C-PERM), commercial external-effect stale-worker protection (1C-EFFECT), public-intake outbox stale-worker protection (1C-OUTBOX), provider rollback CAS (1C-ACTIVATION), cached provider binding (1C-BINDING), and stale local activation-state recovery (1C-ACTIVE-STATE).
-- **Current verification status:** these later Security boundaries remain unverified as a set until the exact current HEAD passes the full seven-job release gate. Prior green runs on earlier HEADs are historical evidence only.
-- **Latest CI failure corrected:** run #1990 exposed only a stale manifest-window assertion plus import-order/duplicate-import test defects; all were corrected. No new runtime failure was reported by that run.
-- **Next required closure:** current-head unit + integration + supply-chain + backup/PITR + release-contract must all be green; then re-run the global adversarial review and synchronize final evidence.
+- **Current verification status:** Global Security Re-baseline is **CLOSED / VERIFIED** on exact HEAD `b8983dcf16630869db1318746edc93298ea8c333` by full seven-job release-gate CI #1994 (`36556900641`). Earlier green runs are retained only as historical evidence.
+- **Latest CI sequence:** #1992 exposed two integration-test defects (provider activation SQL parameter count and public-intake outbox test database isolation); both were corrected. CI #1994 then passed all seven jobs on exact HEAD. No unresolved runtime/security defect remains in the verified security boundary.
+- **Post-gate adversarial result:** read-only global scan rechecked API resource reads, public-intake rate limiting, worker lease transitions and provider activation/binding paths after CI closure; no new P0/P1 finding was identified within the approved security boundary.
 
 ## Current development-session synchronization — 2026-09-28
 
