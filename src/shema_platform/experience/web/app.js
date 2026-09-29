@@ -95,6 +95,7 @@ async function flushPending(){
 }
 function setSurfaceMode(publicMode){
   document.body.classList.toggle('public-mode',publicMode);
+  document.body.classList.toggle('operator-mode',!publicMode);
   if(publicMode){S.token=null;S.caps={};}
 }
 function setHeader(mode,pageTitle){
@@ -210,7 +211,8 @@ function globalIdentifier(query){
 function searchView(prefill=''){
   setHeader('OPERATOR / SEARCH','Поиск');
   const pref=S.preferences.search;
-  view.innerHTML='<section class="grid cols2"><div class="card"><div class="eyebrow">CANONICAL SEARCH</div><h2>Поиск клиентов и контрагентов</h2><p class="muted">Точное значение ИНН/ОГРН/ОГРНИП переключает этот же поиск в режим проверки контрагента. AI до детерминированной проверки не вызывается.</p><form id="sf" class="form"><label>Запрос / идентификатор<input name="query" value="'+esc(prefill||'')+'" placeholder="ИНН, ОГРН, компания, услуга"></label><label>Регион<input name="region" value="'+esc(pref.region)+'"></label><label>Отрасли<input name="industries" value="'+esc(pref.industries)+'" placeholder="офисы, мероприятия, небольшие склады"></label><label>Лимит<input name="limit" type="number" min="1" max="500" value="'+esc(pref.limit)+'"></label><div class="actions"><button class="primary">Искать</button></div></form><div class="callout">NOT_SEARCHED ≠ NOT_FOUND · SOURCE_UNAVAILABLE ≠ CHANGED · BUDGET_LIMITED остаётся видимым.</div></div><div class="card"><div class="eyebrow">RESULTS</div><div id="sr" class="empty">Запустите поиск.</div></div></section>';
+  const initialQuery=prefill||pref.query;
+  view.innerHTML='<section class="grid cols2"><div class="card"><div class="eyebrow">CANONICAL SEARCH</div><h2>Поиск клиентов и контрагентов</h2><p class="muted">Точное значение ИНН/ОГРН/ОГРНИП переключает этот же поиск в режим проверки контрагента. AI до детерминированной проверки не вызывается.</p><form id="sf" class="form"><label>Запрос / идентификатор<input name="query" value="'+esc(initialQuery)+'" placeholder="ИНН, ОГРН, компания, услуга"></label><label>Регион<input name="region" value="'+esc(pref.region)+'"></label><label>Отрасли<input name="industries" value="'+esc(pref.industries)+'" placeholder="офисы, мероприятия, небольшие склады"></label><label>Лимит<input name="limit" type="number" min="1" max="500" value="'+esc(pref.limit)+'"></label><div class="actions"><button class="primary">Искать</button></div></form><div class="callout">NOT_SEARCHED ≠ NOT_FOUND · SOURCE_UNAVAILABLE ≠ CHANGED · BUDGET_LIMITED остаётся видимым.</div></div><div class="card"><div class="eyebrow">RESULTS</div><div id="sr" class="empty">Запустите поиск.</div></div></section>';
   $('#sf').onsubmit=doSearch;
 }
 async function doSearch(event){
