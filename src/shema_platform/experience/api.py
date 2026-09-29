@@ -16,6 +16,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from shema_platform.adapters.ai.composition import AIProviderCompositionError
 from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.adapters.intelligence.dadata_activation import DaDataActivationError
+from shema_platform.application.commands import Actor
 from shema_platform.application.counterparty_check import (
     AuthoritativeCounterpartyLookup,
     CounterpartyCheckService,
@@ -33,7 +34,6 @@ from shema_platform.application.counterparty_provider_activation import (
     CounterpartyProviderActivationCommand,
     CounterpartyProviderActivationService,
 )
-from shema_platform.application.commands import Actor
 from shema_platform.application.counterparty_provider_runtime_lookup import (
     CounterpartyProviderRuntimeLookupService,
 )
