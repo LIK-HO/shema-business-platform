@@ -12,6 +12,8 @@ A control is considered closed only when:
 
 | Boundary | Runtime enforcement | Adversarial evidence | Current closure rule |
 |---|---|---|---|
+| Web/public/operator trust boundary |
+| Repeat-order activation trust boundary | capability is advertised only when a real server-side RepeatOrderService/Revalidator is composed; browser cannot replace validation | fail-closed capability/API tests; idempotency and canonical endpoint tests | full current-head gate |
 | Web/public/operator trust boundary | same-origin shell/assets only; business API remains server-authenticated; capability visibility is server-advertised; operator token is page-memory only | public shell vs protected API tests; browser-storage and direct-DB negative tests | current-head full release gate |
 | Authentication | OIDC issuer/audience/expiry/sub + algorithm allowlist | JWT negative tests | current-head CI required |
 | Function authorization | explicit Permission checks | authenticated-but-no-permission API tests | current-head CI required |
