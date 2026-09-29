@@ -17,6 +17,8 @@ class Permission(StrEnum):
     DISCOVERY_RUN = "discovery.run"
     RESEARCH_RUN = "research.run"
     COUNTERPARTY_CHECK = "counterparty.check"
+    COUNTERPARTY_MONITOR_MANAGE = "counterparty.monitor.manage"
+    COUNTERPARTY_FAVORITE_MANAGE = "counterparty.favorite.manage"
     INTELLIGENCE_RUN = "intelligence.run"
     INTELLIGENCE_PROVIDER_ACTIVATE = "intelligence.provider.activate"
     INTELLIGENCE_PROVIDER_LOOKUP = "intelligence.provider.lookup"
