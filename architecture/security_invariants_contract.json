@@ -39,6 +39,13 @@
       "negative_test": "a provider object from a prior activation cannot execute traffic after canonical rollback and reactivation, even when configuration and activation version are reused"
     },
     {
+      "id": "SI-20",
+      "name": "stale_local_activation_state_cannot_block_reactivation",
+      "class": "concurrency",
+      "enforcement": "activation admission is decided from canonical shared activation state, not an old process-local enabled flag",
+      "negative_test": "a replica with stale local enabled state can reactivate after another replica has performed a canonical rollback"
+    },
+    {
       "id": "SI-16",
       "name": "stale_worker_cannot_overwrite_newer_send",
       "class": "concurrency",
