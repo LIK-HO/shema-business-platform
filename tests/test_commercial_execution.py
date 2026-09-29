@@ -64,6 +64,36 @@ class MemoryActions:
         self.actions[action_id] = return_value
         return return_value
 
+    def fail_external_effect(
+        self,
+        action_id: str,
+        worker_id: str,
+        *,
+        now: datetime,
+    ) -> CommercialAction | None:
+        current = self.get(action_id)
+        if current is None:
+            return None
+        if (
+            current.status is not CommercialActionStatus.SENDING
+            or current.send_worker_id != worker_id
+            or current.send_lease_until is None
+            or current.send_lease_until <= now
+        ):
+            return None
+        failed = CommercialAction(
+            action_id=current.action_id,
+            identity_id=current.identity_id,
+            contact_ref=current.contact_ref,
+            channel=current.channel,
+            evidence_refs=current.evidence_refs,
+            owner_actor_id=current.owner_actor_id,
+            status=CommercialActionStatus.FAILED,
+            send_attempt=current.send_attempt,
+        )
+        self.actions[action_id] = failed
+        return failed
+
     def complete_send(
         self,
         action_id: str,
@@ -129,6 +159,32 @@ class AmbiguousAdapter(CommunicationAdapter):
     def send(self, request: CommunicationSendRequest) -> CommunicationSendResult:
         self.calls += 1
         raise ExternalEffectUnknown("provider outcome cannot be determined")
+
+
+@dataclass
+class StaleWorkerAmbiguousAdapter(CommunicationAdapter):
+    uow: MemoryUow
+    channel: str = "max"
+    calls: int = 0
+
+    def send(self, request: CommunicationSendRequest) -> CommunicationSendResult:
+        self.calls += 1
+        current = self.uow.commercial_actions.get(request.action_id)
+        assert current is not None
+        now = datetime.now(UTC)
+        self.uow.commercial_actions.actions[request.action_id] = current.mark_sending(
+            worker_id="worker-old",
+            lease_until=now - timedelta(seconds=1),
+            attempt=current.send_attempt + 1,
+        )
+        self.uow.commercial_actions.claim_for_send(
+            request.action_id,
+            "worker-new",
+            lease_until=now + timedelta(minutes=5),
+            now=now,
+        )
+        raise ExternalEffectUnknown("provider outcome cannot be determined")
+
 
 
 @dataclass
@@ -258,6 +314,48 @@ def test_ambiguous_external_outcome_is_quarantined_without_retry() -> None:
         )
 
     assert ambiguous.calls == 1
+
+
+def test_stale_worker_unknown_outcome_cannot_fail_newer_lease() -> None:
+    workflow, uow, _ = workflow_parts()
+    adapter = StaleWorkerAmbiguousAdapter(uow)
+    workflow = CommercialActionSendWorkflow(
+        lambda: uow,
+        CommunicationGateway(adapter),
+        RBACAuthorizer(
+            (
+                AuthorizationSubject(
+                    "operator-1",
+                    frozenset({Permission.COMMERCIAL_ACTION_SEND}),
+                ),
+            )
+        ),
+        PolicyEngine(),
+    )
+
+    with pytest.raises(
+        QuarantineRequired,
+        match="outcome is unknown; action quarantined",
+    ):
+        workflow.execute(
+            actor=Actor("operator-1", trust_level=2),
+            action_id="action-1",
+            body="Здравствуйте",
+            idempotency_key="send-key-stale-worker",
+        )
+
+    current = uow.commercial_actions.get("action-1")
+    assert current is not None
+    assert current.status is CommercialActionStatus.SENDING
+    assert current.send_worker_id == "worker-new"
+    assert len(uow.quarantine.records) == 1
+    assert (
+        uow.quarantine.records[0]["reason_code"]
+        == "external_effect_unknown_stale_worker"
+    )
+    assert len(uow.outbox.pending()) == 1
+    assert len(uow.audits.records) == 1
+    assert adapter.calls == 1
 
 
 def test_send_marks_action_sent_and_publishes_outbox() -> None:
