@@ -90,3 +90,14 @@ def test_operator_workbench_does_not_add_a_second_business_state_store() -> None
     assert "sessionstorage" not in js
     assert "indexeddb" not in js
     assert "postgres" not in js
+
+def test_repeat_order_surface_is_capability_gated_and_fail_closed() -> None:
+    client = TestClient(create_app(enable_docs=False))
+    js = client.get("/web/app.js").text
+    for token in (
+        "/v1/operator/repeat-orders",
+        "repeatOrders",
+        "revalidator",
+        "Idempotency-Key",
+    ):
+        assert token in js
