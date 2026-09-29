@@ -23,6 +23,9 @@ from shema_platform.application.counterparty_provider_activation import (
 )
 from shema_platform.foundation.authorization import Permission
 from shema_platform.foundation.errors import AuthorizationError
+from shema_platform.foundation.provider_activation import (
+    InMemoryProviderActivationStateStore,
+)
 from shema_platform.foundation.telemetry import InMemoryTelemetrySink
 
 
@@ -63,6 +66,7 @@ def gate_and_service():
     telemetry = InMemoryTelemetrySink()
     gate = DaDataControlledActivationGate(
         telemetry=telemetry,
+        activation_state_store=InMemoryProviderActivationStateStore(),
         provider_factory=lambda _configuration: FakeProvider(),
         now=lambda: datetime(2026, 9, 27, 12, 0, tzinfo=UTC),
     )
@@ -136,6 +140,7 @@ def test_activation_requires_all_readiness_gates() -> None:
     telemetry = InMemoryTelemetrySink()
     gate = DaDataControlledActivationGate(
         telemetry=telemetry,
+        activation_state_store=InMemoryProviderActivationStateStore(),
         provider_factory=lambda _configuration: FakeProvider(),
     )
     service = CounterpartyProviderActivationService(
