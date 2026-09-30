@@ -48,3 +48,14 @@ def test_phase7c_does_not_create_a_debug_database_endpoint() -> None:
     constraint = read_contract()["known_environment_constraint"]
     assert "same VPC" in constraint
     assert "debug/database-probe endpoint" in constraint
+
+def test_phase7c_recovery_baseline_is_present_in_terraform() -> None:
+    main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
+    assert "deletion_protection = true" in main
+    assert "backup_retain_period_days = 14" in main
+    assert "backup_window_start = {" in main
+
+
+def test_phase7c_live_probe_does_not_claim_database_connectivity() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(encoding="utf-8")
+    assert "DATABASE_CONNECTIVITY_AND_MIGRATIONS=NOT_CLAIMED" in script
