@@ -103,3 +103,24 @@ def test_phase7c_provisions_explicit_runtime_database_and_user() -> None:
     assert "database_name" in variables
     assert "database_user" in variables
     assert "database_secret_input" in variables
+
+
+def test_phase7c_rollback_drill_is_reversible_and_immutable() -> None:
+    contract = read_contract()
+    drill = contract["execution"]["rollback_drill"]
+    assert drill["mode"] == "protected_manual_input"
+    assert "capture_previous_active_revision_before_apply" in drill["sequence"]
+    assert "rollback_to_previous_immutable_revision" in drill["sequence"]
+    assert "restore_new_immutable_revision" in drill["sequence"]
+    assert contract["safety_gates"]["rollback_must_restore_current_revision"] is True
+
+
+def test_phase7c_rollback_script_uses_yandex_immutable_revision_rollback() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_rollback_drill.sh").read_text(
+        encoding="utf-8"
+    )
+    assert "yc serverless container rollback" in script
+    assert "PREVIOUS_REVISION_ID" in script
+    assert 'NEW_REVISION_ID="$(active_revision)"' in script
+    assert "ROLLBACK_TO_PREVIOUS=PASS" in script
+    assert "ROLLBACK_RESTORE_CURRENT=PASS" in script
