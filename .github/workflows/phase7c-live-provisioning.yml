@@ -8,6 +8,11 @@ on:
         required: true
         default: false
         type: boolean
+      rollback_drill:
+        description: "After apply and smoke, prove rollback to the prior immutable revision and restore the new revision."
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -20,6 +25,8 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     environment: production-yandex
+    outputs:
+      previous_revision_id: ${{ steps.capture_previous_revision.outputs.revision_id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -64,6 +71,15 @@ jobs:
         run: terraform -chdir=deploy/terraform init -backend=false -input=false
       - name: Terraform plan
         run: terraform -chdir=deploy/terraform plan -input=false -var-file=terraform.tfvars.json
+
+      - name: Capture previous active revision
+        id: capture_previous_revision
+        env:
+          YC_CONTAINER_NAME: ${{ secrets.PHASE7C_CONTAINER_NAME }}
+        run: |
+          revision_id="$(yc serverless container revision list --container-name "$YC_CONTAINER_NAME" --format=json | jq -r '[.[] | select(.status == "ACTIVE") | .id][0] // empty')"
+          test -n "$revision_id"
+          echo "revision_id=$revision_id" >> "$GITHUB_OUTPUT"
 
   apply:
     needs: plan
@@ -127,3 +143,10 @@ jobs:
           YC_BUCKET_NAME: ${{ secrets.PHASE7C_BUCKET_NAME }}
           YC_BUDGET_ID: ${{ secrets.PHASE7C_BUDGET_ID }}
         run: bash scripts/yandex_cloud_live_evidence.sh
+
+      - name: Run protected rollback drill
+        if: ${{ inputs.rollback_drill == true }}
+        env:
+          YC_CONTAINER_NAME: ${{ secrets.PHASE7C_CONTAINER_NAME }}
+          PREVIOUS_REVISION_ID: ${{ needs.plan.outputs.previous_revision_id }}
+        run: bash scripts/yandex_cloud_rollback_drill.sh
