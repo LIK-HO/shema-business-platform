@@ -119,10 +119,6 @@ resource "yandex_mdb_postgresql_user" "runtime" {
   password_wo        = var.database_password
   password_wo_version = 1
   deletion_protection = true
-
-  permission {
-    database_name = yandex_mdb_postgresql_database.runtime.name
-  }
 }
 
 resource "yandex_mdb_postgresql_database" "runtime" {
