@@ -572,7 +572,7 @@ Final implementation HEAD `4f2589610a9c8c8839c174c6c9b7e5873dae84ef` passed prim
 The next boundary requires real target-folder access and live evidence: resource provisioning, DB connectivity/migrations, secret delivery, health/readiness, observability/budgets, backup/PITR, rollback and smoke tests.
 
 ### Phase 7C execution contract
-The live boundary is provisioned only through the protected `production-yandex` environment. The workflow always produces a Terraform plan first; apply requires an explicit manual dispatch input. Live evidence must cover resource readiness, same-VPC database connectivity/migrations, secrets, health/readiness, observability, budget, backup/PITR, rollback and production smoke.
+The live boundary is provisioned only through the protected `production-yandex` environment. The workflow always produces a Terraform plan first; apply requires an explicit manual dispatch input. Live evidence must cover resource readiness, same-VPC database connectivity/migrations, secrets, health/readiness, observability, budget, backup/PITR, rollback and production smoke. The same-VPC database proof is executed by a private task-mode Serverless Container using the immutable application image digest, Lockbox DATABASE_URL and CI-only invocation permission.
 
 ### Objective — IN_PROGRESS
 
