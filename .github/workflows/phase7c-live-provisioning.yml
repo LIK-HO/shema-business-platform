@@ -1,0 +1,100 @@
+name: Phase 7C Live Provisioning and Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply the approved Terraform plan after reviewing the plan artifact."
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase7c-production
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    environment: production-yandex
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Yandex Cloud CLI
+        run: |
+          curl -fsSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+          echo "$HOME/yandex-cloud/bin" >> "$GITHUB_PATH"
+      - name: Configure Yandex Cloud credentials
+        env:
+          YC_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.YC_SERVICE_ACCOUNT_KEY_JSON }}
+        run: |
+          test -n "$YC_SERVICE_ACCOUNT_KEY_JSON"
+          mkdir -p "$RUNNER_TEMP/yc"
+          printf "%s" "$YC_SERVICE_ACCOUNT_KEY_JSON" > "$RUNNER_TEMP/yc/key.json"
+          yc config profile create shema-phase7c
+          yc config set service-account-key "$RUNNER_TEMP/yc/key.json"
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.16.4"
+          terraform_wrapper: false
+      - name: Write private Terraform variables
+        env:
+          TFVARS_JSON: ${{ secrets.PHASE7C_TFVARS_JSON }}
+        run: |
+          test -n "$TFVARS_JSON"
+          printf "%s" "$TFVARS_JSON" > deploy/terraform/terraform.tfvars.json
+          python -c "import json; json.load(open("deploy/terraform/terraform.tfvars.json"))"
+      - name: Terraform init
+        run: terraform -chdir=deploy/terraform init -backend=false -input=false
+      - name: Terraform plan
+        run: terraform -chdir=deploy/terraform plan -input=false -out=phase7c.tfplan -var-file=terraform.tfvars.json
+      - name: Upload reviewed plan
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: phase7c-terraform-plan
+          path: deploy/terraform/phase7c.tfplan
+          if-no-files-found: error
+          retention-days: 7
+
+  apply:
+    needs: plan
+    if: ${{ inputs.apply == true }}
+    runs-on: ubuntu-latest
+    environment: production-yandex
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Yandex Cloud CLI
+        run: |
+          curl -fsSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+          echo "$HOME/yandex-cloud/bin" >> "$GITHUB_PATH"
+      - name: Configure Yandex Cloud credentials
+        env:
+          YC_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.YC_SERVICE_ACCOUNT_KEY_JSON }}
+        run: |
+          test -n "$YC_SERVICE_ACCOUNT_KEY_JSON"
+          mkdir -p "$RUNNER_TEMP/yc"
+          printf "%s" "$YC_SERVICE_ACCOUNT_KEY_JSON" > "$RUNNER_TEMP/yc/key.json"
+          yc config profile create shema-phase7c
+          yc config set service-account-key "$RUNNER_TEMP/yc/key.json"
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.16.4"
+          terraform_wrapper: false
+      - name: Write private Terraform variables
+        env:
+          TFVARS_JSON: ${{ secrets.PHASE7C_TFVARS_JSON }}
+        run: |
+          test -n "$TFVARS_JSON"
+          printf "%s" "$TFVARS_JSON" > deploy/terraform/terraform.tfvars.json
+      - name: Terraform init
+        run: terraform -chdir=deploy/terraform init -backend=false -input=false
+      - name: Terraform apply
+        run: terraform -chdir=deploy/terraform apply -input=false -auto-approve -var-file=terraform.tfvars.json
