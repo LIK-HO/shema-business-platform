@@ -25,7 +25,12 @@ resource "yandex_iam_service_account" "container_runtime" {
 
 resource "yandex_iam_service_account" "container_puller" {
   name        = "${var.app_name}-container-puller"
-  description = "Pull-only identity for application images."
+  description = "CI/inspection identity for registry image access."
+}
+
+resource "yandex_iam_service_account" "gateway_invoker" {
+  name        = "${var.app_name}-gateway-invoker"
+  description = "Least-privilege identity used only by API Gateway to invoke the private container."
 }
 
 resource "yandex_container_registry" "app" {
