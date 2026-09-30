@@ -1,3 +1,36 @@
+name: Phase 7C Live Provisioning and Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "After reviewing the Terraform plan produced in this workflow run, allow the protected apply job to execute."
+        required: true
+        default: false
+        type: boolean
+      rollback_drill:
+        description: "After apply and smoke, prove rollback to the prior immutable revision and restore the new revision."
+        required: true
+        default: false
+        type: boolean
+      pitr_drill:
+        description: "Restore to a separate temporary PostgreSQL cluster and verify recovery through a private task."
+        required: true
+        default: false
+        type: boolean
+      pitr_recovery_time:
+        description: "RFC3339 UTC recovery target, after an available automated backup and not in the future."
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase7c-production
+  cancel-in-progress: false
+
 jobs:
   plan:
     runs-on: ubuntu-latest
