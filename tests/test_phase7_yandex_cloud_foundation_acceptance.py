@@ -27,7 +27,8 @@ def test_phase7_contract_keeps_postgres_as_canonical_authority() -> None:
 def test_phase7_container_boot_is_production_safe() -> None:
     dockerfile = read("Dockerfile")
     assert "APP_ENV=production" in dockerfile
-    assert "--factory" in dockerfile
+    assert "--factory" not in dockerfile
+    assert "shema_platform.experience.production:app" in dockerfile
     assert "--proxy-headers" in dockerfile
     assert "USER shema" in dockerfile
     assert "latest" not in dockerfile.lower()
@@ -100,3 +101,22 @@ def test_phase7_exit_conditions_include_recovery_observability_and_rollback() ->
         "global_adversarial_review_complete",
     }
     assert required.issubset(set(contract["exit_conditions"]))
+
+
+def test_phase7_production_app_has_docs_disabled() -> None:
+    from shema_platform.experience.production import app
+
+    assert app.openapi_url is None
+    assert app.docs_url is None
+    assert app.redoc_url is None
+
+
+def test_phase7_runtime_and_gateway_identities_are_separated() -> None:
+    main = read("deploy/terraform/main.tf")
+    spec = read("deploy/terraform/openapi.yaml.tftpl")
+    assert 'resource "yandex_iam_service_account" "gateway_invoker"' in main
+    assert 'role         = "serverless-containers.containerInvoker"' in main
+    assert "serviceAccount:${yandex_iam_service_account.container_runtime.id}" in main
+    assert "service_account_id = yandex_iam_service_account.container_runtime.id" in main
+    assert "container_service_account = yandex_iam_service_account.gateway_invoker.id" in main
+    assert 'service_account_id: "$${container_service_account}"' in spec
