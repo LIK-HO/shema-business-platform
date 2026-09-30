@@ -48,7 +48,7 @@ def test_phase7c_requires_persistent_terraform_state_controls() -> None:
     assert contract["execution"]["terraform_state"]["locking"] == "s3_lockfile"
 
 
-def test_phase7c_requires_externalized_credentials_and_manual_apply() -> None
+def test_phase7c_requires_externalized_credentials_and_manual_apply() -> None:
     gates = read_contract()["safety_gates"]
     assert gates["real_credentials_must_be_externalized"] is True
     assert gates["apply_requires_manual_dispatch"] is True
@@ -270,7 +270,11 @@ def test_phase7c_workflow_binds_apply_to_reviewed_plan_fingerprint() -> None:
     assert "planned_change_fingerprint" in workflow
     assert "Recompute and verify reviewed Terraform plan" in workflow
     assert 'test "$actual_fingerprint" = "$EXPECTED_PLAN_FINGERPRINT"' in workflow
-    assert 'terraform -chdir=deploy/terraform apply -input=false "$RUNNER_TEMP/phase7c.tfplan"' in workflow
+    apply_command = (
+        'terraform -chdir=deploy/terraform '
+        'apply -input=false "$RUNNER_TEMP/phase7c.tfplan"'
+    )
+    assert apply_command in workflow
 
 
 def test_phase7c_state_preflight_requires_versioning() -> None:

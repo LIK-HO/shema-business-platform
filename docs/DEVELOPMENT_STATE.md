@@ -5,7 +5,7 @@
 - **7C implementation branch:** `phase7/phase7c-live-evidence-20260930`.
 - **Synchronized repository HEAD:** `5b6a295be71e20a8791bb2caa1009d94952c687a`.
 - **Repository-side release gate:** CI `36736299054` — **7/7 GREEN** on the prior synchronized implementation state; Terraform IaC Validation `36736299157` — **GREEN**.
-- **Current synchronization delta:** workflow/IaC hardening + operational documentation; live production evidence is still not claimed.
+- **Current synchronization delta:** workflow/IaC hardening + operational documentation; live production evidence is still not claimed. A new current-head gate is required after these fixes.
 - **7C safety:** production apply and recovery drills are manual-dispatch and protected by the `production-yandex` environment; credentials remain externalized.
 - **Terraform state safety:** remote Yandex Object Storage backend is mandatory; state bucket versioning is mandatory; S3 lockfile configuration is enabled; apply is refused when the reviewed plan fingerprint changes.
 - **Operational runbook:** `docs/PHASE7C_PRODUCTION_RUNBOOK.md`.
