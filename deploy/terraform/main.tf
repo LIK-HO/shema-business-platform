@@ -41,7 +41,10 @@ resource "yandex_container_registry" "app" {
 resource "yandex_container_registry_iam_binding" "puller" {
   registry_id = yandex_container_registry.app.id
   role        = "container-registry.images.puller"
-  members     = ["serviceAccount:${yandex_iam_service_account.container_puller.id}"]
+  members = [
+    "serviceAccount:${yandex_iam_service_account.container_puller.id}",
+    "serviceAccount:${yandex_iam_service_account.container_runtime.id}",
+  ]
 }
 
 resource "yandex_lockbox_secret" "runtime" {
@@ -154,6 +157,12 @@ resource "yandex_serverless_container" "api" {
   }
 }
 
+resource "yandex_serverless_container_iam_member" "gateway_invoker" {
+  container_id = yandex_serverless_container.api.id
+  role         = "serverless-containers.containerInvoker"
+  member       = "serviceAccount:${yandex_iam_service_account.gateway_invoker.id}"
+}
+
 resource "yandex_api_gateway" "edge" {
   name        = "${var.app_name}-edge"
   description = "Canonical public edge for the Shema API."
@@ -164,6 +173,6 @@ resource "yandex_api_gateway" "edge" {
 
   spec = templatefile("${path.module}/openapi.yaml.tftpl", {
     container_id             = yandex_serverless_container.api.id
-    container_service_account = yandex_iam_service_account.container_runtime.id
+    container_service_account = yandex_iam_service_account.gateway_invoker.id
   })
 }
