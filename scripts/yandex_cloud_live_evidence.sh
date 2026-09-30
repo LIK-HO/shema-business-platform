@@ -18,7 +18,8 @@ yc storage bucket get "$YC_BUCKET_NAME" --format=json >/dev/null
 yc billing v1 budget get "$YC_BUDGET_ID" --format=json | jq -e ".status == \"ACTIVE\"" >/dev/null
 echo "CLOUD_READY=PASS"
 echo "CONTAINER_READY=PASS"
-echo "POSTGRES_READY=PASS"
+echo "POSTGRES_RESOURCE_READY=PASS"
+echo "DATABASE_CONNECTIVITY_AND_MIGRATIONS=NOT_CLAIMED"
 echo "BUCKET_READY=PASS"
 echo "BUDGET_READY=PASS"
 echo "SECRET_VALUES=NOT_PRINTED"
