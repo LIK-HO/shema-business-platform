@@ -62,3 +62,15 @@ variable "custom_domain" {
   description = "Optional public hostname."
   default     = ""
 }
+
+variable "evidence_runner_enabled" {
+  type        = bool
+  description = "Enable the private same-VPC task runner used only for live migration/database evidence."
+  default     = false
+}
+
+variable "migration_runner_name" {
+  type        = string
+  description = "Name of the bounded same-VPC migration evidence runner."
+  default     = "shema-migration-runner"
+}
