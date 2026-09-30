@@ -227,7 +227,7 @@ revision_json="$(yc serverless container revision deploy \
 RECOVERY_RUNNER_REVISION_ID="$(jq -r '.id // empty' <<<"$revision_json")"
 test -n "$RECOVERY_RUNNER_REVISION_ID"
 
-runner_url="$(jq -r '.url // empty' <<<"$runner_create_json")"
+runner_url="$(yc serverless container get --id "$RECOVERY_RUNNER_ID" --format=json | jq -r '.url // empty')"
 test -n "$runner_url"
 iam_token="$(yc iam create-token)"
 curl -sS -D "$HEADERS_FILE" -o "$BODY_FILE" -H "Authorization: Bearer $iam_token" "$runner_url"
