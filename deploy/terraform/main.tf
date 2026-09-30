@@ -114,9 +114,9 @@ resource "yandex_mdb_postgresql_cluster_v2" "prod" {
 }
 
 resource "yandex_mdb_postgresql_user" "runtime" {
-  cluster_id         = yandex_mdb_postgresql_cluster_v2.prod.id
-  name               = var.database_user
-  password_wo        = var.database_secret_input
+  cluster_id          = yandex_mdb_postgresql_cluster_v2.prod.id
+  name                = var.database_user
+  password_wo         = var.database_secret_input
   password_wo_version = 1
 }
 
@@ -241,8 +241,8 @@ resource "yandex_serverless_container" "migration_runner" {
   }
 
   image {
-    url    = var.image_url
-    digest = var.image_digest
+    url     = var.image_url
+    digest  = var.image_digest
     command = ["python", "-m", "shema_platform.platform.live_migration_probe"]
     environment = {
       APP_ENV = "production"
