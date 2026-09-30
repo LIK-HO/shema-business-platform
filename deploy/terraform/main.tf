@@ -82,7 +82,7 @@ resource "yandex_mdb_postgresql_cluster_v2" "prod" {
     version                   = 17
     backup_retain_period_days = 14
 
-    backup_window_start {
+    backup_window_start = {
       hours   = 2
       minutes = 30
     }
