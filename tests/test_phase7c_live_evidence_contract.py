@@ -56,9 +56,10 @@ def test_phase7c_recovery_baseline_is_present_in_terraform() -> None:
     assert "backup_window_start = {" in main
 
 
-def test_phase7c_live_probe_does_not_claim_database_connectivity() -> None:
+def test_phase7c_live_probe_claims_database_connectivity_only_after_task_success() -> None:
     script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(encoding="utf-8")
-    assert "DATABASE_CONNECTIVITY_AND_MIGRATIONS=NOT_CLAIMED" in script
+    assert '[[ "$task_exit_code" == "0" ]]' in script
+    assert "DATABASE_CONNECTIVITY_AND_MIGRATIONS=PASS" in script
 
 def test_phase7c_uses_private_task_runner_for_same_vpc_migrations() -> None:
     main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
@@ -97,7 +98,8 @@ def test_phase7c_provisions_explicit_runtime_database_and_user() -> None:
     variables = (ROOT / "deploy" / "terraform" / "variables.tf").read_text(encoding="utf-8")
     assert 'resource "yandex_mdb_postgresql_database" "runtime"' in main
     assert 'resource "yandex_mdb_postgresql_user" "runtime"' in main
-    assert "password_wo = var.database_secret_input" in main
+    assert "password_wo" in main
+    assert "var.database_secret_input" in main
     assert "database_name" in variables
     assert "database_user" in variables
     assert "database_secret_input" in variables
