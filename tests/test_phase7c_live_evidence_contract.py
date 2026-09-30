@@ -162,6 +162,9 @@ def test_phase7c_pitr_script_restores_private_cluster_and_cleans_up() -> None:
     assert "yc managed-postgresql cluster restore" in script
     assert "--environment PRESTABLE" in script
     assert 'assign-public-ip=false' in script
+    assert '--deletion-protection=false' in script
+    assert 'recovery_delete_target="$RECOVERY_CLUSTER_ID"' in script
+    assert 'recovery_delete_target="$RECOVERY_CLUSTER_NAME"' in script
     assert 'yc lockbox secret create' in script
     assert '--payload -' in script
     assert '--payload "$payload"' not in script
