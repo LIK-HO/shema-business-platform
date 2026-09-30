@@ -568,10 +568,10 @@ This is a bounded extension around the frozen core, not a new system-of-record o
 ### Phase 7B — Production Runtime/Artifact Composition — CLOSED / VERIFIED
 Final implementation HEAD `4f2589610a9c8c8839c174c6c9b7e5873dae84ef` passed primary CI `36703937084` — **7/7 GREEN** and separate Terraform IaC Validation `36703936845` — **GREEN** with provider `0.230.0`. The sub-boundary establishes the immutable production container entrypoint, provider pinning, VPC/service identities, Container Registry digest deployment, Lockbox injection, Managed PostgreSQL v2 authority, private Object Storage, API Gateway → Serverless Containers, explicit runtime/gateway IAM split and Cloud Logging configuration. Global adversarial review found and fixed production import/docs exposure, missing runtime image-pull permission, gateway invocation identity ambiguity and provider-schema mismatches. No frozen-kernel semantics changed.
 
-### Phase 7C — Cloud resource provisioning + live evidence — NEXT
+### Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS
 The next boundary requires real target-folder access and live evidence: resource provisioning, DB connectivity/migrations, secret delivery, health/readiness, observability/budgets, backup/PITR, rollback and smoke tests.
 
-### Objective — IN_PROGRESS
+### Phase 7C execution contract\nThe live boundary is provisioned only through the protected `production-yandex` environment. The workflow always produces a Terraform plan first; apply requires an explicit manual dispatch input. Live evidence must cover resource readiness, same-VPC database connectivity/migrations, secrets, health/readiness, observability, budget, backup/PITR, rollback and production smoke.\n\n### Objective — IN_PROGRESS
 
 ### Current implementation
 Phase 7B — Production runtime/artifact composition is implemented on clean branch `phase7/yandex-cloud-production-20260930` from Phase 6 final HEAD `3270d8c2115944b2e2cb26ae92ba6d90027cb08e`. IaC defines API Gateway → Serverless Containers, Lockbox, immutable Container Registry images, Managed PostgreSQL v2, private VPC networking and bounded private Object Storage. No production resources are provisioned by the development session yet.
