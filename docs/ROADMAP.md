@@ -525,6 +525,11 @@ Finish the primary operator experience on Web and PWA. Android is explicitly rem
 Web and PWA provide the complete proven operator workflow without a second business-rule implementation.
 
 ### Closure evidence — 2026-09-30
+Phase 6 is **CLOSED / VERIFIED** on final implementation HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c` by full seven-job release gate `36637312890` — **7/7 GREEN**. Acceptance: `tests/test_phase6_operator_consolidation_acceptance.py`. Global adversarial review covered the frozen kernel, post-core contracts, runtime, persistence, integrations, operator workflow, security/recovery and migration boundaries. Two trust-boundary findings were required to be fixed before closure: operator navigation now fails closed after capability rejection, and the handoff workspace cannot imply that an external Bitrix transfer was acknowledged when no integration provider is composed. Both are covered by acceptance tests. No frozen-kernel change, second business authority, or external success simulation was introduced.
+
+**Next approved boundary:** Phase 7 — Yandex Cloud Production Foundation.
+
+### Closure evidence — 2026-09-30
 Phase 6 is **CLOSED / VERIFIED** on final HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c` by full seven-job release gate `36637312890` — **7/7 GREEN**. The final adversarial review fixed capability-rejection fail-closed behavior and removed any handoff UI implication of external ACK when no integration provider is composed. SI-27 remains enforced; frozen kernel unchanged.
 
 **Next approved boundary:** Phase 7 — Yandex Cloud Production Foundation.
