@@ -577,7 +577,7 @@ The live boundary is provisioned only through the protected `production-yandex` 
 ### Objective — IN_PROGRESS
 
 ### Current implementation
-Phase 7B — Production runtime/artifact composition is implemented on clean branch `phase7/yandex-cloud-production-20260930` from Phase 6 final HEAD `3270d8c2115944b2e2cb26ae92ba6d90027cb08e`. IaC defines API Gateway → Serverless Containers, Lockbox, immutable Container Registry images, Managed PostgreSQL v2, private VPC networking and bounded private Object Storage. No production resources are provisioned by the development session yet.
+Phase 7B — Production runtime/artifact composition remains CLOSED / VERIFIED. Phase 7C code is implemented on branch `phase7/phase7c-live-evidence-20260930` at verified HEAD `2a1711624ac9a72f188aa4ad0d19b09cac6fcb3c`. The Phase 7C code gate is CI `36712861069` (7/7 GREEN) and Terraform IaC Validation `36712861070` (GREEN). PITR/recovery, rollback, live-evidence, and documentation contracts are implemented and guarded; no production resources are claimed as provisioned until the protected Yandex workflow is actually executed.
 
 ### Objective
 Move the proven modular monolith into Yandex Cloud without changing domain semantics or creating a second persistence authority.
