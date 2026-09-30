@@ -12,3 +12,7 @@ bucket_name    = "shema-prod-bounded-objects"
 custom_domain = ""
 evidence_runner_enabled = false
 migration_runner_name = "shema-migration-runner"
+
+database_name = "shema"
+database_user = "shema_runtime"
+database_secret_input = "REPLACE_IN_PROTECTED_ENV"
