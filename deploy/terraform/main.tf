@@ -101,7 +101,7 @@ resource "yandex_storage_bucket" "bounded_objects" {
   acl                   = "private"
   default_storage_class = "STANDARD"
   force_destroy         = false
-  labels                = local.common_labels
+  tags                  = local.common_labels
 }
 
 resource "yandex_serverless_container" "api" {
@@ -115,10 +115,6 @@ resource "yandex_serverless_container" "api" {
   service_account_id = yandex_iam_service_account.container_runtime.id
   folder_id          = var.folder_id
 
-  environment = {
-    APP_ENV = "production"
-  }
-
   log_options {
     folder_id = var.folder_id
     min_level = "INFO"
@@ -127,6 +123,9 @@ resource "yandex_serverless_container" "api" {
   image {
     url    = var.image_url
     digest = var.image_digest
+    environment = {
+      APP_ENV = "production"
+    }
   }
 
   connectivity {
@@ -177,7 +176,7 @@ resource "yandex_api_gateway" "edge" {
   }
 
   spec = templatefile("${path.module}/openapi.yaml.tftpl", {
-    container_id             = yandex_serverless_container.api.id
+    container_id              = yandex_serverless_container.api.id
     container_service_account = yandex_iam_service_account.gateway_invoker.id
   })
 }
