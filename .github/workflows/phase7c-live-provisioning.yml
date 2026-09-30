@@ -95,3 +95,13 @@ jobs:
         run: terraform -chdir=deploy/terraform init -backend=false -input=false
       - name: Terraform apply
         run: terraform -chdir=deploy/terraform apply -input=false -auto-approve -var-file=terraform.tfvars.json
+
+      - name: Collect live resource evidence
+        env:
+          YC_CLOUD_ID: ${{ secrets.PHASE7C_CLOUD_ID }}
+          YC_FOLDER_ID: ${{ secrets.PHASE7C_FOLDER_ID }}
+          YC_CONTAINER_NAME: ${{ secrets.PHASE7C_CONTAINER_NAME }}
+          YC_CLUSTER_NAME: ${{ secrets.PHASE7C_CLUSTER_NAME }}
+          YC_BUCKET_NAME: ${{ secrets.PHASE7C_BUCKET_NAME }}
+          YC_BUDGET_ID: ${{ secrets.PHASE7C_BUDGET_ID }}
+        run: bash scripts/yandex_cloud_live_evidence.sh
