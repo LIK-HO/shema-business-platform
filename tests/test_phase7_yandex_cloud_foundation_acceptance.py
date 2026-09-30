@@ -41,6 +41,7 @@ def test_phase7_terraform_is_pinned_and_digest_based() -> None:
     assert 'version = "0.230.0"' in versions
     assert "digest = var.image_digest" in main
     assert "yandex_serverless_container" in main
+    assert "log_options" in main
     assert "yandex_api_gateway" in main
     assert "yandex_mdb_postgresql_cluster_v2" in main
 
