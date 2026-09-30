@@ -148,13 +148,24 @@ jobs:
           YC_CLOUD_ID: ${{ secrets.PHASE7C_CLOUD_ID }}
           YC_FOLDER_ID: ${{ secrets.PHASE7C_FOLDER_ID }}
           YC_CONTAINER_NAME: ${{ secrets.PHASE7C_CONTAINER_NAME }}
-          YC_API_GATEWAY_ID: ${{ secrets.PHASE7C_API_GATEWAY_ID }}
           YC_MIGRATION_RUNNER_NAME: ${{ secrets.PHASE7C_MIGRATION_RUNNER_NAME }}
           YC_CLUSTER_NAME: ${{ secrets.PHASE7C_CLUSTER_NAME }}
           YC_BUCKET_NAME: ${{ secrets.PHASE7C_BUCKET_NAME }}
           YC_BUDGET_ID: ${{ secrets.PHASE7C_BUDGET_ID }}
-          YC_EXPECTED_IMAGE_DIGEST: ${{ secrets.PHASE7C_EXPECTED_IMAGE_DIGEST }}
-        run: bash scripts/yandex_cloud_live_evidence.sh
+        run: |
+          set -Eeuo pipefail
+          export YC_API_GATEWAY_ID="$(terraform -chdir=deploy/terraform output -raw api_gateway_id)"
+          export YC_EXPECTED_IMAGE_DIGEST="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          values = json.loads(Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8"))
+          value = values.get("image_digest")
+          if not value:
+              raise SystemExit("image_digest is required")
+          print(value)
+          PY
+          )"
+          bash scripts/yandex_cloud_live_evidence.sh
 
       - name: Run protected rollback drill
         if: ${{ inputs.rollback_drill == true }}
