@@ -59,3 +59,23 @@ def test_phase7c_recovery_baseline_is_present_in_terraform() -> None:
 def test_phase7c_live_probe_does_not_claim_database_connectivity() -> None:
     script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(encoding="utf-8")
     assert "DATABASE_CONNECTIVITY_AND_MIGRATIONS=NOT_CLAIMED" in script
+
+def test_phase7c_uses_private_task_runner_for_same_vpc_migrations() -> None:
+    main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
+    variables = (ROOT / "deploy" / "terraform" / "variables.tf").read_text(encoding="utf-8")
+    probe = (
+        ROOT / "src" / "shema_platform" / "platform" / "live_migration_probe.py"
+    ).read_text(encoding="utf-8")
+    assert 'runtime {' in main
+    assert 'type = "task"' in main
+    assert 'type = "task"' in main
+    assert "migration_runner_name" in variables
+    assert "shema_platform.platform.live_migration_probe" in main
+    assert "MigrationRunner" in probe
+    assert "DATABASE_URL" in probe
+
+
+def test_phase7c_migration_runner_is_not_publicly_exposed() -> None:
+    main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
+    assert "allow-unauthenticated-invoke" not in main
+    assert "api_gateway" not in main.split('resource "yandex_serverless_container" "migration_runner"', 1)[1]
