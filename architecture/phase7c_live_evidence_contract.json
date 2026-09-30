@@ -33,7 +33,11 @@
     "final_current_head_seven_job_gate_green",
     "pitr_recovery_cluster_created",
     "pitr_recovery_database_connectivity_verified",
-    "pitr_recovery_cleanup_verified"
+    "pitr_recovery_cleanup_verified",
+    "api_gateway_edge_ready",
+    "immutable_image_digest_verified",
+    "budget_thresholds_verified",
+    "runtime_and_task_observability_verified"
   ],
   "safety_gates": {
     "apply_requires_manual_dispatch": true,
