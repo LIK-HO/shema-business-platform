@@ -2,26 +2,18 @@
 
 - **Closed sub-boundary:** Phase 7B — Production runtime/artifact composition — CLOSED / VERIFIED.
 - **Active boundary:** Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS.
-- **7C implementation branch:** `phase7/phase7c-live-evidence-20260930` from Phase 7 current HEAD `edbfef3bea8c35a7f5655efbdc065b89025af00b`.
-- **7C contract:** `architecture/phase7c_live_evidence_contract.json`.
+- **7C implementation branch:** `phase7/phase7c-live-evidence-20260930`.
+- **Verified implementation HEAD:** `2a1711624ac9a72f188aa4ad0d19b09cac6fcb3c`.
+- **Code release gate:** CI `36712861069` — **7/7 GREEN** (quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup-recovery, release-contract).
+- **Terraform IaC gate:** `36712861070` — **GREEN**.
 - **7C safety:** production apply and recovery drills are manual-dispatch and protected by the `production-yandex` environment; credentials remain externalized.
 - **Recovery baseline:** Managed PostgreSQL v2 is deletion-protected with 14-day backup retention and an explicit backup window.
 - **Same-VPC evidence runner:** private Serverless Containers task-mode runner on the same immutable image digest, attached to the same VPC, with Lockbox DATABASE_URL and CI-only `containerInvoker`.
-- **PITR drill:** protected recovery restores to a separate PRESTABLE Managed PostgreSQL cluster in the same VPC with public database access disabled; a temporary Lockbox credential and ephemeral task-mode verifier are deleted by a success/failure cleanup trap.
-- **Rollback evidence:** protected manual rollback drill captures the prior active revision, rolls back to it, verifies readiness, then restores the newly deployed immutable revision and verifies readiness again.
-- **Real cloud state:** not claimed until the gated provisioning workflow is actually executed with authorized Yandex credentials.
-- **Closure blockers:** live resource evidence, same-VPC database connectivity/migrations, secret delivery, health/readiness, observability, budget/alerts, PITR, rollback, production smoke, global adversarial review and final current-head seven-job gate.
-
-HEAD for 7B:** `4f2589610a9a8c8839c174c6c9b7e5873dae84ef`.
-- **Primary release gate:** CI `36703937084` — **7/7 GREEN**.
-- **IaC gate:** Terraform IaC Validation `36703936845` — **GREEN** (`terraform fmt -check`, provider init backend=false, `terraform validate`) against Yandex provider `0.230.0`.
-- **Acceptance:** `tests/test_phase7_yandex_cloud_foundation_acceptance.py`.
-- **Security invariant:** SI-28.
-- **Adversarial findings fixed:** production import safety, runtime image-pull permission, dedicated API Gateway invoker identity, explicit container logging, provider-schema correctness.
-- **Frozen kernel:** unchanged.
-- **Real cloud state:** **not provisioned** in this session. Therefore Phase 7 overall remains **IN_PROGRESS**.
-- **Next active boundary:** **Phase 7C — Cloud resource provisioning + live evidence**.
-- **Closure blockers:** actual Yandex access, resource provisioning, DB connectivity/migrations, secret delivery, observability/budget evidence, backup/PITR, rollback/smoke evidence, live global adversarial review and final current-head seven-job release gate.
+- **PITR drill implementation:** protected restore to a separate PRESTABLE PostgreSQL cluster, same VPC, no public DB IP, temporary Lockbox secret, ephemeral same-digest task verifier, verified cleanup, and INT/TERM-safe cleanup.
+- **Rollback implementation:** protected manual rollback drill captures the prior active immutable revision, verifies health after rollback, restores the new revision, and verifies health again.
+- **Global adversarial review:** fresh Phase 7C PITR review completed; no new P0/P1 architecture/security blocker found.
+- **Real cloud state:** **not claimed** until the protected Yandex provisioning/PITR/rollback workflow is actually executed with authorized credentials.
+- **Closure blockers:** live resource provisioning/evidence, live DB connectivity/migrations, secret delivery, observability, budget/alerts, live PITR, live rollback, production smoke, and final current-head gate after the final state synchronization.
 
 # Phase 6 Web/PWA Consolidation — CLOSED / VERIFIED (2026-09-30)
 
