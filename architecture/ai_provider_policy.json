@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "evidence_snapshot": "2026-09-24",
+  "authority": "docs/DEVELOPMENT_MANIFEST.md",
+  "gateway": "shema_platform.application.ai.AIGateway",
+  "frozen_kernel_impact": false,
+  "cloud": {
+    "mode": "allowlist",
+    "allowed_providers": [
+      "yandexgpt",
+      "gigachat"
+    ],
+    "other_providers": "deny_by_default",
+    "activation_requires_manifest_change": true,
+    "evidence_sources": [
+      "https://yandex.cloud/en/docs/overview/api",
+      "https://developers.sber.ru/docs/ru/gigachat/api/reference/rest/gigachat-api"
+    ]
+  },
+  "local_self_hosted": {
+    "enabled": true,
+    "usage_rights": "free_commercial_use_required",
+    "required_metadata": [
+      "model_id",
+      "model_version",
+      "source",
+      "license",
+      "license_url",
+      "license_checked_at",
+      "artifact_digest",
+      "runtime",
+      "resource_limits",
+      "security_status"
+    ],
+    "selection_rule": "Use only models whose license permits free use for the intended commercial scenario."
+  },
+  "routing": {
+    "implicit_cloud_to_local_fallback": false,
+    "implicit_local_to_cloud_fallback": false,
+    "provider_selection_must_be_observable": true
+  }
+}
