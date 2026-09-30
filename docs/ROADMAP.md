@@ -571,7 +571,10 @@ Final implementation HEAD `4f2589610a9c8c8839c174c6c9b7e5873dae84ef` passed prim
 ### Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS
 The next boundary requires real target-folder access and live evidence: resource provisioning, DB connectivity/migrations, secret delivery, health/readiness, observability/budgets, backup/PITR, rollback and smoke tests.
 
-### Phase 7C execution contract\nThe live boundary is provisioned only through the protected `production-yandex` environment. The workflow always produces a Terraform plan first; apply requires an explicit manual dispatch input. Live evidence must cover resource readiness, same-VPC database connectivity/migrations, secrets, health/readiness, observability, budget, backup/PITR, rollback and production smoke.\n\n### Objective — IN_PROGRESS
+### Phase 7C execution contract
+The live boundary is provisioned only through the protected `production-yandex` environment. The workflow always produces a Terraform plan first; apply requires an explicit manual dispatch input. Live evidence must cover resource readiness, same-VPC database connectivity/migrations, secrets, health/readiness, observability, budget, backup/PITR, rollback and production smoke.
+
+### Objective — IN_PROGRESS
 
 ### Current implementation
 Phase 7B — Production runtime/artifact composition is implemented on clean branch `phase7/yandex-cloud-production-20260930` from Phase 6 final HEAD `3270d8c2115944b2e2cb26ae92ba6d90027cb08e`. IaC defines API Gateway → Serverless Containers, Lockbox, immutable Container Registry images, Managed PostgreSQL v2, private VPC networking and bounded private Object Storage. No production resources are provisioned by the development session yet.
