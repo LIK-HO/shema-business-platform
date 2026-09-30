@@ -577,7 +577,7 @@ The live boundary is provisioned only through the protected `production-yandex` 
 ### Objective — IN_PROGRESS
 
 ### Current implementation
-Phase 7B — Production runtime/artifact composition remains CLOSED / VERIFIED. Phase 7C code is implemented on branch `phase7/phase7c-live-evidence-20260930` at synchronized verified HEAD `9e3caa5ee322d20d0988dd4fc5bcd91dfd35c5fa`. The synchronized Phase 7C gate is CI `36713116818` (7/7 GREEN) and Terraform IaC Validation `36713116494` (GREEN). PITR/recovery, rollback, live-evidence, and documentation contracts are implemented and guarded; no production resources are claimed as provisioned until the protected Yandex workflow is actually executed.
+Phase 7B — Production runtime/artifact composition remains CLOSED / VERIFIED. Phase 7C code is implemented on branch `phase7/phase7c-live-evidence-20260930` at synchronized verified HEAD `1a4f1bf24f289c321a8018e6e01580c5bbc93e0a`. The synchronized Phase 7C gate is CI `36735866311` (7/7 GREEN) and Terraform IaC Validation `36735866454` (GREEN). Live evidence is bound to the API Gateway external edge, the applied immutable image digest, configured budget thresholds and both API/task log ingestion. PITR/recovery, rollback, live-evidence, and documentation contracts are implemented and guarded; no production resources are claimed as provisioned until the protected Yandex workflow is actually executed.
 
 ### Objective
 Move the proven modular monolith into Yandex Cloud without changing domain semantics or creating a second persistence authority.
