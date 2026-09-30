@@ -25,16 +25,42 @@ BODY_FILE="$(mktemp)"
 
 cleanup() {
   local rc=$?
+  local cleanup_rc=0
   set +e
   rm -f "$HEADERS_FILE" "$BODY_FILE"
-  [[ -z "$RECOVERY_RUNNER_ID" ]] || yc serverless container delete --id "$RECOVERY_RUNNER_ID" >/dev/null 2>&1 || true
-  [[ -z "$RECOVERY_SECRET_ID" ]] || printf 'yes\n' | yc lockbox secret delete --id "$RECOVERY_SECRET_ID" >/dev/null 2>&1 || true
-  [[ -z "$RECOVERY_CLUSTER_ID" ]] || printf 'yes\n' | yc managed-postgresql cluster delete "$RECOVERY_CLUSTER_ID" >/dev/null 2>&1 || true
-  if [[ "$rc" -eq 0 ]]; then
+
+  if [[ -n "$RECOVERY_RUNNER_ID" ]]; then
+    yc serverless container delete --id "$RECOVERY_RUNNER_ID" >/dev/null 2>&1 || cleanup_rc=1
+    for _ in $(seq 1 30); do
+      if yc serverless container get --id "$RECOVERY_RUNNER_ID" >/dev/null 2>&1; then sleep 2; else break; fi
+    done
+    yc serverless container get --id "$RECOVERY_RUNNER_ID" >/dev/null 2>&1 && cleanup_rc=1
+  fi
+
+  if [[ -n "$RECOVERY_SECRET_ID" ]]; then
+    printf 'yes\n' | yc lockbox secret delete --id "$RECOVERY_SECRET_ID" >/dev/null 2>&1 || cleanup_rc=1
+    for _ in $(seq 1 30); do
+      if yc lockbox secret get "$RECOVERY_SECRET_ID" >/dev/null 2>&1; then sleep 2; else break; fi
+    done
+    yc lockbox secret get "$RECOVERY_SECRET_ID" >/dev/null 2>&1 && cleanup_rc=1
+  fi
+
+  if [[ -n "$RECOVERY_CLUSTER_ID" ]]; then
+    printf 'yes\n' | yc managed-postgresql cluster delete "$RECOVERY_CLUSTER_ID" >/dev/null 2>&1 || cleanup_rc=1
+    for _ in $(seq 1 60); do
+      if yc managed-postgresql cluster get "$RECOVERY_CLUSTER_ID" --folder-id "$YC_FOLDER_ID" >/dev/null 2>&1; then sleep 5; else break; fi
+    done
+    yc managed-postgresql cluster get "$RECOVERY_CLUSTER_ID" --folder-id "$YC_FOLDER_ID" >/dev/null 2>&1 && cleanup_rc=1
+  fi
+
+  if [[ "$cleanup_rc" -eq 0 ]]; then
     echo "PITR_RECOVERY_CLEANUP=PASS"
   else
-    echo "PITR_RECOVERY_CLEANUP=ATTEMPTED"
+    echo "PITR_RECOVERY_CLEANUP=FAIL" >&2
+    rc=1
   fi
+
+  trap - EXIT
   exit "$rc"
 }
 trap cleanup EXIT
@@ -103,22 +129,26 @@ if target > datetime.now(timezone.utc):
     raise SystemExit("PITR_RECOVERY_TIME must not be in the future")
 PY
 
-yc managed-postgresql cluster restore \
-  --backup-id "$BACKUP_ID" \
-  --time "$PITR_RECOVERY_TIME" \
-  --name "$RECOVERY_CLUSTER_NAME" \
-  --description "Temporary protected PITR recovery drill; delete after verification." \
-  --environment PRESTABLE \
-  --folder-id "$YC_FOLDER_ID" \
-  --network-id "$NETWORK_ID" \
-  --host "zone-id=$ZONE_ID,subnet-id=$SUBNET_ID,assign-public-ip=false" \
-  --postgresql-version "$PG_VERSION" \
-  --resource-preset "$RESOURCE_PRESET" \
-  --disk-size "$DISK_SIZE_GB"GB \
-  --disk-type "$DISK_TYPE" \
-  --labels "project=shema,purpose=pitr-recovery" \
-  $(if [[ -n "$SECURITY_GROUP_IDS" ]]; then printf '%s %q' --security-group-ids "$SECURITY_GROUP_IDS"; fi) \
-  >/dev/null
+restore_command=(
+  yc managed-postgresql cluster restore
+  --backup-id "$BACKUP_ID"
+  --time "$PITR_RECOVERY_TIME"
+  --name "$RECOVERY_CLUSTER_NAME"
+  --description "Temporary protected PITR recovery drill; delete after verification."
+  --environment PRESTABLE
+  --folder-id "$YC_FOLDER_ID"
+  --network-id "$NETWORK_ID"
+  --host "zone-id=$ZONE_ID,subnet-id=$SUBNET_ID,assign-public-ip=false"
+  --postgresql-version "$PG_VERSION"
+  --resource-preset "$RESOURCE_PRESET"
+  --disk-size "$DISK_SIZE_GB"GB
+  --disk-type "$DISK_TYPE"
+  --labels "project=shema,purpose=pitr-recovery"
+)
+if [[ -n "$SECURITY_GROUP_IDS" ]]; then
+  restore_command+=(--security-group-ids "$SECURITY_GROUP_IDS")
+fi
+"${restore_command[@]}" >/dev/null
 
 for _ in $(seq 1 120); do
   recovery_info="$(yc managed-postgresql cluster get "$RECOVERY_CLUSTER_NAME" --folder-id "$YC_FOLDER_ID" --format=json)"
@@ -137,8 +167,14 @@ case "$(yc managed-postgresql cluster get "$RECOVERY_CLUSTER_ID" --folder-id "$Y
   *) echo "recovery cluster did not reach a ready state" >&2; exit 1 ;;
 esac
 
+jq -e --arg network "$NETWORK_ID" '.network_id == $network' <<<"$recovery_info" >/dev/null
+recovery_hosts="$(yc managed-postgresql hosts list --cluster-id "$RECOVERY_CLUSTER_ID" --folder-id "$YC_FOLDER_ID" --format=json)"
+jq -e 'length > 0 and all(.[]; (.assign_public_ip // false) == false)' <<<"$recovery_hosts" >/dev/null
+
 echo "PITR_BACKUP_SELECTED=PASS"
 echo "PITR_RECOVERY_CLUSTER_READY=PASS"
+echo "PITR_RECOVERY_SAME_VPC=PASS"
+echo "PITR_RECOVERY_NO_PUBLIC_IP=PASS"
 
 RECOVERY_MASTER_HOST="c-$RECOVERY_CLUSTER_ID.rw.mdb.yandexcloud.net"
 RECOVERY_DATABASE_URL="$(python - "$PITR_DATABASE_URL" "$RECOVERY_MASTER_HOST" <<'PY'
@@ -156,7 +192,7 @@ PY
 test -n "$RECOVERY_DATABASE_URL"
 
 payload="$(jq -cn --arg value "$RECOVERY_DATABASE_URL" '[{"key":"DATABASE_URL","text_value":$value}]')"
-secret_json="$(yc lockbox secret create --name "$RECOVERY_SECRET_NAME" --description "Ephemeral PITR drill database credential. Deleted by cleanup." --labels "project=shema,purpose=pitr-recovery" --payload "$payload" --folder-id "$YC_FOLDER_ID" --format=json)"
+secret_json="$(printf '%s' "$payload" | yc lockbox secret create --name "$RECOVERY_SECRET_NAME" --description "Ephemeral PITR drill database credential. Deleted by cleanup." --labels "project=shema,purpose=pitr-recovery" --payload - --folder-id "$YC_FOLDER_ID" --format=json)"
 RECOVERY_SECRET_ID="$(jq -r '.id // empty' <<<"$secret_json")"
 test -n "$RECOVERY_SECRET_ID"
 RECOVERY_SECRET_VERSION_ID="$(yc lockbox secret get "$RECOVERY_SECRET_ID" --format=json | jq -r '.current_version_id // empty')"
