@@ -1,3 +1,4 @@
+# Phase 7B verified IaC boundary; keep provider pin explicit for reproducible validation.
 terraform {
   required_version = ">= 1.8.0"
 
