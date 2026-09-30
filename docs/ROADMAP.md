@@ -524,6 +524,11 @@ Finish the primary operator experience on Web and PWA. Android is explicitly rem
 ### Exit criteria
 Web and PWA provide the complete proven operator workflow without a second business-rule implementation.
 
+### Closure evidence — 2026-09-30
+Phase 6 is **CLOSED / VERIFIED** on final HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c` by full seven-job release gate `36637312890` — **7/7 GREEN**. The final adversarial review fixed capability-rejection fail-closed behavior and removed any handoff UI implication of external ACK when no integration provider is composed. SI-27 remains enforced; frozen kernel unchanged.
+
+**Next approved boundary:** Phase 7 — Yandex Cloud Production Foundation.
+
 ## 10A. Operator Interface & Multi-Operator Doctrine
 
 ### Interface principles
