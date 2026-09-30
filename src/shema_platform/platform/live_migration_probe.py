@@ -6,10 +6,7 @@ from pathlib import Path
 
 import psycopg
 
-from shema_platform.platform.migrations import (
-    MigrationPlan,
-    MigrationRunner,
-)
+from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
 
 
 ROOT = Path(__file__).resolve().parents[3]
