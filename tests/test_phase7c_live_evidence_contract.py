@@ -124,3 +124,13 @@ def test_phase7c_rollback_script_uses_yandex_immutable_revision_rollback() -> No
     assert 'NEW_REVISION_ID="$(active_revision)"' in script
     assert "ROLLBACK_TO_PREVIOUS=PASS" in script
     assert "ROLLBACK_RESTORE_CURRENT=PASS" in script
+
+
+def test_phase7c_workflow_exposes_protected_rollback_drill_input() -> None:
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    assert "rollback_drill:" in workflow
+    assert "inputs.rollback_drill == true" in workflow
+    assert "needs.plan.outputs.previous_revision_id" in workflow
+    assert "yandex_cloud_rollback_drill.sh" in workflow
