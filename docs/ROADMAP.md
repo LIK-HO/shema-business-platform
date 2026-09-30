@@ -563,7 +563,10 @@ From the beginning the system supports growth from one operator to several witho
 
 This is a bounded extension around the frozen core, not a new system-of-record or a premature multi-tenant architecture.
 
-## 11. Phase 7 — Yandex Cloud Production Foundation
+## 11. Phase 7 — Yandex Cloud Production Foundation — IN_PROGRESS
+
+### Current implementation
+Phase 7B — Production runtime/artifact composition is implemented on clean branch `phase7/yandex-cloud-production-20260930` from Phase 6 final HEAD `3270d8c2115944b2e2cb26ae92ba6d90027cb08e`. IaC defines API Gateway → Serverless Containers, Lockbox, immutable Container Registry images, Managed PostgreSQL v2, private VPC networking and bounded private Object Storage. No production resources are provisioned by the development session yet.
 
 ### Objective
 Move the proven modular monolith into Yandex Cloud without changing domain semantics or creating a second persistence authority.
