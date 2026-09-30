@@ -31,7 +31,7 @@ jobs:
           terraform_wrapper: false
 
       - name: Format check
-        run: terraform fmt -diff -recursive deploy/terraform
+        run: terraform fmt -check -recursive deploy/terraform
 
       - name: Initialize provider schemas
         run: terraform -chdir=deploy/terraform init -backend=false -input=false
