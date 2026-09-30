@@ -2070,3 +2070,6 @@ The current source-tree HEAD is never copied into this manifest as a permanent v
 - Bitrix24 remains the mature live business plane; CRM, SPA, tasks, inventory, documents, routing/logistics and executor workflows are configured only where capabilities are actually available. Tender work uses a specialist connector when needed; no tender subsystem is reintroduced into Shema.
 - Public intake data never writes the canonical Shema database directly from the browser and never creates a live Bitrix24 transaction.
 - Order/Economics UI removal after verified Bitrix cutover is a capability-driven hide, not a broken route or empty navigation element.
+
+
+**Phase 7C recovery addition:** rollback evidence is implemented as a protected two-way drill using Yandex immutable revision IDs; it never leaves production on the rollback revision after the drill.
