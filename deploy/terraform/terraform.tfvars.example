@@ -10,3 +10,5 @@ oidc_jwks_url  = "https://REPLACE_ME"
 database_url   = "postgresql://REPLACE_IN_LOCKBOX"
 bucket_name    = "shema-prod-bounded-objects"
 custom_domain = ""
+evidence_runner_enabled = false
+migration_runner_name = "shema-migration-runner"
