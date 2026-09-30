@@ -16,4 +16,4 @@ RUN python -m pip install --upgrade pip && python -m pip install .
 USER shema
 EXPOSE 8080
 
-CMD ["uvicorn", "shema_platform.experience.api:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers"]
+CMD ["uvicorn", "shema_platform.experience.production:app", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers"]
