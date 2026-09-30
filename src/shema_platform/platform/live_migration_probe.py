@@ -4,8 +4,6 @@ import json
 import os
 from pathlib import Path
 
-import psycopg
-
 from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
 
 
@@ -21,6 +19,8 @@ def main() -> int:
     expected_version = plan.migrations[-1].version if plan.migrations else 0
 
     def connection_factory():
+        import psycopg
+
         return psycopg.connect(database_url, connect_timeout=10)
 
     report = MigrationRunner(connection_factory, plan).apply()
