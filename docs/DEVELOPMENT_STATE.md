@@ -3,9 +3,9 @@
 - **Closed sub-boundary:** Phase 7B — Production runtime/artifact composition — CLOSED / VERIFIED.
 - **Active boundary:** Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS.
 - **7C implementation branch:** `phase7/phase7c-live-evidence-20260930`.
-- **Verified implementation HEAD:** `2a1711624ac9a72f188aa4ad0d19b09cac6fcb3c`.
-- **Code release gate:** CI `36712861069` — **7/7 GREEN** (quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup-recovery, release-contract).
-- **Terraform IaC gate:** `36712861070` — **GREEN**.
+- **Verified implementation HEAD:** `9e3caa5ee322d20d0988dd4fc5bcd91dfd35c5fa`.
+- **Code release gate:** CI `36713116818` — **7/7 GREEN** (quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup-recovery, release-contract).
+- **Terraform IaC gate:** `36713116494` — **GREEN**.
 - **7C safety:** production apply and recovery drills are manual-dispatch and protected by the `production-yandex` environment; credentials remain externalized.
 - **Recovery baseline:** Managed PostgreSQL v2 is deletion-protected with 14-day backup retention and an explicit backup window.
 - **Same-VPC evidence runner:** private Serverless Containers task-mode runner on the same immutable image digest, attached to the same VPC, with Lockbox DATABASE_URL and CI-only `containerInvoker`.
@@ -13,7 +13,7 @@
 - **Rollback implementation:** protected manual rollback drill captures the prior active immutable revision, verifies health after rollback, restores the new revision, and verifies health again.
 - **Global adversarial review:** fresh Phase 7C PITR review completed; no new P0/P1 architecture/security blocker found.
 - **Real cloud state:** **not claimed** until the protected Yandex provisioning/PITR/rollback workflow is actually executed with authorized credentials.
-- **Closure blockers:** live resource provisioning/evidence, live DB connectivity/migrations, secret delivery, observability, budget/alerts, live PITR, live rollback, production smoke, and final current-head gate after the final state synchronization.
+- **Closure blockers:** live resource provisioning/evidence, live DB connectivity/migrations, secret delivery, observability, budget/alerts, live PITR, live rollback, production smoke, and final current-head gate after the final state synchronization — verified GREEN on the synchronized HEAD.
 
 # Phase 6 Web/PWA Consolidation — CLOSED / VERIFIED (2026-09-30)
 
