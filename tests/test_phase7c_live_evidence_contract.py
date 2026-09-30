@@ -280,3 +280,15 @@ def test_phase7c_state_preflight_requires_versioning() -> None:
     assert "YC_TERRAFORM_STATE_BUCKET" in script
     assert "VERSIONING_ENABLED" in script
     assert "TERRAFORM_STATE_BUCKET_SECRET_VALUES=NOT_PRINTED" in script
+
+
+def test_phase7c_workflow_has_one_state_preflight_per_execution_job() -> None:
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    plan = workflow.split("\n  apply:\n    needs: plan", 1)[0]
+    apply = workflow.split("\n  apply:\n    needs: plan", 1)[1]
+    assert plan.count("Verify persistent Terraform state backend") == 1
+    assert apply.split("      - name: Collect live resource evidence", 1)[0].count(
+        "Verify persistent Terraform state backend"
+    ) == 1
