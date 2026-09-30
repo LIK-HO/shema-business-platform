@@ -78,7 +78,10 @@ def test_phase7c_uses_private_task_runner_for_same_vpc_migrations() -> None:
 def test_phase7c_migration_runner_is_not_publicly_exposed() -> None:
     main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
     assert "allow-unauthenticated-invoke" not in main
-    assert "api_gateway" not in main.split('resource "yandex_serverless_container" "migration_runner"', 1)[1]
+    migration_runner_section = main.split(
+        'resource "yandex_serverless_container" "migration_runner"', 1
+    )[1]
+    assert "api_gateway" not in migration_runner_section
 
 def test_phase7c_contract_binds_same_vpc_task_runner_and_forbids_public_access() -> None:
     contract = read_contract()
