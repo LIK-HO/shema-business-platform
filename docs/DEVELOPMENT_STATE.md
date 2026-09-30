@@ -6,13 +6,11 @@
 - **7C contract:** `architecture/phase7c_live_evidence_contract.json`.
 - **7C safety:** production apply is manual-dispatch and protected by the `production-yandex` environment; credentials remain externalized.
 - **Recovery baseline:** Managed PostgreSQL v2 is deletion-protected with 14-day backup retention and an explicit backup window.
+- **Same-VPC evidence runner:** private Serverless Containers task-mode runner on the same immutable image digest, attached to the same VPC, with Lockbox DATABASE_URL and CI-only `containerInvoker`.
 - **Real cloud state:** not claimed until the gated provisioning workflow is actually executed with authorized Yandex credentials.
 - **Closure blockers:** live resource evidence, same-VPC database connectivity/migrations, secret delivery, health/readiness, observability, budget/alerts, PITR, rollback, production smoke, global adversarial review and final current-head seven-job gate.
 
-# Phase 7 — Yandex Cloud Production Foundation — IN_PROGRESS (2026-09-30)
-
-- **Closed sub-boundary:** Phase 7B — Production runtime/artifact composition — CLOSED / VERIFIED.
-- **Final implementation HEAD for 7B:** `4f2589610a9a8c8839c174c6c9b7e5873dae84ef`.
+HEAD for 7B:** `4f2589610a9a8c8839c174c6c9b7e5873dae84ef`.
 - **Primary release gate:** CI `36703937084` — **7/7 GREEN**.
 - **IaC gate:** Terraform IaC Validation `36703936845` — **GREEN** (`terraform fmt -check`, provider init backend=false, `terraform validate`) against Yandex provider `0.230.0`.
 - **Acceptance:** `tests/test_phase7_yandex_cloud_foundation_acceptance.py`.
