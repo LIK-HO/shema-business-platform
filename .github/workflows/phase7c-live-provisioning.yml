@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       apply:
-        description: "Apply after reviewing the plan from a prior manual workflow run."
+        description: "After reviewing the Terraform plan produced in this workflow run, allow the protected apply job to execute."
         required: true
         default: false
         type: boolean
@@ -37,6 +37,7 @@ jobs:
     environment: production-yandex
     outputs:
       previous_revision_id: ${{ steps.capture_previous_revision.outputs.revision_id }}
+      planned_change_fingerprint: ${{ steps.plan_fingerprint.outputs.fingerprint }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -54,6 +55,16 @@ jobs:
           printf "%s" "$YC_SERVICE_ACCOUNT_KEY_JSON" > "$RUNNER_TEMP/yc/key.json"
           yc config profile create shema-phase7c
           yc config set service-account-key "$RUNNER_TEMP/yc/key.json"
+      - name: Verify persistent Terraform state backend
+        env:
+          YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+        run: bash scripts/yandex_cloud_terraform_state_preflight.sh
+
+      - name: Verify persistent Terraform state backend
+        env:
+          YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+        run: bash scripts/yandex_cloud_terraform_state_preflight.sh
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
@@ -78,9 +89,32 @@ jobs:
                   raise SystemExit(f"Phase 7C requires protected Terraform input: {key}")
           PY
       - name: Terraform init
-        run: terraform -chdir=deploy/terraform init -backend=false -input=false
+        env:
+          PHASE7C_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
+        run: |
+          terraform -chdir=deploy/terraform init -input=false \
+            -backend-config="bucket=$PHASE7C_TERRAFORM_STATE_BUCKET"
+
       - name: Terraform plan
-        run: terraform -chdir=deploy/terraform plan -input=false -var-file=terraform.tfvars.json
+        run: |
+          set -Eeuo pipefail
+          terraform -chdir=deploy/terraform plan \
+            -input=false \
+            -var-file=terraform.tfvars.json \
+            -out="$RUNNER_TEMP/phase7c.tfplan"
+
+      - name: Fingerprint reviewed Terraform plan
+        id: plan_fingerprint
+        run: |
+          set -Eeuo pipefail
+          terraform -chdir=deploy/terraform show -no-color \
+            "$RUNNER_TEMP/phase7c.tfplan" > "$RUNNER_TEMP/phase7c-plan.txt"
+          fingerprint="$(sha256sum "$RUNNER_TEMP/phase7c-plan.txt" | awk '{print $1}')"
+          test -n "$fingerprint"
+          echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
+          echo "Terraform plan fingerprint: $fingerprint"
 
       - name: Capture previous active revision
         id: capture_previous_revision
@@ -139,9 +173,40 @@ jobs:
                   raise SystemExit(f"Phase 7C requires protected Terraform input: {key}")
           PY
       - name: Terraform init
-        run: terraform -chdir=deploy/terraform init -backend=false -input=false
-      - name: Terraform apply
-        run: terraform -chdir=deploy/terraform apply -input=false -auto-approve -var-file=terraform.tfvars.json
+        env:
+          PHASE7C_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
+        run: |
+          terraform -chdir=deploy/terraform init -input=false \
+            -backend-config="bucket=$PHASE7C_TERRAFORM_STATE_BUCKET"
+
+      - name: Recompute and verify reviewed Terraform plan
+        env:
+          EXPECTED_PLAN_FINGERPRINT: ${{ needs.plan.outputs.planned_change_fingerprint }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
+        run: |
+          set -Eeuo pipefail
+          terraform -chdir=deploy/terraform plan \
+            -input=false \
+            -var-file=terraform.tfvars.json \
+            -out="$RUNNER_TEMP/phase7c.tfplan"
+          terraform -chdir=deploy/terraform show -no-color \
+            "$RUNNER_TEMP/phase7c.tfplan" > "$RUNNER_TEMP/phase7c-plan.txt"
+          actual_fingerprint="$(sha256sum "$RUNNER_TEMP/phase7c-plan.txt" | awk '{print $1}')"
+          test -n "$EXPECTED_PLAN_FINGERPRINT"
+          test "$actual_fingerprint" = "$EXPECTED_PLAN_FINGERPRINT" || {
+            echo "Terraform plan fingerprint changed between review and apply; refusing deployment."
+            exit 1
+          }
+          echo "Terraform plan fingerprint verified: $actual_fingerprint"
+
+      - name: Terraform apply reviewed plan
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
+        run: terraform -chdir=deploy/terraform apply -input=false "$RUNNER_TEMP/phase7c.tfplan"
 
       - name: Collect live resource evidence
         env:
@@ -152,6 +217,7 @@ jobs:
           YC_CLUSTER_NAME: ${{ secrets.PHASE7C_CLUSTER_NAME }}
           YC_BUCKET_NAME: ${{ secrets.PHASE7C_BUCKET_NAME }}
           YC_BUDGET_ID: ${{ secrets.PHASE7C_BUDGET_ID }}
+          YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
         run: |
           set -Eeuo pipefail
           export YC_API_GATEWAY_ID="$(terraform -chdir=deploy/terraform output -raw api_gateway_id)"

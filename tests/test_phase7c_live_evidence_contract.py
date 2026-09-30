@@ -38,7 +38,17 @@ def test_phase7c_requires_live_recovery_and_production_evidence() -> None:
         "final_current_head_seven_job_gate_green",
     }.issubset(required)
 
-def test_phase7c_requires_externalized_credentials_and_manual_apply() -> None:
+def test_phase7c_requires_persistent_terraform_state_controls() -> None:
+    contract = read_contract()
+    assert "terraform_state_backend_verified" in contract["required_live_evidence"]
+    assert contract["safety_gates"]["terraform_state_must_be_remote"] is True
+    assert contract["safety_gates"]["terraform_state_bucket_versioning_required"] is True
+    assert contract["safety_gates"]["terraform_state_lockfile_must_be_enabled"] is True
+    assert contract["execution"]["terraform_state"]["backend"] == "yandex_object_storage_s3"
+    assert contract["execution"]["terraform_state"]["locking"] == "s3_lockfile"
+
+
+def test_phase7c_requires_externalized_credentials_and_manual_apply() -> None
     gates = read_contract()["safety_gates"]
     assert gates["real_credentials_must_be_externalized"] is True
     assert gates["apply_requires_manual_dispatch"] is True
@@ -243,3 +253,30 @@ def test_phase7c_live_evidence_requires_budget_thresholds_and_runtime_logs() -> 
     assert "immutable_image_digest_verified" in required
     assert "budget_thresholds_verified" in required
     assert "runtime_and_task_observability_verified" in required
+
+
+def test_phase7c_terraform_backend_is_remote_and_locked() -> None:
+    versions = (ROOT / "deploy" / "terraform" / "versions.tf").read_text(encoding="utf-8")
+    assert 'backend "s3"' in versions
+    assert 's3 = "https://storage.yandexcloud.net"' in versions
+    assert "use_lockfile" in versions
+    assert 'shema/production/terraform.tfstate' in versions
+
+
+def test_phase7c_workflow_binds_apply_to_reviewed_plan_fingerprint() -> None:
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    assert "planned_change_fingerprint" in workflow
+    assert "Recompute and verify reviewed Terraform plan" in workflow
+    assert 'test "$actual_fingerprint" = "$EXPECTED_PLAN_FINGERPRINT"' in workflow
+    assert 'terraform -chdir=deploy/terraform apply -input=false "$RUNNER_TEMP/phase7c.tfplan"' in workflow
+
+
+def test_phase7c_state_preflight_requires_versioning() -> None:
+    script = (
+        ROOT / "scripts" / "yandex_cloud_terraform_state_preflight.sh"
+    ).read_text(encoding="utf-8")
+    assert "YC_TERRAFORM_STATE_BUCKET" in script
+    assert "VERSIONING_ENABLED" in script
+    assert "TERRAFORM_STATE_BUCKET_SECRET_VALUES=NOT_PRINTED" in script

@@ -10,6 +10,11 @@ set -Eeuo pipefail
 : "$YC_CLUSTER_NAME" >/dev/null 2>&1 || { echo "YC_CLUSTER_NAME is required" >&2; exit 1; }
 : "$YC_BUCKET_NAME" >/dev/null 2>&1 || { echo "YC_BUCKET_NAME is required" >&2; exit 1; }
 : "$YC_BUDGET_ID" >/dev/null 2>&1 || { echo "YC_BUDGET_ID is required" >&2; exit 1; }
+: "$YC_TERRAFORM_STATE_BUCKET" >/dev/null 2>&1 || { echo "YC_TERRAFORM_STATE_BUCKET is required" >&2; exit 1; }
+
+bash scripts/yandex_cloud_terraform_state_preflight.sh
+echo "TERRAFORM_STATE_BACKEND=PASS"
+
 
 for command_name in yc jq curl; do
   command -v "$command_name" >/dev/null 2>&1 || { echo "missing required command: $command_name" >&2; exit 1; }

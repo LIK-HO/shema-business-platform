@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "status": "phase7c_in_progress",
   "phase": "7",
   "sub_boundary": "7C_CLOUD_RESOURCE_PROVISIONING_AND_LIVE_EVIDENCE",
@@ -14,6 +14,7 @@
     "object_storage": "bounded_non_authoritative"
   },
   "required_live_evidence": [
+    "terraform_state_backend_verified",
     "terraform_apply_success",
     "network_and_runtime_resources_ready",
     "immutable_image_revision_ready",
@@ -54,7 +55,10 @@
     "pitr_must_not_mutate_production": true,
     "pitr_recovery_credentials_must_use_lockbox": true,
     "pitr_recovery_cluster_must_have_no_public_ip": true,
-    "pitr_cleanup_must_run_on_success_and_failure": true
+    "pitr_cleanup_must_run_on_success_and_failure": true,
+    "terraform_state_must_be_remote": true,
+    "terraform_state_bucket_versioning_required": true,
+    "terraform_state_lockfile_must_be_enabled": true
   },
   "known_environment_constraint": "GitHub-hosted runners cannot directly reach a private Managed PostgreSQL host. The approved live path is a private Serverless Containers task-mode runner attached to the same VPC, invoked with IAM authorization by the protected CI identity. The production API must not gain a debug/database-probe endpoint merely to satisfy this gate.",
   "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD and the final current-head seven-job gate is green.",
@@ -102,6 +106,14 @@
       ],
       "production_mutation": "none",
       "live_evidence_must_not_print_secrets": true
+    },
+    "terraform_state": {
+      "backend": "yandex_object_storage_s3",
+      "state_key": "shema/production/terraform.tfstate",
+      "versioning": "required",
+      "locking": "s3_lockfile",
+      "credentials": "dedicated_static_object_storage_access_key_in_protected_environment",
+      "reviewed_plan_binding": "sha256_fingerprint_must_match_before_apply"
     }
   }
 }
