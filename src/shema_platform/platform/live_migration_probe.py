@@ -4,13 +4,13 @@ import json
 import os
 from pathlib import Path
 
-from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
-
 
 ROOT = Path(__file__).resolve().parents[3]
 
 
 def main() -> int:
+    from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
+
     database_url = os.environ.get("DATABASE_URL", "").strip()
     if not database_url:
         raise SystemExit("DATABASE_URL is not configured")
