@@ -41,7 +41,8 @@
     "no_second_transactional_authority": true,
     "rollback_must_use_immutable_revision": true,
     "live_evidence_must_not_contain_secret_values": true,
-    "migration_task_must_not_be_public": true
+    "migration_task_must_not_be_public": true,
+    "rollback_must_restore_current_revision": true
   },
   "known_environment_constraint": "GitHub-hosted runners cannot directly reach a private Managed PostgreSQL host. The approved live path is a private Serverless Containers task-mode runner attached to the same VPC, invoked with IAM authorization by the protected CI identity. The production API must not gain a debug/database-probe endpoint merely to satisfy this gate.",
   "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD and the final current-head seven-job gate is green.",
@@ -52,6 +53,20 @@
     "migration_runner_network": "same_vpc_as_managed_postgresql",
     "migration_runner_access": "containerInvoker_only_for_ci_identity",
     "migration_runner_secret": "DATABASE_URL_from_lockbox",
-    "migration_runner_endpoint": "no_api_gateway; no_public_access"
+    "migration_runner_endpoint": "no_api_gateway; no_public_access",
+    "rollback_drill": {
+      "mode": "protected_manual_input",
+      "sequence": [
+        "capture_previous_active_revision_before_apply",
+        "apply_new_revision",
+        "smoke_new_revision",
+        "rollback_to_previous_immutable_revision",
+        "verify_health_on_previous_revision",
+        "restore_new_immutable_revision",
+        "verify_health_on_restored_revision"
+      ],
+      "command": "yc serverless container rollback --name <container> --revision-id <revision>",
+      "no_secret_values_printed": true
+    }
   }
 }
