@@ -91,11 +91,16 @@
     "terraform_authentication": "short_lived_or_externalized_credentials_only",
     "runtime_service_accounts": [
       "container_runtime",
-      "container_image_puller",
-      "lockbox_reader"
+      "gateway_invoker",
+      "container_puller_ci"
     ],
     "least_privilege": true,
-    "no_static_secret_in_repository": true
+    "no_static_secret_in_repository": true,
+    "role_model": {
+      "container_runtime": "runs canonical API, pulls immutable container image and reads runtime Lockbox secret",
+      "gateway_invoker": "API Gateway only; serverless-containers.containerInvoker on the private API container",
+      "container_puller_ci": "CI/inspection image pull identity; not attached to the running container"
+    }
   },
   "rollback": {
     "release_rollback_unit": "immutable_container_image_digest_plus_configuration_revision",
