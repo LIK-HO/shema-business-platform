@@ -29,3 +29,7 @@ output "migration_runner_id" {
 output "migration_runner_revision_id" {
   value = try(yandex_serverless_container.migration_runner[0].revision_id, null)
 }
+
+output "container_puller_service_account_id" {
+  value = yandex_iam_service_account.container_puller.id
+}
