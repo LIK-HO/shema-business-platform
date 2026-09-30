@@ -21,3 +21,11 @@ output "postgres_cluster_id" {
 output "private_bucket_name" {
   value = yandex_storage_bucket.bounded_objects.bucket
 }
+
+output "migration_runner_id" {
+  value = try(yandex_serverless_container.migration_runner[0].id, null)
+}
+
+output "migration_runner_revision_id" {
+  value = try(yandex_serverless_container.migration_runner[0].revision_id, null)
+}
