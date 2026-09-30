@@ -6,7 +6,10 @@ from pathlib import Path
 
 import psycopg
 
-from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
+from shema_platform.platform.migrations import (
+    MigrationPlan,
+    MigrationRunner,
+)
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -26,7 +29,8 @@ def main() -> int:
     report = MigrationRunner(connection_factory, plan).apply()
     with connection_factory() as connection:
         row = connection.execute(
-            "select current_database(), current_setting('server_version'), max(version) from schema_migration"
+            "select current_database(), current_setting('server_version'), "
+            "max(version) from schema_migration"
         ).fetchone()
 
     if row is None:
