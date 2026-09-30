@@ -33,6 +33,12 @@ resource "yandex_iam_service_account" "gateway_invoker" {
   description = "Least-privilege identity used only by API Gateway to invoke the private container."
 }
 
+resource "yandex_iam_service_account" "migration_runner" {
+  count       = var.evidence_runner_enabled ? 1 : 0
+  name        = var.migration_runner_name
+  description = "Bounded same-VPC task runner for production migration and live database evidence."
+}
+
 resource "yandex_container_registry" "app" {
   name   = "${var.app_name}-images"
   labels = local.common_labels
@@ -41,10 +47,15 @@ resource "yandex_container_registry" "app" {
 resource "yandex_container_registry_iam_binding" "puller" {
   registry_id = yandex_container_registry.app.id
   role        = "container-registry.images.puller"
-  members = [
-    "serviceAccount:${yandex_iam_service_account.container_puller.id}",
-    "serviceAccount:${yandex_iam_service_account.container_runtime.id}",
-  ]
+  members = concat(
+    [
+      "serviceAccount:${yandex_iam_service_account.container_puller.id}",
+      "serviceAccount:${yandex_iam_service_account.container_runtime.id}",
+    ],
+    var.evidence_runner_enabled ? [
+      "serviceAccount:${yandex_iam_service_account.migration_runner[0].id}",
+    ] : [],
+  )
 }
 
 resource "yandex_lockbox_secret" "runtime" {
@@ -186,4 +197,60 @@ resource "yandex_api_gateway" "edge" {
     container_id              = yandex_serverless_container.api.id
     container_service_account = yandex_iam_service_account.gateway_invoker.id
   })
+}
+
+resource "yandex_lockbox_secret_iam_member" "migration_runner" {
+  count     = var.evidence_runner_enabled ? 1 : 0
+  secret_id = yandex_lockbox_secret.runtime.id
+  role      = "lockbox.payloadViewer"
+  member    = "serviceAccount:${yandex_iam_service_account.migration_runner[0].id}"
+}
+
+resource "yandex_serverless_container" "migration_runner" {
+  count              = var.evidence_runner_enabled ? 1 : 0
+  name               = var.migration_runner_name
+  description        = "Bounded same-VPC migration and live database evidence task runner."
+  memory             = 512
+  execution_timeout  = "120s"
+  cores              = 1
+  core_fraction      = 100
+  concurrency        = 1
+  service_account_id = yandex_iam_service_account.migration_runner[0].id
+  folder_id          = var.folder_id
+
+  runtime {
+    type = "task"
+  }
+
+  log_options {
+    folder_id = var.folder_id
+    min_level = "INFO"
+  }
+
+  image {
+    url    = var.image_url
+    digest = var.image_digest
+    command = ["python", "-m", "shema_platform.platform.live_migration_probe"]
+    environment = {
+      APP_ENV = "production"
+    }
+  }
+
+  connectivity {
+    network_id = yandex_vpc_network.prod.id
+  }
+
+  secrets {
+    id                   = yandex_lockbox_secret.runtime.id
+    version_id           = yandex_lockbox_secret_version_hashed.runtime.id
+    key                  = "DATABASE_URL"
+    environment_variable = "DATABASE_URL"
+  }
+}
+
+resource "yandex_serverless_container_iam_member" "migration_runner_invoker" {
+  count        = var.evidence_runner_enabled ? 1 : 0
+  container_id = yandex_serverless_container.migration_runner[0].id
+  role         = "serverless-containers.containerInvoker"
+  member       = "serviceAccount:${yandex_iam_service_account.container_puller.id}"
 }
