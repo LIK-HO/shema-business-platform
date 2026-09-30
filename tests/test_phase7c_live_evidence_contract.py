@@ -60,6 +60,8 @@ def test_phase7c_live_probe_claims_database_connectivity_only_after_task_success
     script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(encoding="utf-8")
     assert '[[ "$task_exit_code" == "0" ]]' in script
     assert "DATABASE_CONNECTIVITY_AND_MIGRATIONS=PASS" in script
+    assert "BACKUP_RETENTION=PASS" in script
+    assert "PRODUCTION_SMOKE=PASS" in script
 
 def test_phase7c_uses_private_task_runner_for_same_vpc_migrations() -> None:
     main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
