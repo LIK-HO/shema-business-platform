@@ -3,11 +3,12 @@ set -Eeuo pipefail
 
 : "${YC_CONTAINER_NAME:?YC_CONTAINER_NAME is required}"
 : "${PREVIOUS_REVISION_ID:?PREVIOUS_REVISION_ID is required}"
-: "${API_URL:?API_URL is required}"
-
 command -v yc >/dev/null 2>&1 || { echo "yc CLI is required" >&2; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo "jq is required" >&2; exit 1; }
 command -v curl >/dev/null 2>&1 || { echo "curl is required" >&2; exit 1; }
+
+API_URL="$(yc serverless container get "$YC_CONTAINER_NAME" --format=json | jq -r ".url // empty")"
+test -n "$API_URL" || { echo "cannot determine container URL" >&2; exit 1; }
 
 active_revision() {
   yc serverless container revision list --container-name "$YC_CONTAINER_NAME" --format=json |
