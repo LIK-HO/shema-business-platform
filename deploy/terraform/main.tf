@@ -73,12 +73,19 @@ resource "yandex_lockbox_secret_iam_member" "runtime" {
 }
 
 resource "yandex_mdb_postgresql_cluster_v2" "prod" {
-  name        = "${var.app_name}-prod"
-  environment = "PRODUCTION"
-  network_id  = yandex_vpc_network.prod.id
+  name                = "${var.app_name}-prod"
+  environment         = "PRODUCTION"
+  network_id          = yandex_vpc_network.prod.id
+  deletion_protection = true
 
   config {
-    version = 17
+    version                   = 17
+    backup_retain_period_days = 14
+
+    backup_window_start {
+      hours   = 2
+      minutes = 30
+    }
 
     resources {
       resource_preset_id = "s2.micro"
