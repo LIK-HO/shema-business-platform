@@ -4,9 +4,10 @@
 - **Active boundary:** Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS.
 - **7C implementation branch:** `phase7/phase7c-live-evidence-20260930` from Phase 7 current HEAD `edbfef3bea8c35a7f5655efbdc065b89025af00b`.
 - **7C contract:** `architecture/phase7c_live_evidence_contract.json`.
-- **7C safety:** production apply is manual-dispatch and protected by the `production-yandex` environment; credentials remain externalized.
+- **7C safety:** production apply and recovery drills are manual-dispatch and protected by the `production-yandex` environment; credentials remain externalized.
 - **Recovery baseline:** Managed PostgreSQL v2 is deletion-protected with 14-day backup retention and an explicit backup window.
 - **Same-VPC evidence runner:** private Serverless Containers task-mode runner on the same immutable image digest, attached to the same VPC, with Lockbox DATABASE_URL and CI-only `containerInvoker`.
+- **PITR drill:** protected recovery restores to a separate PRESTABLE Managed PostgreSQL cluster in the same VPC with public database access disabled; a temporary Lockbox credential and ephemeral task-mode verifier are deleted by a success/failure cleanup trap.
 - **Rollback evidence:** protected manual rollback drill captures the prior active revision, rolls back to it, verifies readiness, then restores the newly deployed immutable revision and verifies readiness again.
 - **Real cloud state:** not claimed until the gated provisioning workflow is actually executed with authorized Yandex credentials.
 - **Closure blockers:** live resource evidence, same-VPC database connectivity/migrations, secret delivery, health/readiness, observability, budget/alerts, PITR, rollback, production smoke, global adversarial review and final current-head seven-job gate.
