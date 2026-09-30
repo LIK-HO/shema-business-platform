@@ -4,7 +4,7 @@
 - **Implementation HEAD:** `1b75bfb46f73309597420b4e1b7762c1477a1e8c`.
 - **Acceptance:** `tests/test_phase6_operator_consolidation_acceptance.py`.
 - **Full release gate:** CI `36637312890` — **7/7 GREEN** (quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery, release-contract).
-- **Adversarial review:** completed over the full approved architecture. Findings fixed: operator route now fails closed after capability rejection; handoff UI cannot imply a composed/acknowledged external transfer.
+- **Adversarial review:** completed over the full approved architecture. Findings fixed: operator route fails closed after capability rejection; handoff state is explicitly `NOT_COMPOSED` and cannot imply external acknowledgement/success.
 - **Experience contract:** one Web/PWA surface, canonical API/domain semantics, server-authoritative capability visibility, explicit causal/context links, memory-only personal view state and no second business store/rule layer.
 - **Frozen kernel:** unchanged.
 - **PR #62:** open / draft / unmerged.
