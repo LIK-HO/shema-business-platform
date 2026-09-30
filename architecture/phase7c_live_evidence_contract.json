@@ -30,7 +30,10 @@
     "rollback_to_previous_immutable_revision_verified",
     "production_smoke_verified",
     "global_adversarial_review_complete",
-    "final_current_head_seven_job_gate_green"
+    "final_current_head_seven_job_gate_green",
+    "pitr_recovery_cluster_created",
+    "pitr_recovery_database_connectivity_verified",
+    "pitr_recovery_cleanup_verified"
   ],
   "safety_gates": {
     "apply_requires_manual_dispatch": true,
@@ -42,7 +45,12 @@
     "rollback_must_use_immutable_revision": true,
     "live_evidence_must_not_contain_secret_values": true,
     "migration_task_must_not_be_public": true,
-    "rollback_must_restore_current_revision": true
+    "rollback_must_restore_current_revision": true,
+    "pitr_must_restore_to_separate_cluster": true,
+    "pitr_must_not_mutate_production": true,
+    "pitr_recovery_credentials_must_use_lockbox": true,
+    "pitr_recovery_cluster_must_have_no_public_ip": true,
+    "pitr_cleanup_must_run_on_success_and_failure": true
   },
   "known_environment_constraint": "GitHub-hosted runners cannot directly reach a private Managed PostgreSQL host. The approved live path is a private Serverless Containers task-mode runner attached to the same VPC, invoked with IAM authorization by the protected CI identity. The production API must not gain a debug/database-probe endpoint merely to satisfy this gate.",
   "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD and the final current-head seven-job gate is green.",
@@ -67,6 +75,29 @@
       ],
       "command": "yc serverless container rollback --name <container> --revision-id <revision>",
       "no_secret_values_printed": true
+    },
+    "pitr_drill": {
+      "mode": "protected_manual_input",
+      "source_authority": "managed_postgresql_production_cluster",
+      "backup_selection": "latest_automated_backup_at_or_before_requested_recovery_time",
+      "recovery_target": "new_temporary_prestable_managed_postgresql_cluster",
+      "recovery_environment": "PRESTABLE",
+      "recovery_network": "same_vpc_as_production",
+      "recovery_host_public_ip": false,
+      "recovery_credentials": "temporary_lockbox_secret_derived_from_protected_production_database_url",
+      "verifier": "temporary_private_serverless_container_task_using_same_immutable_image_digest",
+      "verification": [
+        "recovery_cluster_ready",
+        "database_connection_verified",
+        "migration_state_verified"
+      ],
+      "cleanup": [
+        "temporary_task_runner_deleted",
+        "temporary_lockbox_secret_deleted",
+        "temporary_recovery_cluster_deleted"
+      ],
+      "production_mutation": "none",
+      "live_evidence_must_not_print_secrets": true
     }
   }
 }
