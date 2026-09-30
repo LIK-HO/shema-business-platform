@@ -224,6 +224,11 @@ def test_phase7c_live_evidence_uses_approved_edge_and_immutable_artifact() -> No
     assert 'API_URL="https://$API_GATEWAY_DOMAIN"' in script
     assert "YC_EXPECTED_IMAGE_DIGEST" in script
     assert "IMMUTABLE_IMAGE_DIGEST=PASS" in script
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    assert 'terraform -chdir=deploy/terraform output -raw api_gateway_id' in workflow
+    assert 'values.get("image_digest")' in workflow
 
 
 def test_phase7c_live_evidence_requires_budget_thresholds_and_runtime_logs() -> None:
