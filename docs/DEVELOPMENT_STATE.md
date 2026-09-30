@@ -1,15 +1,16 @@
 # Phase 7 — Yandex Cloud Production Foundation — IN_PROGRESS (2026-09-30)
 
-- **Current sub-boundary:** Phase 7B — Production runtime/artifact composition.
-- **Base:** Phase 6 final synchronized HEAD `3270d8c2115944b2e2cb26ae92ba6d90027cb08e`.
-- **Branch:** `phase7/yandex-cloud-production-20260930`.
-- **Contract:** `architecture/yandex_cloud_production_contract.json`.
-- **IaC:** `deploy/terraform/`.
+- **Closed sub-boundary:** Phase 7B — Production runtime/artifact composition — CLOSED / VERIFIED.
+- **Final implementation HEAD for 7B:** `4f2589610a9a8c8839c174c6c9b7e5873dae84ef`.
+- **Primary release gate:** CI `36703937084` — **7/7 GREEN**.
+- **IaC gate:** Terraform IaC Validation `36703936845` — **GREEN** (`terraform fmt -check`, provider init backend=false, `terraform validate`) against Yandex provider `0.230.0`.
 - **Acceptance:** `tests/test_phase7_yandex_cloud_foundation_acceptance.py`.
 - **Security invariant:** SI-28.
-- **Current status:** production foundation artifacts implemented; no real Yandex Cloud resources or production credentials have been provisioned by this development session.
-- **Authority:** Managed PostgreSQL remains the sole transactional authority; PostgreSQL outbox/durable jobs remain the reliability plane; Message Queue is not admitted as business state.
-- **Closure blockers:** real cloud provisioning, database connectivity/migrations, secret delivery, observability, backup/PITR evidence, rollback evidence, cost controls, global adversarial review and a final current-head seven-job gate.
+- **Adversarial findings fixed:** production import safety, runtime image-pull permission, dedicated API Gateway invoker identity, explicit container logging, provider-schema correctness.
+- **Frozen kernel:** unchanged.
+- **Real cloud state:** **not provisioned** in this session. Therefore Phase 7 overall remains **IN_PROGRESS**.
+- **Next active boundary:** **Phase 7C — Cloud resource provisioning + live evidence**.
+- **Closure blockers:** actual Yandex access, resource provisioning, DB connectivity/migrations, secret delivery, observability/budget evidence, backup/PITR, rollback/smoke evidence, live global adversarial review and final current-head seven-job release gate.
 
 # Phase 6 Web/PWA Consolidation — CLOSED / VERIFIED (2026-09-30)
 
