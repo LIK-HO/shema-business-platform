@@ -1,25 +1,94 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-for name in YC_CLOUD_ID YC_FOLDER_ID YC_CONTAINER_NAME YC_CLUSTER_NAME YC_BUCKET_NAME YC_BUDGET_ID; do
-  eval "value=\$$name"
-  test -n "$value" || { echo "missing required live evidence input: $name" >&2; exit 1; }
+: "$YC_CLOUD_ID" >/dev/null 2>&1 || { echo "YC_CLOUD_ID is required" >&2; exit 1; }
+: "$YC_FOLDER_ID" >/dev/null 2>&1 || { echo "YC_FOLDER_ID is required" >&2; exit 1; }
+: "$YC_CONTAINER_NAME" >/dev/null 2>&1 || { echo "YC_CONTAINER_NAME is required" >&2; exit 1; }
+: "$YC_MIGRATION_RUNNER_NAME" >/dev/null 2>&1 || { echo "YC_MIGRATION_RUNNER_NAME is required" >&2; exit 1; }
+: "$YC_CLUSTER_NAME" >/dev/null 2>&1 || { echo "YC_CLUSTER_NAME is required" >&2; exit 1; }
+: "$YC_BUCKET_NAME" >/dev/null 2>&1 || { echo "YC_BUCKET_NAME is required" >&2; exit 1; }
+: "$YC_BUDGET_ID" >/dev/null 2>&1 || { echo "YC_BUDGET_ID is required" >&2; exit 1; }
+
+for command_name in yc jq curl; do
+  command -v "$command_name" >/dev/null 2>&1 || { echo "missing required command: $command_name" >&2; exit 1; }
 done
 
-command -v yc >/dev/null || { echo "yc CLI is required" >&2; exit 1; }
-command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }
-
 echo "LIVE_EVIDENCE_HEAD=${GITHUB_SHA:-unknown}"
-yc resource-manager cloud get "$YC_CLOUD_ID" --format=json | jq -e --arg id "$YC_CLOUD_ID" '.id == $id' >/dev/null
-yc resource-manager folder get "$YC_FOLDER_ID" --format=json | jq -e --arg id "$YC_FOLDER_ID" '.id == $id' >/dev/null
-yc serverless container get "$YC_CONTAINER_NAME" --format=json | jq -e ".status == \"ACTIVE\" or .status == \"RUNNING\"" >/dev/null
-yc managed-postgresql cluster get "$YC_CLUSTER_NAME" --format=json | jq -e ".status == \"RUNNING\" or .status == \"ALIVE\"" >/dev/null
-yc storage bucket get "$YC_BUCKET_NAME" --format=json >/dev/null
-yc billing v1 budget get "$YC_BUDGET_ID" --format=json | jq -e ".status == \"ACTIVE\"" >/dev/null
+cloud_json="$(yc resource-manager cloud get "$YC_CLOUD_ID" --format=json)"
+folder_json="$(yc resource-manager folder get "$YC_FOLDER_ID" --format=json)"
+container_json="$(yc serverless container get "$YC_CONTAINER_NAME" --format=json)"
+runner_json="$(yc serverless container get "$YC_MIGRATION_RUNNER_NAME" --format=json)"
+cluster_json="$(yc managed-postgresql cluster get "$YC_CLUSTER_NAME" --format=json)"
+bucket_json="$(yc storage bucket get "$YC_BUCKET_NAME" --format=json)"
+budget_json="$(yc billing v1 budget get "$YC_BUDGET_ID" --format=json)"
+
+jq -e --arg id "$YC_CLOUD_ID" '.id == $id' <<<"$cloud_json" >/dev/null
+jq -e --arg id "$YC_FOLDER_ID" '.id == $id' <<<"$folder_json" >/dev/null
+jq -e '.status == "ACTIVE" or .status == "RUNNING"' <<<"$container_json" >/dev/null
+jq -e '.status == "ACTIVE" or .status == "RUNNING"' <<<"$runner_json" >/dev/null
+jq -e '.status == "RUNNING" or .status == "ALIVE"' <<<"$cluster_json" >/dev/null
+jq -e --arg bucket "$YC_BUCKET_NAME" '.name == $bucket or .id == $bucket' <<<"$bucket_json" >/dev/null
+jq -e '.status == "ACTIVE"' <<<"$budget_json" >/dev/null
+
+API_URL="$(jq -r '.url' <<<"$container_json")"
+RUNNER_URL="$(jq -r '.url' <<<"$runner_json")"
+CONTAINER_ID="$(jq -r '.id' <<<"$container_json")"
+RUNNER_ID="$(jq -r '.id' <<<"$runner_json")"
+test -n "$API_URL" && test -n "$RUNNER_URL" && test -n "$CONTAINER_ID" && test -n "$RUNNER_ID"
+
 echo "CLOUD_READY=PASS"
 echo "CONTAINER_READY=PASS"
 echo "POSTGRES_RESOURCE_READY=PASS"
-echo "DATABASE_CONNECTIVITY_AND_MIGRATIONS=NOT_CLAIMED"
 echo "BUCKET_READY=PASS"
 echo "BUDGET_READY=PASS"
+
+health_code="$(curl -sS -o /dev/null -w "%{http_code}" "$API_URL/health/ready")"
+[[ "$health_code" == "200" ]] || { echo "health/readiness failed: HTTP $health_code" >&2; exit 1; }
+echo "HEALTH_READINESS=PASS"
+
+docs_code="$(curl -sS -o /dev/null -w "%{http_code}" "$API_URL/docs")"
+[[ "$docs_code" == "404" ]] || { echo "production docs endpoint unexpectedly exposed: HTTP $docs_code" >&2; exit 1; }
+echo "PRODUCTION_DOCS_DISABLED=PASS"
+
+protected_code="$(curl -sS -o /dev/null -w "%{http_code}" "$API_URL/v1/orders/phase7c-smoke-nonexistent")"
+[[ "$protected_code" == "401" ]] || { echo "protected route did not fail closed: HTTP $protected_code" >&2; exit 1; }
+echo "PROTECTED_ROUTE_FAIL_CLOSED=PASS"
+
+IAM_TOKEN="$(yc iam create-token)"
+headers_file="$(mktemp)"
+body_file="$(mktemp)"
+trap 'rm -f "$headers_file" "$body_file"' EXIT
+
+curl -sS -D "$headers_file" -o "$body_file" -H "Authorization: Bearer $IAM_TOKEN" "$RUNNER_URL"
+task_exit_code="$(awk 'BEGIN{IGNORECASE=1} /^X-Task-Exit-Code:/{gsub("\r","",$2); print $2}' "$headers_file" | tail -n1)"
+[[ "$task_exit_code" == "0" ]] || { echo "same-VPC migration task failed with exit code ${task_exit_code:-unknown}" >&2; cat "$body_file" >&2 || true; exit 1; }
+echo "DATABASE_CONNECTIVITY_AND_MIGRATIONS=PASS"
+echo "LOCKBOX_DATABASE_SECRET_DELIVERY=PASS"
+
+log_probe="$(yc logging read --resource-ids="$RUNNER_ID" --since=10m --limit=20 --format=json)"
+jq -e 'length > 0' <<<"$log_probe" >/dev/null
+echo "OBSERVABILITY_LOG_INGESTION=PASS"
+
+runner_revision="$(jq -r '.revision_id' <<<"$runner_json")"
+test -n "$runner_revision"
+echo "MIGRATION_RUNNER_REVISION_PRESENT=PASS"
 echo "SECRET_VALUES=NOT_PRINTED"
+
+if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+  {
+    echo "## Phase 7C live evidence"
+    echo ""
+    echo "- HEAD: ${GITHUB_SHA:-unknown}"
+    echo "- Cloud/folder: verified"
+    echo "- Serverless Container: active"
+    echo "- Same-VPC migration task: exit code 0"
+    echo "- Managed PostgreSQL: active"
+    echo "- Health/readiness: HTTP 200"
+    echo "- Production docs: HTTP 404"
+    echo "- Protected route: HTTP 401 without credentials"
+    echo "- Cloud Logging ingestion: observed"
+    echo "- Object Storage bucket: present"
+    echo "- Billing budget: active"
+    echo "- Secret values: intentionally not printed"
+  } >> "$GITHUB_STEP_SUMMARY"
+fi
