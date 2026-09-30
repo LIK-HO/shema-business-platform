@@ -13,6 +13,16 @@ on:
         required: true
         default: false
         type: boolean
+      pitr_drill:
+        description: "Restore to a separate temporary PostgreSQL cluster and verify recovery through a private task."
+        required: true
+        default: false
+        type: boolean
+      pitr_recovery_time:
+        description: "RFC3339 UTC recovery target, after an available automated backup and not in the future."
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -150,3 +160,31 @@ jobs:
           YC_CONTAINER_NAME: ${{ secrets.PHASE7C_CONTAINER_NAME }}
           PREVIOUS_REVISION_ID: ${{ needs.plan.outputs.previous_revision_id }}
         run: bash scripts/yandex_cloud_rollback_drill.sh
+
+      - name: Run protected PITR recovery drill
+        if: ${{ inputs.pitr_drill == true }}
+        env:
+          YC_FOLDER_ID: ${{ secrets.PHASE7C_FOLDER_ID }}
+          YC_CLUSTER_NAME: ${{ secrets.PHASE7C_CLUSTER_NAME }}
+          YC_MIGRATION_RUNNER_NAME: ${{ secrets.PHASE7C_MIGRATION_RUNNER_NAME }}
+          PITR_RECOVERY_TIME: ${{ inputs.pitr_recovery_time }}
+        run: |
+          set -Eeuo pipefail
+          test -n "$PITR_RECOVERY_TIME"
+          PITR_DATABASE_URL="$(python - <<'PY'
+          import json
+          from pathlib import Path
+
+          values = json.loads(
+              Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8")
+          )
+          value = values.get("database_url")
+          if not value:
+              raise SystemExit("database_url is required for PITR drill")
+          print(value)
+          PY
+          )"
+          PITR_INVOCATION_SERVICE_ACCOUNT_ID="$(terraform -chdir=deploy/terraform output -raw container_puller_service_account_id)"
+          test -n "$PITR_INVOCATION_SERVICE_ACCOUNT_ID"
+          export PITR_DATABASE_URL PITR_INVOCATION_SERVICE_ACCOUNT_ID
+          bash scripts/yandex_cloud_pitr_drill.sh
