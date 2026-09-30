@@ -74,3 +74,21 @@ variable "migration_runner_name" {
   description = "Name of the bounded same-VPC migration evidence runner."
   default     = "shema-migration-runner"
 }
+
+variable "database_name" {
+  type        = string
+  description = "Canonical transactional PostgreSQL database name."
+  default     = "shema"
+}
+
+variable "database_user" {
+  type        = string
+  description = "Canonical transactional PostgreSQL runtime user."
+  default     = "shema_runtime"
+}
+
+variable "database_secret_input" {
+  type        = string
+  description = "Write-only value for the canonical PostgreSQL runtime credential; supplied only through the protected operator environment."
+  sensitive   = true
+}
