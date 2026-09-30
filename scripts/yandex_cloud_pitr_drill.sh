@@ -65,6 +65,7 @@ cleanup() {
   trap - EXIT
   exit "$rc"
 }
+trap 'exit 143' INT TERM
 trap cleanup EXIT
 
 source_cluster_json="$(yc managed-postgresql cluster get "$YC_CLUSTER_NAME" --folder-id "$YC_FOLDER_ID" --format=json)"
