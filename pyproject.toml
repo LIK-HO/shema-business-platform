@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "shema-business-platform"
 version = "1.5.0"
 description = "Commercial Intelligence & Execution OS"
+license = { text = "Apache-2.0" }
 requires-python = ">=3.12"
 dependencies = [
   "fastapi==0.141.1",
