@@ -21,6 +21,8 @@
     "database_cluster_ready",
     "database_connection_and_migrations_verified_from_same_vpc",
     "health_and_readiness_verified",
+    "production_docs_disabled",
+    "protected_route_fail_closed",
     "observability_verified",
     "budget_and_alerts_verified",
     "backup_retention_verified",
@@ -38,8 +40,18 @@
     "no_public_database_ingress": true,
     "no_second_transactional_authority": true,
     "rollback_must_use_immutable_revision": true,
-    "live_evidence_must_not_contain_secret_values": true
+    "live_evidence_must_not_contain_secret_values": true,
+    "migration_task_must_not_be_public": true
   },
-  "known_environment_constraint": "A GitHub-hosted runner cannot directly connect to a private Managed PostgreSQL host. Database connectivity and migrations therefore require an execution surface inside the same VPC. The production API must not gain a debug/database-probe endpoint merely to satisfy this gate.",
-  "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD and the final current-head seven-job gate is green."
+  "known_environment_constraint": "GitHub-hosted runners cannot directly reach a private Managed PostgreSQL host. The approved live path is a private Serverless Containers task-mode runner attached to the same VPC, invoked with IAM authorization by the protected CI identity. The production API must not gain a debug/database-probe endpoint merely to satisfy this gate.",
+  "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD and the final current-head seven-job gate is green.",
+  "execution": {
+    "migration_runner": "private_serverless_container_commands_mode",
+    "migration_runner_runtime": "task",
+    "migration_runner_image_authority": "same_immutable_image_digest",
+    "migration_runner_network": "same_vpc_as_managed_postgresql",
+    "migration_runner_access": "containerInvoker_only_for_ci_identity",
+    "migration_runner_secret": "DATABASE_URL_from_lockbox",
+    "migration_runner_endpoint": "no_api_gateway; no_public_access"
+  }
 }
