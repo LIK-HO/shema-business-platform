@@ -51,7 +51,11 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          json.loads(Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8"))
+          values = json.loads(
+              Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8")
+          )
+          if values.get("evidence_runner_enabled") is not True:
+              raise SystemExit("Phase 7C live provisioning requires evidence_runner_enabled=true")
           PY
       - name: Terraform init
         run: terraform -chdir=deploy/terraform init -backend=false -input=false
@@ -91,6 +95,17 @@ jobs:
         run: |
           test -n "$TFVARS_JSON"
           printf "%s" "$TFVARS_JSON" > deploy/terraform/terraform.tfvars.json
+      - name: Validate live-evidence Terraform variables
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          values = json.loads(
+              Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8")
+          )
+          if values.get("evidence_runner_enabled") is not True:
+              raise SystemExit("Phase 7C live apply requires evidence_runner_enabled=true")
+          PY
       - name: Terraform init
         run: terraform -chdir=deploy/terraform init -backend=false -input=false
       - name: Terraform apply
