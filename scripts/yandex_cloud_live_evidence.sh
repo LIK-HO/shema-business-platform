@@ -27,8 +27,11 @@ jq -e --arg id "$YC_FOLDER_ID" '.id == $id' <<<"$folder_json" >/dev/null
 jq -e '.status == "ACTIVE" or .status == "RUNNING"' <<<"$container_json" >/dev/null
 jq -e '.status == "ACTIVE" or .status == "RUNNING"' <<<"$runner_json" >/dev/null
 jq -e '.status == "RUNNING" or .status == "ALIVE"' <<<"$cluster_json" >/dev/null
+jq -e '.config.backup_retain_period_days >= 14' <<<"$cluster_json" >/dev/null
 jq -e --arg bucket "$YC_BUCKET_NAME" '.name == $bucket or .id == $bucket' <<<"$bucket_json" >/dev/null
 jq -e '.status == "ACTIVE"' <<<"$budget_json" >/dev/null
+
+echo "BACKUP_RETENTION=PASS"
 
 API_URL="$(jq -r '.url' <<<"$container_json")"
 RUNNER_URL="$(jq -r '.url' <<<"$runner_json")"
@@ -53,6 +56,7 @@ echo "PRODUCTION_DOCS_DISABLED=PASS"
 protected_code="$(curl -sS -o /dev/null -w "%{http_code}" "$API_URL/v1/orders/phase7c-smoke-nonexistent")"
 [[ "$protected_code" == "401" ]] || { echo "protected route did not fail closed: HTTP $protected_code" >&2; exit 1; }
 echo "PROTECTED_ROUTE_FAIL_CLOSED=PASS"
+echo "PRODUCTION_SMOKE=PASS"
 
 IAM_TOKEN="$(yc iam create-token)"
 headers_file="$(mktemp)"
