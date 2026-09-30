@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -1487,4 +1488,6 @@ def create_app(
     return app
 
 
-app = create_app(enable_docs=True)
+app = create_app(
+    enable_docs=os.getenv("APP_ENV", "development").strip().lower() != "production"
+)
