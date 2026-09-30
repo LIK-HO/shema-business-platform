@@ -121,3 +121,39 @@ def test_phase7_runtime_and_gateway_identities_are_separated() -> None:
     assert "service_account_id = yandex_iam_service_account.container_runtime.id" in main
     assert "container_service_account = yandex_iam_service_account.gateway_invoker.id" in main
     assert 'service_account_id: "$${container_service_account}"' in spec
+
+
+def test_phase7_production_import_uses_production_safe_api_entrypoint() -> None:
+    import os
+    import subprocess
+    import sys
+
+    env = os.environ.copy()
+    env.update(
+        {
+            "APP_ENV": "production",
+            "OIDC_ISSUER": "https://issuer.example",
+            "OIDC_AUDIENCE": "shema-test",
+            "OIDC_JWKS_URL": "https://issuer.example/jwks",
+            "DATABASE_URL": "postgresql://user:pass@example:6432/shema",
+        }
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", "import shema_platform.experience.api"],
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+def test_phase7_contract_names_gateway_identity_role() -> None:
+    contract = json.loads(
+        (ROOT / "architecture" / "yandex_cloud_production_contract.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert "gateway_invoker" in contract["iam"]["runtime_service_accounts"]
+    assert contract["iam"]["role_model"]["gateway_invoker"] == (
+        "API Gateway only; serverless-containers.containerInvoker on the private API container"
+    )
