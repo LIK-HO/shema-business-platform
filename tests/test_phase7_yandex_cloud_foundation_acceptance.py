@@ -16,8 +16,12 @@ def test_phase7_contract_keeps_postgres_as_canonical_authority() -> None:
     )
     assert contract["frozen_kernel_impact"] is False
     assert contract["authority"]["transactional_state"] == "managed_postgresql"
-    assert contract["authority"]["business_reliability_plane"] == "postgresql_outbox_and_durable_jobs"
-    assert "yandex_message_queue_as_transactional_business_store" in contract["forbidden_authorities"]
+    assert contract["authority"]["business_reliability_plane"] == (
+        "postgresql_outbox_and_durable_jobs"
+    )
+    assert "yandex_message_queue_as_transactional_business_store" in (
+        contract["forbidden_authorities"]
+    )
 
 
 def test_phase7_container_boot_is_production_safe() -> None:
