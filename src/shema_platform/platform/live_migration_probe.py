@@ -1,21 +1,15 @@
-from __future__ import annotations
-
-import json
-import os
-from pathlib import Path
-
-
-ROOT = Path(__file__).resolve().parents[3]
-
-
 def main() -> int:
+    import json
+    import os
+    from pathlib import Path
+
     from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
 
     database_url = os.environ.get("DATABASE_URL", "").strip()
     if not database_url:
         raise SystemExit("DATABASE_URL is not configured")
 
-    plan = MigrationPlan.from_directory(ROOT / "db" / "migrations")
+    plan = MigrationPlan.from_directory(Path(__file__).resolve().parents[3] / "db" / "migrations")
     expected_version = plan.migrations[-1].version if plan.migrations else 0
 
     def connection_factory():
