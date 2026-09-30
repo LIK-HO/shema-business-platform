@@ -45,12 +45,14 @@ cleanup() {
     yc lockbox secret get "$RECOVERY_SECRET_ID" >/dev/null 2>&1 && cleanup_rc=1
   fi
 
-  if [[ -n "$RECOVERY_CLUSTER_ID" ]]; then
-    printf 'yes\n' | yc managed-postgresql cluster delete "$RECOVERY_CLUSTER_ID" >/dev/null 2>&1 || cleanup_rc=1
+  if [[ -n "$RECOVERY_CLUSTER_ID" || -n "$RECOVERY_CLUSTER_NAME" ]]; then
+    recovery_delete_target="$RECOVERY_CLUSTER_ID"
+    [[ -n "$recovery_delete_target" ]] || recovery_delete_target="$RECOVERY_CLUSTER_NAME"
+    printf 'yes\n' | yc managed-postgresql cluster delete "$recovery_delete_target" >/dev/null 2>&1 || cleanup_rc=1
     for _ in $(seq 1 60); do
-      if yc managed-postgresql cluster get "$RECOVERY_CLUSTER_ID" --folder-id "$YC_FOLDER_ID" >/dev/null 2>&1; then sleep 5; else break; fi
+      if yc managed-postgresql cluster get "$recovery_delete_target" --folder-id "$YC_FOLDER_ID" >/dev/null 2>&1; then sleep 5; else break; fi
     done
-    yc managed-postgresql cluster get "$RECOVERY_CLUSTER_ID" --folder-id "$YC_FOLDER_ID" >/dev/null 2>&1 && cleanup_rc=1
+    yc managed-postgresql cluster get "$recovery_delete_target" --folder-id "$YC_FOLDER_ID" >/dev/null 2>&1 && cleanup_rc=1
   fi
 
   if [[ "$cleanup_rc" -eq 0 ]]; then
@@ -143,6 +145,7 @@ restore_command=(
   --resource-preset "$RESOURCE_PRESET"
   --disk-size "$DISK_SIZE_GB"GB
   --disk-type "$DISK_TYPE"
+  --deletion-protection=false
   --labels "project=shema,purpose=pitr-recovery"
 )
 if [[ -n "$SECURITY_GROUP_IDS" ]]; then
