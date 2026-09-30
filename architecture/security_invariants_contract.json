@@ -191,6 +191,13 @@
       "class": "experience_security",
       "enforcement": "Consolidated Web/PWA navigation, context and handoff surfaces use canonical APIs; protected capabilities remain server-authoritative; no local business store/rules or implied external success state are permitted.",
       "negative_test": "Phase 6 acceptance proves protected route rejection, absence of browser persistence/database authority, approved navigation scope, and NOT_COMPOSED handoff behavior when no integration provider is composed."
+    },
+    {
+      "id": "SI-28",
+      "name": "yandex_cloud_foundation_cannot_create_second_authority",
+      "class": "deployment_security",
+      "enforcement": "Yandex Cloud edge/runtime/storage/secrets roles are adapters around the canonical PostgreSQL business plane; runtime images are immutable by digest and production secrets arrive only through Lockbox",
+      "negative_test": "Phase 7 acceptance proves Terraform provider/resource boundary, digest pinning, Lockbox delivery intent, private database network, non-authoritative object storage and absence of Message Queue as transaction authority"
     }
   ],
   "closure": {
