@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "status": "phase7c_in_progress",
+  "phase": "7",
+  "sub_boundary": "7C_CLOUD_RESOURCE_PROVISIONING_AND_LIVE_EVIDENCE",
+  "purpose": "Provision only the approved Phase 7 foundation and collect independently verifiable live evidence without changing domain semantics.",
+  "authority_invariants": {
+    "transactional_state": "managed_postgresql",
+    "business_reliability_plane": "postgresql_outbox_and_durable_jobs",
+    "secrets": "yandex_lockbox",
+    "artifacts": "container_registry_immutable_digest",
+    "edge": "api_gateway",
+    "runtime": "serverless_containers",
+    "object_storage": "bounded_non_authoritative"
+  },
+  "required_live_evidence": [
+    "terraform_apply_success",
+    "network_and_runtime_resources_ready",
+    "immutable_image_revision_ready",
+    "lockbox_secret_delivery_verified",
+    "database_cluster_ready",
+    "database_connection_and_migrations_verified_from_same_vpc",
+    "health_and_readiness_verified",
+    "observability_verified",
+    "budget_and_alerts_verified",
+    "backup_retention_verified",
+    "pitr_recovery_drill_verified",
+    "rollback_to_previous_immutable_revision_verified",
+    "production_smoke_verified",
+    "global_adversarial_review_complete",
+    "final_current_head_seven_job_gate_green"
+  ],
+  "safety_gates": {
+    "apply_requires_manual_dispatch": true,
+    "production_environment_required": true,
+    "real_credentials_must_be_externalized": true,
+    "terraform_plan_must_be_reviewed_before_apply": true,
+    "no_public_database_ingress": true,
+    "no_second_transactional_authority": true,
+    "rollback_must_use_immutable_revision": true,
+    "live_evidence_must_not_contain_secret_values": true
+  },
+  "known_environment_constraint": "A GitHub-hosted runner cannot directly connect to a private Managed PostgreSQL host. Database connectivity and migrations therefore require an execution surface inside the same VPC. The production API must not gain a debug/database-probe endpoint merely to satisfy this gate.",
+  "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD and the final current-head seven-job gate is green."
+}
