@@ -134,3 +134,76 @@ def test_phase7c_workflow_exposes_protected_rollback_drill_input() -> None:
     assert "inputs.rollback_drill == true" in workflow
     assert "needs.plan.outputs.previous_revision_id" in workflow
     assert "yandex_cloud_rollback_drill.sh" in workflow
+
+
+def test_phase7c_pitr_contract_is_isolated_and_reversible() -> None:
+    contract = read_contract()
+    drill = contract["execution"]["pitr_drill"]
+    assert drill["recovery_target"] == "new_temporary_prestable_managed_postgresql_cluster"
+    assert drill["recovery_network"] == "same_vpc_as_production"
+    assert drill["recovery_host_public_ip"] is False
+    assert drill["recovery_credentials"] == (
+        "temporary_lockbox_secret_derived_from_protected_production_database_url"
+    )
+    assert drill["production_mutation"] == "none"
+    gates = contract["safety_gates"]
+    assert gates["pitr_must_restore_to_separate_cluster"] is True
+    assert gates["pitr_must_not_mutate_production"] is True
+    assert gates["pitr_recovery_credentials_must_use_lockbox"] is True
+    assert gates["pitr_cleanup_must_run_on_success_and_failure"] is True
+
+
+def test_phase7c_pitr_script_restores_private_cluster_and_cleans_up() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_pitr_drill.sh").read_text(
+        encoding="utf-8"
+    )
+    assert "yc managed-postgresql cluster restore" in script
+    assert "--environment PRESTABLE" in script
+    assert 'assign-public-ip=false' in script
+    assert 'yc lockbox secret create' in script
+    assert '--payload -' in script
+    assert '--payload "$payload"' not in script
+    assert 'yc serverless container revision deploy' in script
+    assert '--runtime task' in script
+    assert 'PITR_PRODUCTION_MUTATION=NONE' in script
+    assert 'trap cleanup EXIT' in script
+    assert 'PITR_RECOVERY_CLEANUP=PASS' in script
+    assert 'PITR_RECOVERY_CLEANUP=FAIL' in script
+    assert 'yc managed-postgresql cluster delete' in script
+
+
+def test_phase7c_pitr_script_uses_same_immutable_image_digest() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_pitr_drill.sh").read_text(
+        encoding="utf-8"
+    )
+    assert 'IMAGE_DIGEST=' in script
+    assert 'IMAGE_URL@$IMAGE_DIGEST' in script
+    assert 'PITR_RECOVERY_DATABASE_CONNECTIVITY=PASS' in script
+
+
+def test_phase7c_pitr_script_proves_private_same_vpc_recovery() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_pitr_drill.sh").read_text(
+        encoding="utf-8"
+    )
+    assert '.network_id == $network' in script
+    assert 'assign_public_ip' in script
+    assert 'PITR_RECOVERY_SAME_VPC=PASS' in script
+    assert 'PITR_RECOVERY_NO_PUBLIC_IP=PASS' in script
+
+
+def test_phase7c_pitr_exposes_only_bounded_invoker_identity() -> None:
+    outputs = (ROOT / "deploy" / "terraform" / "outputs.tf").read_text(encoding="utf-8")
+    assert 'output "container_puller_service_account_id"' in outputs
+    assert 'yandex_iam_service_account.container_puller.id' in outputs
+
+
+def test_phase7c_workflow_exposes_protected_pitr_input() -> None:
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    assert "pitr_drill:" in workflow
+    assert "pitr_recovery_time:" in workflow
+    assert "inputs.pitr_drill == true" in workflow
+    assert "yandex_cloud_pitr_drill.sh" in workflow
+    assert "container_puller_service_account_id" in workflow
+    assert "PITR_DATABASE_URL" in workflow
