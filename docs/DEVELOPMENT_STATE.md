@@ -7,6 +7,7 @@
 - **7C safety:** production apply is manual-dispatch and protected by the `production-yandex` environment; credentials remain externalized.
 - **Recovery baseline:** Managed PostgreSQL v2 is deletion-protected with 14-day backup retention and an explicit backup window.
 - **Same-VPC evidence runner:** private Serverless Containers task-mode runner on the same immutable image digest, attached to the same VPC, with Lockbox DATABASE_URL and CI-only `containerInvoker`.
+- **Rollback evidence:** protected manual rollback drill captures the prior active revision, rolls back to it, verifies readiness, then restores the newly deployed immutable revision and verifies readiness again.
 - **Real cloud state:** not claimed until the gated provisioning workflow is actually executed with authorized Yandex credentials.
 - **Closure blockers:** live resource evidence, same-VPC database connectivity/migrations, secret delivery, health/readiness, observability, budget/alerts, PITR, rollback, production smoke, global adversarial review and final current-head seven-job gate.
 
