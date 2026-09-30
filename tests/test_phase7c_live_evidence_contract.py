@@ -171,6 +171,7 @@ def test_phase7c_pitr_script_restores_private_cluster_and_cleans_up() -> None:
     assert 'yc serverless container revision deploy' in script
     assert '--runtime task' in script
     assert 'PITR_PRODUCTION_MUTATION=NONE' in script
+    assert "trap 'exit 143' INT TERM" in script
     assert 'trap cleanup EXIT' in script
     assert 'PITR_RECOVERY_CLEANUP=PASS' in script
     assert 'PITR_RECOVERY_CLEANUP=FAIL' in script
