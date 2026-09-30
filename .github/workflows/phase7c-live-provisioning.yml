@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       apply:
-        description: "Apply the approved Terraform plan after reviewing the plan artifact."
+        description: "Apply after reviewing the plan from a prior manual workflow run."
         required: true
         default: false
         type: boolean
@@ -48,18 +48,15 @@ jobs:
         run: |
           test -n "$TFVARS_JSON"
           printf "%s" "$TFVARS_JSON" > deploy/terraform/terraform.tfvars.json
-          python -c "import json; json.load(open("deploy/terraform/terraform.tfvars.json"))"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          json.loads(Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8"))
+          PY
       - name: Terraform init
         run: terraform -chdir=deploy/terraform init -backend=false -input=false
       - name: Terraform plan
-        run: terraform -chdir=deploy/terraform plan -input=false -out=phase7c.tfplan -var-file=terraform.tfvars.json
-      - name: Upload reviewed plan
-        uses: actions/upload-artifact@v4.6.2
-        with:
-          name: phase7c-terraform-plan
-          path: deploy/terraform/phase7c.tfplan
-          if-no-files-found: error
-          retention-days: 7
+        run: terraform -chdir=deploy/terraform plan -input=false -var-file=terraform.tfvars.json
 
   apply:
     needs: plan
