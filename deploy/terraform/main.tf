@@ -119,6 +119,11 @@ resource "yandex_serverless_container" "api" {
     APP_ENV = "production"
   }
 
+  log_options {
+    folder_id = var.folder_id
+    min_level = "INFO"
+  }
+
   image {
     url    = var.image_url
     digest = var.image_digest
