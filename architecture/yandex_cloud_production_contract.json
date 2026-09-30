@@ -1,0 +1,132 @@
+{
+  "version": "1.0",
+  "status": "approved_phase7_foundation_boundary",
+  "purpose": "Move the proven v1.5 modular monolith toward Yandex Cloud production without changing domain semantics or introducing a second persistence authority.",
+  "frozen_kernel_impact": false,
+  "phase": "7",
+  "sub_boundary": "7A_CLOUD_FOUNDATION_CONTRACT",
+  "authority": {
+    "transactional_state": "managed_postgresql",
+    "business_reliability_plane": "postgresql_outbox_and_durable_jobs",
+    "configuration_and_secrets": "yandex_lockbox",
+    "telemetry": "yandex_monitoring_and_logs_non_authoritative",
+    "large_objects": "yandex_object_storage_bounded_non_authoritative",
+    "artifact_source": "yandex_container_registry_immutable_image_digest",
+    "public_edge": "yandex_api_gateway",
+    "application_runtime": "yandex_serverless_containers",
+    "scheduled_or_triggered_narrow_work": "yandex_cloud_functions_when_required"
+  },
+  "forbidden_authorities": [
+    "yandex_message_queue_as_transactional_business_store",
+    "object_storage_as_relational_business_state",
+    "container_local_filesystem_as_durable_state",
+    "terraform_state_as_business_state",
+    "cloud_monitoring_as_business_state"
+  ],
+  "deployment": {
+    "edge": {
+      "api_gateway": true,
+      "container_integration": "serverless_containers",
+      "direct_container_business_ingress": "disabled_by_default"
+    },
+    "runtime": {
+      "serverless_containers": true,
+      "same_canonical_api": true,
+      "no_domain_semantic_change": true,
+      "immutable_image_reference_required": true,
+      "health_readiness_required": true
+    },
+    "database": {
+      "service": "managed_postgresql",
+      "private_network_preferred": true,
+      "existing_postgresql_migration_authority": true,
+      "backup_recovery_required": true,
+      "dual_write_forbidden": true
+    },
+    "secrets": {
+      "service": "lockbox",
+      "service_account_binding_required": true,
+      "secrets_must_not_be_baked_into_images": true,
+      "oidc_and_database_credentials_externalized": true,
+      "secret_rotation_requires_new_safe_revision": true
+    },
+    "artifacts": {
+      "service": "container_registry",
+      "image_digest_pinning_required": true,
+      "supply_chain_gate_required": true,
+      "mutable_latest_tag_is_not_deployment_authority": true
+    },
+    "observability": {
+      "services": [
+        "monitoring",
+        "logging"
+      ],
+      "telemetry_non_authoritative": true,
+      "correlation_id_preserved": true,
+      "request_body_and_authorization_headers_excluded": true
+    },
+    "storage": {
+      "service": "object_storage",
+      "use_cases": [
+        "bounded_large_evidence_objects",
+        "exports",
+        "recovery_artifacts_when_contractually_required"
+      ],
+      "not_allowed_for": [
+        "orders",
+        "idempotency",
+        "audit_truth",
+        "outbox_truth",
+        "job_state"
+      ]
+    },
+    "cost_controls": {
+      "budget_and_alerts_required": true,
+      "serverless_shell_can_start_minimal": true,
+      "managed_postgresql_is_costed_production_resource": true,
+      "free_allowance_must_not_drive_duplicate_storage_authority": true
+    }
+  },
+  "iam": {
+    "terraform_authentication": "short_lived_or_externalized_credentials_only",
+    "runtime_service_accounts": [
+      "container_runtime",
+      "container_image_puller",
+      "lockbox_reader"
+    ],
+    "least_privilege": true,
+    "no_static_secret_in_repository": true
+  },
+  "rollback": {
+    "release_rollback_unit": "immutable_container_image_digest_plus_configuration_revision",
+    "database_migrations_forward_only": true,
+    "schema_rollback": "recovery_or_forward_fix_not_blind_downgrade",
+    "failed_revision": "stop_traffic_and_restore_previous_known_good_revision",
+    "external_business_state": "never_reconstructed_from_observability"
+  },
+  "queue_rule": {
+    "postgres_outbox_is_business_reliability_authority": true,
+    "message_queue_optional_transport_only": true,
+    "message_queue_admission_requires_measured_workload": true
+  },
+  "exit_conditions": [
+    "contract_verified",
+    "terraform_provider_version_pinned",
+    "artifact_build_is_reproducible",
+    "runtime_composition_can_start_in_production_mode",
+    "database_connection_and_migrations_verified",
+    "secrets_verified",
+    "health_and_readiness_verified",
+    "observability_verified",
+    "backup_and_recovery_verified",
+    "rollback_verified",
+    "full_current_head_release_gate_green",
+    "global_adversarial_review_complete"
+  ],
+  "official_reference_basis": {
+    "serverless_postgresql_connection": "https://yandex.cloud/en/docs/container-registry/tutorials/container-pg-connect",
+    "api_gateway_container_integration": "https://yandex.cloud/en/docs/api-gateway/concepts/extensions/containers",
+    "lockbox_serverless_containers": "https://yandex.cloud/en/docs/lockbox/operations/serverless/containers",
+    "terraform_provider": "https://yandex.cloud/en/docs/terraform/release-notes"
+  }
+}
