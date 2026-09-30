@@ -10,8 +10,8 @@ command -v yc >/dev/null || { echo "yc CLI is required" >&2; exit 1; }
 command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }
 
 echo "LIVE_EVIDENCE_HEAD=${GITHUB_SHA:-unknown}"
-yc resource-manager cloud get "$YC_CLOUD_ID" --format=json | jq -e --arg id "$YC_CLOUD_ID" ".id == $id" >/dev/null
-yc resource-manager folder get "$YC_FOLDER_ID" --format=json | jq -e --arg id "$YC_FOLDER_ID" ".id == $id" >/dev/null
+yc resource-manager cloud get "$YC_CLOUD_ID" --format=json | jq -e --arg id "$YC_CLOUD_ID" '.id == $id' >/dev/null
+yc resource-manager folder get "$YC_FOLDER_ID" --format=json | jq -e --arg id "$YC_FOLDER_ID" '.id == $id' >/dev/null
 yc serverless container get "$YC_CONTAINER_NAME" --format=json | jq -e ".status == \"ACTIVE\" or .status == \"RUNNING\"" >/dev/null
 yc managed-postgresql cluster get "$YC_CLUSTER_NAME" --format=json | jq -e ".status == \"RUNNING\" or .status == \"ALIVE\"" >/dev/null
 yc storage bucket get "$YC_BUCKET_NAME" --format=json >/dev/null
