@@ -113,6 +113,24 @@ resource "yandex_mdb_postgresql_cluster_v2" "prod" {
   }
 }
 
+resource "yandex_mdb_postgresql_user" "runtime" {
+  cluster_id         = yandex_mdb_postgresql_cluster_v2.prod.id
+  name               = var.database_user
+  password_wo        = var.database_password
+  password_wo_version = 1
+  deletion_protection = true
+
+  permission {
+    database_name = yandex_mdb_postgresql_database.runtime.name
+  }
+}
+
+resource "yandex_mdb_postgresql_database" "runtime" {
+  cluster_id = yandex_mdb_postgresql_cluster_v2.prod.id
+  name       = var.database_name
+  owner      = yandex_mdb_postgresql_user.runtime.name
+}
+
 resource "yandex_storage_bucket" "bounded_objects" {
   bucket                = var.bucket_name
   folder_id             = var.folder_id
