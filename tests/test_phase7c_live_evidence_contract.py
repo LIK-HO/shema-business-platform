@@ -88,3 +88,13 @@ def test_phase7c_contract_binds_same_vpc_task_runner_and_forbids_public_access()
     assert execution["migration_runner_access"] == "containerInvoker_only_for_ci_identity"
     assert execution["migration_runner_endpoint"] == "no_api_gateway; no_public_access"
     assert contract["safety_gates"]["migration_task_must_not_be_public"] is True
+
+def test_phase7c_provisions_explicit_runtime_database_and_user() -> None:
+    main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
+    variables = (ROOT / "deploy" / "terraform" / "variables.tf").read_text(encoding="utf-8")
+    assert 'resource "yandex_mdb_postgresql_database" "runtime"' in main
+    assert 'resource "yandex_mdb_postgresql_user" "runtime"' in main
+    assert "password_wo = var.database_secret_input" in main
+    assert "database_name" in variables
+    assert "database_user" in variables
+    assert "database_secret_input" in variables
