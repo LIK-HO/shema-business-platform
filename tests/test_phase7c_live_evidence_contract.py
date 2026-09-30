@@ -213,3 +213,28 @@ def test_phase7c_workflow_exposes_protected_pitr_input() -> None:
     assert "yandex_cloud_pitr_drill.sh" in workflow
     assert "container_puller_service_account_id" in workflow
     assert "PITR_DATABASE_URL" in workflow
+
+
+def test_phase7c_live_evidence_uses_approved_edge_and_immutable_artifact() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(
+        encoding="utf-8"
+    )
+    assert "YC_API_GATEWAY_ID" in script
+    assert 'yc serverless api-gateway get --id "$YC_API_GATEWAY_ID"' in script
+    assert 'API_URL="https://$API_GATEWAY_DOMAIN"' in script
+    assert "YC_EXPECTED_IMAGE_DIGEST" in script
+    assert "IMMUTABLE_IMAGE_DIGEST=PASS" in script
+
+
+def test_phase7c_live_evidence_requires_budget_thresholds_and_runtime_logs() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(
+        encoding="utf-8"
+    )
+    assert "BUDGET_THRESHOLDS=PASS" in script
+    assert "RUNTIME_AND_TASK_LOGGING=PASS" in script
+    contract = read_contract()
+    required = set(contract["required_live_evidence"])
+    assert "api_gateway_edge_ready" in required
+    assert "immutable_image_digest_verified" in required
+    assert "budget_thresholds_verified" in required
+    assert "runtime_and_task_observability_verified" in required
