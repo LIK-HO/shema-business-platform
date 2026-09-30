@@ -1,3 +1,16 @@
+# Phase 7 — Yandex Cloud Production Foundation — IN_PROGRESS (2026-09-30)
+
+- **Current sub-boundary:** Phase 7B — Production runtime/artifact composition.
+- **Base:** Phase 6 final synchronized HEAD `3270d8c2115944b2e2cb26ae92ba6d90027cb08e`.
+- **Branch:** `phase7/yandex-cloud-production-20260930`.
+- **Contract:** `architecture/yandex_cloud_production_contract.json`.
+- **IaC:** `deploy/terraform/`.
+- **Acceptance:** `tests/test_phase7_yandex_cloud_foundation_acceptance.py`.
+- **Security invariant:** SI-28.
+- **Current status:** production foundation artifacts implemented; no real Yandex Cloud resources or production credentials have been provisioned by this development session.
+- **Authority:** Managed PostgreSQL remains the sole transactional authority; PostgreSQL outbox/durable jobs remain the reliability plane; Message Queue is not admitted as business state.
+- **Closure blockers:** real cloud provisioning, database connectivity/migrations, secret delivery, observability, backup/PITR evidence, rollback evidence, cost controls, global adversarial review and a final current-head seven-job gate.
+
 # Phase 6 Web/PWA Consolidation — CLOSED / VERIFIED (2026-09-30)
 
 - **Boundary:** Phase 6 — Production Web/PWA Consolidation.
