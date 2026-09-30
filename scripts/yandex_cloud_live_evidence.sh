@@ -101,9 +101,9 @@ if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
     echo ""
     echo "- HEAD: ${GITHUB_SHA:-unknown}"
     echo "- Cloud/folder: verified"
-    echo "- API Gateway: active and used as the external edge
-- Serverless Container: active
-- Immutable image digest: verified"
+    echo "- API Gateway: active and used as the external edge"
+    echo "- Serverless Container: active"
+    echo "- Immutable image digest: verified"
     echo "- Same-VPC migration task: exit code 0"
     echo "- Managed PostgreSQL: active"
     echo "- Health/readiness: HTTP 200"
@@ -111,8 +111,8 @@ if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
     echo "- Protected route: HTTP 401 without credentials"
     echo "- Cloud Logging ingestion: observed"
     echo "- Object Storage bucket: present"
-    echo "- Billing budget: active with at least one notification threshold
-- Runtime/task logs: observed"
+    echo "- Billing budget: active with at least one notification threshold"
+    echo "- Runtime/task logs: observed"
     echo "- Secret values: intentionally not printed"
   } >> "$GITHUB_STEP_SUMMARY"
 fi
