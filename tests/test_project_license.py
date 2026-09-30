@@ -9,6 +9,8 @@ def test_project_license_is_explicit_and_present() -> None:
     assert "Apache License" in content
     assert "Version 2.0, January 2004" in content
     assert "END OF TERMS AND CONDITIONS" in content
+    assert "Grant of Patent License" in content
+    assert "http://www.apache.org/licenses/LICENSE-2.0" in content
 
 
 def test_project_metadata_declares_apache_license() -> None:

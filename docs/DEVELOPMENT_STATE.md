@@ -3,10 +3,12 @@
 - **Closed sub-boundary:** Phase 7B — Production runtime/artifact composition — CLOSED / VERIFIED.
 - **Active boundary:** Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS.
 - **7C implementation branch:** `phase7/phase7c-live-evidence-20260930`.
-- **Verified implementation HEAD:** `1a4f1bf24f289c321a8018e6e01580c5bbc93e0a`.
-- **Code release gate:** CI `36735866311` — **7/7 GREEN** (quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup-recovery, release-contract).
-- **Terraform IaC gate:** `36735866454` — **GREEN**.
+- **Synchronized repository HEAD:** `5b6a295be71e20a8791bb2caa1009d94952c687a`.
+- **Repository-side release gate:** CI `36736299054` — **7/7 GREEN** on the prior synchronized implementation state; Terraform IaC Validation `36736299157` — **GREEN**.
+- **Current synchronization delta:** workflow/IaC hardening + operational documentation; live production evidence is still not claimed.
 - **7C safety:** production apply and recovery drills are manual-dispatch and protected by the `production-yandex` environment; credentials remain externalized.
+- **Terraform state safety:** remote Yandex Object Storage backend is mandatory; state bucket versioning is mandatory; S3 lockfile configuration is enabled; apply is refused when the reviewed plan fingerprint changes.
+- **Operational runbook:** `docs/PHASE7C_PRODUCTION_RUNBOOK.md`.
 - **Recovery baseline:** Managed PostgreSQL v2 is deletion-protected with 14-day backup retention and an explicit backup window.
 - **Same-VPC evidence runner:** private Serverless Containers task-mode runner on the same immutable image digest, attached to the same VPC, with Lockbox DATABASE_URL and CI-only `containerInvoker`.
 - **PITR drill implementation:** protected restore to a separate PRESTABLE PostgreSQL cluster, same VPC, no public DB IP, temporary Lockbox secret, ephemeral same-digest task verifier, verified cleanup, and INT/TERM-safe cleanup.
