@@ -190,6 +190,7 @@ class UnitOfWork(Protocol):
 
     identities: IdentityRepository
     evidence: EvidenceRepository
+    quarantine: QuarantineRepository
     audits: AuditRepository
     idempotency: IdempotencyRepository
     outbox: OutboxRepository

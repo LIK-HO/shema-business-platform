@@ -527,3 +527,34 @@ def test_max_provider_evidence_contract_is_bounded() -> None:
     assert contract["scope_stop"]["no_kernel_semantic_change"] is True
     assert contract["scope_stop"]["no_automatic_retry"] is True
     assert contract["scope_stop"]["no_production_activation"] is True
+
+def test_max_ambiguous_outcome_safety_contract_is_bounded() -> None:
+    contract = loads(read("architecture/max_ambiguous_outcome_safety_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["trigger"]["error_type"] == "ExternalEffectUnknown"
+    assert contract["handling"]["commercial_action_status_after_trigger"] == "failed"
+    assert contract["handling"]["quarantine_reason_code"] == "external_effect_unknown"
+    assert contract["handling"]["idempotency_result_ref_remains_pending"] is True
+    assert contract["handling"]["outbox_event"] == (
+        "commercial_action.external_effect_unknown"
+    )
+    assert contract["handling"]["audit_outcome"] == "quarantined"
+    assert contract["handling"]["automatic_external_replay"] is False
+    assert contract["replay_proof"]["same_command_after_quarantine_reaches_adapter"] is False
+    assert contract["replay_proof"]["same_command_after_quarantine_raises"] == (
+        "QuarantineRequired"
+    )
+    assert contract["replay_proof"]["stable_external_effect_idempotency_key_preserved"] is True
+    assert contract["persistence"]["quarantine_table"] == "quarantine_record"
+    assert contract["persistence"]["new_migration_required"] is False
+    assert contract["persistence"]["business_state_and_outbox_audit_atomic"] is True
+    assert contract["scope_stop"]["no_live_max_network"] is True
+    assert contract["scope_stop"]["no_provider_credentials"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_automatic_retry"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_frozen_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_provider_reconciliation_guess"] is True
