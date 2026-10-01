@@ -1,5 +1,19 @@
 from fastapi.testclient import TestClient
 
+from shema_platform.adapters.intelligence.dadata import DaDataConfiguration
+from shema_platform.adapters.intelligence.dadata_activation import (
+    DADATA_PROVIDER_ID,
+    DaDataActivationReadiness,
+    DaDataControlledActivationGate,
+)
+from shema_platform.application.counterparty_check import (
+    CounterpartyCheckResult,
+    CounterpartyContradiction,
+    FreshnessState,
+)
+from shema_platform.application.counterparty_provider_activation import (
+    CounterpartyProviderActivationService,
+)
 from shema_platform.experience.api import (
     APIApplication,
     RequestContext,
@@ -52,6 +66,23 @@ class PermissionedAuthenticator(AuthenticationPort):
                 "operator-1",
                 trust_level=2,
                 permissions=frozenset({Permission.ORDER_CREATE}),
+            )
+        raise AuthenticationRequired()
+
+
+class ProviderActivationAuthenticator(AuthenticationPort):
+    def authenticate(self, authorization: str | None) -> AuthenticatedActor:
+        if authorization == "Bearer provider-token":
+            return AuthenticatedActor(
+                "operator-1",
+                trust_level=2,
+                permissions=frozenset({Permission.INTELLIGENCE_PROVIDER_ACTIVATE}),
+            )
+        if authorization == "Bearer rollback-token":
+            return AuthenticatedActor(
+                "operator-2",
+                trust_level=2,
+                permissions=frozenset({Permission.INTELLIGENCE_PROVIDER_ROLLBACK}),
             )
         raise AuthenticationRequired()
 
@@ -142,6 +173,29 @@ class FakeApplication(APIApplication):
         return DiagnosticsResponse(
             healthy=True,
             checks=[DiagnosticCheck(checkId="api", status="pass", message="ok")],
+        )
+
+
+class FakeCounterpartyChecker:
+    def __init__(self):
+        self.calls = []
+
+    def check(self, observation, *, actor_id, correlation_id, now=None):
+        self.calls.append((observation, actor_id, correlation_id))
+        return CounterpartyCheckResult(
+            subject_ref="identity-1",
+            identity=None,
+            freshness=FreshnessState.FRESH,
+            evidence_ids=("evidence-1",),
+            contradictions=(
+                CounterpartyContradiction(
+                    field="canonical_name",
+                    existing_value="Old Name",
+                    observed_value="New Name",
+                ),
+            ),
+            quarantined=True,
+            operator_brief="review required",
         )
 
 
@@ -253,6 +307,71 @@ def test_runtime_api_requires_idempotency_for_critical_mutation() -> None:
     assert response.status_code == 422
 
 
+def test_runtime_api_counterparty_check_exposes_evidence_boundary() -> None:
+    checker = FakeCounterpartyChecker()
+    response = TestClient(
+        create_app(
+            FakeApplication(),
+            FakeAuthenticator(),
+            counterparty_checker=checker,
+        )
+    ).post(
+        "/v1/intelligence/counterparty-check",
+        headers={
+            "Authorization": "Bearer test-token",
+            "X-Correlation-Id": "corr-counterparty",
+        },
+        json={
+            "identifierType": "INN",
+            "identifier": "7707083893",
+            "canonicalName": "New Name",
+            "taxId": "7707083893",
+            "registrationId": "1027700132195",
+            "legalStatus": "active",
+            "sourceRef": "https://pb.nalog.ru/",
+            "sourceReliability": "authoritative",
+            "claimConfidence": 0.95,
+            "observedAt": "2026-09-26T10:00:00Z",
+            "expiresAt": "2026-10-03T10:00:00Z",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["subjectRef"] == "identity-1"
+    assert body["evidenceIds"] == ["evidence-1"]
+    assert body["quarantined"] is True
+    assert body["correlationId"] == "corr-counterparty"
+    assert body["contradictions"][0]["field"] == "canonical_name"
+    assert checker.calls[0][1:] == ("operator-1", "corr-counterparty")
+
+
+def test_runtime_api_counterparty_check_requires_composed_capability() -> None:
+    response = TestClient(
+        create_app(FakeApplication(), FakeAuthenticator())
+    ).post(
+        "/v1/intelligence/counterparty-check",
+        headers={"Authorization": "Bearer test-token"},
+        json={
+            "identifierType": "INN",
+            "identifier": "7707083893",
+            "canonicalName": "New Name",
+            "taxId": "7707083893",
+            "registrationId": "1027700132195",
+            "legalStatus": "active",
+            "sourceRef": "https://pb.nalog.ru/",
+            "sourceReliability": "authoritative",
+            "claimConfidence": 0.95,
+            "observedAt": "2026-09-26T10:00:00Z",
+            "expiresAt": "2026-10-03T10:00:00Z",
+        },
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "application_unavailable"
+
+
+
 def test_runtime_api_maps_quarantine_to_423() -> None:
     response = client(QuarantineApplication()).post(
         "/v1/intelligence/research",
@@ -346,3 +465,114 @@ def test_runtime_api_ai_route_uses_existing_application_unavailable_boundary() -
 
     assert response.status_code == 503
     assert response.json()["code"] == "application_unavailable"
+
+
+def _activation_service() -> CounterpartyProviderActivationService:
+    readiness = DaDataActivationReadiness(
+        source_registry_entry=True,
+        authoritative_provider_contract_evidence=True,
+        provider_neutral_counterparty_lookup_port=True,
+        deterministic_positive_fixture=True,
+        deterministic_negative_fixture_matrix=True,
+        bounded_retry_policy=True,
+        application_timeout_policy=True,
+        credential_boundary=True,
+        redacted_observability=True,
+        kill_switch=True,
+        rollback_without_schema_change=True,
+        full_release_ci=True,
+    )
+    gate = DaDataControlledActivationGate(telemetry=InMemoryTelemetrySink())
+    return CounterpartyProviderActivationService(
+        gate=gate,
+        configuration=DaDataConfiguration(api_key="test-secret", enabled=True),
+        readiness=readiness,
+    )
+
+
+def test_runtime_api_provider_activation_requires_explicit_confirmation() -> None:
+    service = _activation_service()
+    denied = TestClient(
+        create_app(
+            FakeApplication(),
+            ProviderActivationAuthenticator(),
+            counterparty_provider_activation=service,
+        )
+    ).post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/activation",
+        headers={"Authorization": "Bearer provider-token"},
+        json={
+            "reason": "controlled verification",
+            "operatorAuthorized": False,
+            "activationVersion": "activation:test-v1",
+        },
+    )
+    assert denied.status_code == 403
+    assert denied.json()["code"] == "authorization_denied"
+
+    granted = TestClient(
+        create_app(
+            FakeApplication(),
+            ProviderActivationAuthenticator(),
+            counterparty_provider_activation=service,
+        )
+    ).post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/activation",
+        headers={"Authorization": "Bearer provider-token"},
+        json={
+            "reason": "controlled verification",
+            "operatorAuthorized": True,
+            "activationVersion": "activation:test-v1",
+        },
+    )
+    assert granted.status_code == 200
+    assert granted.json()["providerId"] == DADATA_PROVIDER_ID
+    assert granted.json()["enabled"] is True
+
+
+def test_runtime_api_provider_activation_remains_unavailable_when_not_composed() -> None:
+    response = TestClient(
+        create_app(FakeApplication(), ProviderActivationAuthenticator())
+    ).post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/activation",
+        headers={"Authorization": "Bearer provider-token"},
+        json={
+            "reason": "should remain unavailable",
+            "operatorAuthorized": True,
+            "activationVersion": "activation:test-v1",
+        },
+    )
+    assert response.status_code == 503
+    assert response.json()["code"] == "application_unavailable"
+
+
+def test_runtime_api_provider_rollback_uses_path_provider_identity() -> None:
+    service = _activation_service()
+    client_instance = TestClient(
+        create_app(
+            FakeApplication(),
+            ProviderActivationAuthenticator(),
+            counterparty_provider_activation=service,
+        )
+    )
+    activated = client_instance.post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/activation",
+        headers={"Authorization": "Bearer provider-token"},
+        json={
+            "reason": "controlled verification",
+            "operatorAuthorized": True,
+            "activationVersion": "activation:test-v1",
+        },
+    )
+    assert activated.status_code == 200
+
+    rolled_back = client_instance.post(
+        f"/v1/intelligence/providers/{DADATA_PROVIDER_ID}/rollback",
+        headers={"Authorization": "Bearer rollback-token"},
+        json={
+            "reason": "kill switch drill",
+            "operatorAuthorized": True,
+        },
+    )
+    assert rolled_back.status_code == 200
+    assert rolled_back.json()["enabled"] is False

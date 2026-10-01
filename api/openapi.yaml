@@ -85,6 +85,95 @@ paths:
               schema: { $ref: '#/components/schemas/ResearchResponse' }
         '423': { $ref: '#/components/responses/ReviewRequired' }
         '429': { $ref: '#/components/responses/RateLimitError' }
+  /v1/intelligence/counterparty-check:
+    post:
+      operationId: checkCounterparty
+      summary: Record a manual authoritative counterparty check
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CounterpartyCheckRequest' }
+      responses:
+        '200':
+          description: Counterparty evidence snapshot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CounterpartyCheckResponse' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ApplicationUnavailableError' }
+  /v1/intelligence/providers/{providerId}/activation:
+    post:
+      operationId: activateCounterpartyProvider
+      summary: Explicitly activate one verified counterparty provider binding
+      parameters:
+        - $ref: '#/components/parameters/ProviderId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CounterpartyProviderActivationRequest' }
+      responses:
+        '200':
+          description: Provider activation state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CounterpartyProviderActivationResponse' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ApplicationUnavailableError' }
+  /v1/intelligence/providers/{providerId}/lookup:
+    post:
+      operationId: lookupCounterpartyProvider
+      summary: Execute one explicitly activated counterparty provider lookup and ingest its evidence
+      parameters:
+        - $ref: '#/components/parameters/ProviderId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CounterpartyProviderLookupRequest' }
+      responses:
+        '200':
+          description: Counterparty provider observation and Evidence intake result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CounterpartyProviderLookupResponse' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimitError' }
+        '502': { $ref: '#/components/responses/BadGatewayError' }
+        '503': { $ref: '#/components/responses/ApplicationUnavailableError' }
+  /v1/intelligence/providers/{providerId}/rollback:
+    post:
+      operationId: rollbackCounterpartyProvider
+      summary: Explicitly disable one counterparty provider binding
+      parameters:
+        - $ref: '#/components/parameters/ProviderId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CounterpartyProviderRollbackRequest' }
+      responses:
+        '200':
+          description: Provider activation state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CounterpartyProviderActivationResponse' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ApplicationUnavailableError' }
   /v1/commercial-actions:
     post:
       operationId: createCommercialAction
@@ -211,6 +300,11 @@ components:
       in: path
       required: true
       schema: { type: string }
+    ProviderId:
+      name: providerId
+      in: path
+      required: true
+      schema: { type: string, enum: [dadata_organization_api] }
     EntityRef:
       name: entityRef
       in: path
@@ -285,12 +379,35 @@ components:
         industries: { type: array, minItems: 1, items: { type: string } }
         limit: { type: integer, minimum: 1, maximum: 500, default: 50 }
         selectionLevel: { type: string, enum: [candidate, identified, verified] }
+        sourceIds: { type: array, maxItems: 50, items: { type: string } }
+        maxSources: { type: integer, minimum: 1, maximum: 50, default: 8 }
+        maxCandidates: { type: integer, minimum: 1, maximum: 5000, default: 500 }
     SearchResponse:
       type: object
       required: [results, correlationId]
       properties:
         results: { type: array, items: { $ref: '#/components/schemas/SearchHit' } }
         correlationId: { type: string }
+        completeness:
+          type: string
+          enum: [NOT_SEARCHED, SEARCHED_NOT_FOUND, SOURCE_UNAVAILABLE, BUDGET_LIMITED, COMPLETE]
+        planVersion: { type: string }
+        sourceAttempts:
+          type: array
+          items: { $ref: '#/components/schemas/SearchSourceAttempt' }
+    SearchSourceAttempt:
+      type: object
+      required: [sourceId, sourceClass, reliability, accessMode, status, candidateCount]
+      properties:
+        sourceId: { type: string }
+        sourceClass: { type: string }
+        reliability: { type: string }
+        accessMode: { type: string }
+        status:
+          type: string
+          enum: [SEARCHED, SEARCHED_NOT_FOUND, SOURCE_UNAVAILABLE, BUDGET_LIMITED]
+        candidateCount: { type: integer, minimum: 0 }
+        errorCode: { type: [string, 'null'] }
     SearchHit:
       type: object
       required: [candidateRef, name, region, industries, sourceRef, selectionLevel]
@@ -342,6 +459,98 @@ components:
         sourceRef: { type: string }
         trustLevel: { type: string }
         confidence: { type: number, minimum: 0, maximum: 1 }
+    CounterpartyProviderLookupRequest:
+      type: object
+      additionalProperties: false
+      required: [identifierType, identifier, claimConfidence, expiresAt]
+      properties:
+        identifierType: { type: string, enum: [INN, OGRN, OGRNIP] }
+        identifier: { type: string, minLength: 1, maxLength: 32 }
+        claimConfidence: { type: number, minimum: 0, maximum: 1 }
+        expiresAt: { type: string, format: date-time }
+        observedAt: { type: string, format: date-time }
+    CounterpartyProviderLookupResponse:
+      type: object
+      required: [providerId, sourceRef, canonicalName, evidenceIds, subjectRef, contradictions, quarantined, correlationId]
+      properties:
+        providerId: { type: string }
+        sourceRef: { type: string, format: uri, pattern: '^https://' }
+        canonicalName: { type: string }
+        taxId: { type: [string, 'null'] }
+        registrationId: { type: [string, 'null'] }
+        legalStatus: { type: [string, 'null'] }
+        observedAtMs: { type: [integer, 'null'] }
+        evidenceIds: { type: array, items: { type: string } }
+        subjectRef: { type: string }
+        identityRef: { type: [string, 'null'] }
+        contradictions:
+          type: array
+          items: { $ref: '#/components/schemas/CounterpartyContradictionResponse' }
+        quarantined: { type: boolean }
+        correlationId: { type: string }
+    CounterpartyProviderActivationRequest:
+      type: object
+      additionalProperties: false
+      required: [reason, operatorAuthorized, activationVersion]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 256 }
+        operatorAuthorized: { type: boolean }
+        activationVersion: { type: string, minLength: 1, maxLength: 128 }
+    CounterpartyProviderRollbackRequest:
+      type: object
+      additionalProperties: false
+      required: [reason, operatorAuthorized]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 256 }
+        operatorAuthorized: { type: boolean }
+    CounterpartyProviderActivationResponse:
+      type: object
+      required: [providerId, enabled]
+      properties:
+        providerId: { type: string }
+        enabled: { type: boolean }
+        activatedBy: { type: [string, 'null'] }
+        activationVersion: { type: [string, 'null'] }
+        rollbackBy: { type: [string, 'null'] }
+        rollbackReason: { type: [string, 'null'] }
+    CounterpartyCheckRequest:
+      type: object
+      additionalProperties: false
+      required: [identifierType, identifier, canonicalName, sourceRef, sourceReliability, claimConfidence, observedAt, expiresAt]
+      properties:
+        identifierType: { type: string, enum: [INN, OGRN, OGRNIP] }
+        identifier: { type: string, minLength: 1, maxLength: 32 }
+        canonicalName: { type: string, minLength: 1 }
+        taxId: { type: [string, 'null'] }
+        registrationId: { type: [string, 'null'] }
+        legalStatus: { type: [string, 'null'] }
+        sourceRef: { type: string, minLength: 1 }
+        sourceReliability: { type: string, enum: [authoritative] }
+        claimConfidence: { type: number, minimum: 0, maximum: 1 }
+        observedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+    CounterpartyContradiction:
+      type: object
+      required: [field, existingValue, observedValue]
+      properties:
+        field: { type: string }
+        existingValue: { type: string }
+        observedValue: { type: string }
+    CounterpartyCheckResponse:
+      type: object
+      required: [subjectRef, freshness, evidenceIds, contradictions, quarantined, operatorBrief, correlationId]
+      properties:
+        subjectRef: { type: string }
+        identityRef: { type: [string, 'null'] }
+        identityState: { type: [string, 'null'] }
+        freshness: { type: string, enum: [fresh, expired] }
+        evidenceIds: { type: array, items: { type: string } }
+        contradictions:
+          type: array
+          items: { $ref: '#/components/schemas/CounterpartyContradiction' }
+        quarantined: { type: boolean }
+        operatorBrief: { type: string }
+        correlationId: { type: string }
     CommercialActionCreateRequest:
       type: object
       required: [identityId, contactRef, channel, evidenceRefs]

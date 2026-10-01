@@ -19,6 +19,9 @@ def test_canonical_api_contract_exists() -> None:
         "/v1/search:",
         "/v1/discovery/evaluate:",
         "/v1/intelligence/research:",
+        "/v1/intelligence/counterparty-check:",
+        "/v1/intelligence/providers/{providerId}/activation:",
+        "/v1/intelligence/providers/{providerId}/rollback:",
         "/v1/commercial-actions:",
         "/v1/commercial-actions/{actionId}/send:",
         "/v1/orders:",
@@ -32,3 +35,6 @@ def test_canonical_api_contract_exists() -> None:
     assert "Idempotency-Key" in architecture
     assert "AI execution" in architecture
     assert "provider selection" in architecture
+    assert "Controlled provider activation boundary" in architecture
+    assert "Provider identity is taken from the {providerId} path parameter" in architecture
+    assert "intelligence.provider.activate" in architecture

@@ -11,6 +11,9 @@ class Permission(StrEnum):
     COMMERCIAL_ACTION_SEND = "commercial_action.send"
     ORDER_CREATE = "order.create"
     INTELLIGENCE_RUN = "intelligence.run"
+    INTELLIGENCE_PROVIDER_ACTIVATE = "intelligence.provider.activate"
+    INTELLIGENCE_PROVIDER_LOOKUP = "intelligence.provider.lookup"
+    INTELLIGENCE_PROVIDER_ROLLBACK = "intelligence.provider.rollback"
     AI_RUN = "ai.run"
 
 

@@ -6,10 +6,26 @@ from dataclasses import dataclass
 from shema_platform.adapters.ai.application_composition import (
     YandexGPTApplicationComposition,
 )
+from shema_platform.adapters.intelligence.dadata import DaDataConfiguration
+from shema_platform.adapters.intelligence.dadata_activation import (
+    DaDataActivationReadiness,
+    DaDataControlledActivationGate,
+)
 from shema_platform.application.ai_runtime import AIExecutionTrustResolver
+from shema_platform.application.counterparty_lookup import CounterpartyLookupProvider
+from shema_platform.application.counterparty_provider_activation import (
+    CounterpartyProviderActivationService,
+)
+from shema_platform.application.counterparty_provider_evidence import (
+    CounterpartyProviderEvidenceService,
+)
+from shema_platform.application.counterparty_provider_runtime_lookup import (
+    CounterpartyProviderRuntimeLookupService,
+)
 from shema_platform.application.ports import UnitOfWork
 from shema_platform.experience.ai_application import AIOnlyAPIApplication
 from shema_platform.experience.api import APIApplication, create_app
+from shema_platform.experience.search_composition import SearchAugmentedAPIApplication
 from shema_platform.foundation.configuration import ConfigurationSnapshot
 from shema_platform.foundation.policy import PolicyEngine
 from shema_platform.foundation.telemetry import TelemetrySink
@@ -21,8 +37,15 @@ class YandexGPTRuntimeAssembly:
 
     ai: YandexGPTApplicationComposition
 
-    def api_application(self) -> APIApplication:
-        return AIOnlyAPIApplication(self.ai.service())
+    def api_application(
+        self,
+        *,
+        search_application: APIApplication | None = None,
+    ) -> APIApplication:
+        base = AIOnlyAPIApplication(self.ai.service())
+        if search_application is None:
+            return base
+        return SearchAugmentedAPIApplication(base, search_application)
 
     def create_http_app(
         self,
@@ -30,9 +53,10 @@ class YandexGPTRuntimeAssembly:
         authenticator=None,
         enable_docs: bool = True,
         telemetry: TelemetrySink | None = None,
+        search_application: APIApplication | None = None,
     ):
         return create_app(
-            application=self.api_application(),
+            application=self.api_application(search_application=search_application),
             authenticator=authenticator,
             enable_docs=enable_docs,
             telemetry=telemetry,
@@ -61,6 +85,35 @@ class YandexGPTRuntimeAssembly:
         )
 
 
+
+@dataclass(frozen=True, slots=True)
+class CounterpartyProviderRuntimeAssembly:
+    """Explicit counterparty-provider runtime composition; traffic stays gated."""
+
+    activation: CounterpartyProviderActivationService
+    lookup: CounterpartyProviderRuntimeLookupService | None = None
+
+    def create_http_app(
+        self,
+        *,
+        application: APIApplication | None = None,
+        authenticator=None,
+        enable_docs: bool = True,
+        telemetry: TelemetrySink | None = None,
+    ):
+        return create_app(
+            application=application,
+            authenticator=authenticator,
+            enable_docs=enable_docs,
+            telemetry=telemetry,
+            counterparty_provider_activation=self.activation,
+            counterparty_provider_lookup=self.lookup,
+        )
+
+    def provider(self):
+        return self.activation.provider()
+
+
 def compose_yandexgpt_runtime(
     *,
     snapshot: ConfigurationSnapshot,
@@ -82,4 +135,42 @@ def compose_yandexgpt_runtime(
             cost_estimator=cost_estimator,
             policy=policy,
         )
+    )
+
+
+
+def compose_counterparty_provider_runtime(
+    *,
+    configuration: DaDataConfiguration,
+    readiness: DaDataActivationReadiness,
+    telemetry: TelemetrySink,
+    provider_factory: Callable[[DaDataConfiguration], CounterpartyLookupProvider] | None = None,
+    unit_of_work_factory: Callable[[], UnitOfWork] | None = None,
+    max_attempts: int = 3,
+    backoff_seconds: float = 0.25,
+    sleeper: Callable[[float], None] | None = None,
+) -> CounterpartyProviderRuntimeAssembly:
+    """Compose the control-plane without activating or connecting to DaData."""
+    gate = DaDataControlledActivationGate(
+        telemetry=telemetry,
+        provider_factory=provider_factory,
+    )
+    activation = CounterpartyProviderActivationService(
+        gate=gate,
+        configuration=configuration,
+        readiness=readiness,
+    )
+    lookup = None
+    if unit_of_work_factory is not None:
+        lookup = CounterpartyProviderRuntimeLookupService(
+            provider_id="dadata_organization_api",
+            provider_resolver=gate.provider,
+            evidence_service=CounterpartyProviderEvidenceService(unit_of_work_factory),
+            max_attempts=max_attempts,
+            backoff_seconds=backoff_seconds,
+            sleeper=sleeper,
+        )
+    return CounterpartyProviderRuntimeAssembly(
+        activation=activation,
+        lookup=lookup,
     )

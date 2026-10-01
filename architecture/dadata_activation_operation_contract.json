@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "status": "controlled_activation_boundary_verified_live_off",
+  "provider_id": "dadata_organization_api",
+  "operator_surface": {
+    "activation": "POST /v1/intelligence/providers/{providerId}/activation",
+    "rollback": "POST /v1/intelligence/providers/{providerId}/rollback",
+    "authentication": "existing API authentication",
+    "authorization": [
+      "intelligence.provider.activate",
+      "intelligence.provider.rollback"
+    ],
+    "explicit_confirmation_required": true
+  },
+  "activation_requirements": [
+    "source_registry_entry",
+    "authoritative_provider_contract_evidence",
+    "provider_neutral_counterparty_lookup_port",
+    "deterministic_positive_fixture",
+    "deterministic_negative_fixture_matrix",
+    "bounded_retry_policy",
+    "application_timeout_policy",
+    "credential_boundary",
+    "redacted_observability",
+    "kill_switch",
+    "rollback_without_schema_change",
+    "full_release_ci"
+  ],
+  "rules": {
+    "default_state": "disabled",
+    "configuration_enabled_required": true,
+    "network_execution": "only through an explicitly activated binding",
+    "automatic_activation": false,
+    "automatic_fallback": false,
+    "provider_output_is_canonical_truth": false,
+    "history_retained_on_rollback": true,
+    "secret_persistence": "none",
+    "live_ci_traffic": false
+  }
+}

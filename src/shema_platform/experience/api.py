@@ -11,6 +11,25 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from shema_platform.adapters.ai.composition import AIProviderCompositionError
 from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
+from shema_platform.adapters.intelligence.dadata_activation import DaDataActivationError
+from shema_platform.application.counterparty_check import (
+    CounterpartyCheckService,
+    CounterpartyIdentifierType,
+    CounterpartyObservation,
+    SourceReliability,
+)
+from shema_platform.application.counterparty_lookup import (
+    CounterpartyLookupIdentifierType,
+    CounterpartyLookupProviderError,
+    CounterpartyLookupQuery,
+)
+from shema_platform.application.counterparty_provider_activation import (
+    CounterpartyProviderActivationCommand,
+    CounterpartyProviderActivationService,
+)
+from shema_platform.application.counterparty_provider_runtime_lookup import (
+    CounterpartyProviderRuntimeLookupService,
+)
 from shema_platform.experience.api_models import (
     AIRunRequest,
     AIRunResponse,
@@ -18,6 +37,14 @@ from shema_platform.experience.api_models import (
     CommercialActionResponse,
     CommercialActionSendRequest,
     CommunicationResult,
+    CounterpartyCheckRequest,
+    CounterpartyCheckResponse,
+    CounterpartyContradictionResponse,
+    CounterpartyProviderActivationRequest,
+    CounterpartyProviderActivationResponse,
+    CounterpartyProviderLookupRequest,
+    CounterpartyProviderLookupResponse,
+    CounterpartyProviderRollbackRequest,
     DiagnosticsResponse,
     DiscoveryRequest,
     DiscoveryResponse,
@@ -244,6 +271,9 @@ def create_app(
     enable_docs: bool = True,
     telemetry: TelemetrySink | None = None,
     provider_health: ProviderHealthRegistry | None = None,
+    counterparty_checker: CounterpartyCheckService | None = None,
+    counterparty_provider_activation: CounterpartyProviderActivationService | None = None,
+    counterparty_provider_lookup: CounterpartyProviderRuntimeLookupService | None = None,
 ) -> FastAPI:
     runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
@@ -265,6 +295,9 @@ def create_app(
     app.state.application = application
     app.state.authenticator = authenticator
     app.state.provider_health = provider_health or ProviderHealthRegistry()
+    app.state.counterparty_checker = counterparty_checker
+    app.state.counterparty_provider_activation = counterparty_provider_activation
+    app.state.counterparty_provider_lookup = counterparty_provider_lookup
     default_telemetry: TelemetrySink = (
         StructuredLoggingTelemetrySink()
         if runtime_security.environment == "production"
@@ -343,6 +376,38 @@ def create_app(
             request,
             status_code=423,
             code="review_required",
+            message=str(exc),
+        )
+
+    @app.exception_handler(CounterpartyLookupProviderError)
+    async def counterparty_provider_lookup_error(
+        request: Request,
+        exc: CounterpartyLookupProviderError,
+    ) -> JSONResponse:
+        status_code = (
+            404
+            if exc.code == "NOT_FOUND"
+            else 429
+            if exc.code == "PROVIDER_RATE_LIMIT"
+            else 502
+        )
+        return _error(
+            request,
+            status_code=status_code,
+            code=exc.code.lower(),
+            message=str(exc),
+            details={"retryable": exc.retryable},
+        )
+
+    @app.exception_handler(DaDataActivationError)
+    async def dadata_activation_error(
+        request: Request,
+        exc: DaDataActivationError,
+    ) -> JSONResponse:
+        return _error(
+            request,
+            status_code=409,
+            code="provider_activation_blocked",
             message=str(exc),
         )
 
@@ -435,6 +500,181 @@ def create_app(
         idempotency_key: str = Header(min_length=8, alias="Idempotency-Key"),
     ) -> ResearchResponse:
         return services(request).research(payload, _context(request, idempotency_key))
+
+    @router.post(
+        "/intelligence/counterparty-check",
+        response_model=CounterpartyCheckResponse,
+    )
+    async def counterparty_check(
+        request: Request,
+        payload: CounterpartyCheckRequest,
+    ) -> CounterpartyCheckResponse:
+        checker: CounterpartyCheckService | None = request.app.state.counterparty_checker
+        if checker is None:
+            raise ApplicationUnavailable(
+                "counterparty check capability is not composed"
+            )
+        context = _context(request, None)
+        result = checker.check(
+            CounterpartyObservation(
+                identifier_type=CounterpartyIdentifierType(payload.identifier_type),
+                identifier=payload.identifier,
+                canonical_name=payload.canonical_name,
+                tax_id=payload.tax_id,
+                registration_id=payload.registration_id,
+                legal_status=payload.legal_status,
+                source_ref=payload.source_ref,
+                source_reliability=SourceReliability(payload.source_reliability),
+                claim_confidence=payload.claim_confidence,
+                observed_at=payload.observed_at,
+                expires_at=payload.expires_at,
+            ),
+            actor_id=context.actor_id,
+            correlation_id=context.correlation_id,
+        )
+        return CounterpartyCheckResponse(
+            subjectRef=result.subject_ref,
+            identityRef=result.identity.identity_id if result.identity else None,
+            identityState=result.identity.state.value if result.identity else None,
+            freshness=result.freshness.value,
+            evidenceIds=list(result.evidence_ids),
+            contradictions=[
+                CounterpartyContradictionResponse(
+                    field=item.field,
+                    existingValue=item.existing_value,
+                    observedValue=item.observed_value,
+                )
+                for item in result.contradictions
+            ],
+            quarantined=result.quarantined,
+            operatorBrief=result.operator_brief,
+            correlationId=context.correlation_id,
+        )
+
+    @router.post(
+        "/intelligence/providers/{providerId}/activation",
+        response_model=CounterpartyProviderActivationResponse,
+    )
+    async def activate_counterparty_provider(
+        request: Request,
+        payload: CounterpartyProviderActivationRequest,
+        provider_id: str = Path(alias="providerId"),
+    ) -> CounterpartyProviderActivationResponse:
+        service: CounterpartyProviderActivationService | None = (
+            request.app.state.counterparty_provider_activation
+        )
+        if service is None:
+            raise ApplicationUnavailable(
+                "counterparty provider activation capability is not composed"
+            )
+        context = _context(request, None)
+        result = service.activate(
+            CounterpartyProviderActivationCommand(
+                provider_id=provider_id,
+                actor_id=context.actor_id,
+                reason=payload.reason,
+                operator_authorized=payload.operator_authorized,
+                activation_version=payload.activation_version,
+                correlation_id=context.correlation_id,
+            ),
+            permissions=context.permissions,
+        )
+        return CounterpartyProviderActivationResponse(
+            providerId=result.provider_id,
+            enabled=result.enabled,
+            activatedBy=result.activated_by,
+            activationVersion=result.activation_version,
+            rollbackBy=result.rollback_by,
+            rollbackReason=result.rollback_reason,
+        )
+
+    @router.post(
+        "/intelligence/providers/{providerId}/lookup",
+        response_model=CounterpartyProviderLookupResponse,
+    )
+    async def lookup_counterparty_provider(
+        request: Request,
+        payload: CounterpartyProviderLookupRequest,
+        provider_id: str = Path(alias="providerId"),
+    ) -> CounterpartyProviderLookupResponse:
+        service: CounterpartyProviderRuntimeLookupService | None = (
+            request.app.state.counterparty_provider_lookup
+        )
+        if service is None:
+            raise ApplicationUnavailable(
+                "counterparty provider lookup capability is not composed"
+            )
+        context = _context(request, None)
+        result = service.execute(
+            CounterpartyLookupQuery(
+                identifier_type=CounterpartyLookupIdentifierType(payload.identifier_type),
+                identifier=payload.identifier,
+            ),
+            actor_id=context.actor_id,
+            permissions=context.permissions,
+            claim_confidence=payload.claim_confidence,
+            expires_at=payload.expires_at,
+            observed_at=payload.observed_at,
+            correlation_id=context.correlation_id,
+        )
+        if result.provider_record.provider_id != provider_id:
+            raise ValueError("counterparty provider identity mismatch")
+        return CounterpartyProviderLookupResponse(
+            providerId=result.provider_record.provider_id,
+            sourceRef=result.provider_record.source_ref,
+            canonicalName=result.provider_record.canonical_name,
+            taxId=result.provider_record.tax_id,
+            registrationId=result.provider_record.registration_id,
+            legalStatus=result.provider_record.legal_status,
+            observedAtMs=result.provider_record.observed_at_ms,
+            evidenceIds=list(result.evidence_result.evidence_ids),
+            subjectRef=result.evidence_result.subject_ref,
+            identityRef=result.evidence_result.identity_ref,
+            contradictions=[
+                CounterpartyContradictionResponse(
+                    field=field,
+                    existingValue=existing,
+                    observedValue=observed,
+                )
+                for field, existing, observed in result.evidence_result.contradictions
+            ],
+            quarantined=result.evidence_result.quarantined,
+            correlationId=context.correlation_id,
+        )
+
+    @router.post(
+        "/intelligence/providers/{providerId}/rollback",
+        response_model=CounterpartyProviderActivationResponse,
+    )
+    async def rollback_counterparty_provider(
+        request: Request,
+        payload: CounterpartyProviderRollbackRequest,
+        provider_id: str = Path(alias="providerId"),
+    ) -> CounterpartyProviderActivationResponse:
+        service: CounterpartyProviderActivationService | None = (
+            request.app.state.counterparty_provider_activation
+        )
+        if service is None:
+            raise ApplicationUnavailable(
+                "counterparty provider activation capability is not composed"
+            )
+        context = _context(request, None)
+        result = service.rollback(
+            provider_id=provider_id,
+            actor_id=context.actor_id,
+            reason=payload.reason,
+            operator_authorized=payload.operator_authorized,
+            correlation_id=context.correlation_id,
+            permissions=context.permissions,
+        )
+        return CounterpartyProviderActivationResponse(
+            providerId=result.provider_id,
+            enabled=result.enabled,
+            activatedBy=result.activated_by,
+            activationVersion=result.activation_version,
+            rollbackBy=result.rollback_by,
+            rollbackReason=result.rollback_reason,
+        )
 
     @router.post(
         "/commercial-actions",

@@ -18,6 +18,9 @@ class SearchRequest(APIModel):
         default="candidate",
         alias="selectionLevel",
     )
+    source_ids: list[str] = Field(default_factory=list, alias="sourceIds", max_length=50)
+    max_sources: int = Field(default=8, ge=1, le=50, alias="maxSources")
+    max_candidates: int = Field(default=500, ge=1, le=5000, alias="maxCandidates")
 
 
 class SearchHitResponse(APIModel):
@@ -34,9 +37,36 @@ class SearchHitResponse(APIModel):
     )
 
 
+class SearchSourceAttemptResponse(APIModel):
+    source_id: str = Field(alias="sourceId")
+    source_class: str = Field(alias="sourceClass")
+    reliability: str
+    access_mode: str = Field(alias="accessMode")
+    status: Literal[
+        "SEARCHED",
+        "SEARCHED_NOT_FOUND",
+        "SOURCE_UNAVAILABLE",
+        "BUDGET_LIMITED",
+    ]
+    candidate_count: int = Field(default=0, alias="candidateCount")
+    error_code: str | None = Field(default=None, alias="errorCode")
+
+
 class SearchResponse(APIModel):
     results: list[SearchHitResponse]
     correlation_id: str = Field(alias="correlationId")
+    completeness: Literal[
+        "NOT_SEARCHED",
+        "SEARCHED_NOT_FOUND",
+        "SOURCE_UNAVAILABLE",
+        "BUDGET_LIMITED",
+        "COMPLETE",
+    ] = "NOT_SEARCHED"
+    plan_version: str = Field(default="search-plan:v1", alias="planVersion")
+    source_attempts: list[SearchSourceAttemptResponse] = Field(
+        default_factory=list,
+        alias="sourceAttempts",
+    )
 
 
 class DiscoveryRequest(APIModel):
@@ -70,6 +100,88 @@ class EvidenceRef(APIModel):
 class ResearchResponse(APIModel):
     subject_ref: str = Field(alias="subjectRef")
     evidence: list[EvidenceRef]
+
+
+class CounterpartyCheckRequest(APIModel):
+    identifier_type: Literal["INN", "OGRN", "OGRNIP"] = Field(alias="identifierType")
+    identifier: str = Field(min_length=1, max_length=32)
+    canonical_name: str = Field(min_length=1, alias="canonicalName")
+    tax_id: str | None = Field(default=None, alias="taxId")
+    registration_id: str | None = Field(default=None, alias="registrationId")
+    legal_status: str | None = Field(default=None, alias="legalStatus")
+    source_ref: str = Field(min_length=1, alias="sourceRef")
+    source_reliability: Literal["authoritative"] = Field(
+        alias="sourceReliability",
+    )
+    claim_confidence: float = Field(ge=0, le=1, alias="claimConfidence")
+    observed_at: datetime = Field(alias="observedAt")
+    expires_at: datetime = Field(alias="expiresAt")
+
+
+class CounterpartyContradictionResponse(APIModel):
+    field: str
+    existing_value: str = Field(alias="existingValue")
+    observed_value: str = Field(alias="observedValue")
+
+
+class CounterpartyProviderActivationRequest(APIModel):
+    reason: str = Field(min_length=1, max_length=256)
+    operator_authorized: bool = Field(alias="operatorAuthorized")
+    activation_version: str = Field(
+        min_length=1,
+        max_length=128,
+        alias="activationVersion",
+    )
+
+
+class CounterpartyProviderRollbackRequest(APIModel):
+    reason: str = Field(min_length=1, max_length=256)
+    operator_authorized: bool = Field(alias="operatorAuthorized")
+
+
+class CounterpartyProviderLookupRequest(APIModel):
+    identifier_type: Literal["INN", "OGRN", "OGRNIP"] = Field(alias="identifierType")
+    identifier: str = Field(min_length=1, max_length=32)
+    claim_confidence: float = Field(ge=0, le=1, alias="claimConfidence")
+    expires_at: datetime = Field(alias="expiresAt")
+    observed_at: datetime | None = Field(default=None, alias="observedAt")
+
+
+class CounterpartyProviderLookupResponse(APIModel):
+    provider_id: str = Field(alias="providerId")
+    source_ref: str = Field(alias="sourceRef")
+    canonical_name: str = Field(alias="canonicalName")
+    tax_id: str | None = Field(default=None, alias="taxId")
+    registration_id: str | None = Field(default=None, alias="registrationId")
+    legal_status: str | None = Field(default=None, alias="legalStatus")
+    observed_at_ms: int | None = Field(default=None, alias="observedAtMs")
+    evidence_ids: list[str] = Field(alias="evidenceIds")
+    subject_ref: str = Field(alias="subjectRef")
+    identity_ref: str | None = Field(default=None, alias="identityRef")
+    contradictions: list[CounterpartyContradictionResponse]
+    quarantined: bool
+    correlation_id: str = Field(alias="correlationId")
+
+
+class CounterpartyProviderActivationResponse(APIModel):
+    provider_id: str = Field(alias="providerId")
+    enabled: bool
+    activated_by: str | None = Field(default=None, alias="activatedBy")
+    activation_version: str | None = Field(default=None, alias="activationVersion")
+    rollback_by: str | None = Field(default=None, alias="rollbackBy")
+    rollback_reason: str | None = Field(default=None, alias="rollbackReason")
+
+
+class CounterpartyCheckResponse(APIModel):
+    subject_ref: str = Field(alias="subjectRef")
+    identity_ref: str | None = Field(default=None, alias="identityRef")
+    identity_state: str | None = Field(default=None, alias="identityState")
+    freshness: Literal["fresh", "expired"]
+    evidence_ids: list[str] = Field(alias="evidenceIds")
+    contradictions: list[CounterpartyContradictionResponse]
+    quarantined: bool
+    operator_brief: str = Field(alias="operatorBrief")
+    correlation_id: str = Field(alias="correlationId")
 
 
 class AIRunRequest(APIModel):
