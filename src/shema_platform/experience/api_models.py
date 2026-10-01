@@ -314,3 +314,86 @@ class ErrorEnvelope(APIModel):
     message: str
     correlation_id: str = Field(alias="correlationId")
     details: dict[str, object] | None = None
+
+
+
+class PublicIntakeRequest(APIModel):
+    service_type: str = Field(min_length=2, max_length=120, alias="serviceType")
+    location: str = Field(min_length=2, max_length=240)
+    preferred_date_or_period: str = Field(
+        min_length=2,
+        max_length=120,
+        alias="preferredDateOrPeriod",
+    )
+    work_or_cargo_description: str = Field(
+        min_length=5,
+        max_length=4000,
+        alias="workOrCargoDescription",
+    )
+    contact_name: str = Field(min_length=2, max_length=200, alias="contactName")
+    contact_channel: str = Field(min_length=3, max_length=240, alias="contactChannel")
+    approximate_volume_or_weight: str | None = Field(
+        default=None,
+        max_length=500,
+        alias="approximateVolumeOrWeight",
+    )
+    access_or_lifting_constraints: str | None = Field(
+        default=None,
+        max_length=1000,
+        alias="accessOrLiftingConstraints",
+    )
+    company_name: str | None = Field(default=None, max_length=300, alias="companyName")
+    inn: str | None = Field(default=None, min_length=10, max_length=12)
+    ogrn_or_ogrnip: str | None = Field(
+        default=None,
+        min_length=13,
+        max_length=15,
+        alias="ogrnOrOgrnip",
+    )
+    comments: str | None = Field(default=None, max_length=2000)
+    utm_source: str | None = Field(default=None, max_length=160, alias="utmSource")
+    utm_medium: str | None = Field(default=None, max_length=160, alias="utmMedium")
+    utm_campaign: str | None = Field(default=None, max_length=240, alias="utmCampaign")
+    referrer: str | None = Field(default=None, max_length=500, alias="referrer")
+    entry_surface: str = Field(
+        default="public_web",
+        min_length=2,
+        max_length=80,
+        alias="entrySurface",
+    )
+    honeypot: str = Field(default="", max_length=200)
+
+
+class PublicIntakeResponse(APIModel):
+    request_id: str = Field(alias="requestId")
+    correlation_id: str = Field(alias="correlationId")
+    status: Literal["ACCEPTED", "QUARANTINED_SPAM"]
+    preflight_decision: Literal[
+        "NORMAL",
+        "ATTENTION",
+        "BLOCKING_FACT",
+        "UNKNOWN",
+        "CONFLICTING",
+    ] = Field(alias="preflightDecision")
+    identity_match: Literal[
+        "MATCH",
+        "NAME_MISMATCH",
+        "NOT_CHECKED",
+    ] = Field(alias="identityMatch")
+    projection_status: Literal["PROJECTED", "PENDING_PROJECTION"] = Field(
+        alias="projectionStatus"
+    )
+    deduplicated: bool
+
+
+class OperatorNotificationResponse(APIModel):
+    event_id: str = Field(alias="eventId")
+    request_id: str = Field(alias="requestId")
+    event_type: str = Field(alias="eventType")
+    severity: Literal["LOW", "INFO", "ATTENTION", "HIGH", "CRITICAL"]
+    payload: dict[str, object]
+    created_at: str = Field(alias="createdAt")
+
+
+class OperatorNotificationListResponse(APIModel):
+    notifications: list[OperatorNotificationResponse]

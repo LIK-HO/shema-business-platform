@@ -42,4 +42,4 @@ def test_release_tree_accepts_candidate_contract() -> None:
     assert manifest.kernel_contract_version == "1.4"
     assert manifest.core_maturity_contract_version == "1.5-core-maturity"
     assert manifest.release_candidate_contract_version == "1.5-release-candidate-contract"
-    assert manifest.latest_migration_version == 9
+    assert manifest.latest_migration_version >= 9

@@ -1,0 +1,130 @@
+{
+  "version": "1.0",
+  "status": "mandatory_platform_evolution_contract",
+  "frozen_kernel_impact": false,
+  "purpose": "Provide a repeatable mechanism for evolving Shema without hidden authorities, unsafe public ingress, provider lock-in, uncontrolled AI cost or unrecoverable migrations.",
+  "core_rule": "A capability earns architectural residency only after owner, boundary, failure semantics, abuse/resource budget, evidence, observability, rollback and removal path are explicit.",
+  "change_classes": {
+    "E0": "documentation_or_operator_guidance_only",
+    "E1": "local_application_behavior_without_new_authority",
+    "E2": "external_provider_public_ingress_or_new_security_boundary",
+    "E3": "new_persistence_authority_cross_system_ownership_or_migration",
+    "E4": "frozen_kernel_semantic_change"
+  },
+  "mandatory_triggers": [
+    "new_public_ingress",
+    "new_provider",
+    "external_effect",
+    "persistence_authority_change",
+    "cross_system_ownership_change",
+    "security_boundary_change",
+    "material_cost_or_quota_change",
+    "migration_or_cutover",
+    "element_completion",
+    "strategy_change"
+  ],
+  "evolution_pipeline": [
+    "OBSERVE",
+    "PROBLEM_STATEMENT",
+    "BOUNDARY_CONTRACT",
+    "GLOBAL_IMPACT_REVIEW",
+    "THREAT_AND_ABUSE_MODEL",
+    "RESOURCE_AND_COST_MODEL",
+    "IMPLEMENT_VERTICAL_SLICE",
+    "NEGATIVE_AND_RECOVERY_TESTS",
+    "INTEGRATION_AND_E2E",
+    "ADVERSARIAL_SURVIVABILITY_GATE",
+    "CONTROLLED_RELEASE",
+    "MEASURE",
+    "LEARN",
+    "FREEZE_OR_AMEND"
+  ],
+  "admission_gates": {
+    "problem_is_measurable": true,
+    "canonical_owner_is_explicit": true,
+    "non_ai_baseline_exists_when_reasonable": true,
+    "failure_and_recovery_are_defined": true,
+    "security_and_abuse_boundary_is_defined": true,
+    "cost_and_quota_budget_is_defined": true,
+    "observability_is_defined": true,
+    "rollback_or_safe_deactivation_exists": true,
+    "provider_exit_or_replacement_path_exists": true,
+    "no_duplicate_authority_is_created": true,
+    "operator_causal_chain_is_preserved": true
+  },
+  "ai_economy": {
+    "deterministic_first": true,
+    "ai_only_after_evidence_packet": true,
+    "per_request_budget_required": true,
+    "per_feature_kill_switch_required": true,
+    "provider_neutral_gateway_required": true,
+    "degraded_mode_without_ai_when_possible": true,
+    "ai_must_not_be_used_as_registry_truth": true,
+    "ai_must_not_be_used_to_decide_transaction_acceptance": true
+  },
+  "public_ingress": {
+    "all_client_input_is_untrusted": true,
+    "edge_protection_required": true,
+    "server_validation_required": true,
+    "idempotency_required": true,
+    "provider_lookup_budget_required": true,
+    "anti_enumeration_required_for_identifier_lookups": true,
+    "public_response_data_minimized": true,
+    "direct_external_side_effects_from_browser_forbidden": true
+  },
+  "provider_admission": {
+    "documented_api_or_authorized_data_access_required": true,
+    "auth_scope_and_secret_boundary_required": true,
+    "rate_limit_semantics_required": true,
+    "timeout_and_error_matrix_required": true,
+    "retry_policy_required": true,
+    "kill_switch_required": true,
+    "test_double_required": true,
+    "rollback_without_schema_change_preferred": true,
+    "fallback_requires_its_own_safety_contract": true
+  },
+  "migration_admission": {
+    "dual_authority_forbidden": true,
+    "cutover_state_machine_required": true,
+    "backfill_is_replay_safe": true,
+    "readiness_is_measured": true,
+    "rollback_point_is_known": true,
+    "post_cutover_reconciliation_required": true
+  },
+  "operator_admission": {
+    "summary_first_details_one_level_deeper": true,
+    "uncertainty_visible": true,
+    "excluded_or_blocked_items_have_reason": true,
+    "manual_override_is_explicit_and_audited": true,
+    "stale_write_protection": true
+  },
+  "release_states": [
+    "DRAFT",
+    "SHADOW",
+    "BOUNDED",
+    "CANARY",
+    "LIVE",
+    "RETIRED"
+  ],
+  "closure_evidence": [
+    "contract",
+    "implementation",
+    "negative_paths",
+    "integration",
+    "e2e_when_relevant",
+    "security",
+    "recovery_when_relevant",
+    "observability",
+    "global_adversarial_review",
+    "full_current_head_ci",
+    "development_state_update"
+  ],
+  "non_goals": [
+    "endless_feature_accumulation",
+    "framework_rewrite_for_evolution",
+    "automatic_ai_architecture_changes",
+    "new_microservices_without_measured_constraint",
+    "vendor_specific_domain_truth",
+    "silent_schema_breaking_changes"
+  ]
+}

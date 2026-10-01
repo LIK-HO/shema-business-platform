@@ -37,6 +37,18 @@ MAX_INPUT_CHARS = 131_072
 MAX_OUTPUT_TOKENS = 16_384
 
 
+def _required_positive_float(name: str, value: str | None) -> float:
+    if value is None or not value.strip():
+        raise ValueError(f"{name} is required and must be positive")
+    try:
+        parsed = float(value)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a valid positive number") from exc
+    if not isfinite(parsed) or parsed <= 0:
+        raise ValueError(f"{name} must be a finite positive number")
+    return parsed
+
+
 class YandexGPTExecutionError(RuntimeError):
     def __init__(self, failure: AIProviderFailure) -> None:
         super().__init__(failure.message)
@@ -46,13 +58,13 @@ class YandexGPTExecutionError(RuntimeError):
 @dataclass(frozen=True, slots=True)
 class YandexGPTConfiguration:
     api_key: str = field(repr=False)
+    max_cost: float
     model_uri: str = "gpt://placeholder/yandexgpt/latest"
     base_url: str = DEFAULT_BASE_URL
     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS
     max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES
     max_input_chars: int = DEFAULT_MAX_INPUT_CHARS
     max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS
-    max_cost: float = 0.0
     configuration_version: str = "yandexgpt-config:v1"
     activation_version: str = "yandexgpt-activation:v1"
 
@@ -86,7 +98,10 @@ class YandexGPTConfiguration:
                     str(DEFAULT_MAX_OUTPUT_TOKENS),
                 )
             ),
-            max_cost=float(os.getenv("YANDEXGPT_MAX_COST", "0")),
+            max_cost=_required_positive_float(
+                "YANDEXGPT_MAX_COST",
+                os.getenv("YANDEXGPT_MAX_COST"),
+            ),
             configuration_version=os.getenv(
                 "YANDEXGPT_CONFIGURATION_VERSION",
                 "yandexgpt-config:v1",

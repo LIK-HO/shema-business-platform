@@ -124,7 +124,9 @@ def test_migration_runner_adopts_existing_v1_4_schema_without_reapplying_histori
         assert adopted.current_version == V1_4_BASELINE_VERSION
 
         post_adoption = runner.apply()
-        assert post_adoption.applied == (V1_4_BASELINE_VERSION + 1,)
+        assert post_adoption.applied == tuple(
+            range(V1_4_BASELINE_VERSION + 1, len(plan.migrations) + 1)
+        )
         assert post_adoption.current_version == len(plan.migrations)
 
         with connect(schema) as check:

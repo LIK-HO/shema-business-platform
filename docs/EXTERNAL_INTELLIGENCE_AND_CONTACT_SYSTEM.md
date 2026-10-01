@@ -4,7 +4,7 @@
 
 This document defines the mature external contour of Shema:
 
-SEARCH → RESOLUTION → RESEARCH → EVIDENCE → QUALIFICATION → CONTACT PREPARATION → DOCUMENT PACK → ACTION → RESULT → LEARNING
+SEARCH → RESOLUTION → RESEARCH → EVIDENCE → QUALIFICATION → CONTACT PREPARATION → BUSINESS HANDOFF → ACTION → RESULT → LEARNING
 
 The external contour is treated as a reliability boundary of information quality.
 
@@ -133,7 +133,7 @@ Each mode has:
 - stopping conditions;
 - escalation rules.
 
-A deeper mode must not simply collect more documents; it must answer a more specific decision question.
+A deeper mode must not simply collect more raw data; it must answer a more specific decision question.
 
 ### Stage 6 — Relationship / graph pivots
 
@@ -144,7 +144,7 @@ For high-value or ambiguous cases, pivot through:
 - domains;
 - phones/emails where lawfully available;
 - related companies;
-- contracts/procurement;
+- public filings/records;
 - licenses;
 - public events;
 - legal/public records;
@@ -181,7 +181,7 @@ Output:
 
 The operator should receive:
 
-**Who → Why relevant → What is verified → What is inferred → What changed → What risk/uncertainty exists → What to say → What not to say → What document pack applies → Next action**
+**Who → Why relevant → What is verified → What is inferred → What changed → What risk/uncertainty exists → What to say → What not to say → Next action**
 
 The default view is compact.
 Evidence, sources, raw observations and technical diagnostics remain one level deeper.
@@ -222,81 +222,7 @@ Optional branches:
 
 The script is generated from the current dossier snapshot and must retain the evidence version used to construct it.
 
-### Stage 11 — Document & legal configuration
-
-Document preparation is a separate contract-driven subsystem.
-
-Configuration dimensions:
-- customer legal form;
-- contractor legal form;
-- tax regime;
-- VAT applicability/status where relevant;
-- service/work type;
-- payment model;
-- acceptance model;
-- electronic-signature/EDO method;
-- required supporting documents;
-- effective legal-rule version/date.
-
-The system must support combinations such as:
-- ООО → ООО;
-- ООО → ИП;
-- ООО → ИП на НПД;
-- ООО → физлицо-плательщик НПД;
-- ИП → ООО;
-- ИП → ИП;
-- ИП → ИП на НПД;
-- ИП → физлицо-плательщик НПД;
-- and reverse directions where legally and operationally applicable.
-
-The exact document set is selected from the current legal/configuration matrix, not from a fixed static bundle.
-
-### Stage 12 — Document pack
-
-Depending on the configuration, the operator may select or the system may recommend:
-- commercial offer;
-- cover/introductory letter;
-- service agreement;
-- contract for work;
-- application/order;
-- specification;
-- statement of work / technical assignment;
-- act of completed work/services;
-- invoice/account where applicable;
-- universal transfer document where applicable;
-- required supporting documents;
-- NPD status verification;
-- NPD receipt/check control;
-- EDO/e-signature instructions;
-- completion/photo/report attachment where operationally required.
-
-The system must distinguish:
-- mandatory;
-- conditionally required;
-- recommended;
-- optional;
-- not applicable.
-
-It must never present a legal document as universally valid for every transaction configuration.
-
-### Stage 13 — Legal source control
-
-Every generated legal template must have:
-- template ID;
-- version;
-- effective-from date;
-- affected configuration matrix;
-- legal source references;
-- last legal review date;
-- change reason;
-- generation snapshot;
-- checksum/version identity.
-
-Legal changes must invalidate or revalidate affected templates.
-
-The system is a controlled document-construction tool, not an autonomous legal authority.
-
-### Stage 14 — Manual counterparty check
+### Stage 11 — Manual counterparty check
 
 The operator must have a dedicated manual check action:
 
@@ -320,31 +246,36 @@ Manual check output:
 - recommended next verification;
 - downloadable verification report.
 
-## 4. Source hierarchy
+## 4. Source hierarchy and routing
 
-Source priority is contextual, not one permanent universal ranking.
+The source portfolio is deliberately small and role-based. Shema does not search every available source for every candidate.
 
-For a specific claim, prefer the source closest to the underlying fact:
-1. official registry/issuer;
-2. primary company source;
-3. authoritative public record;
-4. trusted structured dataset;
-5. reputable secondary source;
-6. open-web signal;
-7. unverified signal.
+The starter classes are:
 
-The system records the source class rather than replacing provenance with a global score.
+1. **Authoritative public sources** — legal identity/status and specific official facts.
+2. **Primary company sources** — company website and official company channels for services, geography, capabilities and contacts.
+3. **Search indexes** — low-cost discovery and recall; search snippets/indexes are never canonical truth by themselves.
+4. **Maps/directories** — location, contactability and business-presence enrichment.
+5. **Public market/event signals** — company news, events, associations, vacancies and official public channels when a dated need/activity signal is required.
+6. **Structured secondary datasets** — R2 enrichment and cross-checking.
+7. **Specialist investigative sources** — R3/R4 only when a concrete research question justifies them, such as OpenCorporates, ICIJ Offshore Leaks, Internet Archive or Shodan where relevant.
 
-Examples:
-- legal status → registry/official source;
-- service offering → company primary source plus independent corroboration where material;
-- event/need → dated primary/public event evidence;
-- ownership network → official records where available, then structured investigative datasets;
-- reputation signal → source-attributed evidence, never an unqualified system verdict.
+Current routing contract: `architecture/intelligence_source_policy_contract.json`.
 
-ICIJ explicitly warns that its Offshore Leaks data is a partial investigative dataset, can contain duplicates, covers defined time ranges and should not by itself be treated as a complete account of a business. The system should model such limitations instead of hiding them.
+The key rule is:
 
-## 5. Quality model
+**question → minimum source classes needed → evidence gap → one targeted expansion**
+
+not:
+
+**candidate → all sources → noise**.
+
+For a typical B2B candidate the default path is only:
+**search index + primary company source + location/directory discovery → authoritative verification when identity matters.**
+
+Specialist sources are not part of the default waterfall.
+
+## 5. Quality and decision-state model
 
 Do not create a single opaque "reliability score".
 
@@ -403,7 +334,7 @@ Stop deep research when:
 - authoritative evidence is exhausted;
 - further research would be redundant.
 
-## 8. Quality metrics
+## 7. Quality metrics
 
 The external contour measures:
 - candidate recall;
@@ -418,13 +349,12 @@ The external contour measures:
 - qualified-candidate yield;
 - useful-first-contact rate;
 - contact-to-next-step rate;
-- document-pack correctness;
 - research cost/time per qualified candidate;
 - operator correction rate.
 
 Metrics are for improving the system, not for manufacturing a single "AI intelligence score".
 
-## 9. Security / privacy / lawful-access boundary
+## 8. Security / privacy / lawful-access boundary
 
 Only lawful and operationally permitted sources may be used.
 
@@ -441,7 +371,7 @@ Russian personal-data rules require lawful and purpose-limited processing; the c
 
 No scraping, access or collection method is allowed merely because it is technically possible.
 
-## 10. Reliability doctrine
+## 9. Reliability doctrine
 
 The external contour follows the same philosophy as the core:
 
@@ -455,7 +385,7 @@ External intelligence:
 
 Neither side may bypass the other.
 
-## 11. Completion boundary
+## 10. Completion boundary
 
 The Search & Intelligence System is mature only when:
 - search is reproducible and bounded;
@@ -467,13 +397,12 @@ The Search & Intelligence System is mature only when:
 - graph pivots are available for deep cases;
 - qualification consumes evidence;
 - contact preparation is evidence-grounded;
-- legal document packs are configuration-driven and versioned;
 - manual INN/OGRN/OGRNIP verification uses the same intelligence path;
 - operator can inspect why a result was produced;
 - critical failures are recoverable;
 - quality and operator-effort metrics are measured.
 
-## 12. External contour principle
+## 11. External contour principle
 
 The best system is not the one that finds the most information.
 
@@ -492,7 +421,7 @@ Which legal/document configuration applies?
 What is the safest next action?**
 
 
-## 13. External research basis
+## 12. External research basis
 
 Primary reference classes used to shape this boundary:
 - OCCRP Aleph — open-source investigative data platform, cross-referencing, investigations, timelines and graph exploration:

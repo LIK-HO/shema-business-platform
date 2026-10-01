@@ -10,7 +10,7 @@ The frozen v1.4 kernel and certified v1.5 Core Maturity remain the protected int
 
 The governing product loop is:
 
-SEARCH → INTELLIGENCE → EVIDENCE → QUALIFICATION → CONTACT PREPARATION → DOCUMENT PACK → ACTION → RESULT → LEARNING
+SEARCH → INTELLIGENCE → EVIDENCE → QUALIFICATION → CONTACT PREPARATION → BUSINESS HANDOFF → ACTION → RESULT → LEARNING
 
 The governing engineering loop is:
 
@@ -53,9 +53,9 @@ The target is not feature breadth. The target is a coherent personal system in w
 Therefore:
 - Web is the first universal client surface;
 - PWA is justified by real mobile/network needs;
-- Android is justified only where native capabilities provide material value;
+- Web + PWA are the approved client surfaces. Native Android is not part of the roadmap unless a separately approved evidence-backed exception is opened;
 - team/RBAC/tenancy is deferred until a real constraint or operating requirement exists;
-- legal/configuration coverage grows from real transaction patterns rather than attempting to model the whole legal universe;
+- external legal/operating assumptions are kept minimal and do not become an internal document-management subsystem;
 - intelligence sources are added by measured contribution, not by provider count;
 - every feature is evaluated by operator-time saved, decision quality improved, risk reduced, or recoverability gained.
 
@@ -69,7 +69,7 @@ The product is one system with four planes:
 
 **Execution & Reliability** → jobs, outbox, idempotency, reconciliation, audit, recovery, observability.
 
-**Experience & Control** → Web/PWA/Android, search center, dossiers, evidence, actions, system control plane.
+**Experience & Control** → Web/PWA, search center, dossiers, evidence, actions, system control plane.
 
 The planes share one canonical API/domain boundary. None may create an alternate business truth.
 
@@ -341,47 +341,114 @@ Build a contact-script test set covering:
 ### Exit criteria
 The operator can open a verified client dossier and receive a usable, evidence-grounded first-contact script without manually reconstructing the research.
 
-## 8. Phase 4 — Legal / Document Configuration Engine
+## 7A. Phase 3A — Repeat Orders & Business Continuity (temporary Shema live mode)
 
 ### Objective
-Turn a verified client and transaction configuration into a correct selectable document pack.
+Until Bitrix24 becomes the live business plane, Shema must provide a usable repeat-order workflow using the already frozen Order/Economics semantics, without reopening the kernel.
 
-### Work
-- legal-role matrix;
-- tax/regime configuration;
-- service/work type;
-- payment/acceptance configuration;
-- EDO/e-signature configuration;
-- document applicability rules;
-- template registry;
-- effective dates;
-- legal-source references;
-- document versioning;
-- generation snapshots and checksums;
-- mandatory/conditional/recommended/optional/not-applicable statuses;
-- NPD status/check controls where relevant;
-- LEGAL_REVIEW_REQUIRED path.
+### Operator workflow
+- **Повторный заказ** is a first-class action from a completed/eligible prior order.
+- The operator sees the prior order context, recurrence pattern, current evidence freshness, current pricing assumptions and capacity/date assumptions.
+- A repeat order is created as a new immutable order transaction; the previous order is never edited.
+- The operator can pause, skip once, resume or cancel the recurrence plan.
+- Current counterparty status and required evidence are revalidated before confirmation.
+- All repeat-order mutations are idempotent and audited.
+
+### Temporary authority
+Before Bitrix24 handoff:
+- Shema owns the live repeat order and the limited transaction-scoped economics required to execute it;
+- the frozen Order/Economics kernel semantics are reused rather than changed;
+- no accounting, tax, payroll or full finance subsystem is introduced.
+
+### Bitrix24 transition
+The complete cutover is governed by:
+`architecture/repeat_order_transition_contract.json`.
+
+A migrated transaction is not purged from Shema merely because Bitrix24 accepted the first write. Purge is permitted only after:
+**snapshot → Bitrix acknowledgement → full readback → completeness proof → recovery snapshot verification**.
+
+After successful migration:
+- live Order/Economics operational rows are purged;
+- a minimal frozen lineage tombstone remains;
+- Order/Economics tabs disappear from the Shema operator interface without a broken layout;
+- deep links show an explicit “moved to Bitrix24” state;
+- Bitrix24 becomes the only live transaction authority.
 
 ### Exit criteria
-For each supported configuration the system can explain why every document is included or excluded, and reproduce the exact generated pack from its configuration/version snapshot.
+The operator can create and manage repeat orders in Shema safely before Bitrix24, and a verified migration can move the complete business transaction/history package to Bitrix24 without duplicate authority or UI breakage.
 
-## 9. Phase 5 — Web Operator System
+## 7B. Phase 3B — Public Intake Data Plane, Trust Boundary and Counterparty Preflight
 
 ### Objective
-Create the primary human operating surface over proven workflows and consolidate the vertical slices into one coherent operator system. This is not the first appearance of UI; earlier phases already include minimal operator surfaces for validation.
+Accept real B2B client demand through the public site while isolating raw submissions from the canonical Shema database and preserving durable notifications.
+
+### Core design
+- raw client form data is written to a **dedicated PostgreSQL database** through the canonical API;
+- the intake database has separate credentials, bounded access and independent recovery tests;
+- request persistence and the intake outbox are atomic;
+- Shema receives only the accepted business context required for operator work;
+- the operator notification center is projected from the durable intake outbox;
+- notification floods are aggregated, while critical alerts are durable and retryable;
+- counterparty preflight remains deterministic and GPT-free for registry truth.
+
+### Exit criteria
+A request survives Shema outages after accepted intake, produces exactly-once operator-visible notification semantics under retries, and can be reconstructed from intake record → preflight snapshot → Shema request context → outcome.
+
+## 7C. Phase 3C — Counterparty Verification, Monitoring & Favorites
+
+### Objective
+Turn the existing lead-search field into a dual-purpose operator tool without creating a second search engine.
+
+### Operator mechanism
+When the operator enters an exact INN/OGRN/OGRNIP:
+- the search mode automatically becomes **Проверка контрагента**;
+- the operator gets deterministic identity/status verification immediately;
+- **Глубокая разведка** invokes the existing bounded intelligence source policy only after identity resolution;
+- **Сохранить в мониторинг** creates a daily change-monitoring record;
+- **В избранное** creates a personal shortcut.
+
+The separate **Контрагенты** workspace contains:
+**Проверка | Мониторинг | Избранные**.
+
+Monitoring is organizationally distinct from favorites:
+- monitoring produces change events and notifications;
+- favorites do not schedule external lookups;
+- monitoring entries are updated from official/verified registry snapshots;
+- registry outage never creates a false “changed” event.
+
+### Exit criteria
+A monitored counterparty has reproducible snapshots, deterministic change detection, severity-aware notifications, checkpointed batch recovery and a direct link back to its dossier/history.
+
+## 8. Phase 4 — Web Operator System
+
+### Objective
+Create the primary human operating surface over proven B2B workflows and consolidate the vertical slices into one coherent operator system. This is not the first appearance of UI; earlier phases already include minimal operator surfaces for validation.
 
 ### Work
-Build only the workflows already proven in Phases 1–4:
-- command/search center;
-- counterparty check;
+
+Build the public and operator surfaces from the same canonical API:
+- public company site;
+- advanced client request form;
+- source/UTM attribution and request correlation;
+- protected operator workspace;
+- client request intake queue;
 - client dossier;
 - intelligence/evidence view;
 - qualification;
 - contact preparation;
-- document pack;
+- Repeat Orders & Business Continuity;
 - action;
 - result;
-- system control plane.
+- system control plane;
+- MAX mini-app projection of the same public request surface;
+- canonical operator-interface contract: `architecture/operator_interface_contract.json`;
+
+### Public-client domain
+- canonical public domain: `схемагрупп.рф`;
+- public request intake never creates authoritative live transaction state;
+- source attribution is preserved from advertising/direct entry through request, operator handling and eventual business handoff;
+- the same public web application is used by the MAX mini-app through a static HTTPS URL;
+- inSales is detached only after the new site, HTTPS, redirects and health checks are validated; existing DNS and mail records are preserved during cutover.
 
 ### Rules
 - canonical API only;
@@ -396,9 +463,9 @@ Build only the workflows already proven in Phases 1–4:
 - visual regression for critical screens.
 
 ### Exit criteria
-The complete operator path works in one Web surface without bypassing server contracts, while direct search, evidence drill-down, technical diagnostics and safe operator overrides remain available without forcing the operator through a hidden ranking/qualification pipeline.
+The complete public-client + operator path works in one Web surface without bypassing server contracts, while direct search, evidence drill-down, technical diagnostics and safe operator overrides remain available without forcing the operator through a hidden ranking/qualification pipeline.
 
-## 10. Phase 6 — PWA
+## 9. Phase 5 — PWA
 
 ### Objective
 Provide installable mobile-capable access without creating a second system.
@@ -416,29 +483,74 @@ Provide installable mobile-capable access without creating a second system.
 ### Exit criteria
 Temporary network loss does not corrupt canonical state or create duplicate effects.
 
-## 11. Phase 7 — Android
+## 10. Phase 6 — Production Web/PWA Consolidation
 
 ### Objective
-Add native Android capability only where it provides material value beyond PWA.
-
-### Native-first candidates
-- notifications;
-- background execution;
-- secure device storage;
-- camera/photo evidence;
-- fast field workflows;
-- network-aware operation;
-- device-specific integrations.
+Finish the primary operator experience on Web and PWA. Android is explicitly removed from the approved roadmap.
 
 ### Rules
-- same canonical API;
-- same domain semantics;
-- same idempotency;
-- no duplicated business rules;
-- local data remains cache/read model or bounded offline queue.
+- Web and PWA use the same canonical API/domain semantics;
+- no additional native client business layer is created;
+- mobile-specific requirements must be proven within PWA before another surface is considered;
+- offline/read-cache and idempotent pending mutations remain bounded and server-authoritative.
 
 ### Exit criteria
-Web/PWA/Android remain one system with different interaction surfaces.
+Web and PWA provide the complete proven operator workflow without a second business-rule implementation.
+
+## 10A. Operator Interface & Multi-Operator Doctrine
+
+### Interface principles
+The operator interface is an operational safety mechanism, not decoration. The authoritative implementation blueprint is `architecture/operator_interface_contract.json`, aligned to mature Bitrix24 CRM patterns. The adopted pattern is:
+- compact summary/highlights at the top;
+- Details, Related records and Activity/History as predictable information groups;
+- list views as work queues with saved filters/sorts and quick actions;
+- quick/contextual views for inspection without losing the current work context;
+- process stages/checklists as guidance, while server-side contracts remain authoritative;
+- progressive disclosure: evidence and technical diagnostics one level deeper;
+- personal view preferences without changing canonical business logic;
+- keyboard-friendly desktop, responsive Web, touch-friendly PWA, accessibility baseline;
+- clear loading/empty/degraded/error/offline/pending states;
+- destructive/irreversible actions require deliberate confirmation.
+
+### Multi-operator foundation
+From the beginning the system supports growth from one operator to several without duplicating business truth:
+- explicit actor identity on actions;
+- owner/assignee/team queue separated from customer identity;
+- audited assignment/reassignment and handoff;
+- revision/concurrency protection so stale writes fail rather than overwrite newer work;
+- role/permission enforcement on the server;
+- shared records without shadow copies;
+- explicit conflict outcomes: reload, accept current, merge supported fields, or manual review;
+- durable work state instead of chat/private UI state;
+- notifications derived from durable server state.
+
+This is a bounded extension around the frozen core, not a new system-of-record or a premature multi-tenant architecture.
+
+## 11. Phase 7 — Yandex Cloud Production Foundation
+
+### Objective
+Move the proven modular monolith into Yandex Cloud without changing domain semantics or creating a second persistence authority.
+
+### Work
+- containerized canonical API/runtime in Serverless Containers;
+- API Gateway as the explicit external edge;
+- Cloud Functions only for narrow scheduled/triggered work;
+- Lockbox for provider/API credentials;
+- Container Registry for immutable application artifacts;
+- Object Storage for bounded large evidence objects and exports;
+- Monium + Monitoring for observability and operational health;
+- Managed PostgreSQL as the production canonical transactional database;
+- target VPC/private networking for production database access;
+- cost budgets and alerts.
+
+### Free/minimal deployment rule
+The serverless shell can begin inside Yandex Cloud free allowances. Real production data requires Managed PostgreSQL cost; the architecture must not replace PostgreSQL with a second database merely to avoid that cost.
+
+### Queue rule
+The existing PostgreSQL job/outbox model remains the business reliability authority. Yandex Message Queue may be introduced later as transport/fanout when measured workload requires it; it must not become a competing transaction authority.
+
+### Exit criteria
+The same frozen kernel and canonical API run in Yandex Cloud with verified secrets, database connectivity, backup/recovery, health checks, observability and rollback, without introducing duplicate business state.
 
 ## 12. Phase 8 — Production Operations
 
@@ -466,7 +578,49 @@ Roll out gradually, observe, and roll back first when a release is unhealthy. Th
 ### Exit criteria
 A release can be deployed, observed, rolled back and reconstructed without ad hoc manual intervention.
 
-## 13. Phase 9 — External Provider Activation and MAX
+## 13. Phase 9 — Bitrix24 Business Control Plane Integration & Transaction Cutover
+
+### Objective
+Turn Bitrix24 into the mature live business plane and safely retire the temporary Shema live Order/Economics mode after verified migration.
+
+### Business-plane composition
+The Setup Agent configures only capabilities actually available on the portal:
+- CRM: companies, contacts, deals, pipelines and permissions;
+- repeat/recurring sales;
+- Smart Process Automation for bounded logistics/routing/executor workflows;
+- tasks, assignments and team processes;
+- inventory/product catalog and product-level economics where supported;
+- CRM documents and signing where supported;
+- tender connector / approved Bitrix24 Market integration for tender work where a native capability is unavailable;
+- external accounting/finance integration where authoritative accounting is required.
+
+Bitrix24 documentation confirms that CRM supports repeat sales, recurring deals, Smart Process Automation, inventory management, CRM documents and role-based permissions; exact availability remains plan-dependent. urlBitrix24 repeat saleshttps://helpdesk.bitrix24.com/open/24147842/ urlBitrix24 recurring dealshttps://helpdesk.bitrix24.com/open/17240254/ urlBitrix24 Smart Process Automationhttps://helpdesk.bitrix24.com/open/19141012/ urlBitrix24 inventory managementhttps://helpdesk.bitrix24.com/open/26000719/ urlBitrix24 CRM documentshttps://helpdesk.bitrix24.com/open/19441484/
+
+### Full transaction/history migration
+For each selected customer transaction:
+1. freeze the Shema live transaction;
+2. build the complete migration package;
+3. reserve/create the Bitrix24 business object;
+4. transfer all required Order/Economics fields and relevant customer/business history;
+5. read back the complete result;
+6. verify counts, references, monetary aggregates and payload hash;
+7. only then mark the Shema data PURGE_ELIGIBLE;
+8. purge live operational Order/Economics rows;
+9. retain the minimal frozen lineage tombstone;
+10. hide the obsolete Shema UI capability.
+
+A lost or ambiguous Bitrix response always enters reconciliation before another write. A failed readback never permits purge.
+
+### Non-goals
+- no wholesale Shema database migration;
+- no parallel live Order/Economics authority after acknowledged cutover;
+- no tender/document subsystem inside Shema;
+- no blind assumption that a Bitrix24 plan exposes every desired capability.
+
+### Exit criteria
+Bitrix24 (plus explicitly selected specialist integrations) can operate the live business lifecycle, while Shema retains intelligence, evidence, learning context and only the minimum immutable lineage required for causal continuity.
+
+## 14. Phase 10 — External Provider Activation and MAX
 
 ### Objective
 Activate external effects only after their safety contracts are proven.
@@ -489,10 +643,10 @@ No workaround provider or implicit fallback is introduced merely to bypass the b
 ### Exit criteria
 A real external effect is safe under timeout, lost-response, retry, duplicate and recovery scenarios.
 
-## 14. Phase 10 — Learning Loop
+## 15. Phase 11 — Learning Loop
 
 ### Objective
-Close the loop from outcomes back into intelligence and operator decisions.
+Close the loop from outcomes back into intelligence and operator decisions without importing the complete CRM/finance database into Shema.
 
 ### Inputs
 - accepted/rejected candidates;
@@ -500,11 +654,12 @@ Close the loop from outcomes back into intelligence and operator decisions.
 - contactability;
 - script outcomes;
 - next-step outcomes;
-- order;
-- revenue/cost/margin;
+- won/lost or completed outcome classes from Bitrix24;
+- repeat-business signals;
 - provider/source quality;
 - operator corrections;
-- freshness failures.
+- freshness failures;
+- optional coarse economic outcome features only when explicitly justified.
 
 ### Outputs
 - better search plans;
@@ -512,12 +667,13 @@ Close the loop from outcomes back into intelligence and operator decisions.
 - better research depth selection;
 - better qualification;
 - better contact preparation;
-- better document configuration.
+- better source/provider selection;
+- measured infrastructure/resource policy.
 
 ### Rule
 Learning changes controlled application policy, not canonical historical truth.
 
-## 15. Phase 11 — Measured scalability and team mode
+## 16. Phase 12 — Measured scalability and team mode
 
 ### Objective
 Scale only where actual use creates a measured constraint.
@@ -535,7 +691,7 @@ Scale only where actual use creates a measured constraint.
 ### Trigger
 A real bottleneck or isolation/security requirement must exist before introducing structural complexity.
 
-## 15A. Operator freedom and complexity guardrails
+## 16A. Operator freedom and complexity guardrails
 
 These are permanent roadmap rules, not optional UX preferences:
 
@@ -547,24 +703,23 @@ These are permanent roadmap rules, not optional UX preferences:
 - UI complexity must not increase unless operator value is demonstrated;
 - mature-system patterns are adopted by principle, not copied wholesale by subsystem count.
 
-## 16. What must NOT happen
+## 17. What must NOT happen
 
 - no v1.6/v1.7 kernel expansion for UI convenience;
-- no parallel Web/PWA/Android business-rule implementations;
-- no giant intelligence graph before useful bounded workflows exist;
+- no parallel client business-rule implementations;
+- - no giant intelligence graph before useful bounded workflows exist;
 - no mass source integration before both identity and search-relevance benchmarks exist;
 - no mandatory qualification/ranking gate that prevents direct operator search;
 - no enterprise/team-mode complexity before an actual operating constraint exists;
 - no AI truth authority;
 - no provider activation because an API endpoint exists;
 - no automatic retries without external-effect safety evidence;
-- no legal template treated as universally correct;
 - no second system of record in clients;
 - no microservices merely as a maturity signal;
 - no scale claims without measurements;
 - no release without full gate evidence.
 
-## 17. Priority order
+## 18. Priority order
 
 The practical priority is:
 
@@ -572,22 +727,23 @@ The practical priority is:
 1. Intelligence quality benchmark + manual counterparty verification
 2. Search/Research maturity
 3. Contact preparation
-4. Legal/Document engine
-5. Web operator system
-6. PWA
-7. Android
-8. Production operations
-9. External provider activation / MAX
-10. Learning loop
-11. Measured scalability/team mode
+4. Repeat Orders & Business Continuity (temporary Shema live mode)
+5. Public Intake Data Plane + Trust Boundary + Counterparty Preflight
+6. Counterparty Verification, Monitoring & Favorites
+7. Web/PWA public client surface + operator workspace + MAX mini-app projection
+8. Yandex Cloud production foundation
+9. Bitrix24 business-plane configuration + full transaction/history cutover
+10. Production operations and guarded external activation / MAX
+11. Learning loop
+12. Measured scalability/team mode
 
 Where two capabilities are tightly coupled, build them as one vertical slice rather than separate half-finished layers.
 
-## 18. Final target state
+## 19. Final target state
 
 The mature Shema system should allow the owner to move through one coherent loop:
 
-**Find → Resolve → Verify → Understand → Qualify → Prepare contact → Prepare documents → Act → Observe result → Learn**
+**Find → Resolve → Verify → Understand → Qualify → Prepare contact → Handoff → Act → Observe result → Learn**
 
 while the platform guarantees:
 

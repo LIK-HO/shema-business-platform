@@ -1,13 +1,14 @@
 # СХЕМА Business Platform — Development Manifest
 ## Формальный манифест зрелого ядра и рациональной разработки
 
-**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / MAX Evidence Hold / Phase 2-H Runtime Negative/Recovery Closed
-**Active development boundary:** NONE — Phase 2-H Runtime Negative Provider Outcomes & Recovery is CLOSED / VERIFIED; DaData live execution remains explicitly OFF.
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / P47 Strategy Boundary Closed / Operator Interface Contract Closed / **Phase 3A Repeat Orders Closed / MAX Evidence Hold**
+**Current verified boundary:** **Phase 3A Repeat Orders & Business Continuity — CLOSED / VERIFIED** after implementation, global adversarial review and full seven-job release-gate CI #1628 (`36402645839`). The frozen v1.4 kernel remains unchanged; Web/PWA, public intake, Bitrix24 live handoff and MAX activation remain later separately gated boundaries.
 **Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
 **Kernel baseline:** v1.4 frozen
 **Runtime baseline:** v1.5.0
 **System target:** personal-first, scalable when justified, reliable, durable and mature system; not a SaaS breadth target.
-**Strategy revalidation:** 2026-09-26 — post-core strategy rechecked against mature systems; balance rules below are binding for subsequent product development.
+**Strategy revalidation:** 2026-09-28 — B2B-first / Bitrix24 transition strategy rechecked against mature systems; global adversarial survivability gate is now binding for subsequent product development.
+**Latest closure verification:** P47 is CLOSED / VERIFIED at the architecture-and-test stage on the final functional release gate CI #1600 (`36397100698`); all seven jobs are GREEN. This final documentation synchronization contains no product/runtime semantics. Runtime implementation remains governed by the roadmap's later capability boundaries.
 
 ---
 
@@ -28,13 +29,34 @@
 Работа с GitHub не должна зависеть от памяти предыдущего диалога. Вход в каждый новый development session выполняется по `docs/GITHUB_WORK_PROTOCOL.md`, `docs/DEVELOPMENT_STATE.md` и `AGENTS.md`; текущий branch/HEAD/PR/CI всегда читаются заново из GitHub.
 
 Post-core development order is governed by `docs/ROADMAP.md`. The roadmap is capability-oriented and does not reopen frozen kernel semantics.
+
+## 1B. Global adversarial survivability gate — MANDATORY
+
+This is a hard development rule, not a recommendation.
+
+**Every material strategy change and every completed development element must trigger a fresh global adversarial review of the entire approved architecture and system before the element can be marked VERIFIED or CLOSED.**
+
+The review is intentionally conducted from the position of a professional attempting to destroy the system: find split-brain truth, hidden single points of failure, causal-chain breaks, unsafe external effects, operator dead ends, multi-operator races, migration traps, cost/quota cascades, privacy leaks, provider lock-in and external legal and operating-environment change.
+
+The check covers the whole system, not only the changed file or module:
+**frozen kernel → post-core contracts → runtime → persistence → integrations → operator workflow → multi-operator model → security/recovery → external legal/operating constraints → migration/rollback → cost/resource limits.**
+
+Closure is blocked until:
+- P0 findings are fixed or handled by an explicitly approved architecture exception;
+- P1 findings are fixed or have an explicit bounded control and scheduled boundary;
+- P2 findings have a concrete control and ownership boundary;
+- current-head tests and the full release gate are re-run after the change.
+
+“Immortal” is the engineering target in the sense of **survivable architecture**: no designed failure should destroy canonical truth or make deterministic recovery impossible. Literal zero-failure is not asserted; preservation of truth, containment, recovery, audit and learning are.
+
+Machine-readable contract: `architecture/global_adversarial_survivability_gate_contract.json`.
 ## 1A. Цельный образ продукта и баланс стратегии
 
 Shema — это **личная операционная система владельца**, а не урезанная корпоративная CRM/ERP и не SaaS-продукт, который должен догонять коммерческие платформы по числу функций.
 
 Её назначение — дать одному оператору цельный, надёжный путь:
 
-**Намерение → Поиск → Разрешение сущности → Проверка → Понимание → Квалификация → Подготовка контакта → Подготовка документов → Действие → Результат → Обучение системы**
+**Намерение → Поиск → Разрешение сущности → Проверка → Понимание → Квалификация → Подготовка контакта → Передача в бизнес-контур → Действие → Результат → Обучение системы**
 
 При этом внутри система выполняет гораздо больше работы:
 
@@ -48,7 +70,7 @@ Shema — это **личная операционная система влад
 4. **Операторский путь важнее архитектурной красоты.** Любая новая capability должна либо заметно повышать качество решения, либо сокращать операторское время/ошибки, либо защищать критический риск. Само наличие технологии преимуществом не является.
 5. **Personal-first означает не anti-scale, а deferred-scale.** Архитектура допускает будущую нагрузку/командный режим, но текущий UX, deployment model и процессы не должны платить сложностью за гипотетический масштаб.
 6. **Модульность предпочтительнее распределённости.** Modular monolith, PostgreSQL и provider-neutral boundaries остаются базой. Service extraction, отдельные очереди, специализированные хранилища и team-mode появляются только по измеренной причине.
-7. **Не строить функции ради полноты продукта.** PWA, Android, расширенный graph, дополнительные AI providers, CRM-интеграции и командные функции — условные capabilities; они включаются только при доказанной полезности.
+7. **Не строить функции ради полноты продукта.** PWA, расширенный graph, дополнительные AI providers, CRM-интеграции и командные функции — условные capabilities; новый client surface допускается только по отдельному доказательству полезности.
 8. **Каждый важный автоматизм должен иметь понятный отказ.** Оператор должен понимать, что система знает, чего не знает, что не проверяла и почему действие ограничено.
 
 ### Три уровня взаимодействия с системой
@@ -106,6 +128,43 @@ Shema — это **личная операционная система влад
 - Phase 2-H must preserve provider isolation: one provider adapter cannot inherit another provider's rate limits, errors, timeout semantics, retry policy or authorization assumptions. DaData enters through the provider-neutral counterparty-lookup boundary, not the discovery SearchProvider contract.
 - DaData is classified as `trusted_secondary`, not `authoritative`; its data may support discovery, identity resolution and enrichment, but cannot by itself promote canonical truth without the existing Evidence/identity rules.
 - Live execution remains disabled. Provider lookup observations may enter Evidence through the verified boundary, but trusted-secondary data cannot promote canonical Identity by itself.
+
+### Product decisions added 2026-09-28
+
+- **Repeat business:** mandatory Phase 3A is now **Repeat Orders & Business Continuity (temporary Shema live mode)**. Shema may execute bounded repeat orders and limited transaction-scoped economics until Bitrix24 becomes the live business plane. The frozen Order/Economics semantics are reused; no second recurring-deal engine is built. The complete transfer/purge contract governs the later Bitrix24 cutover.
+- **Interface:** adopted a dedicated Bitrix24-aligned operator workspace contract: persistent left navigation, list-first work queues, saved filters/sorts, optional Kanban, quick actions, contextual/split inspection, structured record forms with activity/history, related-record links and progressive disclosure. Canonical contract: `architecture/operator_interface_contract.json`.
+- **Multi-operator:** collaboration is a permanent architectural requirement: explicit actor, ownership/assignment/team queues, server-side permissions, revision/concurrency protection, audited handoff, explicit conflict resolution and no shadow copies.
+- **Clients:** Web + PWA are sufficient and remain the only approved experience surfaces. Android is removed from the roadmap.
+- **Source set:** the external intelligence layer uses a small role-based source portfolio with query-driven routing; specialist sources are triggered only by a concrete evidence gap. Contract: `architecture/intelligence_source_policy_contract.json`.
+- **Bitrix24 setup:** a bounded Bitrix24 Business Plane Setup Agent is part of the integration boundary. It discovers the actual portal, plans and dry-runs changes, applies only owned/namespaced configuration, verifies read-back and records mapping/configuration versions. It is not part of the frozen kernel and does not become a CRM or generic automation agent. Contract: `architecture/bitrix24_configuration_agent_contract.json`.
+
+### Research basis
+Recurring work: https://helpdesk.bitrix24.com/open/25850555/ ; https://knowledge.hubspot.com/payments/manage-subscriptions-for-recurring-payments ; https://support.pipedrive.com/en/article/recurring-products ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/22eca60c150344f89bcee6255485f8c7.html ; https://help.salesforce.com/s/articleView?id=sf.order_overview.htm&language=en_US&type=5
+Interface/workspace: https://help.salesforce.com/s/articleView?id=sf.lightning_page_components.htm&language=en_US&type=5 ; https://learn.microsoft.com/en-us/power-apps/user/use-model-driven-apps ; https://learn.microsoft.com/en-us/power-automate/business-process-flows-overview ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/a630d57fc5004c6383e7a81efee7a8bb/f7b3e498c30a4f9aad381062cc9d8b09.html
+Multi-operator: https://learn.microsoft.com/en-us/power-platform/admin/how-record-access-determined ; https://learn.microsoft.com/en-us/power-platform/admin/security-roles-privileges
+### Adversarial boundary corrections added 2026-09-28
+
+- The business-plane handoff is an explicit capability contract, not a verbal process. See `architecture/business_plane_boundary_contract.json`.
+- `PREPARED → OUTBOX_RESERVED → SENT_UNKNOWN → ACKNOWLEDGED` is the minimum safe handoff lifecycle; lost acknowledgements require reconciliation before replay.
+- A single live business field has one owner. Shema and Bitrix24 never perform unconstrained bidirectional writes to the same live field.
+- Temporary Shema repeat orders use the frozen Order/Economics semantics and must not reimplement Bitrix24's recurring-deal engine; after verified handoff Bitrix24 owns live repeat execution.
+- Customer-facing communication after handoff belongs to the business plane. MAX from Shema is not a substitute second communication history; any future direct customer-channel activation requires an explicit reconciliation/ownership contract.
+- Monium is operational observability only; long-lived audit and business history remain PostgreSQL-owned.
+- YandexGPT cost ceilings are explicit configuration, never an implicit zero default.
+
+### Strategic product-boundary correction added 2026-09-28
+
+- **Core role:** Shema is the intelligence, evidence and decision-support system. New development must not turn it into a second CRM/ERP/accounting/personnel platform.
+- **Runtime:** Yandex Cloud is the target deployment environment. Start with serverless components where practical; PostgreSQL remains the canonical production database because the frozen kernel already establishes it as the transaction authority.
+- **Business-plane ownership:** When the business becomes mature enough to require expanded transaction control, Bitrix24 becomes the live business-process/CRM/communication/calculation/economics control plane. Shema hands over a verified context package and later consumes minimal outcome signals for learning.
+- **Data-plane continuity:** On Yandex Cloud, Managed PostgreSQL remains the canonical Shema database. When Bitrix24 is introduced, the Shema database is **not** moved wholesale into Bitrix24. Bitrix24 stores its own live business data and becomes authoritative only for the business domains explicitly handed over. Shema continues to store intelligence/evidence/provenance/handoff lineage/outcome context. The two domains are joined by stable references, handoff IDs, correlation IDs and versioned mappings, not by competing writes to one live field.
+- **Operator continuity:** The operator should experience one causal workflow, not two unrelated databases. Before handoff, Shema owns intelligence and preparation; after handoff, Bitrix24 owns the live business process. Every handoff remains traceable from the Bitrix entity back to the Shema dossier and from Shema outcome context back to the Bitrix entity. For several operators, live assignment/team workflow belongs to Bitrix24 after handoff; Shema does not keep a shadow operational order board.
+- **Economics boundary:** existing frozen Order/Economics semantics remain for compatibility, lineage and learning; no new Shema accounting subsystem is to be developed unless a separately justified architectural exception is approved.
+- **AI:** the existing YandexGPT adapter remains the primary AI path in Yandex Cloud. AI may summarize, classify and prepare; it cannot become canonical identity, legal or economic truth.
+- **MAX:** the adapter remains, but live outbound effects stay fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
+- **Cloud observability:** new Yandex Cloud deployment documentation must target Monium rather than Cloud Logging because Yandex Cloud states Cloud Logging is scheduled for shutdown in Q2 2027.
+- **Integration principle:** external systems are connected by explicit field ownership. The same live field must never have competing authorities.
+- **Implementation order:** B2B contact preparation → bounded Repeat Orders & Business Continuity → Web/PWA → Yandex Cloud production → Bitrix24 business-plane integration → guarded external communication / MAX → learning → measured scale.
 
 ### Критерий допуска новой capability
 
@@ -360,21 +419,27 @@ Migration 0009 state_ownership_invariants добавляет PostgreSQL constrai
 
 # 4. Архитектурная истина
 
-## 4.1. Единственная canonical transactional authority
+## 4.1. Canonical transactional authority inside Shema and bounded external business authority
 
-PostgreSQL.
+Внутри Shema единственная canonical transactional authority — **PostgreSQL**.
 
-Не являются system of record:
-- Airtable;
-- Replit;
-- Bitrix24;
-- MAX;
-- AI provider;
-- CRM;
-- UI;
-- intelligence provider.
+Это правило относится к состоянию, которым владеет сама Shema:
+- Identity;
+- Evidence;
+- provenance/freshness;
+- research/intelligence state;
+- platform audits;
+- platform jobs/outbox;
+- historical compatibility state of the frozen kernel.
 
-Они могут быть adapters/integrations, но не источниками canonical business truth.
+Внешняя система может быть authoritative **только для собственного явно выделенного бизнес-домена после формального handoff**. Для зрелой стадии это означает:
+- Bitrix24 — owner live business-process fields, CRM/deal/order lifecycle, transaction pricing, payments/economics and business communication history after handoff;
+- Shema не зеркалит эти поля как вторую истину, а хранит reference/correlation и минимальные outcome signals required for learning;
+- MAX remains a communication adapter and is not a business system of record;
+- AI providers and intelligence providers never become canonical truth;
+- UI, Airtable and Replit never become canonical truth.
+
+Таким образом, нет двух систем, редактирующих одну и ту же canonical field. Есть **domain ownership**, explicit handoff и reconciliation между границами.
 
 ## 4.2. Modular monolith остаётся осознанным решением
 
@@ -665,7 +730,7 @@ Risk/reputation findings не должны автоматически стано
 
 Результат downstream работы должен возвращаться в поиск:
 
-**SEARCH → QUALIFICATION → ACTION → ORDER/RESULT → ECONOMICS → LEARNING → SEARCH**
+**SEARCH → QUALIFICATION → CONTACT/PREPARATION → HANDOFF → BUSINESS OUTCOME → LEARNING → SEARCH**
 
 Система должна учиться на:
 - accepted/rejected candidates;
@@ -787,32 +852,18 @@ PWA является installable/resilient Web surface, а не отдельно
 
 Offline mode не должен создавать вторую canonical transaction authority. Локальные данные — cache/read model; canonical write semantics остаются на сервере.
 
-## 5A.4. Android application
+## 5A.4. Web/PWA mobile doctrine
 
-Android — самостоятельный client surface, использующий тот же canonical API и domain semantics.
+Android is explicitly removed from the approved roadmap. Mobile-specific product requirements are implemented in PWA unless a future evidence-backed exception is approved. There is no Android-specific business rule, data model, authorization path or offline authority.
 
-Обязательно:
-- state-driven UI;
-- clear separation UI / data / domain concerns;
-- local persistence only as cache/read model or bounded offline queue;
-- reconnect and sync semantics;
-- lifecycle-safe background work;
-- secure credential/session storage;
-- notification/deep-link handling;
-- app update and rollback strategy;
-- crash diagnostics;
-- permission minimization;
-- network and battery aware execution;
-- end-to-end coverage критических workflows.
-
-## 5A.5. Offline-aware multi-device continuity
+## 5A.5. Offline-aware Web/PWA continuity
 
 Система должна нормально переживать:
 - потерю сети;
 - смену устройства;
 - временную недоступность API;
 - повторное открытие приложения;
-- одновременное использование Web/PWA/Android.
+- одновременное использование Web и PWA.
 
 Правило:
 **local state may accelerate or buffer the experience, but cannot silently override canonical server state.**
@@ -854,7 +905,7 @@ Background work не должен незаметно создавать critical
 
 ## 5A.8. Client observability
 
-Для Web/PWA/Android должны быть различимы:
+Для Web/PWA должны быть различимы:
 - application error;
 - network error;
 - auth/session failure;
@@ -962,10 +1013,10 @@ Provider availability alone никогда не является основан�
 
 Масштабируемость достигается архитектурой, а не усложнением повседневного интерфейса.
 
-Web является обязательным первым универсальным surface. PWA рассматривается как способ улучшить доступность/устойчивость работы при реальной потребности. Android строится только там, где native-возможности дают измеримое преимущество. Ни один client surface не является обязательным исключительно ради галочки зрелости.
+Web является обязательным первым универсальным surface. PWA — второй и достаточный mobile surface. Android исключён из текущей целевой архитектуры. Ни один client surface не является обязательным исключительно ради галочки зрелости.
 ## 5A.15. Experience-layer completion boundary
 
-Experience layer не считается завершённым по факту наличия Web/PWA/Android.
+Experience layer не считается завершённым по факту наличия Web/PWA.
 
 Завершение требует:
 - visual/interaction system;
@@ -1050,88 +1101,19 @@ DOSSIER → ЛПР/ROLE HYPOTHESIS → CONTACT CONTEXT → VALUE HYPOTHESIS → 
 - какие факты требуют повторной проверки;
 - какие вопросы лучше задать вместо предположения.
 
-# 5D. Конструктор документов и юридическая конфигурация
+# 5C-A. Repeat Orders & Business Continuity
 
-Система должна иметь отдельный Document & Legal Configuration layer, не являющийся частью frozen domain kernel.
+Until Bitrix24 becomes the live business plane, Shema provides a bounded operator-facing repeat-order workflow on the frozen Order/Economics semantics. A repeat order is a new immutable transaction; the previous order remains unchanged.
 
-Его задача:
-тип контрагентов → налоговый/правовой режим → тип работ/услуг → схема расчёта → требования к оформлению → предлагаемый комплект документов → версия шаблонов → legal/evidence status
+Required operator semantics:
+- create the next repeat order from an eligible prior order;
+- revalidate counterparty status, service scope, evidence freshness, current pricing assumptions and date/capacity assumptions before confirmation;
+- pause, skip once, resume and cancel the repeat plan;
+- protect duplicate creation with idempotency and audit;
+- expose the current repeat queue as a list with an optional Kanban view;
+- preserve causal links to the originating client, prior order and later Bitrix24 handoff.
 
-## 5D.1. Матрица конфигураций
-
-Минимально поддерживаются конфигурации:
-- ООО → ООО;
-- ООО → ИП;
-- ООО → ИП на НПД;
-- ООО → физлицо — плательщик НПД, где такая модель допустима;
-- ИП → ООО;
-- ИП → ИП;
-- ИП → ИП на НПД;
-- ИП → физлицо — плательщик НПД;
-- и обратные направления, если конкретная сделка юридически допустима.
-
-Конфигурация должна также учитывать:
-- применяемый налоговый режим;
-- НДС/не НДС, когда применимо;
-- вид работ/услуг;
-- оплату;
-- приёмку;
-- ЭДО/электронную подпись;
-- особенности конкретной сделки;
-- дату и версию действующих правил.
-
-Система не должна зашивать налоговые ставки или правовые последствия как вечные constants.
-
-## 5D.2. Document Pack Builder
-
-Для каждой конфигурации система предлагает:
-- обязательные документы;
-- условно обязательные;
-- рекомендуемые;
-- дополнительные;
-- неприменимые.
-
-Типы могут включать:
-- коммерческое предложение;
-- сопроводительное письмо;
-- договор;
-- заявка/заказ;
-- спецификация;
-- ТЗ;
-- акт;
-- счёт/иные расчётные документы, когда применимо;
-- УПД/иные первичные документы, когда применимо;
-- NPD-status verification;
-- NPD receipt/check control;
-- отчёт/фотофиксацию/подтверждение результата, если это часть сделки.
-
-ФНС указывает, что при работе с плательщиком НПД статус можно проверять по ИНН на официальном сервисе, а чек НПД является ключевым подтверждающим документом расходов; акт может дополнять чек, но не заменяет его.
-
-## 5D.3. Template governance
-
-Каждый шаблон должен иметь:
-- template_id;
-- version;
-- effective_from;
-- configuration applicability;
-- legal source references;
-- last legal review;
-- generation snapshot;
-- checksum;
-- change reason.
-
-Документогенерация должна быть детерминированной и аудируемой.
-
-## 5D.4. Legal safety
-
-Система:
-- не делает автономных юридических выводов при отсутствии достаточного основания;
-- показывает применённые правила и источники;
-- переводит неоднозначные конфигурации в LEGAL_REVIEW_REQUIRED;
-- не подменяет профессиональную юридическую консультацию;
-- не генерирует фиктивные реквизиты, обязательства или факты.
-
-Юридическая конфигурация должна учитывать действующее российское регулирование по ГК РФ, первичным учётным документам, электронной подписи, НПД и персональным данным; соответствующие источники должны быть версионированы в системе.
+Bitrix24 owns the mature recurring-deal engine after verified handoff. Shema never becomes a second recurring CRM/order engine.
 
 # 5E. Ручная проверка контрагента
 
@@ -1153,7 +1135,7 @@ DOSSIER → ЛПР/ROLE HYPOTHESIS → CONTACT CONTEXT → VALUE HYPOTHESIS → 
 - источники;
 - history/revalidation;
 - recommended next step;
-- downloadable verification report.
+- machine-readable verification snapshot with traceable evidence references.
 
 Для российских юрлиц и ИП стартовым authoritative layer должен быть официальный контур ФНС. Сервис «Прозрачный бизнес» поддерживает поиск по ИНН/ОГРН/названию для организаций и ИНН/ОГРНИП/ФИО для ИП и объединяет государственные сведения; ФНС отдельно подчёркивает необходимость комплексной оценки, а не вывода по одному индикатору.
 
@@ -1192,7 +1174,7 @@ truth → identity → evidence → freshness → interpretation → operator us
 - explainable resolution;
 - selective deep research;
 - compact operator view;
-- reusable document/configuration engine.
+- reusable intelligence/evidence primitives.
 
 Подробный алгоритм закреплён в:
 docs/EXTERNAL_INTELLIGENCE_AND_CONTACT_SYSTEM.md.
@@ -1772,21 +1754,6 @@ Simple core first → standard patterns → measured scaling → extracted servi
 
 ---
 
-# 13C. Definition of Done — Contact Preparation / Legal Documents / Counterparty Check
-
-- [ ] Contact preparation is evidence-grounded and snapshot-versioned.
-- [ ] LPR/role hypotheses are distinguishable from verified facts.
-- [ ] First-contact scripts contain controlled branches and explicit non-claims.
-- [ ] Document Pack Builder selects documents from a configuration matrix.
-- [ ] Legal templates are versioned, source-linked and effective-date aware.
-- [ ] Ambiguous legal configurations fail closed to LEGAL_REVIEW_REQUIRED.
-- [ ] Manual INN/OGRN/OGRNIP checks use the same Identity/Evidence pipeline.
-- [ ] NPD status verification is available by INN and date.
-- [ ] Required NPD cheque/check controls are represented in relevant document packs.
-- [ ] Generated documents, evidence snapshots and configuration versions are auditable.
-- [ ] No document template or AI output silently creates legal authority.
-- [ ] The operator can move from verified intelligence to a prepared contact and document set without reconstructing the dossier manually.
-
 # 13B. Definition of Done — Mature Search / Intelligence System
 
 - [ ] Multi-source search orchestration is implemented behind provider-neutral boundaries.
@@ -1819,10 +1786,9 @@ The frozen core remains complete independently of the following product-surface 
 - [ ] Direct operator search remains available without mandatory ranking/qualification gates.
 - [ ] Canonical Web client is implemented against canonical API only.
 - [ ] PWA install/update/offline-aware/reconnect semantics are verified.
-- [ ] Android client uses the same canonical API/domain semantics.
 - [ ] Offline-aware multi-device continuity is deterministic and server-authoritative.
 - [ ] Client security/session/device controls are verified.
-- [ ] Web/PWA/Android critical workflows have E2E coverage.
+- [ ] Web/PWA critical workflows have E2E coverage.
 - [ ] Critical UI screens have accessibility and visual-regression coverage.
 - [ ] Client telemetry is correlation-aware, redacted and non-authoritative.
 - [ ] Client releases have compatibility, staged rollout and rollback strategy.
@@ -1869,7 +1835,7 @@ The frozen core remains complete independently of the following product-surface 
 - MAX transport;
 - intelligence providers;
 - payments/settlement;
-- Web/PWA/Android;
+- Web/PWA;
 - team mode;
 - CRM integrations;
 - product/reporting features;
@@ -1883,9 +1849,28 @@ Core изменяется только по доказанному invariant def
 
 ## Experience / Client doctrine
 
+**One system, two surfaces: Web + PWA.**
+
+Применяется зрелый workspace-паттерн: компактный summary/highlights сверху; Details; Related records; Activity/History; list/work queues; quick actions; contextual/split inspection; progressive disclosure для Evidence/Technical; персональные view preferences без изменения canonical truth. Этапы процесса могут отображаться как stage strip/checklist, но серверные contracts остаются единственной authority.
+
+### Multi-operator collaboration doctrine
+
+Система с первого дня готова к увеличению числа операторов:
+- явный actor identity на consequential actions;
+- owner/assignee/team queue отделены от customer Identity;
+- server-side authorization and least privilege;
+- audited assignment/reassignment/handoff;
+- revision/concurrency token; stale writes fail instead of silently overwriting newer state;
+- shared work without shadow copies;
+- explicit conflict outcomes: reload, accept current, merge supported fields, manual review;
+- durable work state and notifications derived from server state, not private UI state.
+
+Это bounded experience/application layer вокруг frozen core, а не новый источник истины или преждевременная multi-tenant архитектура.
+
+
 **One system, multiple surfaces.**
 
-Web, PWA and Android are different experience surfaces over one canonical API/domain system.
+Web and PWA are the experience surfaces over one canonical API/domain system.
 
 They must share:
 - canonical identifiers;
@@ -1936,3 +1921,21 @@ The agent must restore these documents before substantive GitHub work. A convers
 The current source-tree HEAD is never copied into this manifest as a permanent value. Live GitHub state is authoritative for branch, commit, PR and CI status.
 
 **Новые core semantics не добавляются только потому, что появилась новая feature request.**
+
+## Public Intake / Platform Evolution Synchronization — 2026-09-28
+
+- Added mandatory platform evolution contract: architecture/platform_evolution_contract.json.
+- Added public request trust-boundary contract: architecture/public_intake_counterparty_preflight_contract.json.
+- Public intake is untrusted ingress and never writes live Bitrix24 business state directly.
+- Counterparty preflight is deterministic and registry-driven; GPT is excluded from identifier validation and registry truth lookup.
+- Public responses contain minimal status/match information; the operator sees the evidence-linked preflight summary and can drill down.
+- Public-ingress/provider changes are classified E2 and require abuse, resource/cost, security, rollback/deactivation, provider-exit and global-adversarial gates.
+## 2026-09-28 — Public Intake Data Plane, Repeat Orders, Monitoring and Bitrix Cutover
+
+- Added `architecture/public_intake_data_plane_contract.json`: raw public requests live in a dedicated PostgreSQL database with separate credentials, durable intake outbox and operator notification projection.
+- Added `architecture/repeat_order_transition_contract.json`: temporary live repeat-order mode in Shema until Bitrix24 handoff, followed by completeness-verified migration, purge of live Order/Economics rows and frozen hidden lineage.
+- Added `architecture/counterparty_monitoring_contract.json`: exact INN/OGRN/OGRNIP detection in the existing lead-search field, deterministic preflight, bounded deep research, daily monitoring, change notifications and separate favorites.
+- Added `architecture/operator_interface_contract.json`: canonical operator shell, list/Kanban work queues, Bitrix24-aligned record form/timeline patterns, counterparty/repeat-order workspaces, capability-aware UI hiding and no-second-authority rules.
+- Bitrix24 remains the mature live business plane; CRM, SPA, tasks, inventory, documents, routing/logistics and executor workflows are configured only where capabilities are actually available. Tender work uses a specialist connector when needed; no tender subsystem is reintroduced into Shema.
+- Public intake data never writes the canonical Shema database directly from the browser and never creates a live Bitrix24 transaction.
+- Order/Economics UI removal after verified Bitrix cutover is a capability-driven hide, not a broken route or empty navigation element.

@@ -7,6 +7,7 @@ from shema_platform.domain.commercial_action import CommercialAction
 from shema_platform.domain.economics import EconomicEntry
 from shema_platform.domain.identity import Identity
 from shema_platform.domain.order import Order
+from shema_platform.domain.repeat_order import RepeatOrderPlan
 from shema_platform.domain.search import SearchHit
 from shema_platform.foundation.audit import AuditRecord
 from shema_platform.foundation.evidence import Evidence
@@ -169,6 +170,21 @@ class OrderRepository(Protocol):
     def save(self, order: Order) -> None: ...
 
 
+class RepeatOrderRepository(Protocol):
+    """Persistence port for repeat-order planning state with optimistic concurrency."""
+
+    def add(self, plan: RepeatOrderPlan) -> None: ...
+
+    def get(self, plan_id: str) -> RepeatOrderPlan | None: ...
+
+    def save(
+        self,
+        plan: RepeatOrderPlan,
+        *,
+        expected_revision: int,
+    ) -> RepeatOrderPlan: ...
+
+
 class EconomicEntryRepository(Protocol):
     """Append-only persistence port for traceable economic entries."""
 
@@ -197,6 +213,7 @@ class UnitOfWork(Protocol):
     jobs: JobRepository
     commercial_actions: CommercialActionRepository
     orders: OrderRepository
+    repeat_orders: RepeatOrderRepository
     economics: EconomicEntryRepository
     ai_runs: AIRunRepository
 

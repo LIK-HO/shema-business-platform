@@ -30,6 +30,12 @@ from shema_platform.application.counterparty_provider_activation import (
 from shema_platform.application.counterparty_provider_runtime_lookup import (
     CounterpartyProviderRuntimeLookupService,
 )
+from shema_platform.application.public_intake import (
+    PublicIntakePayload,
+    PublicIntakeRateLimited,
+    PublicIntakeSecurityRejected,
+    PublicIntakeService,
+)
 from shema_platform.experience.api_models import (
     AIRunRequest,
     AIRunResponse,
@@ -50,8 +56,12 @@ from shema_platform.experience.api_models import (
     DiscoveryResponse,
     EconomicResponse,
     ErrorEnvelope,
+    OperatorNotificationListResponse,
+    OperatorNotificationResponse,
     OrderCreateRequest,
     OrderResponse,
+    PublicIntakeRequest,
+    PublicIntakeResponse,
     ResearchRequest,
     ResearchResponse,
     SearchRequest,
@@ -62,7 +72,7 @@ from shema_platform.foundation.authentication import (
     AuthenticationPort,
     AuthenticationRequired,
 )
-from shema_platform.foundation.authorization import AuthorizationSubject, Permission
+from shema_platform.foundation.authorization import AuthorizationSubject, Permission, RBACAuthorizer
 from shema_platform.foundation.errors import (
     AuthorizationError,
     IdempotencyConflict,
@@ -201,7 +211,13 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
 
 class AuthenticationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.url.path in {"/docs", "/redoc", "/openapi.json", "/health/ready"}:
+        if request.url.path in {
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/health/ready",
+            "/v1/public/intake",
+        }:
             return await call_next(request)
 
         authenticator: AuthenticationPort | None = request.app.state.authenticator
@@ -274,6 +290,8 @@ def create_app(
     counterparty_checker: CounterpartyCheckService | None = None,
     counterparty_provider_activation: CounterpartyProviderActivationService | None = None,
     counterparty_provider_lookup: CounterpartyProviderRuntimeLookupService | None = None,
+    public_intake: PublicIntakeService | None = None,
+    operator_notification_reader=None,
 ) -> FastAPI:
     runtime_security = RuntimeSecurityConfiguration.from_environment(
         docs_enabled=enable_docs
@@ -298,6 +316,8 @@ def create_app(
     app.state.counterparty_checker = counterparty_checker
     app.state.counterparty_provider_activation = counterparty_provider_activation
     app.state.counterparty_provider_lookup = counterparty_provider_lookup
+    app.state.public_intake = public_intake
+    app.state.operator_notification_reader = operator_notification_reader
     default_telemetry: TelemetrySink = (
         StructuredLoggingTelemetrySink()
         if runtime_security.environment == "production"
@@ -365,6 +385,31 @@ def create_app(
             status_code=409,
             code="idempotency_conflict",
             message=str(exc),
+        )
+
+    @app.exception_handler(PublicIntakeSecurityRejected)
+    async def public_intake_security_rejected(
+        request: Request,
+        exc: PublicIntakeSecurityRejected,
+    ) -> JSONResponse:
+        return _error(
+            request,
+            status_code=400,
+            code="public_intake_security_rejected",
+            message=str(exc),
+        )
+
+    @app.exception_handler(PublicIntakeRateLimited)
+    async def public_intake_rate_limited(
+        request: Request,
+        exc: PublicIntakeRateLimited,
+    ) -> JSONResponse:
+        return _error(
+            request,
+            status_code=429,
+            code="public_intake_rate_limited",
+            message=str(exc),
+            details={"budget": exc.budget},
         )
 
     @app.exception_handler(QuarantineRequired)
@@ -470,6 +515,111 @@ def create_app(
         )
 
     router = APIRouter(prefix="/v1")
+
+    router = APIRouter(prefix="/v1")
+
+    @app.post(
+        "/v1/public/intake",
+        response_model=PublicIntakeResponse,
+        status_code=202,
+    )
+    async def public_intake_submission(
+        request: Request,
+        payload: PublicIntakeRequest,
+        idempotency_key: str = Header(
+            min_length=8,
+            alias="Idempotency-Key",
+        ),
+        public_client_key: str = Header(
+            min_length=8,
+            max_length=128,
+            alias="X-Public-Client-Key",
+        ),
+        origin: str | None = Header(default=None),
+        bot_challenge: str | None = Header(
+            default=None,
+            alias="X-Bot-Challenge",
+        ),
+    ) -> PublicIntakeResponse:
+        service: PublicIntakeService | None = request.app.state.public_intake
+        if service is None:
+            raise ApplicationUnavailable(
+                "public intake capability is not composed"
+            )
+        result = service.submit(
+            payload=PublicIntakePayload(
+                service_type=payload.service_type,
+                location=payload.location,
+                preferred_date_or_period=payload.preferred_date_or_period,
+                work_or_cargo_description=payload.work_or_cargo_description,
+                contact_name=payload.contact_name,
+                contact_channel=payload.contact_channel,
+                approximate_volume_or_weight=payload.approximate_volume_or_weight,
+                access_or_lifting_constraints=payload.access_or_lifting_constraints,
+                company_name=payload.company_name,
+                inn=payload.inn,
+                ogrn_or_ogrnip=payload.ogrn_or_ogrnip,
+                comments=payload.comments,
+                utm_source=payload.utm_source,
+                utm_medium=payload.utm_medium,
+                utm_campaign=payload.utm_campaign,
+                referrer=payload.referrer,
+                entry_surface=payload.entry_surface,
+            ),
+            idempotency_key=idempotency_key,
+            public_client_key=public_client_key,
+            origin=origin,
+            bot_challenge_passed=(
+                (bot_challenge or "").strip().lower() == "passed"
+            ),
+            correlation_id=request.state.correlation_id,
+            honeypot_value=payload.honeypot,
+        )
+        return PublicIntakeResponse(
+            requestId=result.record.request_id,
+            correlationId=result.record.correlation_id,
+            status=result.record.status.value,
+            preflightDecision=result.record.preflight.decision.value,
+            identityMatch=result.record.preflight.identity_match.value,
+            projectionStatus=result.projection_status,
+            deduplicated=result.deduplicated,
+        )
+
+
+    @router.get(
+        "/operator/notifications",
+        response_model=OperatorNotificationListResponse,
+    )
+    async def operator_notifications(
+        request: Request,
+        limit: int = 50,
+    ) -> OperatorNotificationListResponse:
+        if limit < 1 or limit > 100:
+            raise ValueError("limit must be between 1 and 100")
+        reader = request.app.state.operator_notification_reader
+        if reader is None:
+            raise ApplicationUnavailable(
+                "operator notification center is not composed"
+            )
+        context = _context(request, None)
+        RBACAuthorizer(
+            (
+                AuthorizationSubject(
+                    actor_id=context.actor_id,
+                    permissions=context.permissions,
+                ),
+            )
+        ).require(
+            context.actor_id,
+            Permission.PUBLIC_INTAKE_REVIEW,
+        )
+        notifications = reader.list_unread(limit=limit)
+        return OperatorNotificationListResponse(
+            notifications=[
+                OperatorNotificationResponse(**notification)
+                for notification in notifications
+            ]
+        )
 
     @router.post("/search", response_model=SearchResponse)
     async def search(

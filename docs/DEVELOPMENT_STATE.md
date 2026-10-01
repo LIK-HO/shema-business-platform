@@ -1,35 +1,84 @@
 # Development State Ledger
-## Current development-session synchronization — 2026-09-27
+## Current development-session synchronization — 2026-09-28
 
-- Branch: `v1.5/p46-max-provider-evidence-hold`
+- **Phase 3A — Repeat Orders & Business Continuity: CLOSED / VERIFIED.**
+- Exact implementation HEAD at stage verification: `7a766c35c4a2ce8a38d9fbeda268896d6716bd4e`.
+- Full release-gate CI #1628 (`36402645839`) is GREEN across all seven jobs: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract.
+- Implemented bounded local repeat-order runtime over the frozen Order/Economics semantics: repeat plan lifecycle, next-order clone, mandatory pre-confirmation revalidation boundary, idempotency, audit/outbox, optimistic concurrency and transactional rollback.
+- Added durable PostgreSQL repeat-plan migration `0010_repeat_order_plan.sql`; frozen kernel baseline remains unchanged.
+- Added unit + PostgreSQL integration coverage for lifecycle, duplicate protection, current-price revalidation, identity safety, stale-write rejection, transaction rollback and durable lineage.
+- PITR drill now verifies the current post-core schema through migration 10 while preserving the frozen migration-9 baseline semantics.
+- Global adversarial review for 3A found no unresolved P0/P1 blocker inside the implemented boundary. Deferred P1s remain later Bitrix24 handoff/runtime, public Web/PWA runtime, outcome-learning runtime and MAX activation.
+- **Next implementation boundary:** Phase 3B — Public Intake Data Plane + Trust Boundary + Counterparty Preflight.
+
+- Branch: `v1.5/p47-product-expansion`.
 - HEAD: resolved live from GitHub; this ledger does not store a static commit pointer.
-- PR: #56 — open, draft, mergeable.
-- Phase 2-H lookup→retry→evidence composition and synchronized documentation are CLOSED / VERIFIED by full CI #1383 (`36315401510`) with all seven release-gate jobs GREEN.
-- Phase 2-H controlled activation operation: **CLOSED / VERIFIED by CI #1392 (`36316219807`) on `de99fd3e30514c140464947099a03fa9399809f9`.**
-- Phase 2-H runtime activation rehearsal: **CLOSED / VERIFIED by CI #1397 (`36316599417`) on `c47c9b7368abd5de8488390d47f212884f5eb3cc`.**
-- Phase 2-H provider lookup → Evidence runtime vertical slice: **CLOSED / VERIFIED by CI #1402 (`36317002134`) on `88dab9aa995c70217af0b616d59039f62450bb26`.**
-- Phase 2-H Runtime Negative Provider Outcomes & Recovery: **CLOSED / VERIFIED by full CI #1404 (`36317178100`) on `758690225996c1c2cca95cbbd3b1c56638d69db8`; live activation remains OFF.**
-- Phase 2-G FNS evidence hold remains independently BLOCKED for automation.
-- Implemented activation artifacts: `src/shema_platform/adapters/intelligence/dadata_activation.py`, `src/shema_platform/application/counterparty_provider_activation.py`, `architecture/dadata_activation_operation_contract.json`, `tests/test_counterparty_provider_activation.py`, plus API models/routes and canonical OpenAPI updates.
-- Activation invariant: construction and startup do not activate DaData; the provider binding starts disabled and can only be enabled through the explicit control-plane operation.
-- Authorization invariant: provider activation and rollback require dedicated permissions and explicit operator confirmation.
-- Credential invariant: activation state, API DTOs, telemetry and operation contracts contain no provider secret.
-- Identity invariant: `providerId` is supplied only by the route path, not duplicated in the request body.
-- Rollback invariant: the kill-switch disables the binding, preserves safe historical activation metadata and makes no database schema change.
-- Evidence invariant: DaData remains `trusted_secondary`; provider observations remain Evidence input and cannot promote canonical Identity.
-- Network invariant: no live DaData traffic, no automatic activation, no fallback provider, no CI provider traffic and no credentials in source control.
-- Final gate for controlled activation operation: full seven-job CI #1392 (`36316219807`) — all seven jobs GREEN.
-- Verified negative/recovery evidence: deterministic runtime tests cover not-found, rate-limit retry/saturation, provider 5xx, transport recovery, secondary contradiction quarantine, no-fallback behavior, bounded retry delays and no partial Evidence/Identity mutation on terminal provider errors. Full seven-job CI #1404 (`36317178100`) passed GREEN.
-- Stage exit invariant: no live DaData execution, provider credentials in repository, automatic fallback, FNS automation, MAX activation, DB schema change or frozen-kernel semantic change. No new active implementation boundary is opened by this closure.
+- PR: #58 — open, draft, mergeable state subject to current CI; head resolved live.
+- Phase 2-H Runtime Negative Provider Outcomes & Recovery: CLOSED / VERIFIED; live DaData remains OFF.
+- Current verified architecture boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract** — CLOSED / VERIFIED at contract and test stage. Runtime public-form implementation remains governed by the Phase 3B roadmap exit criteria.
+- Current verified boundary: **Operator Interface Alignment + Repeat Orders & Business Continuity + Public Intake + Counterparty Monitoring + Bitrix24 Cutover strategy/contracts** — CLOSED / VERIFIED after current-head adversarial review and the final functional release-gate CI #1600 (`36397100698`). The visual Web/PWA runtime remains the separately scoped Phase 4 implementation boundary.
+- Previous draft procurement subsystem removed from the current product boundary; no procurement/tender runtime, provider adapters, tender workspace or procurement persistence remains in the active implementation.
+- Product flow is fixed for the initial B2B stage as: intelligence → identity/evidence → qualification → contact preparation → repeat orders/business continuity → business handoff → live business execution → result/learning.
+- Phase 3A is fixed as Repeat Orders & Business Continuity in temporary Shema live mode, with verified Bitrix24 cutover and purge/hide semantics.
+- Phase 4 is the unified Web operator/public-client surface; no internal document-management subsystem is part of the roadmap.
+- Web + PWA are the only approved experience surfaces; Android is removed from the target roadmap.
+- Multi-operator collaboration is a permanent architecture requirement: explicit actor, ownership/assignment/team queues, server-side authorization, audited handoff, revision/concurrency protection and explicit conflict resolution.
+- Public experience boundary: схемагрупп.рф is the target public Web/PWA domain; the same public request application is projected into a MAX mini-app, with request/correlation/source attribution preserved.
+- Prohibited until the explicitly selected next boundary: frozen-kernel semantics, unrelated UI work, FNS automation, MAX activation, provider fallback and unbounded crawling.
 
+## Adversarial regression synchronization — 2026-09-28
 
-## Stage closure evidence — 2026-09-27
+- Added explicit `architecture/business_plane_boundary_contract.json` for Shema → Bitrix24 handoff, field ownership, retry/reconciliation and outcome return.
+- Corrected YandexGPT configuration so `YANDEXGPT_MAX_COST` is explicitly required and positive; zero/missing cost ceilings now fail closed.
+- Repeat-order boundary correction: Shema owns the bounded temporary local repeat-order mode; Bitrix24 remains the recurring-deal authority after verified cutover.
+- Monium is explicitly operational telemetry; durable audit/business history remains PostgreSQL-owned.
+- The functional P47 release gate CI #1600 (`36397100698`) is GREEN: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract all pass.
+- Global adversarial survivability gate is now mandatory for every material strategy change and every element completion; no element may enter VERIFIED/CLOSED without a current-head whole-system adversarial review.
+- Data-plane rule: Managed PostgreSQL remains the canonical Shema database in Yandex Cloud. Bitrix24 receives live business ownership after handoff; the Shema database is not wholesale migrated into Bitrix24.
+- Operator continuity rule: every business handoff carries stable Shema identity, handoff, correlation and Bitrix entity references so one or multiple operators can reconstruct the full causal chain without shadow copies.
 
-- Negative/recovery test file: `tests/test_counterparty_provider_runtime_negative.py`.
-- Exit document: `docs/RUNTIME_NEGATIVE_PROVIDER_OUTCOMES_2026_09_27.md`.
-- Full seven-job release gate for the negative/recovery implementation: CI #1404 (`36317178100`) — all seven jobs GREEN.
-- Final post-closure regression gate: CI #1408 (`36320629569`) on `6779e38578e35a5e8081ce8894b404c2fdfbe3de` — all seven jobs GREEN.
-- Runtime boundary remains disabled by default; live DaData traffic did not occur.
+## Strategic boundary synchronization — 2026-09-28
+
+- A new Yandex Cloud deployment strategy is recorded: Serverless Containers + API Gateway + narrow Cloud Functions/Timers + Lockbox + Container Registry + Object Storage + Monium, with Managed PostgreSQL remaining the canonical production database.
+- Bitrix24 is established as the future mature business control plane for live transactions, pricing, calculations/economics, communications, assignments and process automation. Shema supplies verified context and later receives minimal outcome signals for learning.
+- New Shema development must not expand into a second CRM, accounting, finance or personnel system. Existing frozen Order/Economics semantics remain only for compatibility, lineage and learning.
+- Existing YandexGPT and MAX provider boundaries remain in force. YandexGPT is the bounded AI processing path; MAX live outbound remains fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
+- This synchronization is architecture/experience-contract/test scope only. No Bitrix24 runtime, MAX activation or new persistence authority has been opened.
+- New strategy contracts: architecture/platform_growth_strategy_contract.json, architecture/business_plane_boundary_contract.json, architecture/public_client_experience_contract.json and architecture/operator_interface_contract.json.
+- New executable guards: tests/test_platform_growth_strategy_contract.py, tests/test_business_plane_boundary_contract.py and tests/test_public_client_experience_contract.py.
+- Adversarial review: docs/ADVERSARIAL_ARCHITECTURE_REVIEW_2026_09_28.md.
+- Operator interface blueprint: architecture/operator_interface_contract.json.
+
+## Current-head boundary closure — 2026-09-28
+
+- HEAD: `6d8ca21b2a8af96cdb0b5de6c0d4aae3eb13689a`.
+- PR #58: open, draft, mergeable; no merge or production authorization implied.
+- Full release-gate CI #1589 (`36386211886`) is GREEN across all seven jobs: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract.
+- The preceding CI defect was a stale operator-interface assertion requiring obsolete left-navigation entries; it was corrected to match the approved model where global search lives in the header and Repeat Orders is a specialized workspace.
+- Global adversarial review has no unresolved P0 finding for this boundary after the current-head gate closed. Deferred P1 items remain explicitly bounded to later roadmap stages and do not authorize new runtime authority in the current boundary.
+- P47 is therefore CLOSED / VERIFIED at the architecture-and-test boundary. This does not claim that the Web/PWA visual runtime, Bitrix24 live integration, outcome-learning runtime, or MAX live outbound are implemented or activated.
+- Next implementation boundary is governed by the roadmap: **Phase 3A — Repeat Orders & Business Continuity (temporary Shema live mode)**.
+
+## Stage verification — 2026-09-28
+
+- Full seven-job release gate: CI #1417 (`36351981305`) — GREEN.
+- Quality 3.12: success.
+- Quality 3.13: success.
+- Supply-chain: success.
+- Integration 3.12: success.
+- Integration 3.13: success.
+- Backup/recovery: success.
+- Release-contract: success.
+
+## Current strategy-boundary verification — 2026-09-28
+
+- Boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract**.
+- Current verified HEAD: d595ec856a6a611751c7b619ae75f23ca3db4398.
+- Full CI run 36372953967 passed all seven jobs: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup-recovery and release-contract.
+- Dedicated contract tests were added for public intake and controlled platform evolution.
+- During verification, the gate exposed and the branch corrected two regressions: YandexGPT dataclass field ordering and a stale Bitrix24 business-plane ownership assertion.
+- No FNS live automation, public-form Bitrix24 write path, or MAX activation was opened by this stage.
+- The verified result closes the architectural contract/test stage; runtime implementation must still satisfy the Phase 3B exit criteria before production activation.
 
 ## Historical core-certification baseline
 
@@ -144,7 +193,7 @@ There is **no B11 core-expansion phase**.
 Allowed:
 - product/application workflows outside the kernel;
 - concrete providers and integrations behind adapters;
-- Web/PWA/Android/experience layers;
+- Web/PWA/experience layers;
 - operational tuning supported by measured production evidence;
 - security or reliability fixes meeting the documented exception rule.
 
@@ -182,3 +231,18 @@ Prohibited:
 - Final certification evidence: CI #1036 (`35892865534`) fully green.
 - v1.4 kernel semantics: frozen.
 - v1.5 core maturity: certified.
+
+- Verified strategy boundary: **Public Intake Trust Boundary + Counterparty Preflight + Platform Evolution Contract** — CLOSED / VERIFIED at contract/test stage.
+- Deterministic registry preflight is the first line: GPT is not used for INN/OGRN validation or registry truth lookup.
+- Public form is untrusted ingress; layered edge/application protection, idempotency, anti-enumeration and provider budgets are mandatory.
+- No live FNS automation or public-form Bitrix24 write path is activated by this contract change.
+- Adversarial review of the delta found no new kernel authority or cross-system split-brain. The current-head full release-gate CI is GREEN; production activation remains separately gated.
+## Current strategy extension — 2026-09-28
+
+- New active boundary: **Repeat Orders & Business Continuity + Public Intake Data Plane + Counterparty Monitoring + Bitrix24 Transaction Cutover**.
+- Public client submissions now have a separate dedicated PostgreSQL intake database boundary; raw intake is not written directly into the canonical Shema database.
+- Shema provides temporary live repeat-order execution until the Bitrix24 business plane is active. The frozen Order/Economics kernel is reused without semantic expansion.
+- Bitrix24 cutover is destructive only after complete package transfer, readback verification, recovery snapshot verification and reconciliation proof. Live Shema Order/Economics rows are then purgeable and the operator UI hides those capabilities cleanly.
+- Counterparty monitoring is a separate operator workspace with daily deterministic registry change detection, severity-aware notifications and personal favorites.
+- The adversarial gate has been extended to intake loss/notification recovery, transaction migration completeness and monitoring false-positive/poisoning scenarios.
+- Current-head verification: CI run #1591 (`36387246513`) on the synchronized HEAD passed all seven release-gate jobs: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract. The earlier CI #1588 failure was an obsolete intermediate-head failure caused by the stale `search` navigation assertion and is not evidence against the current HEAD.
