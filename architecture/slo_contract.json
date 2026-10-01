@@ -1,0 +1,73 @@
+{
+  "version": "1.5-slo-baseline",
+  "status": "baseline",
+  "measurement_window": "30d",
+  "policy": {
+    "error_budget_burn_requires_reliability_priority": true,
+    "targets_are_initial_and_must_be_recalibrated_from_real_traffic": true,
+    "no_slo_target_changes_kernel_semantics": true
+  },
+  "slis": [
+    {
+      "id": "api_availability",
+      "target": 0.995,
+      "window": "30d",
+      "good_events": "HTTP responses with status < 500",
+      "total_events": "authenticated canonical API requests",
+      "source": "HTTP telemetry correlation events"
+    },
+    {
+      "id": "critical_mutation_success",
+      "target": 0.999,
+      "window": "30d",
+      "good_events": "critical create/send/order commands completed without terminal system failure",
+      "total_events": "critical mutation commands accepted by application",
+      "source": "application/audit workflow outcome"
+    },
+    {
+      "id": "job_recovery",
+      "target": 0.99,
+      "window": "30d",
+      "good_events": "retryable worker failures reclaimed and converged to a terminal state within recovery deadline",
+      "total_events": "retryable worker failures",
+      "source": "durable job execution state"
+    },
+    {
+      "id": "outbox_lag",
+      "target": 0.99,
+      "window": "30d",
+      "good_events": "unpublished outbox events delivered within 60 seconds",
+      "total_events": "published-eligible outbox events",
+      "source": "outbox occurred_at/published_at"
+    },
+    {
+      "id": "external_effect_completion",
+      "target": 0.99,
+      "window": "30d",
+      "good_events": "reserved external effects converge to SENT/COMPLETED or explicit terminal failure within 5 minutes",
+      "total_events": "external-effect reservations",
+      "source": "commercial action send state"
+    },
+    {
+      "id": "api_latency",
+      "target": 0.99,
+      "window": "30d",
+      "good_events": "canonical API requests complete within 1000ms",
+      "total_events": "canonical API requests",
+      "source": "HTTP telemetry duration_ms"
+    }
+  ],
+  "error_budget": {
+    "calculation": "1 - target",
+    "burn_policy": [
+      {
+        "condition": "rolling_30d_budget_remaining < 50%",
+        "action": "reliability review required before non-reliability core changes"
+      },
+      {
+        "condition": "rolling_30d_budget_remaining < 20%",
+        "action": "freeze non-essential reliability-neutral releases until budget recovers"
+      }
+    ]
+  }
+}

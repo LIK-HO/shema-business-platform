@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "endpoint": "/health/ready",
+  "authentication": "none",
+  "response_fields": [
+    "ready",
+    "providers.providerId",
+    "providers.enabled",
+    "providers.configured",
+    "providers.reachable",
+    "providers.lastCheckedAt",
+    "providers.lastErrorCode"
+  ],
+  "secret_fields": [],
+  "provider_payloads": false,
+  "error_payloads": false,
+  "canonical_business_state": false,
+  "status_codes": {
+    "ready": 200,
+    "not_ready": 503
+  }
+}

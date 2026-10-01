@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "status": "bounded_gigachat_adapter",
+  "frozen_kernel_impact": false,
+  "provider": {
+    "id": "gigachat",
+    "kind": "cloud",
+    "base_url": "https://api.giga.chat/v1",
+    "chat_endpoint": "/chat/completions",
+    "token_endpoint": "https://ngw.devices.sberbank.ru:9443/api/v2/oauth",
+    "auth_key_runtime_only": true,
+    "token_runtime_only": true,
+    "token_ttl_minutes": 30,
+    "token_refresh_safety_window_seconds": 30,
+    "scopes": [
+      "GIGACHAT_API_PERS",
+      "GIGACHAT_API_B2B",
+      "GIGACHAT_API_CORP"
+    ]
+  },
+  "bounded_controls": {
+    "https_only": true,
+    "max_timeout_seconds": 30,
+    "bounded_response_bytes": true,
+    "bounded_input_chars": true,
+    "bounded_output_tokens": true,
+    "bounded_cost": true,
+    "no_automatic_retry": true
+  },
+  "production_scope": {
+    "allowed_scopes": [
+      "GIGACHAT_API_B2B",
+      "GIGACHAT_API_CORP"
+    ],
+    "reason": "production business use must not rely on personal Freemium terms"
+  },
+  "response_validation": {
+    "requires_text_content": true,
+    "requires_token_usage": true,
+    "requires_consistent_token_totals": true,
+    "requires_response_model_identity": true,
+    "canonical_persistence_owner": "frozen_AIGateway"
+  },
+  "activation": {
+    "default_enabled": false,
+    "explicit_operator": true,
+    "rollback": true,
+    "feature_flag": "ai.gigachat.production.enabled"
+  },
+  "provider_policy": {
+    "cloud_allowlist": [
+      "yandexgpt",
+      "gigachat"
+    ],
+    "implicit_cloud_local_fallback": false,
+    "openai_approved": false
+  },
+  "scope_stop": {
+    "no_kernel_semantic_change": true,
+    "no_database_schema_change": true,
+    "no_application_wiring": true,
+    "no_live_traffic": true,
+    "no_openai": true,
+    "no_new_cloud_provider": true
+  }
+}
