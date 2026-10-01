@@ -1508,29 +1508,51 @@ Evidence:
 
 No merge or deployment authorization is implied.
 
-## Next bounded productization boundary
-
-P37 — SELECTED-PROVIDER END-TO-END HTTP PROOF.
+## P37 — SELECTED-PROVIDER END-TO-END HTTP PROOF — CLOSED / VERIFIED
 
 Purpose:
 - prove the canonical `POST /v1/ai/run` path through the immutable operator-selected runtime;
 - verify both approved provider compositions use the same provider-neutral application/Gateway semantics;
 - use deterministic non-production provider transports only.
 
-Bounded proof:
-- YandexGPT-selected runtime;
-- GigaChat-selected runtime;
-- canonical trust/evidence resolution;
-- explicit provider activation;
-- canonical AIRun/audit persistence and correlation;
-- fail-closed behavior when selected provider is inactive or trust/evidence is invalid.
+Implementation:
+- `tests/integration/test_selected_provider_ai_end_to_end.py`;
+- `architecture/selected_provider_ai_end_to_end_contract.json`;
+- `docs/P37_SELECTED_PROVIDER_AI_END_TO_END_PROOF.md`;
+- executable contract proof in `tests/test_architecture_contract.py`.
+
+Evidence:
+- CI run #1200 (`36112512471`) passed all seven required jobs on implementation HEAD `9a82417149df0868b73d8e53507da2fcdb1b9994`:
+  - quality 3.12 — success;
+  - quality 3.13 — success;
+  - integration 3.12 — success;
+  - integration 3.13 — success;
+  - supply-chain — success;
+  - backup-recovery — success;
+  - release-contract — success.
+- Both selected-provider end-to-end scenarios passed with deterministic transports.
+- AIRun and audit persistence, correlation propagation, inactive-provider fail-closed behavior and expired-evidence fail-closed behavior are executable evidence.
+- No live provider traffic was used.
+- No frozen kernel, HTTP contract or database schema was changed.
+
+No merge or deployment authorization is implied.
+
+## Next bounded productization boundary
+
+P38 — AI PRODUCTION OBSERVABILITY CONTRACT.
+
+Purpose:
+- make the already implemented AI execution path operationally observable using provider-neutral telemetry;
+- define mandatory event fields and prohibited sensitive data;
+- verify activation, execution, failure and rollback signals without introducing a second execution path.
 
 Scope stop:
-- no live provider traffic;
 - no new provider;
-- no provider field in HTTP;
-- no automatic fallback;
-- no frozen kernel change;
+- no HTTP route change;
 - no database schema/migration;
-- no production deployment.
+- no frozen kernel semantic change;
+- no new telemetry backend;
+- no credentials, prompts, evidence payloads or model inputs in telemetry;
+- no automatic activation;
+- no live provider traffic.
 

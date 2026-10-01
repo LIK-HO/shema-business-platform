@@ -338,3 +338,32 @@ def test_approved_ai_provider_selection_contract_is_bounded() -> None:
     assert contract["scope_stop"]["no_http_route_change"] is True
     assert contract["scope_stop"]["no_client_provider_field"] is True
     assert contract["scope_stop"]["no_live_provider_traffic"] is True
+
+def test_selected_provider_ai_end_to_end_contract_is_bounded() -> None:
+    contract = loads(read("architecture/selected_provider_ai_end_to_end_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["path"][0] == "POST /v1/ai/run"
+    assert contract["path"][-1] == "PostgreSQL ai_run/audit_log"
+    assert contract["providers"]["yandexgpt"]["transport"] == "deterministic_test_only"
+    assert contract["providers"]["gigachat"]["transport"] == "deterministic_test_only"
+    assert contract["providers"]["yandexgpt"]["live_traffic"] is False
+    assert contract["providers"]["gigachat"]["live_traffic"] is False
+    assert contract["proof"]["canonical_http_route"] is True
+    assert contract["proof"]["operator_selected_provider"] is True
+    assert contract["proof"]["automatic_fallback"] is False
+    assert contract["proof"]["explicit_activation"] is True
+    assert contract["proof"]["trust_resolved_from_postgresql"] is True
+    assert contract["proof"]["airun_persistence"] is True
+    assert contract["proof"]["audit_persistence"] is True
+    assert contract["proof"]["correlation_propagation"] is True
+    assert contract["proof"]["inactive_provider_fails_closed"] is True
+    assert contract["proof"]["expired_evidence_fails_closed"] is True
+    assert contract["proof"]["unselected_provider_invoked"] is False
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_provider_field_in_http"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_automatic_production_activation"] is True
+    assert contract["scope_stop"]["no_live_provider_traffic"] is True
