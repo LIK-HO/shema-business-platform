@@ -584,3 +584,24 @@ def test_quarantine_read_model_contract_is_bounded() -> None:
     assert contract["scope_stop"]["no_frozen_kernel_semantic_change"] is True
     assert contract["scope_stop"]["no_automatic_retry"] is True
     assert contract["scope_stop"]["no_http_route_change"] is True
+
+def test_productization_readiness_contract_is_bounded() -> None:
+    contract = loads(read("architecture/productization_readiness_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["production_rule"]["requires_all_checks_passed"] is True
+    assert contract["production_rule"]["provider_side_external_effect_safety_is_mandatory"] is True
+    assert contract["production_rule"]["automatic_override"] is False
+    assert set(contract["current_expected_blockers"]) == {
+        "MAX provider-side idempotency contract is not documented/certified",
+        "MAX provider-side reconciliation contract is not documented/certified",
+    }
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_new_execution_path"] is True
+    assert contract["scope_stop"]["no_database_migration"] is True
+    assert contract["scope_stop"]["no_frozen_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_production_activation"] is True
+    assert contract["scope_stop"]["no_live_external_traffic"] is True
+    assert contract["scope_stop"]["no_merge"] is True
+    assert contract["scope_stop"]["no_deploy"] is True
