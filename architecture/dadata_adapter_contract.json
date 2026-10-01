@@ -1,0 +1,115 @@
+{
+  "version": "1.0",
+  "status": "phase_2h_controlled_execution_candidate_activation_off",
+  "source_id": "dadata_organization_api",
+  "provider": "DaData",
+  "service_name": "Organization by INN/OGRN API",
+  "service_url": "https://dadata.ru/api/find-party/",
+  "classification": {
+    "source_class": "trusted_structured_dataset",
+    "reliability": "trusted_secondary",
+    "authority_rule": "provider_output_is_evidence_input_not_canonical_truth"
+  },
+  "registry_binding": {
+    "access_mode": "approved_adapter_only",
+    "network_automation": false,
+    "activation_off_by_default": true
+  },
+  "endpoint": {
+    "method": "POST",
+    "url": "https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party",
+    "request_content_type": "application/json",
+    "authorization": "Authorization: Token <API_KEY>",
+    "identifiers": [
+      "INN",
+      "INN/KPP",
+      "OGRN"
+    ],
+    "query_max_length": 300,
+    "count_max": 300
+  },
+  "provider_limits": {
+    "daily_quota": "tariff_defined; current free tier documented as 10000 requests/day",
+    "requests_per_second_per_ip": 30,
+    "new_connections_per_minute_per_ip": 60
+  },
+  "error_mapping": {
+    "200": "SUCCESS",
+    "400": "INVALID_REQUEST",
+    "401": "MISSING_API_KEY",
+    "403": "API_KEY_OR_ACCOUNT_NOT_AUTHORIZED_OR_DAILY_LIMIT",
+    "405": "METHOD_NOT_ALLOWED",
+    "413": "REQUEST_TOO_LARGE",
+    "429": "PROVIDER_RATE_LIMIT",
+    "5xx": "PROVIDER_INTERNAL_ERROR"
+  },
+  "retry_policy": {
+    "provider_retry_after_semantics": "NOT_ESTABLISHED",
+    "application_policy": "bounded_only",
+    "retryable_classes": [
+      "PROVIDER_RATE_LIMIT",
+      "PROVIDER_INTERNAL_ERROR",
+      "transport_timeout"
+    ],
+    "non_retryable_classes": [
+      "INVALID_REQUEST",
+      "MISSING_API_KEY",
+      "API_KEY_OR_ACCOUNT_NOT_AUTHORIZED_OR_DAILY_LIMIT",
+      "METHOD_NOT_ALLOWED",
+      "REQUEST_TOO_LARGE"
+    ],
+    "backoff": "exponential_with_jitter",
+    "max_attempts": 3,
+    "must_respect_application_budget": true
+  },
+  "timeout_policy": {
+    "provider_specific_timeout_contract": "NOT_DOCUMENTED",
+    "application_timeout_required": true,
+    "timeout_value_is_configuration": true,
+    "timeout_must_be_bounded": true
+  },
+  "provenance": {
+    "source_id": "dadata_organization_api",
+    "provider_name": "DaData",
+    "observed_at_required": true,
+    "captured_at_required": true,
+    "freshness_required": true,
+    "operator_visible": true,
+    "source_authority_must_not_be_promoted": true
+  },
+  "observability": {
+    "application_correlation_id": true,
+    "provider_request_id": "NOT_ESTABLISHED_IN_PROVIDER_CONTRACT",
+    "capture_status_and_error_class": true,
+    "capture_attempt_count": true,
+    "capture_budget_consumption": true
+  },
+  "credential_boundary": {
+    "api_key_required": true,
+    "repository_storage": false,
+    "logs_must_redact_credentials": true,
+    "activation_requires_configured_secret": true
+  },
+  "kill_switch": {
+    "network_execution_enabled": false,
+    "activation_path_present_but_off": true,
+    "operator_control": "disable_dadata_provider_binding"
+  },
+  "rollback": {
+    "state_model": "configuration_and_adapter_binding_only",
+    "database_migration_required": false,
+    "historical_evidence_preservation": true,
+    "rollback_action": "disable_or_remove_dadata_binding_without_rewriting_history"
+  },
+  "activation_decision": "OFF_UNTIL_PHASE_2H_GATE_PASSES",
+  "non_goals": [
+    "canonical_truth_authority",
+    "automatic_qualification",
+    "global_ranking",
+    "fallback_to_fns",
+    "automatic_activation",
+    "new_database_schema",
+    "kernel_semantic_change",
+    "MAX_activation"
+  ]
+}

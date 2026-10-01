@@ -1,0 +1,110 @@
+{
+  "version": "1.0",
+  "status": "planned_bounded_integration_agent",
+  "name": "Bitrix24 Business Plane Setup Agent",
+  "purpose": "Inspect a Bitrix24 portal, compile a versioned configuration plan from Shema's approved business-plane contract, apply only owned changes, verify the result and establish the integration mapping without turning Shema into a CRM.",
+  "placement": "integration_business_plane_boundary",
+  "core_impact": false,
+  "phases": [
+    "DISCOVER",
+    "PLAN",
+    "DRY_RUN",
+    "APPLY",
+    "VERIFY",
+    "RECONCILE"
+  ],
+  "discover": [
+    "authorization_method_and_scopes",
+    "current_user_permissions",
+    "portal_application_info_and_plan_capabilities",
+    "crm_objects_and_fields",
+    "pipelines_and_stages",
+    "existing_custom_fields",
+    "existing_relevant_automation_capabilities",
+    "event_capabilities"
+  ],
+  "configure_scope": [
+    "Shema-to-Bitrix field mapping",
+    "namespaced custom fields required by the integration",
+    "selected CRM pipeline and stages when absent and explicitly approved",
+    "integration application/webhook/event boundary",
+    "repeat-business mapping to native Bitrix capabilities",
+    "operator role mapping required for the integration",
+    "CRM core company/contact/deal configuration",
+    "repeat-order and recurring-work mapping",
+    "logistics and routing SPA or specialist connector boundary",
+    "executor assignment and role configuration",
+    "inventory and product-level economics when plan supports it",
+    "CRM document generation/signing configuration when supported",
+    "tender connector or approved Bitrix24 Market integration boundary"
+  ],
+  "safety_rules": [
+    "read_only_discovery_before_mutation",
+    "versioned_declarative_configuration_plan",
+    "dry_run_diff_before_apply",
+    "no_unowned_delete_or_destructive_mutation",
+    "only_namespaced_or_explicitly_owned_configuration_is_mutated",
+    "plan_capability_mismatch_fails_closed",
+    "missing_scope_or_permission_fails_closed",
+    "all_external_changes_are_idempotent_or_reconciled",
+    "read_back_verification_after_apply",
+    "configuration_snapshot_and_audit_required",
+    "human_approval_required_for_destructive_or_ambiguous_changes"
+  ],
+  "ai_role": {
+    "allowed": [
+      "interpret_operator_business_configuration",
+      "propose_configuration_plan",
+      "explain_diff_and_tradeoffs",
+      "explain_portal_capability_gaps"
+    ],
+    "forbidden": [
+      "direct_unreviewed_rest_mutations",
+      "invent_missing_bitrix_capabilities",
+      "override_bitrix_permissions",
+      "create_duplicate_crm_or_finance_authority_in_shema"
+    ]
+  },
+  "target_outcome": "A previously generic Bitrix24 portal becomes the approved Shema business-plane configuration through a discoverable, auditable, reversible-as-far-as-the-provider-allows setup flow rather than manual portal reconstruction.",
+  "non_goals": [
+    "full_bitrix24_feature_autopilot",
+    "arbitrary_portal_customization",
+    "crm_data_migration_of_the_entire_shema_database",
+    "hidden_bidirectional_same_field_writes",
+    "unbounded_business_feature_autopilot",
+    "migration_of_shema_security_or_internal_telemetry"
+  ],
+  "integration_model": {
+    "authorization": [
+      "prototype_inbound_webhook",
+      "mature_oauth2_application"
+    ],
+    "portal_inspection": [
+      "app.info",
+      "crm.item.fields",
+      "crm.category.list",
+      "crm.status.list",
+      "user.access"
+    ],
+    "mutation_primitives": [
+      "crm.category.add",
+      "crm.deal.userfield.add",
+      "crm.company.userfield.add",
+      "crm.contact.userfield.add",
+      "supported_crm_automation_methods_only_when_application_scope_allows"
+    ],
+    "batching": "use_rest_batch_when_safe_and_idempotent",
+    "capability_detection": "mandatory_before_plan_and_apply"
+  },
+  "business_plane_capability_tiers": {
+    "native_bitrix24": "use_when_capability_detected",
+    "smart_process_automation": "use_for_bounded_custom_workflows_when_available",
+    "specialist_connector": "use_for tender, advanced routing, logistics or accounting capabilities not natively available",
+    "fail_closed": "never emulate a missing mature business subsystem inside Shema"
+  },
+  "migration_scope": {
+    "transaction_history_package": "architecture/repeat_order_transition_contract.json",
+    "full_business_history_for_selected_customer_transaction": true,
+    "destructive_purge_only_after_readback_verification": true
+  }
+}

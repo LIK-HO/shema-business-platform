@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "status": "ai_production_promotion_release_gate",
+  "frozen_kernel_impact": false,
+  "frozen_ai_kernel": {
+    "path": "src/shema_platform/application/ai.py",
+    "integrity_method": "git_blob_sha1",
+    "expected_blob_sha": "3595d451e441594919b7de6d5084eed3ecc8e99a"
+  },
+  "approved_provider_policy": {
+    "allow_list": [
+      "yandexgpt",
+      "gigachat"
+    ],
+    "automatic_fallback": false,
+    "automatic_activation": false,
+    "client_provider_selection": false,
+    "live_traffic_in_promotion_evidence": false
+  },
+  "runtime_secret_policy": {
+    "yandexgpt_secret": "YANDEXGPT_API_KEY",
+    "yandexgpt_runtime_only": true,
+    "gigachat_authorization_key_runtime_only": true,
+    "gigachat_token_runtime_only": true
+  },
+  "evidence": {
+    "recovery": {
+      "ref": "scripts/postgres_pitr_drill.sh",
+      "validated_by_ci_job": "backup-recovery"
+    },
+    "supply_chain": {
+      "ref": ".github/workflows/ci.yml",
+      "validated_by_ci_job": "supply-chain"
+    },
+    "release_contract": {
+      "ref": "src/shema_platform/platform/release.py",
+      "validated_by_ci_job": "release-contract"
+    },
+    "security": [
+      "architecture/ai_production_activation_contract.json",
+      "architecture/gigachat_provider_contract.json",
+      "architecture/approved_ai_provider_selection_contract.json",
+      "architecture/ai_production_observability_contract.json"
+    ],
+    "end_to_end": "architecture/selected_provider_ai_end_to_end_contract.json"
+  },
+  "operator_approval": {
+    "required": true,
+    "persisted": false,
+    "activates_provider": false,
+    "contains_credentials": false
+  },
+  "scope_stop": {
+    "no_new_provider": true,
+    "no_http_route_change": true,
+    "no_database_schema_change": true,
+    "no_kernel_semantic_change": true,
+    "no_automatic_production_activation": true,
+    "no_live_provider_traffic": true,
+    "no_new_telemetry_backend": true,
+    "no_duplicate_recovery_drill": true
+  }
+}

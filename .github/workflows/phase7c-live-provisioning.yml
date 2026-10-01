@@ -1,0 +1,269 @@
+name: Phase 7C Live Provisioning and Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "After reviewing the Terraform plan produced in this workflow run, allow the protected apply job to execute."
+        required: true
+        default: false
+        type: boolean
+      rollback_drill:
+        description: "After apply and smoke, prove rollback to the prior immutable revision and restore the new revision."
+        required: true
+        default: false
+        type: boolean
+      pitr_drill:
+        description: "Restore to a separate temporary PostgreSQL cluster and verify recovery through a private task."
+        required: true
+        default: false
+        type: boolean
+      pitr_recovery_time:
+        description: "RFC3339 UTC recovery target, after an available automated backup and not in the future."
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase7c-production
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    environment: production-yandex
+    outputs:
+      previous_revision_id: ${{ steps.capture_previous_revision.outputs.revision_id }}
+      planned_change_fingerprint: ${{ steps.plan_fingerprint.outputs.fingerprint }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Yandex Cloud CLI
+        run: |
+          curl -fsSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+          echo "$HOME/yandex-cloud/bin" >> "$GITHUB_PATH"
+      - name: Configure Yandex Cloud credentials
+        env:
+          YC_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.YC_SERVICE_ACCOUNT_KEY_JSON }}
+        run: |
+          test -n "$YC_SERVICE_ACCOUNT_KEY_JSON"
+          mkdir -p "$RUNNER_TEMP/yc"
+          printf "%s" "$YC_SERVICE_ACCOUNT_KEY_JSON" > "$RUNNER_TEMP/yc/key.json"
+          yc config profile create shema-phase7c
+          yc config set service-account-key "$RUNNER_TEMP/yc/key.json"
+      - name: Verify persistent Terraform state backend
+        env:
+          YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+        run: bash scripts/yandex_cloud_terraform_state_preflight.sh
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.16.4"
+          terraform_wrapper: false
+      - name: Write private Terraform variables
+        env:
+          TFVARS_JSON: ${{ secrets.PHASE7C_TFVARS_JSON }}
+        run: |
+          test -n "$TFVARS_JSON"
+          printf "%s" "$TFVARS_JSON" > deploy/terraform/terraform.tfvars.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          values = json.loads(
+              Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8")
+          )
+          if values.get("evidence_runner_enabled") is not True:
+              raise SystemExit("Phase 7C live provisioning requires evidence_runner_enabled=true")
+          for key in ("database_name", "database_user", "database_secret_input", "database_url"):
+              if not values.get(key):
+                  raise SystemExit(f"Phase 7C requires protected Terraform input: {key}")
+          PY
+      - name: Terraform init
+        env:
+          PHASE7C_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
+        run: |
+          terraform -chdir=deploy/terraform init -input=false \
+            -backend-config="bucket=$PHASE7C_TERRAFORM_STATE_BUCKET"
+
+      - name: Terraform plan
+        run: |
+          set -Eeuo pipefail
+          terraform -chdir=deploy/terraform plan \
+            -input=false \
+            -var-file=terraform.tfvars.json \
+            -out="$RUNNER_TEMP/phase7c.tfplan"
+
+      - name: Fingerprint reviewed Terraform plan
+        id: plan_fingerprint
+        run: |
+          set -Eeuo pipefail
+          terraform -chdir=deploy/terraform show -no-color \
+            "$RUNNER_TEMP/phase7c.tfplan" > "$RUNNER_TEMP/phase7c-plan.txt"
+          fingerprint="$(sha256sum "$RUNNER_TEMP/phase7c-plan.txt" | awk '{print $1}')"
+          test -n "$fingerprint"
+          echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
+          echo "Terraform plan fingerprint: $fingerprint"
+
+      - name: Capture previous active revision
+        id: capture_previous_revision
+        env:
+          YC_CONTAINER_NAME: ${{ secrets.PHASE7C_CONTAINER_NAME }}
+        run: |
+          revision_id="$(yc serverless container revision list --container-name "$YC_CONTAINER_NAME" --format=json | jq -r '[.[] | select(.status == "ACTIVE") | .id][0] // empty')"
+          test -n "$revision_id"
+          echo "revision_id=$revision_id" >> "$GITHUB_OUTPUT"
+
+  apply:
+    needs: plan
+    if: ${{ inputs.apply == true }}
+    runs-on: ubuntu-latest
+    environment: production-yandex
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Yandex Cloud CLI
+        run: |
+          curl -fsSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+          echo "$HOME/yandex-cloud/bin" >> "$GITHUB_PATH"
+      - name: Configure Yandex Cloud credentials
+        env:
+          YC_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.YC_SERVICE_ACCOUNT_KEY_JSON }}
+        run: |
+          test -n "$YC_SERVICE_ACCOUNT_KEY_JSON"
+          mkdir -p "$RUNNER_TEMP/yc"
+          printf "%s" "$YC_SERVICE_ACCOUNT_KEY_JSON" > "$RUNNER_TEMP/yc/key.json"
+          yc config profile create shema-phase7c
+          yc config set service-account-key "$RUNNER_TEMP/yc/key.json"
+      - name: Verify persistent Terraform state backend
+        env:
+          YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+        run: bash scripts/yandex_cloud_terraform_state_preflight.sh
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.16.4"
+          terraform_wrapper: false
+      - name: Write private Terraform variables
+        env:
+          TFVARS_JSON: ${{ secrets.PHASE7C_TFVARS_JSON }}
+        run: |
+          test -n "$TFVARS_JSON"
+          printf "%s" "$TFVARS_JSON" > deploy/terraform/terraform.tfvars.json
+      - name: Validate live-evidence Terraform variables
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          values = json.loads(
+              Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8")
+          )
+          if values.get("evidence_runner_enabled") is not True:
+              raise SystemExit("Phase 7C live apply requires evidence_runner_enabled=true")
+          for key in ("database_name", "database_user", "database_secret_input", "database_url"):
+              if not values.get(key):
+                  raise SystemExit(f"Phase 7C requires protected Terraform input: {key}")
+          PY
+      - name: Terraform init
+        env:
+          PHASE7C_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
+        run: |
+          terraform -chdir=deploy/terraform init -input=false \
+            -backend-config="bucket=$PHASE7C_TERRAFORM_STATE_BUCKET"
+
+      - name: Recompute and verify reviewed Terraform plan
+        env:
+          EXPECTED_PLAN_FINGERPRINT: ${{ needs.plan.outputs.planned_change_fingerprint }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
+        run: |
+          set -Eeuo pipefail
+          terraform -chdir=deploy/terraform plan \
+            -input=false \
+            -var-file=terraform.tfvars.json \
+            -out="$RUNNER_TEMP/phase7c.tfplan"
+          terraform -chdir=deploy/terraform show -no-color \
+            "$RUNNER_TEMP/phase7c.tfplan" > "$RUNNER_TEMP/phase7c-plan.txt"
+          actual_fingerprint="$(sha256sum "$RUNNER_TEMP/phase7c-plan.txt" | awk '{print $1}')"
+          test -n "$EXPECTED_PLAN_FINGERPRINT"
+          test "$actual_fingerprint" = "$EXPECTED_PLAN_FINGERPRINT" || {
+            echo "Terraform plan fingerprint changed between review and apply; refusing deployment."
+            exit 1
+          }
+          echo "Terraform plan fingerprint verified: $actual_fingerprint"
+
+      - name: Terraform apply reviewed plan
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
+        run: terraform -chdir=deploy/terraform apply -input=false "$RUNNER_TEMP/phase7c.tfplan"
+
+      - name: Collect live resource evidence
+        env:
+          YC_CLOUD_ID: ${{ secrets.PHASE7C_CLOUD_ID }}
+          YC_FOLDER_ID: ${{ secrets.PHASE7C_FOLDER_ID }}
+          YC_CONTAINER_NAME: ${{ secrets.PHASE7C_CONTAINER_NAME }}
+          YC_MIGRATION_RUNNER_NAME: ${{ secrets.PHASE7C_MIGRATION_RUNNER_NAME }}
+          YC_CLUSTER_NAME: ${{ secrets.PHASE7C_CLUSTER_NAME }}
+          YC_BUCKET_NAME: ${{ secrets.PHASE7C_BUCKET_NAME }}
+          YC_BUDGET_ID: ${{ secrets.PHASE7C_BUDGET_ID }}
+          YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+        run: |
+          set -Eeuo pipefail
+          export YC_API_GATEWAY_ID="$(terraform -chdir=deploy/terraform output -raw api_gateway_id)"
+          export YC_EXPECTED_IMAGE_DIGEST="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          values = json.loads(Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8"))
+          value = values.get("image_digest")
+          if not value:
+              raise SystemExit("image_digest is required")
+          print(value)
+          PY
+          )"
+          bash scripts/yandex_cloud_live_evidence.sh
+
+      - name: Run protected rollback drill
+        if: ${{ inputs.rollback_drill == true }}
+        env:
+          YC_CONTAINER_NAME: ${{ secrets.PHASE7C_CONTAINER_NAME }}
+          PREVIOUS_REVISION_ID: ${{ needs.plan.outputs.previous_revision_id }}
+        run: bash scripts/yandex_cloud_rollback_drill.sh
+
+      - name: Run protected PITR recovery drill
+        if: ${{ inputs.pitr_drill == true }}
+        env:
+          YC_FOLDER_ID: ${{ secrets.PHASE7C_FOLDER_ID }}
+          YC_CLUSTER_NAME: ${{ secrets.PHASE7C_CLUSTER_NAME }}
+          YC_MIGRATION_RUNNER_NAME: ${{ secrets.PHASE7C_MIGRATION_RUNNER_NAME }}
+          PITR_RECOVERY_TIME: ${{ inputs.pitr_recovery_time }}
+        run: |
+          set -Eeuo pipefail
+          test -n "$PITR_RECOVERY_TIME"
+          PITR_DATABASE_URL="$(python - <<'PY'
+          import json
+          from pathlib import Path
+
+          values = json.loads(
+              Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8")
+          )
+          value = values.get("database_url")
+          if not value:
+              raise SystemExit("database_url is required for PITR drill")
+          print(value)
+          PY
+          )"
+          PITR_INVOCATION_SERVICE_ACCOUNT_ID="$(terraform -chdir=deploy/terraform output -raw container_puller_service_account_id)"
+          test -n "$PITR_INVOCATION_SERVICE_ACCOUNT_ID"
+          export PITR_DATABASE_URL PITR_INVOCATION_SERVICE_ACCOUNT_ID
+          bash scripts/yandex_cloud_pitr_drill.sh

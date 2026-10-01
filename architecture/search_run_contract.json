@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "status": "phase_2a_pilot",
+  "purpose": "Bounded search-run integrity contract before broader source orchestration.",
+  "network_execution_enabled": false,
+  "persistence_authority": "none",
+  "ranking_authority": false,
+  "selection_gate_is_operator_criteria": true,
+  "completeness_states": ["NOT_SEARCHED", "SEARCHED_NOT_FOUND", "SOURCE_UNAVAILABLE", "BUDGET_LIMITED", "COMPLETE"],
+  "source_attempt_statuses": ["SEARCHED", "SEARCHED_NOT_FOUND", "SOURCE_UNAVAILABLE", "BUDGET_LIMITED"],
+  "budget_dimensions": ["max_sources", "max_candidates"],
+  "required_properties": ["deterministic_source_order", "explicit_source_provenance", "no_hidden_ranking", "bounded_source_calls", "explicit_incomplete_states", "reproducible_plan_version", "search_quality_measurement"],
+  "prohibited_in_phase_2a": ["mass_source_integration", "automatic_network_execution", "opaque_global_score", "mandatory_ranking_gate", "new_database_tables", "new_system_of_record", "kernel_semantic_change", "automatic_qualification"],
+  "metrics": ["precision", "recall", "source_coverage"]
+}

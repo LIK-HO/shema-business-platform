@@ -1,0 +1,205 @@
+{
+  "version": "1.0",
+  "status": "approved_architecture_boundary",
+  "purpose": "Protect public client intake and provide deterministic counterparty preflight before operator qualification without creating a second business authority.",
+  "placement": "experience_and_application_boundary",
+  "frozen_kernel_impact": false,
+  "authority": {
+    "public_form": "untrusted_input",
+    "canonical_api": "server_authoritative_request_intake",
+    "counterparty_preflight": "deterministic_decision_support_from_external_evidence",
+    "operator_business_decision": "operator_authoritative_until_bitrix24_handoff",
+    "ai": "non_authoritative_summary_and_next_research_proposal_only"
+  },
+  "public_form": {
+    "minimum_fields": [
+      "service_type",
+      "location",
+      "preferred_date_or_period",
+      "work_or_cargo_description",
+      "contact_name",
+      "contact_channel"
+    ],
+    "conditional_fields": [
+      "approximate_volume_or_weight",
+      "access_or_lifting_constraints",
+      "company_name",
+      "inn",
+      "ogrn_or_ogrnip"
+    ],
+    "progressive_disclosure": true,
+    "client_feedback": {
+      "invalid_identifier": "correct_identifier_before_b2b_submission",
+      "registered_active": "identifier_matches_registered_entity",
+      "liquidation_or_termination": "entity_status_requires_correction_or_manual_route",
+      "reorganization": "entity_has_reorganization_signal_show_operator_attention",
+      "not_found": "no_authoritative_match_found",
+      "provider_unavailable": "verification_temporarily_unavailable_request_may_enter_pending_verification",
+      "no_raw_registry_payload": true
+    }
+  },
+  "pipeline": [
+    "edge_security_gate",
+    "request_shape_and_origin_validation",
+    "bot_and_abuse_challenge",
+    "deterministic_identifier_validation",
+    "cached_or_authoritative_counterparty_preflight",
+    "idempotent_request_observation_persistence",
+    "operator_review",
+    "qualification",
+    "business_handoff"
+  ],
+  "counterparty_preflight": {
+    "purpose": "resolve and summarize counterparty state without GPT",
+    "deterministic_checks": [
+      "identifier_checksum_and_length",
+      "identifier_type_detection_inn_ogrn_ogrnip",
+      "authoritative_identity_match",
+      "registration_status",
+      "liquidation_or_termination_indicator",
+      "reorganization_indicator",
+      "registration_date_when_available",
+      "legal_name_match",
+      "declared_okved_relevance_when_available",
+      "address_data_and_known_invalidity_signals_when_available",
+      "director_or_participant_presence_when_available",
+      "disqualified_person_signal_when_available",
+      "mass_registration_address_signal_when_available",
+      "reporting_or_debt_signals_when_available",
+      "financial_data_presence_when_available",
+      "edo_participation_when_available"
+    ],
+    "decision_classes": [
+      "NORMAL",
+      "ATTENTION",
+      "BLOCKING_FACT",
+      "UNKNOWN",
+      "CONFLICTING"
+    ],
+    "decision_semantics": "flags are evidence states, not an automated good/bad customer verdict",
+    "gpt_policy": {
+      "used_for_initial_identifier_validation": false,
+      "used_for_registry_lookup": false,
+      "used_when_deterministic_evidence_is_sufficient": false,
+      "allowed_after_evidence_packet": "summarize verified facts, surface contradictions, propose targeted next check",
+      "must_not": "invent_registry_facts_or_override_provider_evidence"
+    }
+  },
+  "registry_integration": {
+    "primary_authority": "fns_egrul_egrip_and_transparent_business",
+    "preferred_mode": "official_integrated_registry_data_or_authorized_official_service",
+    "no_undocumented_browser_scraping": true,
+    "server_side_only": true,
+    "public_client_receives": "minimal_status_and_identity_match_only",
+    "operator_receives": "source_reference_snapshot_freshness_and_allowed_business_fields",
+    "freshness": {
+      "target": "latest_available_official_data",
+      "daily_open_data_is_acceptable_with_explicit_snapshot_date": true,
+      "live_lookup_is_optional_and_separately_gated": true,
+      "stale_data_must_be_marked": true
+    },
+    "provider_failure": "return UNKNOWN_PROVIDER_UNAVAILABLE_without_fabricating_status",
+    "cache": {
+      "normalized_identifier_lookup_seconds": 300,
+      "operator_preflight_reuse_seconds": 900,
+      "cache_key": "source_version_plus_normalized_identifier"
+    }
+  },
+  "abuse_and_security": {
+    "edge_layers": [
+      "waf_or_equivalent_edge_filter",
+      "rate_limit",
+      "bot_detection_or_turnstile",
+      "origin_allowlist"
+    ],
+    "application_layers": [
+      "server_side_schema_validation",
+      "strict_field_length_limits",
+      "strict_content_type_limits",
+      "csrf_or_equivalent_request_proof",
+      "honeypot_field",
+      "idempotency_key",
+      "duplicate_submission_fingerprint",
+      "provider_lookup_budget",
+      "bounded_timeout",
+      "bounded_attachment_policy"
+    ],
+    "initial_control_policy": {
+      "submission_default": "5_per_10_minutes_per_public_client_key",
+      "registry_lookup_default": "20_per_10_minutes_per_public_client_key",
+      "same_identifier_reuse": "serve_from_cache_within_cache_ttl",
+      "body_size": "bounded_small_form_payload",
+      "attachments": "disabled_until_secure_upload_boundary_is_verified"
+    },
+    "anti_enumeration": {
+      "separate_lookup_and_submit_budgets": true,
+      "no_unbounded_identifier_search": true,
+      "no_detailed_registry_dump_to_public_client": true,
+      "progressive_challenge_on_suspicious_behavior": true
+    },
+    "secrets": {
+      "registry_credentials_never_in_browser": true,
+      "bitrix_credentials_never_in_browser": true,
+      "ai_credentials_never_in_browser": true
+    }
+  },
+  "request_safety": {
+    "idempotency_required": true,
+    "same_key_same_payload": "return_existing_request_reference",
+    "same_key_different_payload": "fail_closed",
+    "replay_after_timeout": "reconcile_before_creating_second_observation",
+    "spam_handling": "quarantine_without_operator_queue_pollution",
+    "canonical_request_state": "server_side_only",
+    "direct_bitrix_creation_from_public_form": false
+  },
+  "operator_preflight_card": {
+    "summary_first": [
+      "identity_match",
+      "registry_status",
+      "freshness",
+      "blocking_or_attention_flags",
+      "evidence_completeness"
+    ],
+    "details_one_level_deeper": [
+      "source_and_snapshot_reference",
+      "legal_name_and_identifiers",
+      "registration_and_reorganization_history_when_available",
+      "okved_and_business_presence",
+      "address_and_invalidity_signals",
+      "leadership_and_disqualification_signals",
+      "reporting_debt_financial_and_edo_signals_when_available",
+      "contradictions",
+      "unknowns",
+      "next_recommended_check"
+    ],
+    "operator_decision_field": "human_owned_work_acceptance_decision",
+    "ai_verdict_field": false,
+    "causal_links": [
+      "request_id",
+      "correlation_id",
+      "shema_identity_ref",
+      "preflight_snapshot_id"
+    ]
+  },
+  "attachments": {
+    "phase": "disabled_until_verified",
+    "future_requirements": [
+      "presigned_upload",
+      "private_storage",
+      "mime_and_size_validation",
+      "malware_scan_or_equivalent",
+      "no_public_execution_path",
+      "metadata_redaction_when_required",
+      "quarantine_before_operator_access"
+    ]
+  },
+  "non_goals": [
+    "public_crm",
+    "public_live_order_creation",
+    "automatic_customer_rejection_based_on_ai",
+    "direct_browser_to_registry_api",
+    "direct_browser_to_bitrix24",
+    "automatic_document_exchange",
+    "unbounded_web_crawling_from_form_submission"
+  ]
+}

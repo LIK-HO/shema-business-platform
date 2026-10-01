@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "status": "bounded_ai_application_composition",
+  "frozen_kernel_impact": false,
+  "application": {
+    "workflow": "AIExecutionService",
+    "trust_source": "canonical_postgresql",
+    "provider": "YandexGPT through P27 composition and P28 production gate",
+    "gateway": "shema_platform.application.ai.AIGateway",
+    "provider_selection": "outside_http_client_control",
+    "configuration_version": "production_gate_state"
+  },
+  "trust_resolution": {
+    "resource_source": "identity.state",
+    "resource_mapping": {
+      "identified": 1,
+      "verified": 2,
+      "active": 2,
+      "other": 0
+    },
+    "evidence_source": "evidence",
+    "accepted_lifecycle": "active",
+    "expiry_required": true,
+    "level_mapping": "T0..T4 to integer 0..4",
+    "subject_must_match_resource": true,
+    "failure_action": "quarantine"
+  },
+  "execution": {
+    "provider_call": "outside_unit_of_work",
+    "canonical_persistence": "frozen_AIGateway",
+    "audit": "frozen_AIGateway",
+    "correlation": "request_context",
+    "client_controls_provider": false,
+    "client_controls_trust": false
+  },
+  "activation": {
+    "default_enabled": false,
+    "explicit_operator": true,
+    "rollback": true,
+    "implicit_cloud_local_fallback": false
+  },
+  "scope_stop": {
+    "no_kernel_semantic_change": true,
+    "no_database_schema_change": true,
+    "no_new_provider": true,
+    "no_automatic_production_activation": true,
+    "no_openai": true,
+    "no_gigachat_implementation": true,
+    "no_local_runtime": true
+  }
+}

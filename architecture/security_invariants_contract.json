@@ -1,0 +1,211 @@
+{
+  "version": "1.0",
+  "status": "executable_security_invariant_contract",
+  "principle": "Runtime enforcement plus adversarial evidence, not documentation, is the proof.",
+  "invariants": [
+    {
+      "id": "SI-01",
+      "name": "authenticated_not_authorized",
+      "class": "authorization",
+      "enforcement": "sensitive route/application permission guards",
+      "negative_test": "authenticated actor without required permission is denied"
+    },
+    {
+      "id": "SI-02",
+      "name": "foreign_object_denied",
+      "class": "BOLA",
+      "enforcement": "resource owner scope on commercial_action/order/repeat_order and sensitive reads via ResourceReadAuthorizer",
+      "negative_test": "actor with valid permission cannot act on or read a foreign resource"
+    },
+    {
+      "id": "SI-17",
+      "name": "public_intake_outbox_stale_worker_denied",
+      "class": "concurrency",
+      "enforcement": "public-intake outbox publication requires current worker lease",
+      "negative_test": "a stale public-intake outbox worker cannot mark a reclaimed event published"
+    },
+    {
+      "id": "SI-18",
+      "name": "provider_rollback_stale_activation_denied",
+      "class": "concurrency",
+      "enforcement": "provider activation rollback uses compare-and-set on the currently active activation version and activation timestamp",
+      "negative_test": "a rollback command based on a prior activation cannot disable a provider that was reactivated after the command read state"
+    },
+    {
+      "id": "SI-19",
+      "name": "stale_provider_binding_denied",
+      "class": "concurrency",
+      "enforcement": "provider instances are bound to the exact canonical activation version and activation timestamp; cached instances are invalidated before traffic",
+      "negative_test": "a provider object from a prior activation cannot execute traffic after canonical rollback and reactivation, even when configuration and activation version are reused"
+    },
+    {
+      "id": "SI-20",
+      "name": "stale_local_activation_state_cannot_block_reactivation",
+      "class": "concurrency",
+      "enforcement": "activation admission is decided from canonical shared activation state, not an old process-local enabled flag",
+      "negative_test": "a replica with stale local enabled state can reactivate after another replica has performed a canonical rollback"
+    },
+    {
+      "id": "SI-21",
+      "name": "counterparty_monitoring_actor_scope_and_integrity",
+      "class": "authorization",
+      "enforcement": "counterparty monitoring/favorites require explicit permissions, are scoped to actor_id, and observations are bound to the subscribed identifier with hashed provenance",
+      "negative_test": "an actor without the capability or outside the subscription owner cannot read/write the monitoring resource; tampered snapshot payloads and invalid identifiers are rejected"
+    },
+    {
+      "id": "SI-16",
+      "name": "stale_worker_cannot_overwrite_newer_send",
+      "class": "concurrency",
+      "enforcement": "lease-guarded atomic external-effect unknown transition",
+      "negative_test": "a worker that lost its send lease cannot move a newer worker's SENDING action to FAILED"
+    },
+    {
+      "id": "SI-15",
+      "name": "permission_non_escalation",
+      "class": "authorization",
+      "enforcement": "explicit Permission membership with no derived or wildcard capabilities",
+      "negative_test": "an actor holding arbitrary permission combinations cannot satisfy an ungranted third permission"
+    },
+    {
+      "id": "SI-03",
+      "name": "client_evidence_not_authoritative",
+      "class": "provenance",
+      "enforcement": "server-side authoritative lookup",
+      "negative_test": "client-submitted canonical evidence fields rejected"
+    },
+    {
+      "id": "SI-04",
+      "name": "public_identity_not_client_defined",
+      "class": "public_ingress",
+      "enforcement": "trusted peer identity",
+      "negative_test": "rotating client header does not reset budget"
+    },
+    {
+      "id": "SI-05",
+      "name": "bot_verification_server_side",
+      "class": "public_ingress",
+      "enforcement": "BotChallengeVerifier composition boundary",
+      "negative_test": "spoofed 'passed' header without verifier rejected"
+    },
+    {
+      "id": "SI-06",
+      "name": "bounded_http_body",
+      "class": "resource_exhaustion",
+      "enforcement": "RequestBodySizeLimitMiddleware",
+      "negative_test": "oversized body rejected"
+    },
+    {
+      "id": "SI-07",
+      "name": "outbound_destination_pinned",
+      "class": "SSRF",
+      "enforcement": "official host allowlists",
+      "negative_test": "attacker HTTPS endpoint rejected"
+    },
+    {
+      "id": "SI-08",
+      "name": "redirect_not_followed",
+      "class": "SSRF",
+      "enforcement": "secure_urlopen",
+      "negative_test": "30x redirect does not trigger second request"
+    },
+    {
+      "id": "SI-09",
+      "name": "server_correlation",
+      "class": "forensics",
+      "enforcement": "CorrelationMiddleware generates IDs",
+      "negative_test": "client correlation header cannot replace canonical ID"
+    },
+    {
+      "id": "SI-10",
+      "name": "critical_effect_idempotent",
+      "class": "replay",
+      "enforcement": "durable idempotency reservation",
+      "negative_test": "same key converges; different payload fails"
+    },
+    {
+      "id": "SI-11",
+      "name": "outbox_lease_safe",
+      "class": "concurrency",
+      "enforcement": "PostgreSQL FOR UPDATE SKIP LOCKED leases",
+      "negative_test": "two workers cannot claim one event concurrently"
+    },
+    {
+      "id": "SI-12",
+      "name": "frozen_kernel_integrity",
+      "class": "supply_chain",
+      "enforcement": "kernel hash gate",
+      "negative_test": "kernel byte drift blocks promotion"
+    },
+    {
+      "id": "SI-13",
+      "name": "minimal_public_health",
+      "class": "information_disclosure",
+      "enforcement": "readiness returns only ready",
+      "negative_test": "provider topology absent from unauthenticated response"
+    },
+    {
+      "id": "SI-14",
+      "name": "fail_closed_composition",
+      "class": "misconfiguration",
+      "enforcement": "required public security dependencies validated at composition time",
+      "negative_test": "missing allowlist/verifier prevents insecure public runtime composition"
+    },
+    {
+      "id": "SI-22",
+      "name": "counterparty_monitoring_checkpoint_recovery_integrity",
+      "class": "concurrency",
+      "enforcement": "daily monitoring uses durable batch/item checkpoints, bounded leases with worker ownership CAS, deterministic command idempotency and fail-closed provider/snapshot handling",
+      "negative_test": "a stale worker cannot complete a reclaimed item; provider outage creates no snapshot/change; replay converges to the existing snapshot; exhausted attempts do not call the provider; tampered snapshots are rejected"
+    },
+    {
+      "id": "SI-23",
+      "name": "web_operator_client_cannot_be_business_authority",
+      "class": "experience_security",
+      "enforcement": "Web shell and assets are public, while all business state access remains behind canonical authenticated APIs; browser storage does not persist operator credentials",
+      "negative_test": "unauthenticated requests can fetch only shell/assets/public intake; protected operator APIs reject absent authentication; client source contains no direct database access and no persistent operator token storage"
+    },
+    {
+      "id": "SI-24",
+      "name": "repeat_order_capability_requires_real_revalidator",
+      "class": "business_continuity_security",
+      "enforcement": "Repeat-order Web/API capability is advertised only when a server-composed RepeatOrderService exists; that service requires a RepeatOrderRevalidator and validates counterparty, service scope, pricing, date/capacity and evidence freshness before creating or confirming repeat orders",
+      "negative_test": "without composed RepeatOrderService the capability is false and repeat UI/API fails closed; client JavaScript contains no alternate business validation or local repeat-order state store"
+    },
+    {
+      "id": "SI-25",
+      "name": "phase4_global_acceptance_surface_integrity",
+      "class": "experience_security",
+      "enforcement": "All public, MAX and operator surfaces are same-origin Web surfaces over canonical APIs; protected APIs fail closed without authentication; browser security headers are applied at the outermost HTTP boundary; client-side code cannot persist or originate business truth",
+      "negative_test": "global acceptance tests assert public shell availability, protected endpoint rejection, security headers on both success and auth-failure responses, absence of browser persistence/database access in client code, and presence of all required operator surfaces"
+    },
+    {
+      "id": "SI-26",
+      "name": "pwa_offline_layer_cannot_be_business_authority",
+      "class": "experience_security",
+      "enforcement": "service worker caches public shell/assets only; business APIs and protected operator state are network-only; pending mutations are bounded in page memory and require durable idempotency keys",
+      "negative_test": "service worker/network tests prove /v1/* and protected state are never cached, queued entries have no Authorization header and no persistent browser storage is used"
+    },
+    {
+      "id": "SI-27",
+      "name": "phase6_operator_experience_cannot_create_second_authority",
+      "class": "experience_security",
+      "enforcement": "Consolidated Web/PWA navigation, context and handoff surfaces use canonical APIs; protected capabilities remain server-authoritative; no local business store/rules or implied external success state are permitted.",
+      "negative_test": "Phase 6 acceptance proves protected route rejection, absence of browser persistence/database authority, approved navigation scope, and NOT_COMPOSED handoff behavior when no integration provider is composed."
+    },
+    {
+      "id": "SI-28",
+      "name": "yandex_cloud_foundation_cannot_create_second_authority",
+      "class": "deployment_security",
+      "enforcement": "Yandex Cloud edge/runtime/storage/secrets roles are adapters around the canonical PostgreSQL business plane; runtime images are immutable by digest and production secrets arrive only through Lockbox",
+      "negative_test": "Phase 7 acceptance proves Terraform provider/resource boundary, digest pinning, Lockbox delivery intent, private database network, non-authoritative object storage and absence of Message Queue as transaction authority"
+    }
+  ],
+  "closure": {
+    "required_current_head": true,
+    "required_full_release_gate": true,
+    "P0": "fix or explicit architecture exception",
+    "P1": "fix or explicit bounded scheduled disposition",
+    "P2": "control and owner",
+    "documentation_only_is_not_closure": true
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "version": "1.1",
+  "status": "phase7c_in_progress",
+  "phase": "7",
+  "sub_boundary": "7C_CLOUD_RESOURCE_PROVISIONING_AND_LIVE_EVIDENCE",
+  "purpose": "Provision only the approved Phase 7 foundation and collect independently verifiable live evidence without changing domain semantics.",
+  "authority_invariants": {
+    "transactional_state": "managed_postgresql",
+    "business_reliability_plane": "postgresql_outbox_and_durable_jobs",
+    "secrets": "yandex_lockbox",
+    "artifacts": "container_registry_immutable_digest",
+    "edge": "api_gateway",
+    "runtime": "serverless_containers",
+    "object_storage": "bounded_non_authoritative"
+  },
+  "required_live_evidence": [
+    "terraform_state_backend_verified",
+    "terraform_apply_success",
+    "network_and_runtime_resources_ready",
+    "immutable_image_revision_ready",
+    "lockbox_secret_delivery_verified",
+    "database_cluster_ready",
+    "database_connection_and_migrations_verified_from_same_vpc",
+    "health_and_readiness_verified",
+    "production_docs_disabled",
+    "protected_route_fail_closed",
+    "observability_verified",
+    "budget_and_alerts_verified",
+    "backup_retention_verified",
+    "pitr_recovery_drill_verified",
+    "rollback_to_previous_immutable_revision_verified",
+    "production_smoke_verified",
+    "global_adversarial_review_complete",
+    "final_current_head_seven_job_gate_green",
+    "pitr_recovery_cluster_created",
+    "pitr_recovery_database_connectivity_verified",
+    "pitr_recovery_cleanup_verified",
+    "api_gateway_edge_ready",
+    "immutable_image_digest_verified",
+    "budget_thresholds_verified",
+    "runtime_and_task_observability_verified"
+  ],
+  "safety_gates": {
+    "apply_requires_manual_dispatch": true,
+    "production_environment_required": true,
+    "real_credentials_must_be_externalized": true,
+    "terraform_plan_must_be_reviewed_before_apply": true,
+    "no_public_database_ingress": true,
+    "no_second_transactional_authority": true,
+    "rollback_must_use_immutable_revision": true,
+    "live_evidence_must_not_contain_secret_values": true,
+    "migration_task_must_not_be_public": true,
+    "rollback_must_restore_current_revision": true,
+    "pitr_must_restore_to_separate_cluster": true,
+    "pitr_must_not_mutate_production": true,
+    "pitr_recovery_credentials_must_use_lockbox": true,
+    "pitr_recovery_cluster_must_have_no_public_ip": true,
+    "pitr_cleanup_must_run_on_success_and_failure": true,
+    "terraform_state_must_be_remote": true,
+    "terraform_state_bucket_versioning_required": true,
+    "terraform_state_lockfile_must_be_enabled": true
+  },
+  "known_environment_constraint": "GitHub-hosted runners cannot directly reach a private Managed PostgreSQL host. The approved live path is a private Serverless Containers task-mode runner attached to the same VPC, invoked with IAM authorization by the protected CI identity. The production API must not gain a debug/database-probe endpoint merely to satisfy this gate.",
+  "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD and the final current-head seven-job gate is green.",
+  "execution": {
+    "migration_runner": "private_serverless_container_commands_mode",
+    "migration_runner_runtime": "task",
+    "migration_runner_image_authority": "same_immutable_image_digest",
+    "migration_runner_network": "same_vpc_as_managed_postgresql",
+    "migration_runner_access": "containerInvoker_only_for_ci_identity",
+    "migration_runner_secret": "DATABASE_URL_from_lockbox",
+    "migration_runner_endpoint": "no_api_gateway; no_public_access",
+    "rollback_drill": {
+      "mode": "protected_manual_input",
+      "sequence": [
+        "capture_previous_active_revision_before_apply",
+        "apply_new_revision",
+        "smoke_new_revision",
+        "rollback_to_previous_immutable_revision",
+        "verify_health_on_previous_revision",
+        "restore_new_immutable_revision",
+        "verify_health_on_restored_revision"
+      ],
+      "command": "yc serverless container rollback --name <container> --revision-id <revision>",
+      "no_secret_values_printed": true
+    },
+    "pitr_drill": {
+      "mode": "protected_manual_input",
+      "source_authority": "managed_postgresql_production_cluster",
+      "backup_selection": "latest_automated_backup_at_or_before_requested_recovery_time",
+      "recovery_target": "new_temporary_prestable_managed_postgresql_cluster",
+      "recovery_environment": "PRESTABLE",
+      "recovery_network": "same_vpc_as_production",
+      "recovery_host_public_ip": false,
+      "recovery_credentials": "temporary_lockbox_secret_derived_from_protected_production_database_url",
+      "verifier": "temporary_private_serverless_container_task_using_same_immutable_image_digest",
+      "verification": [
+        "recovery_cluster_ready",
+        "database_connection_verified",
+        "migration_state_verified"
+      ],
+      "cleanup": [
+        "temporary_task_runner_deleted",
+        "temporary_lockbox_secret_deleted",
+        "temporary_recovery_cluster_deleted"
+      ],
+      "production_mutation": "none",
+      "live_evidence_must_not_print_secrets": true
+    },
+    "terraform_state": {
+      "backend": "yandex_object_storage_s3",
+      "state_key": "shema/production/terraform.tfstate",
+      "versioning": "required",
+      "locking": "s3_lockfile",
+      "credentials": "dedicated_static_object_storage_access_key_in_protected_environment",
+      "reviewed_plan_binding": "sha256_fingerprint_must_match_before_apply"
+    }
+  }
+}

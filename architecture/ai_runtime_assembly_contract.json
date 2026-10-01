@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "status": "bounded_explicit_runtime_assembly",
+  "frozen_kernel_impact": false,
+  "assembly": {
+    "composition_root": "shema_platform.experience.runtime_composition",
+    "provider": "yandexgpt",
+    "api_boundary": "shema_platform.experience.api.create_app",
+    "application": "AIOnlyAPIApplication",
+    "construction_activates_provider": false
+  },
+  "dependencies": {
+    "configuration": "ConfigurationSnapshot",
+    "telemetry": "TelemetrySink",
+    "transactional_authority": "PostgreSQL via UnitOfWork",
+    "trust_resolution": "AIExecutionTrustResolver",
+    "prompt_renderer": "injected",
+    "cost_estimator": "injected"
+  },
+  "activation": {
+    "default_enabled": false,
+    "explicit_operator": true,
+    "api_key_runtime_only": true,
+    "rollback": true,
+    "automatic_startup_activation": false
+  },
+  "provider_policy": {
+    "cloud_allowlist": [
+      "yandexgpt",
+      "gigachat"
+    ],
+    "implicit_cloud_local_fallback": false,
+    "openai_approved": false,
+    "new_provider_added": false
+  },
+  "scope_stop": {
+    "no_kernel_semantic_change": true,
+    "no_database_schema_change": true,
+    "no_deployment": true,
+    "no_live_traffic_activation": true,
+    "no_gigachat_implementation": true,
+    "no_local_runtime": true,
+    "no_openai": true
+  }
+}

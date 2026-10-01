@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "scope": "provider_operation",
+  "timeout": "explicit_and_bounded",
+  "max_timeout_seconds": 30,
+  "failure_handling": "fail_closed",
+  "automatic_retry": false,
+  "durable_job_semantics": false,
+  "canonical_business_state": false
+}

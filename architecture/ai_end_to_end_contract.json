@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "status": "bounded_end_to_end_ai_execution_proof",
+  "frozen_kernel_impact": false,
+  "path": [
+    "canonical_http",
+    "APIApplication",
+    "AIExecutionService",
+    "frozen_AIGateway",
+    "P27_scoped_composition",
+    "P28_production_gate",
+    "deterministic_test_transport"
+  ],
+  "proofs": {
+    "canonical_airun_persistence": true,
+    "canonical_audit_persistence": true,
+    "correlation_propagation": true,
+    "server_side_trust_resolution": true,
+    "expired_evidence_fails_closed": true,
+    "provider_not_invoked_on_trust_failure": true,
+    "provider_activation_remains_explicit": true
+  },
+  "test_transport": {
+    "production_provider_added": false,
+    "network_dependency": false,
+    "uses_existing_yandexgpt_provider_contract": true
+  },
+  "scope_stop": {
+    "no_kernel_semantic_change": true,
+    "no_database_schema_change": true,
+    "no_live_traffic": true,
+    "no_openai": true,
+    "no_new_cloud_provider": true,
+    "no_cloud_local_fallback": true
+  }
+}

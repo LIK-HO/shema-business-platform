@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "scope": "operation",
+  "max_calls": "explicit_per_operation",
+  "rate_limit": "provider_configuration",
+  "reserve_before_external_io": true,
+  "exhaustion": "reject_without_external_io",
+  "canonical_business_state": false,
+  "durable_economic_state": false
+}

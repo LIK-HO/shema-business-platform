@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="СХЕМА — единая публичная и операторская Web/PWA-поверхность">
+<meta name="theme-color" content="#0b1220">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/web/manifest.webmanifest">
+<link rel="stylesheet" href="/web/style.css">
+<title>СХЕМА Business Platform</title>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" aria-label="Основная навигация">
+    <div class="brand">
+      <b aria-hidden="true">С</b>
+      <div><strong>СХЕМА</strong><small>Business Platform</small></div>
+    </div>
+    <nav id="nav">
+      <button data-route="workbench">Рабочий стол</button>
+      <button data-route="clients">Клиенты</button>
+      <button data-route="counterparties">Контрагенты</button>
+      <button data-route="requests">Заявки <span id="nav-count">0</span></button>
+      <button data-route="research">Разведка</button>
+      <button data-route="repeat" data-capability="repeatOrders">Повторные заказы</button>
+      <button data-route="handoffs">Передача</button>
+      <button data-route="control" data-capability="diagnostics">Контроль</button>
+    </nav>
+    <div class="side-foot">
+      <span id="session">Гость</span>
+      <button id="login" class="secondary">Войти оператору</button>
+    </div>
+  </aside>
+  <main>
+    <header>
+      <div class="header-left">
+        <button id="menu-toggle" class="ghost mobile-only" aria-label="Открыть меню">Меню</button>
+        <div><small id="surface">PUBLIC / WEB</small><h1 id="title">Заявка на услугу</h1></div>
+      </div>
+      <div class="header-tools">
+        <form id="global-search" class="global-search" role="search">
+          <label class="sr-only" for="global-query">Поиск</label>
+          <input id="global-query" name="query" autocomplete="off" placeholder="ИНН / ОГРН / компания / запрос">
+          <button class="secondary">Найти</button>
+        </form>
+        <button id="notifications" class="ghost" hidden aria-label="Уведомления">Уведомления <span id="nav-count-header">0</span></button>
+        <code id="corr">correlation: —</code>
+        <button id="refresh" class="ghost">Обновить</button>
+      </div>
+    </header>
+    <div id="network-state" class="network-state" role="status" aria-live="polite"></div>
+    <section id="view" aria-live="polite"></section>
+  </main>
+</div>
+<dialog id="auth">
+  <form id="auth-form" method="dialog">
+    <h2>Сессия оператора</h2>
+    <p class="muted">Bearer token хранится только в памяти текущей страницы.</p>
+    <label for="token">Токен<input id="token" type="password" autocomplete="off" required></label>
+    <div id="auth-error" class="error hidden"></div>
+    <div class="actions"><button value="cancel" class="secondary">Отмена</button><button value="default" class="primary">Проверить</button></div>
+  </form>
+</dialog>
+<div id="toast" aria-live="polite"></div>
+<script src="/web/app.js" defer></script>
+</body>
+</html>

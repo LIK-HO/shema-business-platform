@@ -1,0 +1,101 @@
+{
+  "version": "1.0",
+  "status": "phase_2g_selected_evidence_captured_activation_blocked",
+  "source_id": "fns_transparent_business",
+  "provider": "Federal Tax Service of Russia (FNS)",
+  "service_name": "FNS Transparent Business",
+  "service_url": "https://pb.nalog.ru/",
+  "registry_binding": {
+    "source_class": "official_registry",
+    "reliability": "authoritative",
+    "access_mode": "manual_operator_lookup",
+    "network_automation": false
+  },
+  "adapter_boundary": {
+    "execution_mode": "manual_operator_observation_intake",
+    "network_execution_enabled": false,
+    "automatic_activation": false,
+    "automatic_retry": false,
+    "fallback_provider": false,
+    "persistence_authority": "existing_identity_and_evidence_contracts_only",
+    "ranking_authority": false,
+    "qualification_authority": false
+  },
+  "input_identifiers": [
+    "INN",
+    "OGRN",
+    "OGRNIP",
+    "name"
+  ],
+  "material_claims": [
+    "registration",
+    "legal_status",
+    "tax_identifier",
+    "company_context"
+  ],
+  "provenance": {
+    "source_ref": "https://pb.nalog.ru/",
+    "provider_name": "FNS Transparent Business",
+    "reliability": "authoritative",
+    "observed_at_required": true,
+    "captured_at_required": true,
+    "freshness_required": true,
+    "operator_visible": true
+  },
+  "error_mapping": {
+    "operator_no_match": "SEARCHED_NOT_FOUND",
+    "operator_source_unavailable": "SOURCE_UNAVAILABLE",
+    "operator_timeout": "SOURCE_UNAVAILABLE",
+    "ambiguous_or_conflicting_identity": "QUARANTINE_AND_MANUAL_REVIEW",
+    "provider_machine_error_contract": "NOT_ESTABLISHED"
+  },
+  "limits": {
+    "provider_rate_limit": {
+      "status": "NOT_ESTABLISHED",
+      "evidence_required_for_automation": true
+    },
+    "provider_timeout_contract": {
+      "status": "NOT_ESTABLISHED",
+      "evidence_required_for_automation": true
+    },
+    "application_budget": {
+      "enforced_by": "existing_search_budget",
+      "network_side_effect": false
+    }
+  },
+  "external_effect_safety": {
+    "lookup_is_read_only": true,
+    "provider_side_idempotency": "NOT_APPLICABLE_TO_READ_ONLY_LOOKUP",
+    "provider_side_reconciliation": "NOT_APPLICABLE_TO_READ_ONLY_LOOKUP",
+    "future_automation_rule": "MUST_REVALIDATE_PROVIDER_CONTRACT_BEFORE_ACTIVATION"
+  },
+  "kill_switch": {
+    "network_execution_enabled": false,
+    "activation_path_present": false,
+    "operator_action": "disable_source_binding_and_reject_network_adapter"
+  },
+  "rollback": {
+    "state_model": "configuration_only",
+    "rollback_action": "remove_source_specific_binding_and_fixture_reference",
+    "database_migration_required": false,
+    "historical_evidence_preservation": true
+  },
+  "activation_decision": "BLOCKED",
+  "blocking_reasons": [
+    "provider_rate_limit_contract_not_authoritatively_established",
+    "provider_timeout_contract_not_authoritatively_established",
+    "provider_machine_error_semantics_not_authoritatively_established",
+    "no_live_network_execution_is_authorized_in_phase_2g"
+  ],
+  "non_goals": [
+    "live_provider_traffic",
+    "automated_scraping",
+    "automatic_retry",
+    "fallback_provider",
+    "new_database_schema",
+    "ranking_authority",
+    "automatic_qualification",
+    "MAX_activation",
+    "frozen_kernel_change"
+  ]
+}

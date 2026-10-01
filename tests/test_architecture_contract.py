@@ -1,0 +1,608 @@
+from json import loads
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def read(path: str) -> str:
+    return (ROOT / path).read_text()
+
+
+def test_architecture_baseline_exists() -> None:
+    assert (ROOT / "ARCHITECTURE.md").is_file()
+
+
+def test_machine_readable_architecture_contract_exists() -> None:
+    contract = loads(read("architecture/contract.json"))
+    assert contract["version"] == "1.4"
+    assert contract["runtime"] == "modular_monolith"
+    assert contract["transactional_authority"] == "postgresql"
+    assert "max_is_an_adapter" in contract["critical_invariants"]
+    assert "commercial_action" in contract["persistence"]["canonical"]
+    assert "order_header" in contract["persistence"]["canonical"]
+    assert "economic_entry" in contract["persistence"]["canonical"]
+    assert "ai_run" in contract["persistence"]["canonical"]
+    assert "job_execution" in contract["persistence"]["canonical"]
+    assert "commercial_send_reservation" in contract["operational_controls"]
+    assert "commercial_send_is_lease_guarded" in contract["critical_invariants"]
+    assert (
+        "external_communication_deduplicates_by_idempotency_key"
+        in contract["critical_invariants"]
+    )
+    assert (
+        "external_effect_idempotency_key_is_stable_per_action"
+        in contract["critical_invariants"]
+    )
+    assert "commercial_action_is_ready_before_external_send" not in contract[
+        "critical_invariants"
+    ]
+    assert (
+        "commercial_action_is_reserved_before_external_effect"
+        in contract["critical_invariants"]
+    )
+    assert (
+        "commercial_send_completion_requires_current_lease"
+        in contract["critical_invariants"]
+    )
+    assert (
+        "idempotency_business_state_outbox_audit_are_one_transaction"
+        in contract["critical_invariants"]
+    )
+    assert "order_persistence_respects_domain_lifecycle" in contract["critical_invariants"]
+    assert "order_persistence_serializes_lifecycle_update" in contract[
+        "critical_invariants"
+    ]
+    assert contract["persistence"]["uncertain_state"] == ["quarantine_record"]
+
+
+def test_database_migrations_are_forward_only_and_declared() -> None:
+    contract = loads(read("architecture/contract.json"))
+    assert contract["persistence"]["migrations"] == [
+        "0001_foundation.sql",
+        "0002_discovery.sql",
+        "0003_audit_context.sql",
+        "0004_commercial_execution.sql",
+        "0005_ai_run.sql",
+        "0006_job_execution.sql",
+        "0007_outbox_delivery_lease.sql",
+        "0008_commercial_send_reservation.sql",
+    ]
+    assert "correlation_id" in read("db/migrations/0003_audit_context.sql")
+    assert "commercial_action" in read("db/migrations/0004_commercial_execution.sql")
+    assert "ai_run" in read("db/migrations/0005_ai_run.sql")
+    assert "job_execution" in read("db/migrations/0006_job_execution.sql")
+    assert "delivery_lease_until" in read("db/migrations/0007_outbox_delivery_lease.sql")
+    assert "send_lease_until" in read("db/migrations/0008_commercial_send_reservation.sql")
+
+
+def test_database_migration_contains_foundation_tables() -> None:
+    migration = read("db/migrations/0001_foundation.sql")
+    for table in ("identity", "evidence", "idempotency_key", "audit_log", "outbox_event"):
+        assert f"create table if not exists {table}" in migration
+
+
+def test_discovery_migration_contains_candidate_and_quarantine_tables() -> None:
+    migration = read("db/migrations/0002_discovery.sql")
+    for table in ("search_candidate", "quarantine_record"):
+        assert f"create table if not exists {table}" in migration
+    assert "ux_search_candidate_source_ref" in migration
+    assert "ix_quarantine_open" in migration
+
+
+def test_domain_does_not_depend_on_upper_layers() -> None:
+    domain_root = ROOT / "src/shema_platform/domain"
+    forbidden = (
+        "shema_platform.application",
+        "shema_platform.adapters",
+        "shema_platform.infrastructure",
+    )
+    for path in domain_root.rglob("*.py"):
+        content = path.read_text()
+        assert not any(token in content for token in forbidden)
+
+
+def test_foundation_does_not_depend_on_upper_layers() -> None:
+    foundation_root = ROOT / "src/shema_platform/foundation"
+    forbidden = (
+        "shema_platform.domain",
+        "shema_platform.application",
+        "shema_platform.adapters",
+    )
+    for path in foundation_root.rglob("*.py"):
+        content = path.read_text()
+        assert not any(token in content for token in forbidden)
+
+
+def test_kernel_checkpoint_tracks_twelve_elements() -> None:
+    checkpoint = read("docs/V1.4_KERNEL_CHECKPOINT.md")
+    for element in (
+        "1. Foundation / Architecture Contract",
+        "4. Discovery + Qualification",
+        "9. Commercial Action",
+        "10. Order",
+        "11. Economics",
+        "12. Canonical API / Experience Boundary",
+    ):
+        assert element in checkpoint
+
+
+def test_legacy_boundary_is_explicit() -> None:
+    architecture = read("ARCHITECTURE.md")
+    assert "Airtable is legacy/transition data" in architecture
+    assert "MAX is included in the adapter boundary" in architecture
+
+
+def test_v1_5_unified_runtime_contract_is_additive() -> None:
+    runtime = loads(read("architecture/runtime_contract.json"))
+    kernel = loads(read("architecture/contract.json"))
+
+    assert runtime["version"] == "1.5.0"
+    assert runtime["baseline_kernel_contract"] == "1.4"
+    assert runtime["iam"]["authentication_boundary"] == "oidc_jwt_adapter"
+    assert runtime["iam"]["permission_materialization"] is True
+    assert runtime["iam"]["unknown_permissions_fail_closed"] is True
+    assert "RS256" in runtime["iam"]["allowed_algorithms"]
+    assert "EdDSA" in runtime["iam"]["allowed_algorithms"]
+    assert runtime["observability"]["telemetry_allowlist_based_redaction"] is True
+    assert runtime["observability"]["telemetry_does_not_store_authorization_headers"] is True
+    assert runtime["security"]["production_docs_disabled"] is True
+    assert runtime["security"]["production_oidc_https_required"] is True
+    assert runtime["supply_chain"]["dependency_audit"] == "pip-audit"
+    assert runtime["supply_chain"]["audit_is_release_gate"] is True
+    assert runtime["recovery"]["outbox_reclaim"] is True
+    assert runtime["recovery"]["commercial_send_reclaim"] is True
+    assert kernel["version"] == "1.4"
+
+
+def test_gigachat_application_composition_contract_is_bounded() -> None:
+    contract = loads(
+        read("architecture/gigachat_application_composition_contract.json")
+    )
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["composition"]["provider"] == "gigachat"
+    assert contract["composition"]["gateway"] == (
+        "shema_platform.application.ai.AIGateway"
+    )
+    assert contract["composition"]["workflow"] == (
+        "shema_platform.application.ai_runtime.AIExecutionService"
+    )
+    assert contract["activation"]["default_enabled"] is False
+    assert contract["activation"]["explicit_operator"] is True
+    assert contract["activation"]["rollback"] is True
+    assert contract["trust"]["client_controls_trust"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_http_wiring"] is True
+    assert contract["scope_stop"]["no_openai"] is True
+    assert contract["scope_stop"]["no_cloud_local_fallback"] is True
+
+
+def test_gigachat_provider_contract_is_bounded() -> None:
+    contract = loads(read("architecture/gigachat_provider_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["provider"]["id"] == "gigachat"
+    assert contract["provider"]["base_url"] == "https://api.giga.chat/v1"
+    assert contract["provider"]["token_ttl_minutes"] == 30
+    assert contract["provider"]["auth_key_runtime_only"] is True
+    assert contract["provider"]["token_runtime_only"] is True
+    assert contract["bounded_controls"]["no_automatic_retry"] is True
+    assert contract["production_scope"]["allowed_scopes"] == [
+        "GIGACHAT_API_B2B",
+        "GIGACHAT_API_CORP",
+    ]
+    assert contract["activation"]["default_enabled"] is False
+    assert contract["activation"]["explicit_operator"] is True
+    assert contract["provider_policy"]["cloud_allowlist"] == [
+        "yandexgpt",
+        "gigachat",
+    ]
+    assert contract["provider_policy"]["implicit_cloud_local_fallback"] is False
+    assert contract["provider_policy"]["openai_approved"] is False
+    assert contract["scope_stop"]["no_application_wiring"] is True
+    assert contract["scope_stop"]["no_live_traffic"] is True
+    assert contract["scope_stop"]["no_openai"] is True
+
+
+def test_ai_end_to_end_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_end_to_end_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["proofs"]["canonical_airun_persistence"] is True
+    assert contract["proofs"]["canonical_audit_persistence"] is True
+    assert contract["proofs"]["correlation_propagation"] is True
+    assert contract["proofs"]["server_side_trust_resolution"] is True
+    assert contract["proofs"]["expired_evidence_fails_closed"] is True
+    assert contract["proofs"]["provider_not_invoked_on_trust_failure"] is True
+    assert contract["test_transport"]["production_provider_added"] is False
+    assert contract["test_transport"]["network_dependency"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_live_traffic"] is True
+    assert contract["scope_stop"]["no_openai"] is True
+
+
+def test_ai_runtime_assembly_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_runtime_assembly_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["assembly"]["construction_activates_provider"] is False
+    assert contract["activation"]["default_enabled"] is False
+    assert contract["activation"]["explicit_operator"] is True
+    assert contract["activation"]["automatic_startup_activation"] is False
+    assert contract["provider_policy"]["cloud_allowlist"] == ["yandexgpt", "gigachat"]
+    assert contract["provider_policy"]["implicit_cloud_local_fallback"] is False
+    assert contract["provider_policy"]["openai_approved"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_live_traffic_activation"] is True
+    assert contract["scope_stop"]["no_openai"] is True
+
+
+def test_ai_application_composition_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_application_composition_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["trust_resolution"]["resource_source"] == "identity.state"
+    assert contract["trust_resolution"]["evidence_source"] == "evidence"
+    assert contract["trust_resolution"]["subject_must_match_resource"] is True
+    assert contract["trust_resolution"]["expiry_required"] is True
+    assert contract["execution"]["canonical_persistence"] == "frozen_AIGateway"
+    assert contract["execution"]["audit"] == "frozen_AIGateway"
+    assert contract["activation"]["default_enabled"] is False
+    assert contract["activation"]["explicit_operator"] is True
+    assert contract["activation"]["implicit_cloud_local_fallback"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_openai"] is True
+
+
+def test_ai_http_route_contract_is_bounded() -> None:
+    route = loads(read("architecture/ai_api_route_contract.json"))
+
+    assert route["version"] == "1.0"
+    assert route["route"]["path"] == "/v1/ai/run"
+    assert route["route"]["client_cannot_control"] == [
+        "provider_id",
+        "model",
+        "model_version",
+        "actor_trust_level",
+        "resource_trust_level",
+        "evidence_level",
+        "production_activation_state",
+        "provider_credentials",
+        "correlation_id",
+    ]
+    assert (
+        route["composition_boundary"]["frozen_AIGateway_semantics_unchanged"]
+        is True
+    )
+    assert (
+        route["production_behavior"][
+            "production_provider_activation_still_requires_P28_gate"
+        ]
+        is True
+    )
+
+def test_gigachat_runtime_assembly_contract_is_bounded() -> None:
+    contract = loads(read("architecture/gigachat_runtime_assembly_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["assembly"]["construction_activates_provider"] is False
+    assert contract["assembly"]["application"] == "AIOnlyAPIApplication"
+    assert contract["activation"]["default_enabled"] is False
+    assert contract["activation"]["explicit_operator"] is True
+    assert contract["activation"]["rollback"] is True
+    assert contract["activation"]["network_calls_during_construction"] is False
+    assert contract["provider_policy"]["cloud_allowlist"] == [
+        "yandexgpt",
+        "gigachat",
+    ]
+    assert contract["provider_policy"]["client_controls_provider"] is False
+    assert contract["provider_policy"]["implicit_cloud_local_fallback"] is False
+    assert contract["provider_policy"]["openai_approved"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_provider_selection_in_request"] is True
+    assert contract["scope_stop"]["no_live_traffic_activation"] is True
+
+def test_approved_ai_provider_selection_contract_is_bounded() -> None:
+    contract = loads(read("architecture/approved_ai_provider_selection_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["selection"]["layer"] == "composition_root"
+    assert contract["selection"]["allowed_providers"] == [
+        "yandexgpt",
+        "gigachat",
+    ]
+    assert contract["selection"]["immutable_for_composed_instance"] is True
+    assert contract["selection"]["client_controls_provider"] is False
+    assert contract["selection"]["http_request_controls_provider"] is False
+    assert contract["selection"]["selection_has_provider_fallback"] is False
+    assert contract["activation"]["automatic_activation"] is False
+    assert contract["activation"]["network_calls_during_selection"] is False
+    assert contract["activation"]["provider_specific_activation_gates_remain_authoritative"] is True
+    assert contract["provider_policy"]["openai_approved"] is False
+    assert contract["provider_policy"]["local_runtime_added"] is False
+    assert contract["provider_policy"]["cloud_local_fallback"] is False
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_client_provider_field"] is True
+    assert contract["scope_stop"]["no_live_provider_traffic"] is True
+
+def test_selected_provider_ai_end_to_end_contract_is_bounded() -> None:
+    contract = loads(read("architecture/selected_provider_ai_end_to_end_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["path"][0] == "POST /v1/ai/run"
+    assert contract["path"][-1] == "PostgreSQL ai_run/audit_log"
+    assert contract["providers"]["yandexgpt"]["transport"] == "deterministic_test_only"
+    assert contract["providers"]["gigachat"]["transport"] == "deterministic_test_only"
+    assert contract["providers"]["yandexgpt"]["live_traffic"] is False
+    assert contract["providers"]["gigachat"]["live_traffic"] is False
+    assert contract["proof"]["canonical_http_route"] is True
+    assert contract["proof"]["operator_selected_provider"] is True
+    assert contract["proof"]["automatic_fallback"] is False
+    assert contract["proof"]["explicit_activation"] is True
+    assert contract["proof"]["trust_resolved_from_postgresql"] is True
+    assert contract["proof"]["airun_persistence"] is True
+    assert contract["proof"]["audit_persistence"] is True
+    assert contract["proof"]["correlation_propagation"] is True
+    assert contract["proof"]["inactive_provider_fails_closed"] is True
+    assert contract["proof"]["expired_evidence_fails_closed"] is True
+    assert contract["proof"]["unselected_provider_invoked"] is False
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_provider_field_in_http"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_automatic_production_activation"] is True
+    assert contract["scope_stop"]["no_live_provider_traffic"] is True
+
+def test_ai_production_observability_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_production_observability_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["events"] == {
+        "activation": "ai.production.activated",
+        "rollback": "ai.production.rolled_back",
+        "provider_success": "ai.provider.completed",
+        "provider_failure": "ai.provider.failed",
+    }
+    assert "configuration_version" in contract["safe_operational_attributes"]
+    assert "operator" in contract["safe_operational_attributes"]
+    assert contract["required_properties"]["correlation_id"] is True
+    assert contract["required_properties"]["provider_identified"] is True
+    assert contract["required_properties"]["configuration_version_for_provider_events"] is True
+    assert contract["required_properties"]["operator_for_activation_and_rollback"] is True
+    assert contract["required_properties"]["redacted"] is True
+    assert contract["required_properties"]["telemetry_non_authoritative"] is True
+    assert contract["required_properties"]["telemetry_failure_does_not_break_execution"] is True
+    prohibited = set(contract["prohibited_data"])
+    assert {
+        "credentials",
+        "authorization_headers",
+        "prompts",
+        "input_refs",
+        "evidence_refs",
+        "provider_outputs",
+        "model_inputs",
+    } <= prohibited
+    assert contract["scope_stop"]["no_new_telemetry_backend"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_activation"] is True
+    assert contract["scope_stop"]["no_live_provider_traffic"] is True
+
+def test_ai_promotion_release_gate_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_promotion_release_gate_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["frozen_ai_kernel"]["path"] == (
+        "src/shema_platform/application/ai.py"
+    )
+    assert contract["approved_provider_policy"]["allow_list"] == [
+        "yandexgpt",
+        "gigachat",
+    ]
+    assert contract["approved_provider_policy"]["automatic_fallback"] is False
+    assert contract["approved_provider_policy"]["automatic_activation"] is False
+    assert contract["approved_provider_policy"]["client_provider_selection"] is False
+    assert contract["approved_provider_policy"]["live_traffic_in_promotion_evidence"] is False
+    assert contract["runtime_secret_policy"]["yandexgpt_runtime_only"] is True
+    assert contract["runtime_secret_policy"]["gigachat_authorization_key_runtime_only"] is True
+    assert contract["runtime_secret_policy"]["gigachat_token_runtime_only"] is True
+    assert contract["operator_approval"]["required"] is True
+    assert contract["operator_approval"]["persisted"] is False
+    assert contract["operator_approval"]["activates_provider"] is False
+    assert contract["operator_approval"]["contains_credentials"] is False
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_production_activation"] is True
+    assert contract["scope_stop"]["no_live_provider_traffic"] is True
+    assert contract["scope_stop"]["no_duplicate_recovery_drill"] is True
+
+def test_ai_production_rehearsal_contract_is_bounded() -> None:
+    contract = loads(read("architecture/ai_production_rehearsal_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["rehearsal"]["starts_from_green_p39_assessment"] is True
+    assert contract["rehearsal"]["operator_approval_required"] is True
+    assert contract["rehearsal"]["approval_activates_provider"] is False
+    assert contract["rehearsal"]["providers"] == [
+        "yandexgpt",
+        "gigachat",
+    ]
+    assert contract["activation"]["explicit_operator_required"] is True
+    assert contract["activation"]["activation_makes_no_external_call"] is True
+    assert contract["activation"]["deterministic_transport_only"] is True
+    assert contract["rollback"]["explicit_operator_required"] is True
+    assert contract["rollback"]["restores_disabled_state"] is True
+    assert contract["rollback"]["blocks_subsequent_provider_invocation"] is True
+    assert contract["rollback"]["records_activation_and_rollback_telemetry"] is True
+    assert contract["scope_stop"]["no_live_provider_traffic"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_activation"] is True
+    assert contract["scope_stop"]["no_cloud_local_fallback"] is True
+    assert contract["scope_stop"]["no_deployment"] is True
+    assert contract["scope_stop"]["no_merge"] is True
+
+def test_max_reconciliation_idempotency_contract_is_bounded() -> None:
+    contract = loads(read("architecture/max_reconciliation_idempotency_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["provider"]["id"] == "max"
+    assert contract["provider"]["live_network"] is False
+    assert contract["provider"]["production_credentials"] is False
+    assert contract["provider"]["canonical_truth_owner"] == "platform"
+    assert contract["proof"]["stable_idempotency_key_per_action"] is True
+    assert contract["proof"]["same_request_replay_returns_same_external_identity"] is True
+    assert contract["proof"]["same_key_different_payload_fails_closed"] is True
+    assert contract["proof"]["different_actions_have_distinct_external_identity"] is True
+    assert contract["proof"]["repeated_delivery_is_deterministically_deduplicated"] is True
+    assert contract["proof"]["unsafe_provider_capability_fails_closed"] is True
+    assert contract["safety"]["supports_idempotency"] is True
+    assert contract["safety"]["supports_reconciliation"] is False
+    assert contract["safety"]["safe_for_retry"] is True
+    assert contract["scope_stop"]["no_live_max_api"] is True
+    assert contract["scope_stop"]["no_credentials"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_retry_in_adapter"] is True
+    assert contract["scope_stop"]["no_production_activation"] is True
+
+def test_max_provider_evidence_contract_is_bounded() -> None:
+    contract = loads(read("architecture/max_provider_evidence_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["provider"]["id"] == "max"
+    assert contract["provider"]["outbound_method"] == "POST /messages"
+    assert contract["provider"]["live_network_used"] is False
+    assert contract["provider"]["credentials_used"] is False
+    assert contract["confirmed_provider_contract"]["send_method_documented"] is True
+    assert contract["confirmed_provider_contract"]["success_response_identity_documented"] is True
+    assert contract["confirmed_provider_contract"]["authorization_contract_documented"] is True
+    assert contract["confirmed_provider_contract"]["http_429_documented"] is True
+    assert contract["confirmed_provider_contract"]["per_destination_rate_limit_documented"] is True
+    assert contract["confirmed_provider_contract"]["message_identity_field"] == "Message.body.mid"
+    assert (
+        contract["external_effect_safety"][
+            "provider_side_idempotency_contract_documented"
+        ]
+        is False
+    )
+    assert (
+        contract["external_effect_safety"][
+            "provider_side_reconciliation_contract_documented"
+        ]
+        is False
+    )
+    assert contract["external_effect_safety"]["crash_safe_retry_certified"] is False
+    assert contract["external_effect_safety"]["automatic_retry_allowed"] is False
+    assert contract["scope_stop"]["no_live_max_credentials"] is True
+    assert contract["scope_stop"]["no_live_max_network"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_retry"] is True
+    assert contract["scope_stop"]["no_production_activation"] is True
+
+def test_max_ambiguous_outcome_safety_contract_is_bounded() -> None:
+    contract = loads(read("architecture/max_ambiguous_outcome_safety_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["trigger"]["error_type"] == "ExternalEffectUnknown"
+    assert contract["handling"]["commercial_action_status_after_trigger"] == "failed"
+    assert contract["handling"]["quarantine_reason_code"] == "external_effect_unknown"
+    assert contract["handling"]["idempotency_result_ref_remains_pending"] is True
+    assert contract["handling"]["outbox_event"] == (
+        "commercial_action.external_effect_unknown"
+    )
+    assert contract["handling"]["audit_outcome"] == "quarantined"
+    assert contract["handling"]["automatic_external_replay"] is False
+    assert contract["replay_proof"]["same_command_after_quarantine_reaches_adapter"] is False
+    assert contract["replay_proof"]["same_command_after_quarantine_raises"] == (
+        "QuarantineRequired"
+    )
+    assert contract["replay_proof"]["stable_external_effect_idempotency_key_preserved"] is True
+    assert contract["persistence"]["quarantine_table"] == "quarantine_record"
+    assert contract["persistence"]["new_migration_required"] is False
+    assert contract["persistence"]["business_state_and_outbox_audit_atomic"] is True
+    assert contract["scope_stop"]["no_live_max_network"] is True
+    assert contract["scope_stop"]["no_provider_credentials"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_automatic_retry"] is True
+    assert contract["scope_stop"]["no_database_schema_change"] is True
+    assert contract["scope_stop"]["no_frozen_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+    assert contract["scope_stop"]["no_provider_reconciliation_guess"] is True
+
+def test_quarantine_read_model_contract_is_bounded() -> None:
+    contract = loads(read("architecture/quarantine_read_model_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["storage"]["table"] == "quarantine_record"
+    assert contract["storage"]["schema_change_required"] is False
+    assert contract["storage"]["read_only"] is True
+    assert contract["inspection"]["lookup_by_object"] is True
+    assert contract["inspection"]["lookup_by_reason"] is True
+    assert contract["inspection"]["list_open_with_bounded_limit"] is True
+    assert contract["state_change"]["resolve_quarantine"] is False
+    assert contract["state_change"]["commercial_action_mutation"] is False
+    assert contract["state_change"]["failed_to_sent_transition"] is False
+    assert contract["state_change"]["external_send"] is False
+    assert contract["authorization"]["no_new_permission"] is True
+    assert contract["authorization"]["operator_experience_boundary"] == "future"
+    assert contract["authorization"]["platform_reader_is_not_a_public_route"] is True
+    assert contract["scope_stop"]["no_live_max_network"] is True
+    assert contract["scope_stop"]["no_credentials"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_database_migration"] is True
+    assert contract["scope_stop"]["no_frozen_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_retry"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
+
+def test_productization_readiness_contract_is_bounded() -> None:
+    contract = loads(read("architecture/productization_readiness_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["production_rule"]["requires_all_checks_passed"] is True
+    assert contract["production_rule"]["provider_side_external_effect_safety_is_mandatory"] is True
+    assert contract["production_rule"]["automatic_override"] is False
+    assert set(contract["current_expected_blockers"]) == {
+        "MAX provider-side idempotency contract is not documented/certified",
+        "MAX provider-side reconciliation contract is not documented/certified",
+    }
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_new_execution_path"] is True
+    assert contract["scope_stop"]["no_database_migration"] is True
+    assert contract["scope_stop"]["no_frozen_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_production_activation"] is True
+    assert contract["scope_stop"]["no_live_external_traffic"] is True
+    assert contract["scope_stop"]["no_merge"] is True
+    assert contract["scope_stop"]["no_deploy"] is True

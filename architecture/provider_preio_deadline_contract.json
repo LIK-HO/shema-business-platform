@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "scope": "provider_operation",
+  "deadline_enforcement": "includes_pre_io_wait",
+  "rate_limit_wait": "must_fit_within_remaining_deadline",
+  "request_timeout": "remaining_after_pre_io_wait",
+  "external_io_after_deadline": false,
+  "failure_handling": "fail_closed",
+  "automatic_retry": false,
+  "durable_job_semantics": false,
+  "canonical_business_state": false
+}

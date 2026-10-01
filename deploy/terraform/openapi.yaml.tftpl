@@ -1,0 +1,17 @@
+openapi: 3.0.0
+info:
+  title: Shema Business Platform API
+  version: "1.5.0"
+paths:
+  /{proxy+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: proxy
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: serverless_containers
+        container_id: "$${container_id}"
+        service_account_id: "$${container_service_account}"

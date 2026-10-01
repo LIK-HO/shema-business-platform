@@ -1,0 +1,52 @@
+{
+  "version": "1.0",
+  "status": "approved_interim_live_boundary",
+  "purpose": "Provide a bounded repeat-order tool in Shema before Bitrix24 becomes the live business plane, using existing frozen Order/Economics semantics without reopening the kernel.",
+  "frozen_kernel_impact": false,
+  "modes": ["SHEMA_LOCAL_LIVE","TRANSFER_PENDING","BITRIX_LIVE","PURGED_FROZEN"],
+  "interim_authority": {
+    "before_bitrix_handoff": "shema_order_and_limited_economics",
+    "after_bitrix_ack": "bitrix24_live_transaction",
+    "no_dual_live_ownership": true
+  },
+  "local_repeat_tool": {
+    "source": "completed_or_business_eligible_prior_order",
+    "actions": ["create_next_repeat_order","edit_current_repeat_order_context","pause_recurrence","skip_once","cancel_repeat_plan"],
+    "revalidation_before_confirm": ["counterparty_identity_and_status","service_scope","current_price_or_pricing_policy","date_and_capacity_assumptions","required_evidence_freshness"],
+    "history_preserved_on_clone": true,
+    "past_order_is_immutable": true,
+    "economics_are_transaction_scoped_not_accounting_authority": true,
+    "duplicate_window_protected_by_idempotency": true
+  },
+  "migration_state_machine": ["LOCAL_ACTIVE","FREEZE_PENDING","SNAPSHOT_BUILT","BITRIX_RESERVED","BITRIX_ACKNOWLEDGED","READBACK_VERIFIED","PURGE_ELIGIBLE","PURGED_FROZEN","UI_HIDDEN","RECONCILIATION_REQUIRED","MIGRATION_FAILED"],
+  "complete_transfer_package": {
+    "required_categories": ["customer_identity_and_contact_context","client_request_context","qualification_and_contact_preparation_history","order_header","order_lines","economic_entries_linked_to_order","repeat_business_rule_and_recurrence_context","commercial_action_history","outcome_history","evidence_references_required_for_business_continuity","source_and_correlation_references"],
+    "excludes": "security_secrets_and_internal_operator_telemetry_not_required_for_business_continuity",
+    "completeness_proof": ["field_manifest_hash","record_counts","line_counts","economic_entry_counts","aggregate_amount_checks","reference_integrity_check","payload_hash","bitrix_readback_verification"]
+  },
+  "purge_policy": {
+    "never_purge_before_bitrix_ack": true,
+    "never_purge_before_readback_verification": true,
+    "never_purge_before_recovery_snapshot_verification": true,
+    "purge_live_order_and_economic_operational_rows_after_verified_transfer": true,
+    "preserve_minimal_frozen_lineage_tombstone": true,
+    "frozen_lineage_fields": ["shema_order_ref","migration_id","bitrix_entity_ref","mapping_version","payload_hash","verified_at","purged_at"]
+  },
+  "ui_behavior": {
+    "capability_flag": "live_order_economics_available",
+    "when_shema_live": "show_order_and_economics_views",
+    "after_purged_frozen": "remove_order_and_economics_tabs_without_layout_reflow",
+    "deep_link_after_hide": "show_moved_to_bitrix24_state_with_authorized_link_when_available",
+    "client_dossier_link": "show_compact_business_history_link_to_bitrix24",
+    "no_empty_broken_tabs": true,
+    "old_urls_must_not_render_stale_data": true
+  },
+  "failure_recovery": {
+    "lost_bitrix_response": "reconcile_before_retry",
+    "partial_transfer": "resume_from_verified_package",
+    "readback_mismatch": "reconciliation_required_and_no_purge",
+    "purge_failure": "retain_shema_live_state_until_retry_is_verified",
+    "bitrix_unavailable": "keep_shema_local_mode",
+    "corrupted_package_hash": "fail_closed_and_restore_from_clean_snapshot"
+  }
+}

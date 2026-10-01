@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "status": "controlled_ai_promotion_rehearsal",
+  "frozen_kernel_impact": false,
+  "rehearsal": {
+    "starts_from_green_p39_assessment": true,
+    "operator_approval_required": true,
+    "approval_activates_provider": false,
+    "providers": [
+      "yandexgpt",
+      "gigachat"
+    ]
+  },
+  "activation": {
+    "explicit_operator_required": true,
+    "activation_makes_no_external_call": true,
+    "deterministic_transport_only": true
+  },
+  "rollback": {
+    "explicit_operator_required": true,
+    "restores_disabled_state": true,
+    "blocks_subsequent_provider_invocation": true,
+    "records_activation_and_rollback_telemetry": true
+  },
+  "scope_stop": {
+    "no_live_provider_traffic": true,
+    "no_new_provider": true,
+    "no_http_route_change": true,
+    "no_database_schema_change": true,
+    "no_kernel_semantic_change": true,
+    "no_automatic_activation": true,
+    "no_cloud_local_fallback": true,
+    "no_deployment": true,
+    "no_merge": true
+  }
+}

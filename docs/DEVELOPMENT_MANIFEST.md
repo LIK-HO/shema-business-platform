@@ -1,0 +1,2075 @@
+**Current implementation boundary:** **Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS.** Phase 7B remains CLOSED / VERIFIED. The current branch/HEAD is resolved from GitHub at every development-session entry; this manifest does not freeze a mutable HEAD value. The last functional-code release gate before this documentation-only synchronization was CI `36741560081` (7/7 GREEN) with Terraform IaC Validation `36741559567` (run 93) GREEN. This synchronization changes documentation only. 7C includes persistent remote Terraform state in Yandex Object Storage with required bucket versioning and S3 lockfile configuration, reviewed-plan fingerprint binding, API-Gateway-edge verification, immutable-artifact verification, budget-threshold verification, runtime/task observability, protected Yandex provisioning, recovery-safe PostgreSQL baseline and protected PITR/rollback drills. Live closure remains restricted to real Yandex evidence on the exact current HEAD.
+
+**Current implementation boundary:** **Phase 7 — IN_PROGRESS; Phase 7B Production runtime/artifact composition — CLOSED / VERIFIED.** Final 7B HEAD `4f2589610a9c8c8839c174c6c9b7e5873dae84ef` passed CI `36703937084` — **7/7 GREEN** and Terraform IaC Validation `36703936845` — **GREEN**. The foundation uses immutable image digests, Lockbox, Managed PostgreSQL, API Gateway → Serverless Containers, private Object Storage, explicit runtime/gateway service-account separation and production-safe API composition. No real Yandex Cloud resources or production credentials were provisioned, so overall Phase 7 remains open. Next boundary: **Phase 7C — Cloud resource provisioning + live evidence**. SI-28 is active.
+
+**Current implementation boundary:** **Phase 6 — Production Web/PWA Consolidation — CLOSED / VERIFIED.** Final implementation HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c` passed full seven-job CI `36637312890` — **7/7 GREEN**. Global adversarial review completed; operator capability rejection and handoff false-readiness were fixed and covered by acceptance tests. Web/PWA remains one experience layer over canonical APIs; no second business authority or frozen-kernel change was introduced. Next active boundary: **Phase 7 — Yandex Cloud Production Foundation**.
+
+**Current implementation boundary:** **Phase 5 — PWA — CLOSED / VERIFIED.** Final implementation HEAD `337b3c3f8465b406d13f6655f8e65910efe4524a` passed full seven-job CI `36635383440` — **7/7 GREEN**. Global adversarial review completed; the PWA public-bootstrap allowlist defect was fixed and covered by HTTP-level acceptance. SI-26 is evidenced by `tests/test_phase5_pwa_acceptance.py`. Next active boundary: Phase 6 — Production Web/PWA Consolidation. No frozen-kernel semantics changed and no second business authority was introduced.
+
+**Current implementation boundary:** **Phase 5 — PWA — IN_PROGRESS.** Phase 4 Web Operator System remains CLOSED / VERIFIED. Phase 5 is bounded to installability, service-worker lifecycle, public-only offline cache, memory-only pending mutations, reconnect/conflict handling and safe update/rollback. No frozen-kernel change or second business authority is permitted.
+
+**Final implementation boundary:** **Phase 4 — Web Operator System — CLOSED / VERIFIED**. Phase 4-4A/4B/4C/4D are closed; 4E hardening plus `tests/test_phase4_global_acceptance.py` passed on runtime HEAD `13de9b974bf59070dfbe2f4cd69f5ec7255c42f4` with full seven-job gate `36588002294` — **7/7 GREEN**. The final synchronization commit contains only Roadmap/Manifest/State/Security-contract updates; it does not alter runtime behavior. No merge, release, or PR-state change is implied.
+
+**Current implementation boundary:** **Phase 4-4D Repeat Orders & Business Continuity Web boundary — CLOSED / VERIFIED** by full seven-job release-gate CI run `36584780497` on HEAD `f28a8323e2f7b68311df8dbb9f83402fad3a3821`. The next active element is Phase 4-4E system/control-plane hardening and global acceptance.
+
+**Current implementation boundary:** **Phase 4-4B Public Client Intake + Attribution + MAX projection hardening — CLOSED / VERIFIED** by full seven-job release-gate CI run `36582610189` on HEAD `273333d2432abc5ce8318fe58df219ab90f06230`. The next active element is Phase 4-4C.
+
+**Current implementation boundary:** **Phase 4-4A Canonical Web/Public + Protected Operator Shell — CLOSED / VERIFIED** by full seven-job release-gate CI run `36581745238`. The frozen kernel is unchanged. The current active work is Phase 4 Web Operator System; only one substantial capability boundary is active at a time.
+
+# СХЕМА Business Platform — Development Manifest
+## Формальный манифест зрелого ядра и рациональной разработки
+
+**Status:** v1.5 Core Maturity Certified / Kernel Frozen / P46 Closed / Phase 2-H Closed / P47 Strategy Boundary Closed / Operator Interface Contract Closed / Phase 3A Repeat Orders Closed / **Phase 3B Public Intake Data Plane — CLOSED / VERIFIED / Phase 3C-1 Counterparty Monitoring & Favorites — CLOSED / VERIFIED / Global Security Re-baseline — CLOSED / VERIFIED / MAX Evidence Hold**
+**Current verified boundary:** **Phase 3C-1 Counterparty Monitoring & Favorites — CLOSED / VERIFIED** by full seven-job release-gate CI #2041 (`36561799870`); **Phase 3B Public Intake Data Plane, Global Security Re-baseline and Phase 3A Repeat Orders & Business Continuity remain CLOSED / VERIFIED**. The frozen v1.4 kernel remains unchanged. The verified security chain covers resource-read scope, permission non-escalation, external-effect stale-worker protection, public-intake outbox lease ownership, provider rollback CAS, exact provider binding and stale-local activation recovery.
+**Branch / HEAD / PR:** resolved live from GitHub at every development-session entry; never treated as a static manifest fact.
+**Kernel baseline:** v1.4 frozen
+**Runtime baseline:** v1.5.0
+**System target:** personal-first, scalable when justified, reliable, durable and mature system; not a SaaS breadth target.
+**Strategy revalidation:** 2026-09-28 — B2B-first / Bitrix24 transition strategy rechecked against mature systems; global adversarial survivability gate is now binding for subsequent product development.
+**Latest closure verification:** P47 is CLOSED / VERIFIED at the architecture-and-test stage on the final functional release gate CI #1600 (`36397100698`); all seven jobs are GREEN. This final documentation synchronization contains no product/runtime semantics. Runtime implementation remains governed by the roadmap's later capability boundaries.
+
+---
+
+## 1. Назначение
+
+Этот документ является формальной точкой синхронизации разработки.
+
+Он фиксирует:
+1. что уже сделано в ядре;
+2. на какой стадии мы находимся;
+3. какие свойства обязательны для зрелого ядра;
+4. какие проверки ещё необходимы;
+5. где заканчивается развитие ядра и начинается продуктовый/интеграционный слой;
+6. какие принципы считаются архитектурными инвариантами.
+
+После прохождения финальной сертификации зрелости семантика ядра считается frozen. Новые возможности реализуются поверх неё через application workflows, adapters, integrations и experience/product layers.
+
+Работа с GitHub не должна зависеть от памяти предыдущего диалога. Вход в каждый новый development session выполняется по `docs/GITHUB_WORK_PROTOCOL.md`, `docs/DEVELOPMENT_STATE.md` и `AGENTS.md`; текущий branch/HEAD/PR/CI всегда читаются заново из GitHub.
+
+Post-core development order is governed by `docs/ROADMAP.md`. The roadmap is capability-oriented and does not reopen frozen kernel semantics.
+Canonical operator interface boundary: `architecture/operator_interface_contract.json`.
+
+## 1B. Global adversarial survivability gate — MANDATORY
+
+This is a hard development rule, not a recommendation.
+
+**Every material strategy change and every completed development element must trigger a fresh global adversarial review of the entire approved architecture and system before the element can be marked VERIFIED or CLOSED.**
+
+The review is intentionally conducted from the position of a professional attempting to destroy the system: find split-brain truth, hidden single points of failure, causal-chain breaks, unsafe external effects, operator dead ends, multi-operator races, migration traps, cost/quota cascades, privacy leaks, provider lock-in and external legal and operating-environment change.
+
+The check covers the whole system, not only the changed file or module:
+**frozen kernel → post-core contracts → runtime → persistence → integrations → operator workflow → multi-operator model → security/recovery → external legal/operating constraints → migration/rollback → cost/resource limits.**
+
+Closure is blocked until:
+- P0 findings are fixed or handled by an explicitly approved architecture exception;
+- P1 findings are fixed or have an explicit bounded control and scheduled boundary;
+- P2 findings have a concrete control and ownership boundary;
+- current-head tests and the full release gate are re-run after the change.
+
+“Immortal” is the engineering target in the sense of **survivable architecture**: no designed failure should destroy canonical truth or make deterministic recovery impossible. Literal zero-failure is not asserted; preservation of truth, containment, recovery, audit and learning are.
+
+Machine-readable contract: `architecture/global_adversarial_survivability_gate_contract.json`.
+
+### 1C. Security re-baseline — weakest-link enforcement
+
+Security closure is governed by `SECURITY.md`, `docs/THREAT_MODEL.md` and `architecture/security_invariants_contract.json`.
+
+The mandatory trust chain is:
+**untrusted input → edge/authentication → authorization → resource scope → validation → evidence provenance → policy → transaction/concurrency → external-effect reservation → external call → reconciliation → audit → recovery.**
+
+Documentation, a contract file or a positive-path test never closes a security finding by itself. Closure requires runtime enforcement, an adversarial/negative test, current-HEAD evidence and the full release gate.
+
+The frozen v1.4 kernel remains protected by its independent integrity gate. Security hardening must not silently change frozen kernel semantics.
+
+
+### 1C-ACTIVE-STATE. Stale local activation-state sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
+
+- Finding: after a remote canonical rollback, YandexGPT/GigaChat replicas retained local enabled state and could reject a legitimate reactivation even though canonical state was disabled.
+- Fix: activation admission now trusts canonical shared state; stale local enabled flags no longer block reactivation.
+- Evidence: YandexGPT and GigaChat negative tests perform canonical rollback outside the local gate, then prove the stale replica can reactivate.
+- No schema or frozen-kernel change.
+- Verification: full seven-job release gate CI #1994 (`36556900641`) is GREEN on exact HEAD `b8983dcf16630869db1318746edc93298ea8c333`.
+
+### 1C-BINDING. Cached provider stale-binding sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
+
+- Finding: a runtime replica could retain a cached provider object after global rollback and later reuse it after re-activation when configuration (and even activation_version) was reused.
+- Fix: provider instances are now bound to the exact canonical `(activation_version, activated_at)` pair; cached instances are invalidated before reuse, and every external execution rechecks the canonical binding.
+- Evidence: adversarial unit tests cover YandexGPT, GigaChat and DaData reactivation with reused configuration/activation version and a new activation timestamp; the old provider object is rejected.
+- No schema or frozen-kernel change.
+- Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
+
+### 1C-ACTIVATION. Provider rollback stale-activation sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
+
+- Finding: provider rollback previously targeted only the provider_id, so a stale rollback could disable a provider after a newer activation had already taken ownership of the canonical kill-switch state.
+- Fix: rollback is now an atomic compare-and-set on both activation_version and activated_at; stale commands fail without mutating the newer activation.
+- Evidence: deterministic unit test plus PostgreSQL persistence test prove that a stale rollback cannot disable a reactivated provider.
+- No schema or frozen-kernel change.
+- Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
+
+### 1C-OUTBOX. Public-intake outbox stale-worker sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
+
+- Finding: public-intake outbox publication checked worker identity but not the current delivery lease, so a stale worker could potentially mark a reclaimed event as published.
+- Fix: publication is now an atomic update requiring the same worker_id, unpublished state and an unexpired delivery lease.
+- Evidence: PostgreSQL integration test proves a reclaimed event remains owned by the newer worker when the stale worker attempts publication.
+- No schema or frozen-kernel change.
+- Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
+
+### 1C-EFFECT. External-effect stale-worker sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
+
+- Finding: an ExternalEffectUnknown arriving from a worker after lease loss could previously overwrite a newer worker's SENDING state through an unguarded persistence save.
+- Fix: the unknown-effect transition is now an atomic persistence operation requiring the same worker_id, status='sending' and an unexpired lease. A stale worker can only create a reconciliation/quarantine fact; it cannot mutate the newer send state.
+- Evidence: unit test covers reclaimed lease; PostgreSQL integration test proves stale worker returns no transition and the newer worker remains owner of the send lease.
+- No schema or frozen-kernel change.
+- Verification: full release gate required on the exact post-change HEAD before this boundary is VERIFIED.
+
+### 1C-PERM. Permission non-escalation sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
+
+- **Implemented:** authorization remains an explicit membership check; permission combinations do not synthesize a third capability and wildcard/unknown permissions remain rejected at IAM materialization.
+- Adversarial matrix covers cross-domain combinations including commercial action create/send, provider activate/lookup/rollback, order read/create and public-review/diagnostics/AI.
+- This is an authorization-model proof boundary; no role hierarchy or implicit capability inference was introduced.
+- Full release verification is required on the exact post-change HEAD before this sub-boundary is considered VERIFIED.
+
+### 3C-1. Counterparty Monitoring & Favorites runtime boundary — 2026-09-29 — CLOSED / VERIFIED by CI #2041 (`36561799870`)
+
+- Runtime boundary: exact INN/OGRN/OGRNIP subscriptions can be persisted as actor-scoped Monitoring and personal Favorites without creating a second search engine or changing frozen kernel semantics.
+- Authorization: separate `COUNTERPARTY_MONITOR_MANAGE` and `COUNTERPARTY_FAVORITE_MANAGE` capabilities; monitoring/favorite reads and observation writes are actor-scoped.
+- Integrity: identifier checksum validation, idempotent commands, snapshot payload hashing, provenance/source version, deterministic snapshot IDs and deterministic snapshot-to-snapshot change detection.
+- Reliability: duplicate-safe PostgreSQL uniqueness, transactional audit/outbox facts, deterministic UUID outbox identifiers and replay-safe persistence.
+- API/composition: protected monitoring/favorites endpoints plus explicit `compose_counterparty_monitoring_runtime()`; database is not touched during composition.
+- Adversarial evidence: invalid identifiers, missing permissions, actor-scope violations, duplicate subscriptions, snapshot tampering, personal-favorite isolation, severity classification and PostgreSQL persistence were exercised.
+- Full seven-job release gate CI #2041 (`36561799870`) is GREEN on the exact implementation HEAD; no frozen-kernel semantic change.
+- Scope limit: daily checkpointed batch monitoring, bounded parallelism/backoff, provider-outage handling and recovery checkpoint semantics remain the separate **3C-2** boundary.
+
+### 3C-2. Checkpointed Counterparty Monitoring Worker & Recovery boundary — 2026-09-29 — CLOSED / VERIFIED by CI #2073 (`36577339818`)
+
+- **Implemented:** durable daily batch and item checkpoints; bounded parallel provider execution; PostgreSQL `FOR UPDATE SKIP LOCKED` claiming; exact worker/lease CAS on completion/failure; checkpointed reclaim after worker loss; deterministic exponential backoff with bounded attempt budget.
+- **Provider-outage semantics:** provider-unavailable, timeout and connection failure paths become retryable item state with no snapshot/change event; successful recovery clears the monitor error and advances the next check only after authoritative observation.
+- **Replay integrity:** observation idempotency is bound to the batch command identity, so a replay returns the durable snapshot instead of creating a second snapshot/change event.
+- **Fail-closed:** corrupted/tampered snapshots remain rejected by snapshot integrity validation; exhausted attempt items fail without another provider call.
+- **Adversarial evidence:** unit + PostgreSQL integration cover outage/no-false-change, duplicate batch replay, stale-worker completion after lease reclaim, max-attempt provider suppression and bounded parallelism.
+- **Recovery evidence:** PITR drill validates canonical migration 0016 and the complete seven-job gate #2073 is GREEN on the exact implementation HEAD.
+- **Scope:** no frozen-kernel semantic change; no production provider activation or merge is implied by this closure.
+
+### 3C-E2E. Counterparty Verification, Monitoring & Favorites phase boundary — 2026-09-29 — CLOSED / VERIFIED
+
+- Phase 3C combines the verified 3C-1 runtime/persistence boundary with the verified 3C-2 checkpointed worker/recovery boundary.
+- Required behavior is now durable from exact identifier → monitoring subscription → authoritative snapshot → deterministic change event → recoverable daily batch processing.
+- Next implementation boundary: **Phase 4 — Web Operator System**.
+### 3B-E2E. Public-intake outage → replay → reconstruction boundary — 2026-09-29 — CLOSED / VERIFIED by CI #2004 (`36558811275`)
+
+- Boundary proof: accepted public intake is durably retained in the dedicated intake database when canonical Shema projection is unavailable.
+- Recovery proof: the durable intake outbox is claimed by a later worker, projected into canonical Shema, and published only after successful projection.
+- Reconstruction proof: canonical `public_request_context` and `operator_notification` are recreated from the accepted intake record with correlation, preflight result and source attribution preserved.
+- Replay safety: a second dispatcher pass produces no second notification and no duplicate canonical projection.
+- Adversarial review: edge identity/rate limits, idempotency reservation, stale outbox lease handling, projection idempotency, data minimization and canonical authority boundaries were rechecked read-only; no unresolved P0/P1 was identified in the Phase 3B scope.
+- No frozen-kernel semantic change.
+
+### 3B-PERSIST. Public-intake canonical projection persistence sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #2001 (`36558318175`)
+
+- Finding: `PostgresPublicRequestProjection` and `PostgresOperatorNotificationReader` referenced `public_request_context` and `operator_notification`, but the canonical migration chain ended at 0013 without creating either table.
+- Fix: added `db/migrations/0014_public_intake_projection.sql` with projection context, durable operator notifications and unread/request indexes.
+- Evidence: PostgreSQL integration test proves migration creation, canonical projection, notification creation and replay-safe duplicate projection; PITR recovery CI verifies migration 0014 survives recovery.
+- This persistence boundary is part of the now-verified Phase 3B runtime exit.
+- No frozen-kernel semantic change.
+
+### 1C-READ. Resource-read authorization sub-boundary — 2026-09-29 — CLOSED / VERIFIED by CI #1994 (`36556900641`)
+
+- **Implemented / VERIFIED:** sensitive resource reads now require both the explicit route permission and a server-side `ResourceReadAuthorizer` check on the concrete `orderId` / `entityRef`.
+- `GET /v1/orders/{orderId}` and `GET /v1/economics/{entityRef}` fail closed when the resource-scope capability is not composed.
+- The PostgreSQL-backed scope implementation resolves canonical ownership from the Order resource; Phase 3A economics currently bind `entity_ref` to `order_id`, so no new Order/Economics kernel field is introduced.
+- Foreign-resource reads are denied even when the actor has the corresponding read permission; missing-owner state also fails closed.
+- Evidence: adversarial API tests, resource-scope unit tests, Python 3.12/3.13 quality, integration, supply-chain, backup/PITR and release-contract all passed on exact HEAD `7e2f46aadec3aa0d977ea90ee31139aba1511670` in CI run #1934 (`36551109926`).
+- This closes the **resource-read BOLA sub-boundary**, not the entire global Security re-baseline. The remaining Security campaign continues from this exact boundary.
+
+## 1A. Цельный образ продукта и баланс стратегии
+
+Shema — это **личная операционная система владельца**, а не урезанная корпоративная CRM/ERP и не SaaS-продукт, который должен догонять коммерческие платформы по числу функций.
+
+Её назначение — дать одному оператору цельный, надёжный путь:
+
+**Намерение → Поиск → Разрешение сущности → Проверка → Понимание → Квалификация → Подготовка контакта → Передача в бизнес-контур → Действие → Результат → Обучение системы**
+
+При этом внутри система выполняет гораздо больше работы:
+
+**identity → evidence → freshness → provenance → policy → durable execution → audit → recovery → observability**
+
+### Основной продуктовый баланс
+
+1. **Снаружи — простота. Внутри — защищённая сложность.** Сложность допускается только там, где она защищает истину, безопасность, восстановление, качество исследования или внешний эффект.
+2. **Качество решения важнее количества найденных данных.** Система должна уменьшать шум, но не лишать оператора доступа к допустимым кандидатам.
+3. **Алгоритм помогает, но не скрывает.** Ranking, deduplication, suggestions и research triggers могут помогать; они не должны бесшумно превращаться в право системы решать вместо оператора.
+4. **Операторский путь важнее архитектурной красоты.** Любая новая capability должна либо заметно повышать качество решения, либо сокращать операторское время/ошибки, либо защищать критический риск. Само наличие технологии преимуществом не является.
+5. **Personal-first означает не anti-scale, а deferred-scale.** Архитектура допускает будущую нагрузку/командный режим, но текущий UX, deployment model и процессы не должны платить сложностью за гипотетический масштаб.
+6. **Модульность предпочтительнее распределённости.** Modular monolith, PostgreSQL и provider-neutral boundaries остаются базой. Service extraction, отдельные очереди, специализированные хранилища и team-mode появляются только по измеренной причине.
+7. **Не строить функции ради полноты продукта.** PWA, расширенный graph, дополнительные AI providers, CRM-интеграции и командные функции — условные capabilities; новый client surface допускается только по отдельному доказательству полезности.
+8. **Каждый важный автоматизм должен иметь понятный отказ.** Оператор должен понимать, что система знает, чего не знает, что не проверяла и почему действие ограничено.
+
+### Три уровня взаимодействия с системой
+
+**WORK** — основной операторский слой: найти, открыть, понять, выбрать, выполнить.
+
+**EVIDENCE** — раскрытие основания: источники, даты, freshness, contradictions, match explanation, provenance.
+
+**TECHNICAL / CONTROL** — эксплуатационный слой: jobs, leases, retries, provider state, correlation, audit, policy/configuration, release/recovery.
+
+Эти уровни являются progressive disclosure, а не тремя разными системами.
+
+## Current stage synchronization — 2026-09-27
+
+- **Phase 2-H lookup/retry/evidence boundary:** CLOSED / VERIFIED by full CI #1377 (`36315266092`) and final documentation synchronization CI #1383 (`36315401510`).
+- **Phase 2-H controlled activation operation:** CLOSED / VERIFIED by full CI #1392 (`36316219807`) on final synchronized HEAD `de99fd3e30514c140464947099a03fa9399809f9`.
+- **Phase 2-H runtime activation rehearsal:** CLOSED / VERIFIED by full CI #1397 (`36316599417`) on `c47c9b7368abd5de8488390d47f212884f5eb3cc`.
+- **Phase 2-H provider lookup → Evidence runtime vertical slice:** CLOSED / VERIFIED by full CI #1402 (`36317002134`) on `88dab9aa995c70217af0b616d59039f62450bb26`.
+- Verified control-plane properties: dedicated RBAC permissions, explicit operator confirmation, provider identity taken from the route path, readiness fail-closed gate, disabled-by-default provider configuration, redacted telemetry, kill-switch rollback and no secret persistence.
+- No live DaData traffic occurred. No CI traffic uses the real provider. FNS automation remains independently BLOCKED.
+- **Phase 2-H Runtime Negative Provider Outcomes & Recovery:** CLOSED / VERIFIED by full CI #1404 (`36317178100`) on `758690225996c1c2cca95cbbd3b1c56638d69db8`.
+- Verified runtime negative cases: not-found, rate-limit retry and exhaustion, provider 5xx, transport recovery, secondary-evidence contradiction quarantine, no-fallback behavior and terminal-error no-partial-state guarantees.
+- Stage exit: no live DaData traffic, no provider credentials in Git, no automatic fallback, no FNS automation, no DB schema change and no frozen-kernel semantic change.
+- No new capability is activated by this closure; the next implementation boundary must be selected and documented separately before coding resumes.
+
+
+- **Phase 2-A closure:** Search Run Integrity Boundary is CLOSED / VERIFIED.
+- Implementation HEAD: `af813ff79802aa358eafcb68586d3bf0b105aa7d`.
+- Full verification CI run #1316 (`36304414654`) passed all seven release-gate jobs.
+- **Phase 2-B closure:** Source-Registry-Backed Search Planning is CLOSED / VERIFIED.
+- Implementation HEAD: `ee549cada95a0a90a7647b2b01eec51fa0bdd9bc`.
+- Full verification CI run #1324 (`36308069460`) passed all seven release-gate jobs.
+- **Phase 2-C closure:** Registry-Backed Operator Search Composition is CLOSED / VERIFIED.
+- Implementation HEAD: `16c08111e025bd267787eaa5de36c4dd53f70609`.
+- Full verification CI run #1330 (`36308647549`) passed all seven release-gate jobs.
+- **Phase 2-D closure:** Generic Runtime Composition is CLOSED / VERIFIED.
+- Verified HEAD: `7637871b3cac379fdff056aed90ddc73aacf760f`.
+- Full CI #1336 (`36309294705`) passed all seven release-gate jobs.
+- **Phase 2-E closure:** Search Adapter Compliance Boundary is CLOSED / VERIFIED.
+- Verified HEAD: `abca1b26e32498105b4ea855474aab387091218c`.
+- Full CI #1340 (`36310957082`) passed all seven release-gate jobs.
+- **Phase 2-F closure:** First Approved Source Adapter Readiness Gate is CLOSED / VERIFIED.
+- Verified HEAD: `9e49e79c3825703117ad6b587e9cee5160feaca9`.
+- Full CI #1343 (`36311263929`) passed all seven release-gate jobs.
+- **Phase 2-G source-selection/evidence sub-boundary:** CLOSED / VERIFIED by full CI #1348 (`36312176697`) on `3625d0e30309b64ebfb6eada4a2a75a4b619fa52`.
+- Selected source: `fns_transparent_business` (FNS Transparent Business), already declared in the registry and already used by the Phase 1-A manual counterparty-check vertical slice.
+- Source-specific adapter contract: `architecture/fns_transparent_business_adapter_contract.json`.
+- Authoritative evidence record: `architecture/fns_transparent_business_evidence_2026_09_27.json`.
+- Deterministic fixtures: `tests/test_fns_transparent_business_contract.py`.
+- Lawful-use evidence is established for the FNS open-data context, including the requirement for lawful use and source attribution. This still does not establish a provider-specific automation API, rate-limit, timeout or machine-error contract.
+- **Phase 2-G overall remains CLOSED for its evidence boundary / activation BLOCKED.** The repository does not infer missing provider automation facts. Its FNS automation hold continues independently from the new Phase 2-H DaData execution boundary.
+- No live provider traffic, automatic retry/fallback, new persistence authority, ranking authority, automatic qualification, MAX activation or frozen-kernel change is authorized by this boundary.
+- Phase 2-H is now the controlled provider-execution boundary for a documented API provider. `dadata_organization_api` is the parallel alternative track because its official API documentation establishes the endpoint, authentication, daily quota model, request-rate/connection limits and machine-readable HTTP error classes. The boundary is implemented through provider-neutral counterparty lookup and evidence intake contracts; this does not grant live activation.
+- `fns_transparent_business` remains independently tracked as an evidence-hold alternative and stays BLOCKED for automated activation until its own provider-specific automation contract is authoritatively established.
+- Phase 2-H must preserve provider isolation: one provider adapter cannot inherit another provider's rate limits, errors, timeout semantics, retry policy or authorization assumptions. DaData enters through the provider-neutral counterparty-lookup boundary, not the discovery SearchProvider contract.
+- DaData is classified as `trusted_secondary`, not `authoritative`; its data may support discovery, identity resolution and enrichment, but cannot by itself promote canonical truth without the existing Evidence/identity rules.
+- Live execution remains disabled. Provider lookup observations may enter Evidence through the verified boundary, but trusted-secondary data cannot promote canonical Identity by itself.
+
+### Product decisions added 2026-09-28
+
+- **Repeat business:** mandatory Phase 3A is now **Repeat Orders & Business Continuity (temporary Shema live mode)**. Shema may execute bounded repeat orders and limited transaction-scoped economics until Bitrix24 becomes the live business plane. The frozen Order/Economics semantics are reused; no second recurring-deal engine is built. The complete transfer/purge contract governs the later Bitrix24 cutover.
+- **Interface:** adopted a dedicated Bitrix24-aligned operator workspace contract: persistent left navigation, list-first work queues, saved filters/sorts, optional Kanban, quick actions, contextual/split inspection, structured record forms with activity/history, related-record links and progressive disclosure. Canonical contract: `architecture/operator_interface_contract.json`.
+- **Multi-operator:** collaboration is a permanent architectural requirement: explicit actor, ownership/assignment/team queues, server-side permissions, revision/concurrency protection, audited handoff, explicit conflict resolution and no shadow copies.
+- **Clients:** Web + PWA are sufficient and remain the only approved experience surfaces. Android is removed from the roadmap.
+- **Source set:** the external intelligence layer uses a small role-based source portfolio with query-driven routing; specialist sources are triggered only by a concrete evidence gap. Contract: `architecture/intelligence_source_policy_contract.json`.
+- **Bitrix24 setup:** a bounded Bitrix24 Business Plane Setup Agent is part of the integration boundary. It discovers the actual portal, plans and dry-runs changes, applies only owned/namespaced configuration, verifies read-back and records mapping/configuration versions. It is not part of the frozen kernel and does not become a CRM or generic automation agent. Contract: `architecture/bitrix24_configuration_agent_contract.json`.
+
+### Research basis
+Recurring work: https://helpdesk.bitrix24.com/open/25850555/ ; https://knowledge.hubspot.com/payments/manage-subscriptions-for-recurring-payments ; https://support.pipedrive.com/en/article/recurring-products ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/22eca60c150344f89bcee6255485f8c7.html ; https://help.salesforce.com/s/articleView?id=sf.order_overview.htm&language=en_US&type=5
+Interface/workspace: https://help.salesforce.com/s/articleView?id=sf.lightning_page_components.htm&language=en_US&type=5 ; https://learn.microsoft.com/en-us/power-apps/user/use-model-driven-apps ; https://learn.microsoft.com/en-us/power-automate/business-process-flows-overview ; https://help.sap.com/docs/SAP_S4HANA_CLOUD/a630d57fc5004c6383e7a81efee7a8bb/f7b3e498c30a4f9aad381062cc9d8b09.html
+Multi-operator: https://learn.microsoft.com/en-us/power-platform/admin/how-record-access-determined ; https://learn.microsoft.com/en-us/power-platform/admin/security-roles-privileges
+### Adversarial boundary corrections added 2026-09-28
+
+- The business-plane handoff is an explicit capability contract, not a verbal process. See `architecture/business_plane_boundary_contract.json`.
+- `PREPARED → OUTBOX_RESERVED → SENT_UNKNOWN → ACKNOWLEDGED` is the minimum safe handoff lifecycle; lost acknowledgements require reconciliation before replay.
+- A single live business field has one owner. Shema and Bitrix24 never perform unconstrained bidirectional writes to the same live field.
+- Temporary Shema repeat orders use the frozen Order/Economics semantics and must not reimplement Bitrix24's recurring-deal engine; after verified handoff Bitrix24 owns live repeat execution.
+- Customer-facing communication after handoff belongs to the business plane. MAX from Shema is not a substitute second communication history; any future direct customer-channel activation requires an explicit reconciliation/ownership contract.
+- Monium is operational observability only; long-lived audit and business history remain PostgreSQL-owned.
+- YandexGPT cost ceilings are explicit configuration, never an implicit zero default.
+
+### Strategic product-boundary correction added 2026-09-28
+
+- **Core role:** Shema is the intelligence, evidence and decision-support system. New development must not turn it into a second CRM/ERP/accounting/personnel platform.
+- **Runtime:** Yandex Cloud is the target deployment environment. Start with serverless components where practical; PostgreSQL remains the canonical production database because the frozen kernel already establishes it as the transaction authority.
+- **Business-plane ownership:** When the business becomes mature enough to require expanded transaction control, Bitrix24 becomes the live business-process/CRM/communication/calculation/economics control plane. Shema hands over a verified context package and later consumes minimal outcome signals for learning.
+- **Data-plane continuity:** On Yandex Cloud, Managed PostgreSQL remains the canonical Shema database. When Bitrix24 is introduced, the Shema database is **not** moved wholesale into Bitrix24. Bitrix24 stores its own live business data and becomes authoritative only for the business domains explicitly handed over. Shema continues to store intelligence/evidence/provenance/handoff lineage/outcome context. The two domains are joined by stable references, handoff IDs, correlation IDs and versioned mappings, not by competing writes to one live field.
+- **Operator continuity:** The operator should experience one causal workflow, not two unrelated databases. Before handoff, Shema owns intelligence and preparation; after handoff, Bitrix24 owns the live business process. Every handoff remains traceable from the Bitrix entity back to the Shema dossier and from Shema outcome context back to the Bitrix entity. For several operators, live assignment/team workflow belongs to Bitrix24 after handoff; Shema does not keep a shadow operational order board.
+- **Economics boundary:** existing frozen Order/Economics semantics remain for compatibility, lineage and learning; no new Shema accounting subsystem is to be developed unless a separately justified architectural exception is approved.
+- **AI:** the existing YandexGPT adapter remains the primary AI path in Yandex Cloud. AI may summarize, classify and prepare; it cannot become canonical identity, legal or economic truth.
+- **MAX:** the adapter remains, but live outbound effects stay fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
+- **Cloud observability:** new Yandex Cloud deployment documentation must target Monium rather than Cloud Logging because Yandex Cloud states Cloud Logging is scheduled for shutdown in Q2 2027.
+- **Integration principle:** external systems are connected by explicit field ownership. The same live field must never have competing authorities.
+- **Implementation order:** B2B contact preparation → bounded Repeat Orders & Business Continuity → Web/PWA → Yandex Cloud production → Bitrix24 business-plane integration → guarded external communication / MAX → learning → measured scale.
+
+### Критерий допуска новой capability
+
+Перед разработкой capability должны быть даны ответы:
+
+- какую конкретную проблему владельца она решает;
+- какая canonical truth или evidence ей необходима;
+- какой operator-time/risk/quality gain ожидается;
+- можно ли реализовать её поверх текущих contracts без нового source of truth;
+- можно ли удалить/отключить её без разрушения истории;
+- какой failure/recovery path у неё есть;
+- почему её сложность оправдана именно для текущего масштаба.
+
+Если ответы неубедительны, capability откладывается, упрощается или исключается.
+
+---
+
+# 2. Формальный статус на 2026-09-23
+
+Мы на стадии:
+
+**v1.5 Core Maturity Certified — B10 Controlled Release Candidate / Final Semantic Freeze**
+
+Это означает:
+- v1.4 business/domain kernel сформирован и frozen;
+- v1.5 runtime boundary сформирован;
+- B2 unified v1.5 candidate прошёл полный CI/release verification;
+- B3 безопасный adoption существующих v1.4 databases доказан executable integration proof;
+- B4 crash-after-external-effect recovery доказан реальным commercial send integration proof;
+- B5 physical backup/restore/PITR доказан реальным PostgreSQL 16 drill и измеренным RTO/RPO;
+- B6 end-to-end observability correlation доказан реальным HTTP→workflow→audit→telemetry integration proof;
+- B7 security certification matrix закрыт и подтверждён CI #1015;
+- B8 SLO/error-budget baseline закрыт и подтверждён CI #1020;
+- B9 capacity/overload baseline закрыт и подтверждён CI #1027;
+- B10 controlled release candidate/final semantic freeze закрыт и подтверждён CI #1035;
+- дальнейшее развитие ядра остановлено: новые возможности реализуются за пределами frozen kernel.
+
+CI run #1011 на PR #8 head `006493ce4ae710324718bff23a57dfcd0b66641a` завершился зелёным по всем семи jobs. PR #8 остаётся открытым, draft и mergeable; это ещё не production release.
+
+# 3. Что уже сделано в ядре
+
+## 3.1. v1.4 — frozen kernel
+
+Утверждённые 12 элементов:
+
+1. Foundation / Architecture Contract
+2. Identity
+3. Canonical Search
+4. Discovery + Qualification
+5. Transactional Persistence
+6. Intelligence / Research
+7. AI Gateway
+8. MAX / Communication Adapter
+9. Commercial Action
+10. Order
+11. Economics
+12. Canonical API / Experience Boundary
+
+Состояние:
+
+| Элемент | Состояние |
+|---|---|
+| Foundation / Architecture Contract | implemented + hardened |
+| Identity | implemented + hardened |
+| Canonical Search | implemented + hardened |
+| Discovery + Qualification | implemented + hardened |
+| Transactional Persistence | implemented + hardened |
+| Intelligence / Research | implemented + hardened |
+| AI Gateway | implemented + hardened |
+| MAX / Communication Adapter | adapter contract |
+| Commercial Action | implemented + hardened |
+| Order | implemented + hardened |
+| Economics | implemented + hardened |
+| Canonical API / Experience Boundary | contract + runtime edge |
+
+v1.4 semantics не переписываются для решения задач v1.5 runtime.
+
+## 3.2. Identity and Truth Boundary
+
+Закреплено:
+- canonical entity = Identity;
+- source candidate не является canonical identity;
+- INN — основной cross-source deduplication key для текущего российского B2B контура;
+- lifecycle RAW → CANDIDATE → IDENTIFIED → VERIFIED → ACTIVE / INACTIVE / UNKNOWN;
+- MATCH / MERGE / KEEP_SEPARATE / QUARANTINE / MANUAL_REVIEW;
+- ambiguity не повышается до verified truth автоматически.
+
+## 3.3. Evidence / Intelligence
+
+Закреплены:
+- R1-R4 research depths;
+- required / optional / prohibited source classes;
+- provider waterfall;
+- budget controls;
+- source provenance;
+- persisted Evidence;
+- conservative qualification;
+- quarantine/review для uncertainty.
+
+Внешнее утверждение не считается canonical business truth без evidence.
+
+## 3.4. AI Gateway
+
+AI подчинён:
+- authorization;
+- policy;
+- evidence;
+- budget;
+- model/prompt versioning;
+- provider-result validation;
+- audit.
+
+AI не обладает authority над canonical business state.
+
+## 3.5. Idempotency
+
+Закреплена PostgreSQL-backed idempotency model:
+- caller-supplied operation key;
+- request hash;
+- unique key;
+- conflict при изменённом запросе;
+- durable result reference;
+- race-safe reservation;
+- transactional completion.
+
+Повтор critical command не должен создавать второй бизнес-эффект.
+
+## 3.6. Transactional Atomicity
+
+Для critical workflows закреплена транзакционная связка:
+
+business state + idempotency + outbox + audit
+
+в рамках одного PostgreSQL transaction.
+
+При ошибке обязательного шага операция откатывается.
+
+## 3.7. Durable Jobs
+
+Реализован durable execution plane:
+- persisted job state;
+- lease;
+- worker ownership;
+- expiration;
+- reclaim;
+- bounded retry;
+- current-holder-only completion;
+- controlled lease renewal;
+- idempotent handlers;
+- handler registry.
+
+Handler не получает произвольный UnitOfWork/persistence access.
+
+## 3.8. Transactional Outbox
+
+Закреплены:
+- state + event в одной транзакции;
+- durable outbox;
+- delivery lease;
+- worker ownership;
+- attempt counter;
+- expired lease reclaim;
+- current-holder-only publish completion;
+- immutable event id;
+- downstream idempotent delivery requirement.
+
+At-least-once является сознательной семантикой. Exactly-once на распределённой сети не принимается как предположение.
+
+## 3.9. Commercial Send
+
+Закрыт опасный READY → network TOCTOU:
+
+READY → leased SENDING → external effect → SENT
+
+Стабильный external-effect idempotency key:
+
+commercial-send:{action_id}
+
+Есть reservation, worker, attempt, lease, reclaim и current-worker-only completion.
+
+## 3.10. Order and Economics
+
+Order:
+- требует SENT/COMPLETED commercial action;
+- имеет явный lifecycle;
+- сериализует конкурирующие lifecycle updates;
+- сохраняет lineage.
+
+Economics:
+- append-only entries;
+- traceable source lineage;
+- deterministic money;
+- cost/revenue/margin lineage.
+
+## 3.11. Database Defense-in-Depth
+
+Migration 0009 state_ownership_invariants добавляет PostgreSQL constraints, которые дополнительно запрещают невозможные lease/state combinations для jobs, outbox delivery и commercial send.
+
+Для существующих v1.4 databases принят отдельный adoption path: migrations 0001-0008 не переисполняются. Schema shape сначала проверяется против обязательного v1.4 baseline, затем migration ledger 0001-0008 создаётся транзакционно с утверждёнными checksums, после чего обычный runner продолжает с 0009.
+
+Инвариант закреплён одновременно в domain/application, repository и database.
+
+## 3.12. Migration Integrity
+
+Введён MigrationRunner с:
+- contiguous version sequence;
+- filename validation;
+- SHA-256 checksums;
+- immutable historical migration check;
+- transactional application;
+- PostgreSQL advisory transaction lock;
+- migration ledger.
+
+Историческая migration не должна изменяться незаметно.
+
+## 3.13. Recovery Drills
+
+Уже есть executable drills для:
+- worker crash/retry;
+- outbox external publication/reclaim.
+
+Следующий уровень drills закреплён в разделе certification.
+
+## 3.14. Architecture Dependency Boundaries
+
+Автоматически проверяется, что domain и foundation не зависят от:
+- application;
+- adapters;
+- experience;
+- platform.
+
+Архитектурные границы являются executable rule, а не только документацией.
+
+## 3.15. Release Contract
+
+Есть deterministic release contract, проверяющий:
+- frozen kernel contract;
+- core maturity contract;
+- migration baseline;
+- project version;
+- maturity gates.
+
+## 3.16. v1.5 Production Controls
+
+Отдельно разработаны:
+- production IAM: OIDC/JWT boundary, issuer/audience/expiry, HTTPS, bounded JWKS cache, explicit asymmetric algorithms, permission materialization, fail-closed unknown permissions;
+- production security/telemetry/supply-chain: fail-closed configuration, redacted telemetry, correlation context, запрет записи request bodies и authorization headers, dependency audit.
+
+Эти направления сведены в единый проверенный v1.5 candidate; дальнейшая работа идёт через доказательство эксплуатационных свойств и безопасного перехода существующих данных, без изменения frozen v1.4 semantics.
+
+---
+
+# 4. Архитектурная истина
+
+## 4.1. Canonical transactional authority inside Shema and bounded external business authority
+
+Внутри Shema единственная canonical transactional authority — **PostgreSQL**.
+
+Это правило относится к состоянию, которым владеет сама Shema:
+- Identity;
+- Evidence;
+- provenance/freshness;
+- research/intelligence state;
+- platform audits;
+- platform jobs/outbox;
+- historical compatibility state of the frozen kernel.
+
+Внешняя система может быть authoritative **только для собственного явно выделенного бизнес-домена после формального handoff**. Для зрелой стадии это означает:
+- Bitrix24 — owner live business-process fields, CRM/deal/order lifecycle, transaction pricing, payments/economics and business communication history after handoff;
+- Shema не зеркалит эти поля как вторую истину, а хранит reference/correlation и минимальные outcome signals required for learning;
+- MAX remains a communication adapter and is not a business system of record;
+- AI providers and intelligence providers never become canonical truth;
+- UI, Airtable and Replit never become canonical truth.
+
+Таким образом, нет двух систем, редактирующих одну и ту же canonical field. Есть **domain ownership**, explicit handoff и reconciliation между границами.
+
+## 4.2. Modular monolith остаётся осознанным решением
+
+Service extraction разрешён только при наличии измеренной причины:
+- independent scaling;
+- fault isolation;
+- deployment independence;
+- organizational ownership;
+- capacity constraint;
+- security boundary.
+
+Microservices не являются самостоятельной целью.
+
+## 4.3. Сложность должна находиться внутри платформы
+
+Оператор должен видеть понятные состояния и минимальное число технических решений.
+
+Система сама поглощает внутреннюю сложность там, где это безопасно:
+- recovery;
+- deduplication;
+- retry;
+- evidence/provenance;
+- auditing;
+- leases;
+- provider health/failure state.
+
+При этом provider failover не выполняется молча. Переключение внешнего провайдера допускается только при доказанной capability/safety/reconciliation semantics; для неоднозначного внешнего эффекта система останавливается в состоянии, пригодном для reconciliation.
+
+---
+
+# 5. Что означает «зрелое и бессмертное ядро»
+
+«Бессмертное» — не обещание нулевых отказов.
+
+100% абсолютная безопасность, доступность и отсутствие дефектов для произвольной программной системы недостижимы. Поэтому инженерное определение такое:
+
+> Система считается бессмертной в рациональном продуктовом смысле, если известные классы отказов не уничтожают canonical business truth, операции имеют детерминированные recovery paths, ошибки обнаруживаются, критические изменения аудируются, историческое состояние защищено, внешние зависимости заменяемы, а выпуск новой версии не требует нарушения фундаментальных инвариантов.
+
+Цель — не отсутствие отказов.
+
+Цель — контролируемость последствий отказа.
+
+---
+
+# 5B. Система поиска и разведки клиентов — обязательная post-core capability
+
+Поиск и разведка клиентов являются отдельным зрелым системным контуром поверх frozen kernel. Их задача — не просто находить записи, а превращать внешние сигналы в проверяемый, обновляемый и безопасный pipeline:
+
+**SEARCH → IDENTITY RESOLUTION → INTELLIGENCE → EVIDENCE → QUALIFICATION → MONITORING → COMMERCIAL ACTION → RESULT → LEARNING**
+
+Этот контур не заменяет frozen kernel и не создаёт второй источник canonical truth.
+
+## 5B.1. Search Orchestration
+
+Система должна:
+- строить повторяемый search plan из цели, географии, отрасли, типов клиентов и критериев;
+- запускать несколько источников через provider-neutral adapters;
+- поддерживать waterfall/fallback на уровне источников только при доказанной безопасной семантике;
+- ограничивать число запросов, время, объём результатов и внешние затраты;
+- сохранять search context, query/version и дату проверки;
+- повторять поиск детерминированно и сравнивать результаты между запусками.
+
+## 5B.2. Source Registry and Source Governance
+
+Каждый источник должен иметь:
+- identity;
+- тип и назначение;
+- capability;
+- access/auth model;
+- rate/resource limits;
+- trust/reliability class;
+- freshness characteristics;
+- provenance requirements;
+- legal/operational usage constraints;
+- health/readiness;
+- last verified state.
+
+Источник никогда не считается authoritative только потому, что он технически доступен.
+
+## 5B.3. Discovery and Entity Resolution
+
+Результаты поиска проходят:
+
+**RAW → CANDIDATE → IDENTIFIED → VERIFIED → ACTIVE / INACTIVE / UNKNOWN**
+
+Должны быть:
+- deterministic deduplication;
+- primary identity key where legally/operationally valid;
+- MATCH / MERGE / KEEP_SEPARATE / QUARANTINE / MANUAL_REVIEW;
+- conflict detection;
+- prevention of source identifiers becoming canonical identifiers.
+
+Для российского B2B контура ИНН остаётся основным cross-source deduplication key, но не используется как безусловная истина при conflicting/missing evidence.
+
+### 5B.3A. Независимые оси состояния
+
+Identity, Evidence, Qualification и Action — разные семантические оси и не должны быть сведены в один длинный lifecycle.
+
+**Identity:** `CANDIDATE → IDENTIFIED → VERIFIED / CONFLICTING`
+
+**Evidence:** `NOT_SEARCHED → OBSERVED → VERIFIED / CORROBORATED → STALE / EXPIRED / CONFLICTING`
+
+**Qualification:** `UNKNOWN → CONDITIONAL → QUALIFIED / UNSUITABLE / NEEDS_RESEARCH`
+
+**Action:** `NOT_READY → READY → IN_PROGRESS → COMPLETED / BLOCKED`
+
+Один объект может быть:
+- VERIFIED по identity, но CONDITIONAL по qualification;
+- QUALIFIED, но NOT_READY к external action;
+- иметь сильную identity, но STALE evidence;
+- иметь потенциальную потребность, отмеченную только как INFERRED/HYPOTHESIS.
+
+Не допускается автоматическое продвижение между этими осями только потому, что соседняя ось достигла более высокого состояния.
+
+### 5B.3B. Явное различие «не найдено», «не проверено» и «источник недоступен»
+
+Минимально различаются:
+
+- `NOT_SEARCHED` — соответствующая проверка ещё не выполнялась;
+- `SEARCHED_NOT_FOUND` — проверка выполнена, допустимых результатов не найдено;
+- `SOURCE_UNAVAILABLE` — источник/провайдер не был доступен или не дал пригодного результата;
+- `EXPIRED` — ранее полученное evidence больше не считается актуальным;
+- `CONFLICTING` — есть несовместимые material claims.
+
+`NOT_FOUND` не является универсальным контейнером для этих случаев.
+
+## 5B.4. Client Profile / Opportunity Profile
+
+Для каждого кандидата система должна уметь собирать единый operational profile:
+- identity;
+- geography;
+- industry/category;
+- organization scale indicators;
+- relevant activities;
+- public business contacts;
+- service-fit signals;
+- current need/opportunity signals;
+- evidence;
+- risk/reputation signals;
+- freshness;
+- qualification state;
+- recommended next safe action.
+
+Необходимая информация должна материализоваться один раз и использоваться всеми client surfaces.
+
+## 5B.5. Intelligence / Research Modes
+
+Research должен иметь уровни глубины, а не одно неограниченное «исследование»:
+
+**R1 — базовая проверка → R2 — расширенная проверка → R3 — глубокая разведка → R4 — специальное исследование.**
+
+Для каждого режима определяются:
+- допустимые источники;
+- обязательные evidence;
+- бюджет;
+- maximum elapsed time;
+- expected output;
+- stopping conditions;
+- escalation condition.
+
+Research provider waterfall должен быть управляемым и повторяемым.
+
+## 5B.6. Evidence and Provenance
+
+Каждое materially relevant external claim должно иметь:
+- source reference;
+- observed_at;
+- captured_at;
+- source/provider identity;
+- truth class;
+- source reliability;
+- claim confidence;
+- evidence completeness where applicable;
+- lifecycle;
+- freshness/expiry where applicable.
+
+`source reliability`, `entity-match confidence`, `claim confidence`, `freshness`, `corroboration` и `contradiction severity` не сворачиваются в один opaque score.
+
+Система должна уметь ответить:
+**«Откуда мы это узнали, когда проверяли и почему считаем это достаточно надёжным?»**
+
+## 5B.7. Freshness / Revalidation / Evidence Decay
+
+Разведка не является вечной.
+
+Нужны:
+- freshness policy by source/type;
+- evidence expiry;
+- revalidation scheduling;
+- stale/expired indicators;
+- change detection;
+- suppression of outdated conclusions;
+- refresh priority based on operational importance.
+
+Истекшее evidence не должно молча выглядеть как актуальная истина.
+
+## 5B.8. Qualification Engine
+
+Квалификация должна быть rule/evidence-driven.
+
+Минимум:
+- identity verified;
+- service fit;
+- geography fit;
+- operational fit;
+- contactability;
+- economic fit;
+- evidence sufficiency;
+- risk/reputation status;
+- freshness.
+
+Нельзя автоматически переводить кандидата в готового клиента только по совпадению поискового запроса.
+
+## 5B.9. Opportunity / Need Detection
+
+Система должна уметь обнаруживать:
+- новые компании;
+- изменения профиля;
+- новые публичные контакты;
+- новые business signals;
+- события, указывающие на потенциальную потребность;
+- исчезновение/изменение старых сигналов.
+
+Каждый trigger должен иметь source/evidence и дату наблюдения.
+
+## 5B.10. Monitoring
+
+Для важных клиентов/кандидатов нужен controlled monitoring:
+- profile changes;
+- ownership/status changes where publicly observable;
+- contact changes;
+- operational signals;
+- relevant public events;
+- evidence expiry;
+- provider/source health.
+
+Monitoring должен быть:
+- bounded;
+- deduplicated;
+- correlation-aware;
+- cost/time controlled;
+- non-authoritative until evidence is materialized.
+
+## 5B.11. Reputation / Risk / Counterparty Safety
+
+Разведка должна иметь отдельный защитный контур:
+- reputation signals;
+- legal/public risk signals;
+- conflicting identities;
+- suspicious source contradictions;
+- quarantine;
+- manual review;
+- risk evidence lineage.
+
+Risk/reputation findings не должны автоматически становиться юридическими выводами; система хранит evidence и attributed findings.
+
+## 5B.12. Contact Discovery
+
+Для business contacts:
+- source provenance;
+- contact type;
+- freshness;
+- verification state;
+- deduplication;
+- confidence;
+- no silent replacement of existing verified contact data.
+
+Контакт не считается подтверждённым только потому, что найден в одном источнике.
+
+## 5B.13. Search Result Quality
+
+Система должна измерять:
+- duplicate rate;
+- identity resolution precision/recall where measurable;
+- search precision@K / recall@K on a maintained benchmark where ground truth exists;
+- evidence coverage;
+- stale-data rate;
+- qualification yield;
+- false-positive / false-negative rate where measurable;
+- source contribution;
+- search cost/time;
+- useful-first-result rate;
+- operator correction rate.
+
+Эти показатели нужны для улучшения search strategy, а не для декоративной аналитики.
+
+## 5B.14. Search Learning Loop
+
+Результат downstream работы должен возвращаться в поиск:
+
+**SEARCH → QUALIFICATION → CONTACT/PREPARATION → HANDOFF → BUSINESS OUTCOME → LEARNING → SEARCH**
+
+Система должна учиться на:
+- accepted/rejected candidates;
+- reasons for rejection;
+- response/contactability;
+- actual commercial outcome;
+- revenue/margin;
+- provider/source quality;
+- search cost.
+
+Learning не должен изменять canonical truth без явного, проверяемого application rule.
+
+## 5B.15. Legal / Operational Boundaries
+
+Разведка ограничивается:
+- доступными законными источниками;
+- допустимыми способами доступа;
+- documented provider contracts;
+- privacy/security rules;
+- rate and anti-abuse limits;
+- source terms where applicable.
+
+Автоматизация не должна превращаться в обход ограничений источника или несанкционированный доступ.
+
+## 5B.16. Operator Workflow
+
+Оператор должен видеть не поток сырого поиска, а:
+
+**Найдено → Проверяется → Подтверждено → Требует разведки → Квалифицировано → Есть потребность → Готово к действию → Наблюдение**
+
+Технические источники, confidence, secondary evidence и diagnostics остаются в техническом/интеллектуальном слое и не перегружают основной рабочий интерфейс.
+
+## 5B.17. Search System Completion Boundary
+
+Система поиска и разведки считается зрелой только когда есть:
+- multi-source orchestration;
+- identity resolution;
+- evidence/provenance;
+- freshness/revalidation;
+- qualification;
+- contact discovery;
+- opportunity detection;
+- monitoring;
+- reputation/risk boundary;
+- measurable search quality;
+- learning loop;
+- operator workflow;
+- failure/recovery behavior;
+- cost/time budgets;
+- complete end-to-end evidence for critical search flows.
+
+# 5A. Системный product/experience layer — обязательная post-core граница
+
+После frozen kernel зрелость системы определяется не только внутренними сервисами. Пользовательские и эксплуатационные поверхности становятся самостоятельными bounded layers, которые обязаны сохранять семантику frozen core и не создавать альтернативный источник истины.
+
+## 5A.1. UI / UX System
+
+UI должен быть единой операционной системой для владельца.
+
+Его default view — WORK; EVIDENCE и TECHNICAL/CONTROL раскрываются progressive disclosure.
+
+Ключевая information hierarchy:
+1. что происходит;
+2. что это значит для текущей задачи;
+3. почему система так считает;
+4. что оператор может сделать дальше.
+
+UI должен быть единой операционной системой для владельца:
+- единая information architecture;
+- единый design system и component library;
+- единые состояния loading / success / empty / degraded / error / offline / pending;
+- ясное различие canonical data, evidence, recommendation, action и uncertainty;
+- минимум лишних технических решений для оператора;
+- keyboard-first для desktop;
+- touch-first для mobile;
+- responsive layout;
+- быстрый доступ к critical workflows;
+- глобальный search / command center;
+- безопасные destructive/irreversible actions с явным подтверждением;
+- сохранение контекста после ошибок и reconnect.
+
+UI никогда не владеет бизнес-правилами. Он представляет состояние, полученное через canonical API.
+
+## 5A.2. Web application
+
+Web — основной универсальный client surface.
+
+Обязательно:
+- canonical API only;
+- typed API contracts;
+- route/deep-link semantics;
+- secure session handling;
+- resilient loading and reconnect behavior;
+- pagination/filtering/search for large datasets;
+- keyboard navigation;
+- accessibility target не ниже WCAG 2.2 AA для user-facing Web/PWA surfaces;
+- visual regression coverage для critical screens;
+- end-to-end coverage критических пользовательских потоков;
+- browser compatibility policy;
+- deterministic error handling.
+
+## 5A.3. PWA
+
+PWA является installable/resilient Web surface, а не отдельной бизнес-системой.
+
+Обязательно:
+- installability;
+- service worker/update lifecycle;
+- offline-aware read access для безопасно кэшируемых данных;
+- explicit online/offline state;
+- reconnect and resynchronization;
+- bounded local cache;
+- cache invalidation/versioning;
+- background synchronization только для безопасных operations;
+- no local cache as canonical truth;
+- user-visible pending/sync state;
+- safe handling of stale data;
+- controlled client update and rollback strategy.
+
+Offline mode не должен создавать вторую canonical transaction authority. Локальные данные — cache/read model; canonical write semantics остаются на сервере.
+
+## 5A.4. Web/PWA mobile doctrine
+
+Android is explicitly removed from the approved roadmap. Mobile-specific product requirements are implemented in PWA unless a future evidence-backed exception is approved. There is no Android-specific business rule, data model, authorization path or offline authority.
+
+## 5A.5. Offline-aware Web/PWA continuity
+
+Система должна нормально переживать:
+- потерю сети;
+- смену устройства;
+- временную недоступность API;
+- повторное открытие приложения;
+- одновременное использование Web и PWA.
+
+Правило:
+**local state may accelerate or buffer the experience, but cannot silently override canonical server state.**
+
+Для queued mutations обязательны:
+- client operation id;
+- idempotency;
+- explicit pending state;
+- retry only when operation is safe;
+- conflict detection;
+- server-authoritative reconciliation;
+- durable error state when reconciliation is impossible.
+
+## 5A.6. Client security / device trust
+
+Помимо server IAM нужен client security boundary:
+- secure token/session storage;
+- no secrets in local storage where unsafe;
+- session expiry/revocation propagation;
+- device/session visibility;
+- optional local application lock;
+- safe handling of screenshots/logs where platform allows;
+- minimal permissions;
+- secure deep links;
+- TLS/security validation according to platform capabilities;
+- mobile/web security verification mapped to the selected security baseline.
+
+## 5A.7. Notifications / background execution
+
+Управляемые notifications должны быть:
+- bounded;
+- deduplicated;
+- correlated;
+- user-relevant;
+- revocable;
+- non-authoritative.
+
+Background work не должен незаметно создавать critical business effects. Любой critical external effect обязан проходить canonical server workflow.
+
+## 5A.8. Client observability
+
+Для Web/PWA должны быть различимы:
+- application error;
+- network error;
+- auth/session failure;
+- stale cache;
+- synchronization failure;
+- API/business rejection;
+- external dependency failure.
+
+Client telemetry:
+- correlation-aware;
+- redacted;
+- non-authoritative;
+- privacy-minimized;
+- versioned by app/build version.
+
+Должна существовать связка:
+**client event → correlation id → canonical API request → server workflow → audit/telemetry.**
+
+## 5A.9. Client quality gates
+
+Критические client flows должны иметь:
+- unit tests where logic exists;
+- API contract tests;
+- integration tests;
+- E2E tests;
+- offline/reconnect tests;
+- failure-path tests;
+- accessibility tests;
+- visual regression for critical screens;
+- supported-browser/device matrix;
+- performance smoke tests;
+- release candidate validation.
+
+## 5A.10. Safe client update lifecycle
+
+Каждый client surface должен поддерживать:
+- immutable/versioned build;
+- explicit compatibility window with canonical API;
+- staged rollout where appropriate;
+- rollback to previous known-good build;
+- migration of local caches/storage;
+- prevention of incompatible client/server combinations;
+- crash/release telemetry sufficient to stop a bad rollout.
+
+## 5A.11. Operator / System Control Plane
+
+Нужен отдельный operational surface для владельца системы:
+- health/readiness;
+- active provider status;
+- jobs/outbox state;
+- quarantine inspection;
+- failed operations;
+- audit inspection;
+- migration status;
+- backup/recovery status;
+- SLO/error-budget state;
+- release/configuration version;
+- AI provider activation status;
+- integration diagnostics.
+
+Этот surface наблюдает и управляет только теми действиями, для которых существует соответствующий безопасный server-side contract. UI не получает прямого доступа к PostgreSQL.
+
+## 5A.12. Data portability / continuity
+
+Система должна иметь bounded portability:
+- deterministic export;
+- verified import where required;
+- schema/version metadata;
+- provenance preservation;
+- checksum/integrity validation;
+- backup-independent export for critical business data;
+- restore verification;
+- explicit ownership of imported external data.
+
+Миграция в другой storage/provider/UI не должна разрушать canonical identity, evidence lineage, audit history или economics lineage.
+
+## 5A.13. Integration ecosystem
+
+Каждая внешняя интеграция должна иметь:
+- adapter boundary;
+- capability declaration;
+- credentials/configuration boundary;
+- timeout/resource budget;
+- retry policy;
+- idempotency/reconciliation contract where external effects exist;
+- provenance where external data enters Evidence;
+- health/readiness;
+- observability;
+- contract tests;
+- fail-closed behavior when required guarantees are absent.
+
+Provider availability alone никогда не является основанием для production activation.
+
+## 5A.14. Personal-system usability doctrine
+
+Система оптимизируется прежде всего для одного владельца/оператора:
+- минимальное число экранов для critical tasks;
+- минимальное число ручных переходов;
+- technical complexity hidden inside platform;
+- clear operator state;
+- safe defaults;
+- reversible actions where possible;
+- explicit irreversible boundaries;
+- no duplicated source-of-truth fields across clients.
+
+Масштабируемость достигается архитектурой, а не усложнением повседневного интерфейса.
+
+Web является обязательным первым универсальным surface. PWA — второй и достаточный mobile surface. Android исключён из текущей целевой архитектуры. Ни один client surface не является обязательным исключительно ради галочки зрелости.
+## 5A.15. Experience-layer completion boundary
+
+Experience layer не считается завершённым по факту наличия Web/PWA.
+
+Завершение требует:
+- visual/interaction system;
+- canonical API integration;
+- offline/reconnect semantics;
+- client security;
+- E2E verification;
+- accessibility;
+- observability;
+- safe update/rollback;
+- multi-device continuity;
+- operational control surface.
+
+## 5B.18. Свобода поиска и ограничение алгоритмического отбора
+
+Search UX должен оставлять оператору возможность работать напрямую, а не проходить обязательную цепочку автоматических классификаторов.
+
+Оператор должен иметь возможность начать работу как минимум из:
+- свободного поискового запроса;
+- точного INN/OGRN/OGRNIP;
+- названия/домена/контакта;
+- сохранённого search plan;
+- конкретного сигнала/события.
+
+Ranking может менять порядок показа, но не должен молча уничтожать доступ к допустимому кандидату.
+
+Для algorithmic filtering обязательны:
+- понятная причина исключения;
+- возможность показать кандидатов, отброшенных ranking/filter stage;
+- возможность ослабить соответствующий фильтр в рамках безопасных границ;
+- указание, какие источники и проверки фактически были выполнены;
+- отображение budget/source-unavailable состояния, если полнота поиска ограничена.
+
+Система не должна заставлять оператора доверять «лучшим 10» вместо предоставления объяснимого набора кандидатов.
+
+### 5B.19. Search / Research completeness
+
+Каждый существенный search/research result должен, где применимо, показывать:
+
+- сколько кандидатов найдено;
+- сколько разрешено identity;
+- сколько требуют manual review;
+- какие источники проверены;
+- какие источники не проверены;
+- какие были недоступны;
+- был ли исчерпан budget;
+- какая версия search plan/algorithm использовалась.
+
+Это делает результат воспроизводимым и предотвращает ошибочное толкование ограниченного поиска как полного отсутствия данных.
+
+# 5C. Контур подготовки первого контакта
+
+Search/Intelligence не заканчивается квалификацией.
+
+Для каждого подходящего клиента система должна уметь перейти из verified intelligence в безопасно подготовленное первое обращение:
+
+DOSSIER → ЛПР/ROLE HYPOTHESIS → CONTACT CONTEXT → VALUE HYPOTHESIS → SCRIPT → OBJECTION BRANCHES → NEXT STEP
+
+Обязательно:
+- определение роли/ЛПР только по доступным и допустимым данным;
+- evidence-backed reason for contact;
+- персонализация только на основании проверенных фактов;
+- отдельное поле для inference/hypothesis;
+- запрет выдуманных фактов о клиенте, ЛПР, его потребности или предыдущих отношениях;
+- сценарии для gatekeeper / wrong person / interested / not now / price request / document request;
+- фиксация dossier snapshot и evidence version, на основании которых сформирован скрипт;
+- рекомендации следующего шага без автоматического критического действия без server-side authorization.
+
+## 5C.1. Сценарий обращения
+
+Минимальная структура:
+- контекст;
+- причина релевантности;
+- конкретное подтверждённое наблюдение;
+- гипотеза потребности;
+- короткий диагностический вопрос;
+- предложение ценности;
+- следующий шаг.
+
+Система должна уметь показать оператору также:
+- что нельзя утверждать;
+- какие факты требуют повторной проверки;
+- какие вопросы лучше задать вместо предположения.
+
+# 5C-A. Repeat Orders & Business Continuity
+
+Until Bitrix24 becomes the live business plane, Shema provides a bounded operator-facing repeat-order workflow on the frozen Order/Economics semantics. A repeat order is a new immutable transaction; the previous order remains unchanged.
+
+Required operator semantics:
+- create the next repeat order from an eligible prior order;
+- revalidate counterparty status, service scope, evidence freshness, current pricing assumptions and date/capacity assumptions before confirmation;
+- pause, skip once, resume and cancel the repeat plan;
+- protect duplicate creation with idempotency and audit;
+- expose the current repeat queue as a list with an optional Kanban view;
+- preserve causal links to the originating client, prior order and later Bitrix24 handoff.
+
+Bitrix24 owns the mature recurring-deal engine after verified handoff. Shema never becomes a second recurring CRM/order engine.
+
+# 5E. Ручная проверка контрагента
+
+Нужна отдельная operator-first команда:
+
+Проверить по ИНН / ОГРН / ОГРНИП
+
+Она должна использовать тот же Search/Intelligence/Evidence pipeline, а не отдельную упрощённую логику.
+
+Результат должен включать:
+- canonical identity;
+- регистрационные сведения;
+- статус;
+- ключевые доступные официальные сведения;
+- рисковые сигналы;
+- evidence;
+- freshness;
+- contradictions;
+- источники;
+- history/revalidation;
+- recommended next step;
+- machine-readable verification snapshot with traceable evidence references.
+
+Для российских юрлиц и ИП стартовым authoritative layer должен быть официальный контур ФНС. Сервис «Прозрачный бизнес» поддерживает поиск по ИНН/ОГРН/названию для организаций и ИНН/ОГРНИП/ФИО для ИП и объединяет государственные сведения; ФНС отдельно подчёркивает необходимость комплексной оценки, а не вывода по одному индикатору.
+
+Для НПД должна поддерживаться датированная проверка статуса через официальный сервис ФНС по ИНН.
+
+Ручная проверка не создаёт отдельную truth authority: результат материализуется в тот же Evidence/Identity boundary.
+
+# 5F. Приоритет качества внешнего контура
+
+При конфликте целей внешний контур применяет порядок:
+
+truth → identity → evidence → freshness → interpretation → operator usability → speed/cost
+
+Это означает:
+- нельзя жертвовать идентификацией ради количества найденных кандидатов;
+- нельзя жертвовать provenance ради удобного summary;
+- нельзя скрывать conflict ради «чистого» профиля;
+- нельзя расширять R3/R4 на весь массив без необходимости;
+- нельзя делать один непрозрачный score заменой доказательств.
+
+Зрелые открытые системы показывают этот принцип различными средствами: Aleph использует cross-referencing и investigation workspaces; OpenSanctions разделяет candidate retrieval и matching и учитывает identifiers/contradicting attributes; Sayari разделяет identity resolution и possibly-same-as; OpenCTI отдельно моделирует reliability источника и confidence информации; FollowTheMoney хранит provenance на уровне statements.
+
+## 5F.1. Баланс качества и сложности
+
+Не строить:
+- универсальный граф всех сущностей;
+- бесконечный scoring engine;
+- десятки одинаковых provider-specific правил;
+- автоматическую «истину» из AI summary;
+- отдельный mini-CRM внутри intelligence layer.
+
+Строить:
+- сильные common primitives;
+- provider-neutral evidence contracts;
+- bounded research modes;
+- explainable resolution;
+- selective deep research;
+- compact operator view;
+- reusable intelligence/evidence primitives.
+
+Подробный алгоритм закреплён в:
+docs/EXTERNAL_INTELLIGENCE_AND_CONTACT_SYSTEM.md.
+
+# 5G. Границы сложности и non-goals
+
+Для personal-first системы зрелость не измеряется количеством функций, сервисов, источников или экранов.
+
+### Не является целью
+
+- конкурировать с Salesforce/SAP/Palantir по breadth;
+- иметь универсальный graph для всех сущностей;
+- покрыть все виды юридических конфигураций до появления реальной потребности;
+- поддерживать десятки AI providers;
+- иметь полноценный team/tenant/RBAC слой заранее;
+- строить offline-first transaction engine без доказанной необходимости;
+- превращать intelligence в mini-CRM;
+- скрывать raw candidates за единым opaque ranking;
+- создавать microservices без измеренной причины;
+- добавлять dashboard'ы, которые не помогают оператору принять решение или восстановить систему.
+
+### Является целью
+
+- единая truth/evidence/execution model;
+- минимальный operator path;
+- высокая объяснимость;
+- контролируемая автоматизация;
+- воспроизводимый research;
+- безопасные внешние эффекты;
+- проверяемая recovery;
+- заменяемые providers;
+- долговечная история;
+- постепенное расширение без повторного создания ядра.
+
+### Правило «достаточной зрелости»
+
+Функция считается зрелой не тогда, когда в ней присутствуют все мыслимые возможности, а когда:
+- основной путь корректен;
+- отрицательные и неопределённые пути определены;
+- оператор понимает состояние;
+- система сохраняет canonical truth;
+- failure/recovery проверены;
+- эксплуатационная стоимость оправдана текущим использованием;
+- расширение не требует скрытого усложнения соседних контуров.
+# 6. Семь gates зрелости
+
+## Gate 1 — Correctness
+
+Обязательно:
+- domain invariants;
+- invalid state rejection;
+- identity truth boundary;
+- evidence boundary;
+- lifecycle correctness;
+- money correctness;
+- canonical error semantics;
+- negative tests.
+
+## Gate 2 — Atomicity
+
+Обязательно:
+- critical command atomicity;
+- idempotency atomicity;
+- state + outbox;
+- state + audit;
+- rollback consistency.
+
+## Gate 3 — Concurrency
+
+Обязательно:
+- duplicate command race;
+- lease race;
+- expired lease reclaim;
+- current-worker-only completion;
+- order lifecycle serialization;
+- concurrent migration protection.
+
+## Gate 4 — Recovery
+
+Обязательно:
+- worker crash before completion;
+- worker crash after external effect;
+- duplicate delivery;
+- dependency timeout;
+- lease expiry;
+- DB rollback;
+- backup restore;
+- point-in-time recovery;
+- upgrade rollback;
+- controlled degraded mode.
+
+Должны быть определены RTO и RPO.
+
+## Gate 5 — Security
+
+Обязательно:
+- authentication;
+- authorization;
+- policy;
+- least privilege;
+- fail-closed behavior;
+- secret handling;
+- data isolation;
+- encryption;
+- dependency vulnerability gate;
+- security test matrix;
+- OWASP ASVS-style control mapping;
+- auditability;
+- production configuration validation.
+
+## Gate 6 — Observability
+
+Для каждого critical workflow должна существовать correlation lineage:
+
+request/correlation id → command → authorization/policy → idempotency key → DB transaction → audit → job → outbox event → external effect → result.
+
+Нужно уметь восстановить:
+- что произошло;
+- с каким объектом;
+- кто инициировал;
+- какая версия policy/configuration использовалась;
+- какая внешняя операция вызывалась;
+- какой результат получен;
+- где произошёл failure.
+
+## Gate 7 — Release Safety
+
+Обязательно:
+- architecture contract validation;
+- maturity contract validation;
+- lint;
+- compile;
+- unit;
+- PostgreSQL integration tests;
+- security tests;
+- recovery drills;
+- supply-chain audit;
+- migration integrity;
+- reproducible release artifact;
+- controlled rollout;
+- rollback path.
+
+---
+
+# 7. Дополнительные maturity controls
+
+## 7.1. SLI/SLO/Error Budget
+
+Для production должны быть определены:
+- user-facing SLIs;
+- SLOs;
+- latency objectives;
+- critical workflow success rate;
+- recovery objectives;
+- error budgets.
+
+При исчерпании error budget изменения, не устраняющие reliability/security defects, должны приостанавливаться.
+
+## 7.2. Capacity and Performance
+
+Нужны:
+- load baseline;
+- concurrency baseline;
+- queue depth limits;
+- rate limits;
+- bounded retries;
+- backpressure;
+- timeout budgets;
+- capacity model;
+- overload behavior;
+- graceful degradation.
+
+## 7.3. Data Governance
+
+Для чувствительных и externally-derived данных должны быть определены:
+- provenance;
+- retention;
+- expiry;
+- ownership;
+- access boundary;
+- audit;
+- deletion policy;
+- source freshness;
+- evidence confidence.
+
+## 7.4. AI Safety Boundary
+
+AI output:
+- не является canonical truth;
+- traceable;
+- имеет model/prompt/config version;
+- имеет evidence refs;
+- имеет budget;
+- проходит policy;
+- не может самостоятельно менять критическое состояние.
+
+## 7.4A. AI Provider Policy
+
+AI Gateway остаётся provider-neutral application boundary. Конкретные модели и провайдеры не являются частью frozen kernel.
+
+### Облачные AI-провайдеры
+
+Разрешены только два облачных AI-класса:
+- **YandexGPT** через Yandex Cloud AI Studio;
+- **GigaChat** через GigaChat API.
+
+Любой другой облачный LLM/AI provider считается **запрещённым по умолчанию** и не может быть активирован без отдельного архитектурного решения и явного изменения этого манифеста.
+
+Для облачных провайдеров обязательны:
+- отдельный adapter;
+- explicit activation;
+- runtime-only credentials;
+- bounded request/response/resource/cost/time limits;
+- readiness/health;
+- provenance/evidence discipline;
+- fail-closed behavior;
+- отсутствие прямого доступа провайдера к canonical business state;
+- отсутствие автоматического provider-specific retry без доказанной семантики повторного выполнения.
+
+### Локальные / self-hosted LLM
+
+Система должна поддерживать установку и использование локальных/self-hosted LLM-моделей с **правом бесплатного использования для предполагаемого коммерческого сценария**.
+
+«Бесплатное использование» означает отсутствие обязательной лицензионной/API-платы за использование самой модели; вычислительные ресурсы, электричество, GPU/CPU, хранение и эксплуатация остаются операционными затратами.
+
+Для каждой установленной локальной модели должны быть зафиксированы:
+- model identifier и version;
+- источник/репозиторий;
+- license и URL лицензии;
+- дата проверки прав на использование;
+- artifact/model digest;
+- runtime/adapter;
+- resource limits;
+- статус безопасности и происхождения.
+
+Локальная модель подключается только через тот же provider-neutral AI Gateway. Она не становится canonical truth и не получает прямого права изменять критическое состояние.
+
+### Production activation gate
+
+Для production cloud AI обязательно действует отдельный reversible activation gate:
+- default state — disabled;
+- activation only from an immutable production configuration snapshot;
+- runtime credential is never stored in the snapshot;
+- explicit operator activation is required;
+- readiness, cost and deadline ceilings are checked before provider traffic;
+- configuration version must match the request scope;
+- rollback disables subsequent traffic immediately;
+- activation state is operational metadata only and cannot become canonical business state.
+
+### Правило выбора
+
+- Cloud AI → только YandexGPT или GigaChat.
+- Local/self-hosted AI → разрешён только при подтверждённом праве бесплатного коммерческого использования.
+- Нет неявного fallback Cloud → Local или Local → Cloud.
+- Провайдер, модель и configuration version должны быть наблюдаемы и воспроизводимы.
+- Появление нового AI provider не является основанием для изменения frozen kernel.
+
+## 7.5. Controlled Change
+
+Каждое изменение core должно ответить:
+1. Какой инвариант сохраняется?
+2. Какой риск снимается?
+3. Каким тестом это доказано?
+4. Что происходит при rollback?
+
+Нет ответа — изменение не должно попадать в core.
+
+---
+
+# 8. Историческая запись Core Maturity Certification (B1–B10)
+
+## B1 — GREEN CI — CLOSED / VERIFIED
+Полный green подтверждён CI run #970.
+
+## B2 — Unified v1.5 candidate — CLOSED / VERIFIED
+Единый baseline подтверждён CI run #989:
+- v1.5-runtime;
+- production IAM;
+- production security/telemetry/supply-chain;
+- core maturity.
+
+## B3 — Migration adoption
+Для существующих v1.4 databases принят контролируемый путь:
+
+existing schema → verified baseline → migration ledger → 0009+
+
+без разрушения данных. B3 закрыт и сохранён здесь как историческая certification evidence.
+
+## B4 — Crash-after-external-effect integration proof — CLOSED / VERIFIED
+CI run #999 подтвердил recovery после внешнего эффекта для real commercial send path.
+
+## B5 — Backup / Restore / PITR — CLOSED / VERIFIED
+
+Доказано:
+- physical PostgreSQL 16 base backup;
+- WAL archiving;
+- point-in-time recovery to a controlled target timestamp;
+- preservation of canonical identity, commercial action, order, order line, economics and audit lineage;
+- exclusion of the later sentinel commit;
+- measured RTO = **2.039s**;
+- measured RPO = **2.053s** for the controlled drill window;
+- recovery is a release-gated CI control.
+
+CI run #1005 (`35841541121`) прошёл все семь jobs, включая `backup-recovery` и `release-contract`.
+
+## B6 — End-to-end observability correlation — CLOSED / VERIFIED
+
+Доказано через PostgreSQL integration test:
+- incoming correlation ID reaches canonical API context;
+- the same ID reaches a real critical workflow;
+- the ID is persisted in audit;
+- telemetry emits the same ID;
+- authorization headers and request bodies are excluded from telemetry;
+- proof passes on Python 3.12 and 3.13.
+
+CI run #1011 подтвердил B6 вместе с backup-recovery и release-contract.
+
+## B7 — Security certification matrix — CLOSED / VERIFIED
+Каждый production security control получает:
+
+control → implementation → test → result → release gate.
+
+## B8 — SLO / error-budget baseline — CLOSED / VERIFIED
+Определён минимум для:
+- API availability;
+- critical mutation success;
+- job recovery;
+- outbox lag;
+- external-effect completion;
+- latency.
+
+## B9 — Capacity / overload test — CLOSED / VERIFIED
+Проверено:
+- concurrent critical commands;
+- worker saturation;
+- retry storm;
+- queue backlog;
+- DB contention;
+- rate limiting;
+- graceful degradation.
+
+## B10 — Controlled release candidate / final semantic freeze — CLOSED / VERIFIED
+
+Проведён финальный controlled release-candidate run CI #1035 (`35892641331`) на HEAD `4f5df0346c544ce30525723e4c8748336615ef75`.
+
+Все семь release gates зелёные. `architecture/release_candidate_contract.json` и `docs/CORE_SEMANTIC_FREEZE.md` закрепляют final boundary: v1.4 kernel semantics frozen, новые функции остаются вне ядра, а исключительный core change требует доказанного invariant/security/data-integrity/fundamental reliability defect, regression tests, impact analysis и rollback plan.
+
+B10 не авторизует merge или production deployment.
+
+---
+
+# 9. Что после этого запрещено делать с ядром
+
+После Core Maturity Certification запрещено расширять core просто ради:
+- новой интеграции;
+- нового UI;
+- нового AI provider;
+- нового CRM;
+- нового канала коммуникации;
+- нового low-code инструмента;
+- модного архитектурного паттерна;
+- microservices без measured constraint.
+
+Такие изменения реализуются за границей ядра.
+
+Изменение frozen core допускается только при:
+- доказанном дефекте инварианта;
+- security issue;
+- data-corruption risk;
+- доказанном scalability/reliability boundary;
+- изменении фундаментального business invariant.
+
+Требуются:
+- architecture decision;
+- regression tests;
+- migration plan;
+- rollback plan;
+- impact analysis.
+
+---
+
+# 10. Исследовательская база
+
+Манифест сформирован на основе публично доступных engineering/architecture/reliability materials. Закрытые внутренние процессы компаний не предполагаются и не выдаются за проверенные факты.
+
+## Google / SRE
+SLI/SLO, error budgets, supervised rollout, rollback-first, backoff+jitter, automation, toil reduction.
+
+https://sre.google/sre-book/service-level-objectives/
+https://sre.google/sre-book/service-best-practices/
+https://sre.google/sre-book/embracing-risk/
+https://sre.google/sre-book/introduction/
+
+## Microsoft / Azure
+Well-Architected reliability, idempotent consumer, bounded retry, backoff, jitter, timeout, health, outbox, chaos/fault injection, reliability maturity and simplicity.
+
+https://learn.microsoft.com/en-us/azure/well-architected/reliability/design-patterns
+https://learn.microsoft.com/en-us/azure/well-architected/design-guides/handle-transient-faults
+https://learn.microsoft.com/en-us/azure/well-architected/reliability/maturity-model
+https://learn.microsoft.com/en-us/azure/well-architected/reliability/checklist
+https://learn.microsoft.com/en-us/azure/architecture/patterns/saga
+
+## IBM
+Resilience, end-to-end observability, recovery readiness, continuous resiliency testing and automation.
+
+https://www.ibm.com/think/architectures/well-architected/resiliency
+https://www.ibm.com/think/topics/observability
+https://www.ibm.com/think/topics/observability-engineering
+
+## Yandex / YDB
+Failure-first thinking, overload protection, buffering, strict consistency/ACID where required, recovery, retry semantics.
+
+https://github.com/ydb-platform/ydb
+https://github.com/ydb-platform/ydb/blob/main/ydb/docs/en/core/recipes/ydb-sdk/retry.md
+https://habr.com/ru/companies/yandex/articles/828168/
+https://habr.com/ru/companies/yandex/articles/835112/
+
+## VK
+Simplicity under scale, reusable platform primitives, technology-independent architecture, asynchronous buffering, release testing.
+
+https://habr.com/ru/companies/vk/articles/683192/
+https://habr.com/ru/companies/vk/articles/927836/
+https://habr.com/ru/companies/vk/articles/837060/
+https://habr.com/ru/companies/vk/articles/703230/
+
+## Sber
+High-load resilience, architecture evolution, hiding infrastructure complexity from users, architecture standards and controlled scaling.
+
+https://habr.com/ru/companies/sberbank/articles/796243/
+https://habr.com/ru/companies/sberbank/articles/727312/
+https://habr.com/ru/companies/sberbank/articles/857524/
+https://habr.com/ru/companies/sberbank/articles/807769/
+
+## Salesforce
+Event-driven architecture, producer/consumer/channel separation, business event schemas, loose coupling.
+
+https://developer.salesforce.com/docs/platform/platform-events/guide/platform-events-intro-architecture.html
+https://github.com/salesforce
+
+## Oracle
+Application Continuity, recoverable session handling, transaction replay and ambiguity around lost commit acknowledgements.
+
+https://docs.oracle.com/en/database/oracle/oracle-database/26/odpnt/featAppCont.html
+https://docs.oracle.com/en/database/oracle/oracle-database/26/adfns/high-availability.html
+
+## SAP
+Clean core, released interfaces, side-by-side extensibility, upgrade safety, API governance, event-driven integration.
+
+https://www.sap.com/documents/2026/07/503068a8-5d7f-0010-bca6-c68f7e60039b.html
+https://www.sap.com/documents/2024/09/20aece06-d87e-0010-bca6-c68f7e60039b.html
+https://github.com/SAP/architecture-center
+https://github.com/SAP-samples/abap-partner-reference-application
+
+## Zoho
+Secure-by-design, RBAC, audit trails, change management, environment separation, vulnerability scanning, scaling, async scheduling and API gateway controls.
+
+https://help.zoho.com/portal/en/kb/creator/faqs/getting-started/articles/faq-privacy-security
+https://help.zoho.com/portal/en/kb/creator/developer-guide/getting-started/articles/zoho-creator-best-practices
+https://catalyst.zoho.com/cookbook/catalyst-101/understanding-catalyst-architecture/
+
+## 1C-Bitrix
+Clustering, failover, replication, distributed cache, load balancing and geographical redundancy.
+
+https://www.dev.1c-bitrix.ru/user_help/settings/cluster/index.php
+https://www.1c-bitrix.ru/products/cms/modules/web-cluster/
+https://www.1c-bitrix.ru/products/cms/performance/
+
+## BPMSoft
+Explicit integration boundary, REST/SOAP/OData/webhooks, OAuth/LDAP and external integration performance/resilience review.
+
+https://edu.bpmsoft.ru/baza-znaniy/start-razrabotki/instrumenty-i-printsipy-razrabotki/
+https://market.bpmsoft.ru/upload/files/BPMSoft_PartnerProgram-MP.pdf
+
+## Диасофт
+Platformized development, development factory, avoidance of distributed monoliths, async/sync integration, CI/CD and automated testing.
+
+https://www.diasoft.ru/about/publications/20088/
+https://www.diasoft.ru/about/publications/20761/
+https://www.diasoft.ru/about/publications/20897/
+https://www.diasoft.ru/about/publications/21490/
+
+## AlphaSense
+Research-plan transparency, citations, verification, deep research and repeatable research workflows.
+
+https://help.alpha-sense.com/hc/en-us/articles/41666587181203-Interacting-with-Generative-Search
+https://developer.alpha-sense.com/agent-api/gensearch
+
+## Contify
+Vetted sources, signal/noise filtering, deduplication, disambiguation, HITL, knowledge-graph grounding and source-grounded AI.
+
+https://www.contify.com/solutions/competitive-intelligence/
+https://www.contify.com/ai-info/
+https://www.contify.com/resources/blog/competitive-intelligence/
+
+## Valona Intelligence
+Decision-centric intelligence, repeatable collection/analysis/delivery and trusted intelligence infrastructure.
+
+https://valonaintelligence.com/resources/blog/insights-blog-competitive-intelligence-best-practices
+https://valonaintelligence.com/news/intelligence-infrastructure-thats-built-to-meet-the-moment
+
+## Northern Light
+Governed knowledge foundation, trusted source collections, source-linked AI answers and citations.
+
+https://www.northernlight.com/blog/northern-light-announces-generative-ai-question-answering-capability-for-singlepoint-strategic-research-portals
+https://www.northernlight.com/blog/singlepoints-generative-ai-capability-gets-conversational
+
+## Crayon
+Multi-channel signal capture, filtering, saved/repeatable searches, scheduled analysis and workflow-native delivery.
+
+https://www.crayon.co/product/aggregate
+https://www.crayon.co/product/organize
+https://www.crayon.co/product/publish
+https://www.crayon.co/blog/market-intelligence
+
+## Similarweb / Semrush
+Continuously updated intelligence, large-scale data collection, automated pipelines, IaC, CI/CD, data-quality/availability monitoring and cost-aware data engineering.
+
+https://www.similarweb.com/blog/
+https://careers.semrush.com/jobs/2083484_Serbia/
+
+## Birdeye / Reputation / NiceJob
+Enterprise security/compliance, encryption, monitoring, backups/recovery, multi-source reputation signals and integrations into existing workflows.
+
+https://birdeye.com/security/
+https://reputation.com/legal-information/reputation-data-processing-addendum
+https://reputation.com/
+https://partners.nicejob.com/integrations
+
+---
+
+# 11. Synthesis
+
+Across the publicly verifiable material the durable common principles are:
+
+1. Canonical truth must have an owner.
+2. Boundaries matter more than technology fashion.
+3. Retries require idempotency.
+4. At-least-once delivery requires duplicate-safe consumers.
+5. External effects must be isolated from local transactions.
+6. Failures must be expected, observable and recoverable.
+7. Recovery must be tested, not merely documented.
+8. Complexity should be absorbed by platform primitives.
+9. Architecture should remain simpler than business scale requires.
+10. Interfaces and events should be stable and governed.
+11. AI must be grounded, traceable and subordinate to business controls.
+12. Security belongs in the development lifecycle.
+13. Production quality requires release discipline and measurable operational targets.
+14. Microservices are a scaling/isolation tool, not a maturity badge.
+15. Actionable intelligence matters more than raw information volume.
+16. Automated controls are stronger than verbal process agreements.
+17. Mature platforms extend around a stable core instead of repeatedly redefining the core.
+
+---
+
+# 12. Development doctrine
+
+### Core doctrine
+Frozen semantics → measurable invariants → executable tests → controlled release → bounded evolution
+
+### Product doctrine
+Core → application capabilities → adapters → integrations → experience
+
+### Intelligence doctrine
+Sources → observations → identity resolution → evidence → qualification → action → outcome → learning
+
+### Reliability doctrine
+Prevent where cheap → detect quickly → contain → recover → audit → learn
+
+### AI doctrine
+Evidence → model → constrained output → verification → policy → action
+
+### Security doctrine
+Least privilege → fail closed → isolate → encrypt → audit → test → recover
+
+### Architecture doctrine
+Simple core first → standard patterns → measured scaling → extracted services only when justified
+
+---
+
+# 13B. Definition of Done — Mature Search / Intelligence System
+
+- [ ] Multi-source search orchestration is implemented behind provider-neutral boundaries.
+- [ ] Search plans are versioned/reproducible and bounded by time/resource budgets.
+- [ ] Identity resolution and deterministic deduplication are executable.
+- [ ] Evidence/provenance is persisted for material external claims.
+- [ ] Freshness/expiry/revalidation is enforced.
+- [ ] Qualification is evidence/rule-driven and conservative.
+- [ ] Public business contact discovery is provenance-aware and deduplicated.
+- [ ] Opportunity/need detection has evidence and timestamps.
+- [ ] Monitoring can detect relevant changes without creating duplicate noise.
+- [ ] Reputation/risk intelligence has quarantine/manual-review boundaries.
+- [ ] Search quality and source performance are measurable.
+- [ ] A maintained search relevance benchmark exists in addition to identity/entity-resolution gold data.
+- [ ] Ranking is reversible/explainable and does not silently hide eligible candidates.
+- [ ] `NOT_SEARCHED`, `SEARCHED_NOT_FOUND`, `SOURCE_UNAVAILABLE`, `EXPIRED` and `CONFLICTING` are distinguishable.
+- [ ] Search completeness/budget state is visible where relevant.
+- [ ] Downstream outcomes feed the Search Learning Loop.
+- [ ] Critical search/research paths have failure, retry, budget and recovery tests.
+- [ ] No source/provider becomes canonical business truth.
+- [ ] No search feature creates a second identity or evidence authority.
+- [ ] The operator can move from discovery to safe commercial action without manually reconstructing intelligence context.
+
+# 13A. Definition of Done — Mature Personal System Surface
+
+The frozen core remains complete independently of the following product-surface work. The system as a whole becomes mature only when the required experience and operational surfaces are also verified.
+
+- [ ] Unified UI/design system exists and critical operator flows are simplified.
+- [ ] WORK / EVIDENCE / TECHNICAL-CONTROL progressive disclosure is implemented.
+- [ ] Direct operator search remains available without mandatory ranking/qualification gates.
+- [ ] Canonical Web client is implemented against canonical API only.
+- [ ] PWA install/update/offline-aware/reconnect semantics are verified.
+- [ ] Offline-aware multi-device continuity is deterministic and server-authoritative.
+- [ ] Client security/session/device controls are verified.
+- [ ] Web/PWA critical workflows have E2E coverage.
+- [ ] Critical UI screens have accessibility and visual-regression coverage.
+- [ ] Client telemetry is correlation-aware, redacted and non-authoritative.
+- [ ] Client releases have compatibility, staged rollout and rollback strategy.
+- [ ] Operator/System Control Plane exposes bounded diagnostics and recovery state.
+- [ ] Data export/import/portability preserves identity, evidence, audit and economics lineage.
+- [ ] External integrations have explicit capability, safety, health and contract evidence.
+- [ ] Real production SLO/capacity evidence is collected before making scale claims.
+- [ ] No client or integration creates a second system of record.
+- [ ] No experience-layer feature reopens frozen core semantics without the documented exception process.
+
+# 13. Definition of Done — Mature Core
+
+- [ ] v1.4 kernel contract remains frozen and green.
+- [ ] v1.5 IAM/security/gates integrated into one candidate.
+- [ ] CI fully green on supported Python versions.
+- [ ] Critical workflow atomicity integration-proven.
+- [ ] Concurrent idempotent commands race-safe.
+- [ ] Job/outbox/commercial-send reclaim integration-proven.
+- [ ] Crash-after-external-effect proven with stable external idempotency.
+- [ ] Migration adoption proven for existing databases.
+- [ ] Migration history checksum-protected.
+- [ ] Backup/restore/PITR proven.
+- [ ] RTO/RPO measured.
+- [ ] End-to-end correlation proven.
+- [ ] SLI/SLO/error-budget baseline exists.
+- [ ] Capacity/overload behavior tested.
+- [ ] Security controls mapped to tests.
+- [ ] Dependency/supply-chain audit green.
+- [ ] Release artifact and rollback path deterministic.
+- [ ] Final release candidate passes controlled deployment checks.
+- [ ] Core semantic freeze formally declared.
+
+---
+
+# 14. Stop line
+
+После выполнения Definition of Done:
+
+**Core Maturity = CERTIFIED**
+
+Дальше новые возможности идут за пределами ядра:
+- approved cloud AI providers: YandexGPT and GigaChat;
+- installable local/self-hosted free-use LLMs;
+- MAX transport;
+- intelligence providers;
+- payments/settlement;
+- Web/PWA;
+- team mode;
+- CRM integrations;
+- product/reporting features;
+- integration ecosystem.
+
+Core изменяется только по доказанному invariant defect, security/data-integrity defect или measured fundamental scalability/reliability constraint.
+
+Любое исключение требует architecture decision, regression tests, migration plan, rollback plan и impact analysis.
+
+---
+
+## Experience / Client doctrine
+
+**One system, two surfaces: Web + PWA.**
+
+Применяется зрелый workspace-паттерн: компактный summary/highlights сверху; Details; Related records; Activity/History; list/work queues; quick actions; contextual/split inspection; progressive disclosure для Evidence/Technical; персональные view preferences без изменения canonical truth. Этапы процесса могут отображаться как stage strip/checklist, но серверные contracts остаются единственной authority.
+
+### Multi-operator collaboration doctrine
+
+Система с первого дня готова к увеличению числа операторов:
+- явный actor identity на consequential actions;
+- owner/assignee/team queue отделены от customer Identity;
+- server-side authorization and least privilege;
+- audited assignment/reassignment/handoff;
+- revision/concurrency token; stale writes fail instead of silently overwriting newer state;
+- shared work without shadow copies;
+- explicit conflict outcomes: reload, accept current, merge supported fields, manual review;
+- durable work state and notifications derived from server state, not private UI state.
+
+Это bounded experience/application layer вокруг frozen core, а не новый источник истины или преждевременная multi-tenant архитектура.
+
+
+**One system, multiple surfaces.**
+
+Web and PWA are the experience surfaces over one canonical API/domain system.
+
+They must share:
+- canonical identifiers;
+- business semantics;
+- authorization outcomes;
+- error taxonomy;
+- correlation lineage;
+- idempotency semantics;
+- evidence/status presentation rules.
+
+They may differ in:
+- interaction model;
+- local caching;
+- offline capabilities;
+- navigation;
+- notification mechanisms;
+- device-specific optimizations.
+
+They must never diverge in canonical business truth.
+
+## Universal development doctrine
+
+The repository adopts `docs/UNIVERSAL_DEVELOPMENT_DOCTRINE.md` as the reusable development standard for integrity, reliability, security, scalability, maintainability, observability, intelligence/data governance and release safety. The doctrine governs *how* development is performed; project manifests govern the project's own product and architecture semantics.
+
+## Operational authority
+
+The repository-level operating contract is:
+- `AGENTS.md` — mandatory agent operating rules;
+- `docs/GITHUB_WORK_PROTOCOL.md` — resumable GitHub development protocol;
+- `docs/DEVELOPMENT_STATE.md` — durable interruption cursor;
+- `architecture/development_work_protocol.json` — machine-readable version of the workflow protocol.
+
+The agent must restore these documents before substantive GitHub work. A conversation-memory assumption is never allowed to override the repository state ledger.
+
+## Authority
+
+Манифест является development-level interpretation of:
+- ARCHITECTURE.md
+- architecture/contract.json
+- architecture/core_maturity_contract.json
+- docs/V1.4_KERNEL.md
+- docs/V1.4_KERNEL_CHECKPOINT.md
+- docs/V1.5_CORE_MATURITY.md
+- docs/V1.5_RUNTIME.md
+
+При расхождении документов расхождение считается defect до разрешения.
+
+The current source-tree HEAD is never copied into this manifest as a permanent value. Live GitHub state is authoritative for branch, commit, PR and CI status.
+
+**Новые core semantics не добавляются только потому, что появилась новая feature request.**
+
+## Public Intake / Platform Evolution Synchronization — 2026-09-28
+
+- Added mandatory platform evolution contract: architecture/platform_evolution_contract.json.
+- Added public request trust-boundary contract: architecture/public_intake_counterparty_preflight_contract.json.
+- Public intake is untrusted ingress and never writes live Bitrix24 business state directly.
+- Counterparty preflight is deterministic and registry-driven; GPT is excluded from identifier validation and registry truth lookup.
+- Public responses contain minimal status/match information; the operator sees the evidence-linked preflight summary and can drill down.
+- Public-ingress/provider changes are classified E2 and require abuse, resource/cost, security, rollback/deactivation, provider-exit and global-adversarial gates.
+## 2026-09-28 — Public Intake Data Plane, Repeat Orders, Monitoring and Bitrix Cutover
+
+- Added `architecture/public_intake_data_plane_contract.json`: raw public requests live in a dedicated PostgreSQL database with separate credentials, durable intake outbox and operator notification projection.
+- Added `architecture/repeat_order_transition_contract.json`: temporary live repeat-order mode in Shema until Bitrix24 handoff, followed by completeness-verified migration, purge of live Order/Economics rows and frozen hidden lineage.
+- Added `architecture/counterparty_monitoring_contract.json`: exact INN/OGRN/OGRNIP detection in the existing lead-search field, deterministic preflight, bounded deep research, daily monitoring, change notifications and separate favorites.
+- Added `architecture/operator_interface_contract.json`: canonical operator shell, list/Kanban work queues, Bitrix24-aligned record form/timeline patterns, counterparty/repeat-order workspaces, capability-aware UI hiding and no-second-authority rules.
+- Bitrix24 remains the mature live business plane; CRM, SPA, tasks, inventory, documents, routing/logistics and executor workflows are configured only where capabilities are actually available. Tender work uses a specialist connector when needed; no tender subsystem is reintroduced into Shema.
+- Public intake data never writes the canonical Shema database directly from the browser and never creates a live Bitrix24 transaction.
+- Order/Economics UI removal after verified Bitrix cutover is a capability-driven hide, not a broken route or empty navigation element.
+
+
+**Phase 7C recovery addition:** rollback evidence is implemented as a protected two-way drill using Yandex immutable revision IDs; it never leaves production on the rollback revision after the drill.

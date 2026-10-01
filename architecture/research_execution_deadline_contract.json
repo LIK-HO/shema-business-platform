@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "scope": "research_operation",
+  "time_budget": "propagated_to_provider_execution",
+  "remaining_time_cap": true,
+  "provider_timeout": "minimum_of_provider_configuration_and_remaining_research_time",
+  "non_positive_remaining_time": "skip_provider",
+  "failure_handling": "fail_closed",
+  "automatic_retry": false,
+  "durable_job_semantics": false,
+  "canonical_business_state": false
+}

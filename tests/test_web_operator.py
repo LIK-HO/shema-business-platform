@@ -1,0 +1,120 @@
+from pathlib import Path
+
+from fastapi.testclient import TestClient
+
+from shema_platform.experience.api import create_app
+
+
+def test_web_routes_are_same_origin_and_public() -> None:
+    c=TestClient(create_app(enable_docs=False))
+    for path in ("/","/request","/operator","/max"):
+        r=c.get(path)
+        assert r.status_code==200
+        assert "/web/style.css" in r.text
+        assert "/web/app.js" in r.text
+
+def test_web_assets_and_client_security_contract() -> None:
+    c=TestClient(create_app(enable_docs=False))
+    assert c.get("/web/style.css").status_code==200
+    js=c.get("/web/app.js").text
+    assert "X-Bot-Challenge" in js
+    assert "/v1/public/intake" in js
+    assert "/v1/operator/notifications" in js
+    assert "localStorage" not in js
+    assert "sessionStorage" not in js
+    assert "document.cookie" not in js
+    assert "postgres" not in js.lower()
+    assert "DATABASE_URL" not in js
+
+def test_visual_contract_regions_exist() -> None:
+    root=Path(__file__).resolve().parents[1]/"src"/"shema_platform"/"experience"/"web"
+    html=(root/"index.html").read_text()
+    css=(root/"style.css").read_text()
+    js=(root/"app.js").read_text()
+    for token in ['id="nav"','id="surface"','id="title"','id="view"','id="auth"']:
+        assert token in html
+    for token in [".shell",".side","header",".card",".hero","@media"]:
+        assert token in css
+    for token in ["pub()","requests()","searchView()","counterparties()","system()","dossier()"]:
+        assert token in js
+
+def test_public_shell_does_not_bypass_operator_api_authentication() -> None:
+    client = TestClient(create_app(enable_docs=False))
+
+    assert client.get("/operator").status_code == 200
+    assert client.get("/web/app.js").status_code == 200
+
+    notifications = client.get("/v1/operator/notifications")
+    capabilities = client.get("/v1/operator/capabilities")
+
+    assert notifications.status_code in {401, 403, 503}
+    assert capabilities.status_code in {401, 403, 503}
+
+def test_public_surface_contains_attribution_and_causal_context_contract() -> None:
+    client = TestClient(create_app(enable_docs=False))
+    response = client.get("/?utm_source=test&utm_medium=cpc&utm_campaign=phase4")
+    assert response.status_code == 200
+
+    js = client.get("/web/app.js").text
+    for token in (
+        "utmSource",
+        "utmMedium",
+        "utmCampaign",
+        "referrer",
+        "correlationId",
+        "Idempotency-Key",
+        "get('surface')",
+    ):
+        assert token in js
+
+    for service_label in ("Погрузка и разгрузка", "Такелаж и подъём", "Линейный персонал"):
+        assert service_label in response.text or service_label in js
+
+def test_operator_workbench_references_existing_canonical_business_endpoints() -> None:
+    client = TestClient(create_app(enable_docs=False))
+    js = client.get("/web/app.js").text
+
+    for endpoint in (
+        "/v1/intelligence/research",
+        "/v1/discovery/evaluate",
+        "/v1/commercial-actions",
+        "/v1/orders",
+        "/v1/economics/",
+    ):
+        assert endpoint in js
+
+def test_operator_workbench_does_not_add_a_second_business_state_store() -> None:
+    client = TestClient(create_app(enable_docs=False))
+    js = client.get("/web/app.js").text.lower()
+    assert "localstorage" not in js
+    assert "sessionstorage" not in js
+    assert "indexeddb" not in js
+    assert "postgres" not in js
+
+def test_repeat_order_surface_is_capability_gated_and_fail_closed() -> None:
+    client = TestClient(create_app(enable_docs=False))
+    js = client.get("/web/app.js").text
+    for token in (
+        "/v1/operator/repeat-orders",
+        "repeatOrders",
+        "revalidator",
+        "Idempotency-Key",
+    ):
+        assert token in js
+
+def test_phase4_security_headers_are_present_on_public_and_operator_surfaces() -> None:
+    client = TestClient(create_app(enable_docs=False))
+
+    public = client.get("/")
+    operator = client.get("/operator")
+    protected_api = client.get("/v1/operator/capabilities")
+
+    for response in (public, operator, protected_api):
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["X-Frame-Options"] == "DENY"
+        assert response.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
+        assert "frame-ancestors 'none'" in response.headers["Content-Security-Policy"]
+
+    assert operator.headers["Cache-Control"] == "no-store"
+    assert "connect-src 'self'" in public.headers["Content-Security-Policy"]
+    assert protected_api.status_code in {401, 403, 503}

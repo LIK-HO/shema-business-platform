@@ -1,0 +1,147 @@
+{
+  "version": "1.1",
+  "status": "approved_experience_boundary",
+  "frozen_kernel_impact": false,
+  "purpose": "One Web/PWA experience surface with a public client intake zone, a protected operator zone and a MAX mini-app projection, without a second business authority.",
+  "experience_surfaces": {
+    "public_web": {
+      "role": "public_company_site_and_client_request_intake",
+      "canonical_domain": "схемагрупп.рф",
+      "uses_canonical_api": true,
+      "creates_live_business_order": false,
+      "creates_client_request_observation": true,
+      "operator_confirmation_required_for_critical_action": true,
+      "preflight": "deterministic_counterparty_preflight_before_operator_queue",
+      "public_submission_is_untrusted": true,
+      "server_authoritative": true,
+      "request_storage": "dedicated_public_intake_database_via_canonical_api",
+      "notification_flow": "intake_outbox_to_operator_notification_center"
+    },
+    "operator_web": {
+      "role": "protected_work_surface",
+      "uses_canonical_api": true,
+      "shares_business_semantics_with_pwa": true,
+      "notification_center": true,
+      "interface_contract": "architecture/operator_interface_contract.json"
+    },
+    "pwa": {
+      "role": "installable_operator_and_client_capable_web_surface",
+      "same_origin_business_logic": true,
+      "no_second_business_rule_implementation": true,
+      "offline_mutations_only_when_idempotency_is_proven": true
+    },
+    "max_mini_app": {
+      "role": "client_facing_request_and_assistance_projection",
+      "bot_role": "answer_client_questions_clarify_request_and_open_request_flow",
+      "requires_max_bot": true,
+      "static_https_url_required": true,
+      "uses_same_public_web_application": true,
+      "uses_same_canonical_api": true,
+      "no_separate_business_database": true,
+      "no_authoritative_live_transaction_state": true,
+      "start_parameters_supported": true,
+      "uses_same_intake_database_via_canonical_api": true
+    }
+  },
+  "public_request_flow": [
+    "ad_or_direct_visit",
+    "public_site_or_max_mini_app",
+    "guided_request_form",
+    "edge_security_gate",
+    "deterministic_identifier_validation",
+    "counterparty_preflight_without_gpt",
+    "atomic_intake_db_submission_and_outbox",
+    "operator_notification_projection",
+    "shema_request_context_projection",
+    "operator_review",
+    "qualification",
+    "business_handoff_when_ready"
+  ],
+  "guided_form": {
+    "progressive_steps": true,
+    "minimum_fields": [
+      "service_type",
+      "location",
+      "preferred_date_or_period",
+      "work_or_cargo_description",
+      "contact_name",
+      "contact_channel"
+    ],
+    "optional_context": [
+      "photos_or_files",
+      "desired_response_time",
+      "additional_comments"
+    ],
+    "source_attribution": [
+      "utm_source",
+      "utm_medium",
+      "utm_campaign",
+      "referrer",
+      "entry_surface"
+    ],
+    "anti_abuse": [
+      "edge_waf_or_equivalent",
+      "bot_or_turnstile_verification",
+      "separate_submission_and_registry_lookup_rate_limits",
+      "server_side_validation",
+      "idempotency_key",
+      "duplicate_submission_detection",
+      "bounded_provider_lookup_budget",
+      "bounded_attachment_limits"
+    ],
+    "conditional_fields": [
+      "approximate_volume_or_weight",
+      "access_or_lifting_constraints",
+      "company_name",
+      "inn",
+      "ogrn_or_ogrnip"
+    ]
+  },
+  "causal_continuity": {
+    "request_id_required": true,
+    "correlation_id_required": true,
+    "source_attribution_preserved": true,
+    "client_can_reopen_request_status_without_creating_duplicate": true,
+    "operator_can_trace_request_to_dossier_and_outcome": true,
+    "preflight_snapshot_reference_required": true,
+    "operator_can_trace_preflight_to_request": true
+  },
+  "domain_migration": {
+    "source_platform": "inSales",
+    "target_platform": "Shema Web/PWA public surface",
+    "strategy": "prepare_and_validate_new_public_surface_before_dns_cutover",
+    "preserve_existing_dns_records": true,
+    "preserve_mail_records": true,
+    "cutover_requires_https_validation": true,
+    "cutover_requires_redirect_and_health_check": true,
+    "inSales_detachment_after_successful_cutover": true,
+    "dns_propagation_is_treated_as_a_controlled_transition": true,
+    "cutover_requires_security_control_validation": true
+  },
+  "non_goals": [
+    "second_crm",
+    "public_client_business_authority",
+    "direct_live_order_creation_without_server_validation",
+    "separate_max_backend",
+    "separate_pwa_business_logic",
+    "direct_public_access_to_intake_database"
+  ],
+  "acquisition_channels": [
+    "yandex_advertising_where_available",
+    "google_advertising_where_available",
+    "vk_advertising_where_available",
+    "direct",
+    "partner_or_referral"
+  ],
+  "evolution_contract": "architecture/platform_evolution_contract.json",
+  "counterparty_preflight_contract": "architecture/public_intake_counterparty_preflight_contract.json",
+  "counterparty_operator_workspace": {
+    "search_mode": "exact_identifier_detection_inside_existing_lead_search",
+    "separate_saved_workspace": "Контрагенты",
+    "tabs": [
+      "Проверка",
+      "Мониторинг",
+      "Избранные"
+    ]
+  }
+}

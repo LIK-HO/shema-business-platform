@@ -1,0 +1,47 @@
+{
+  "version": "1.0",
+  "status": "phase_2h_controlled_activation_operation_verified_activation_off",
+  "provider_id": "dadata_organization_api",
+  "execution_kind": "counterparty_lookup",
+  "network_execution_enabled": false,
+  "automatic_activation": false,
+  "required_gates": [
+    "source_registry_entry",
+    "authoritative_provider_contract_evidence",
+    "provider_neutral_counterparty_lookup_port",
+    "deterministic_positive_fixture",
+    "deterministic_negative_fixture_matrix",
+    "bounded_retry_policy",
+    "application_timeout_policy",
+    "credential_boundary",
+    "redacted_observability",
+    "kill_switch",
+    "rollback_without_schema_change",
+    "full_release_ci",
+    "explicit_operator_authorization",
+    "controlled_activation_operation",
+    "operator_api_boundary",
+    "default_disabled_runtime_composition"
+  ],
+  "authority_rules": {
+    "provider_output_is_canonical_truth": false,
+    "provider_output_role": "secondary_evidence_input",
+    "identity_promotion": "existing_identity_and_evidence_rules_only"
+  },
+  "activation_rule": "all required gates must be green and explicit operator authorization must be present",
+  "live_ci_traffic": false,
+  "secret_source": "deployment_configuration_only",
+  "fallback_provider": "none",
+  "rollback": "disable provider binding; preserve historical evidence; no schema rewrite",
+  "operator_control_plane": {
+    "activation_endpoint": "POST /v1/intelligence/providers/{providerId}/activation",
+    "rollback_endpoint": "POST /v1/intelligence/providers/{providerId}/rollback",
+    "authentication": "existing API authentication",
+    "authorization": [
+      "intelligence.provider.activate",
+      "intelligence.provider.rollback"
+    ],
+    "explicit_operator_authorization": true,
+    "provider_identity_source": "path_parameter"
+  }
+}
