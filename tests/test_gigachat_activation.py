@@ -128,3 +128,46 @@ def test_gate_fails_closed_without_runtime_secret() -> None:
             cost_estimator=lambda *_: 0.01,
             authorization_key="",
         )
+
+def test_activation_and_rollback_telemetry_is_redacted() -> None:
+    telemetry = InMemoryTelemetrySink()
+    gate = GigaChatProductionGate(telemetry=telemetry)
+
+    gate.activate(
+        snapshot(),
+        activated_by="operator-1",
+        prompt_renderer=lambda _: "confidential prompt",
+        cost_estimator=lambda *_: 0.01,
+        authorization_key="authorization-secret",
+        requester=lambda *args: (200, b"{}"),
+        token_requester=lambda *args: (200, b"{}"),
+    )
+    gate.rollback(
+        rolled_back_by="operator-2",
+        reason="controlled test rollback",
+    )
+
+    events = telemetry.all()
+    assert [event.name for event in events] == [
+        "ai.production.activated",
+        "ai.production.rolled_back",
+    ]
+    assert events[0].attributes["provider"] == "gigachat"
+    assert events[0].attributes["operator"] == "operator-1"
+    assert (
+        events[0].attributes["configuration_version"]
+        == "gigachat-config:v1"
+    )
+    assert events[1].attributes["provider"] == "gigachat"
+    assert events[1].attributes["operator"] == "operator-2"
+    assert (
+        events[1].attributes["configuration_version"]
+        == "gigachat-config:v1"
+    )
+    assert events[1].attributes["error_code"] == (
+        "production_activation_rolled_back"
+    )
+    for event in events:
+        assert "authorization_key" not in event.attributes
+        assert "prompt" not in event.attributes
+        assert "token" not in event.attributes

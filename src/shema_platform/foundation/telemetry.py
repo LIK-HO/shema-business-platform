@@ -19,6 +19,8 @@ _SAFE_ATTRIBUTE_KEYS = frozenset(
         "provider",
         "error_code",
         "job_type",
+        "configuration_version",
+        "operator",
     }
 )
 _MAX_STRING_VALUE_LENGTH = 256

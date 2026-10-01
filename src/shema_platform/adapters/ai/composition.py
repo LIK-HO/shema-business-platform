@@ -239,6 +239,9 @@ class ScopedAIProvider:
                         "component": "ai.provider",
                         "operation": task.task_type,
                         "provider": run.provider_id,
+                        "configuration_version": (
+                            scope.context.configuration_version or ""
+                        ),
                         "duration_ms": round((monotonic() - started) * 1000, 2),
                     },
                 )
@@ -264,6 +267,9 @@ class ScopedAIProvider:
                         "component": "ai.provider",
                         "operation": task.task_type,
                         "provider": self.provider_id,
+                        "configuration_version": (
+                            scope.context.configuration_version or ""
+                        ),
                         "error_code": failure.code.value,
                         "duration_ms": round((monotonic() - started) * 1000, 2),
                     },

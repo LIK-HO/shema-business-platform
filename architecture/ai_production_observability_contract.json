@@ -1,0 +1,47 @@
+{
+  "version": "1.0",
+  "status": "ai_production_observability_contract",
+  "frozen_kernel_impact": false,
+  "events": {
+    "activation": "ai.production.activated",
+    "rollback": "ai.production.rolled_back",
+    "provider_success": "ai.provider.completed",
+    "provider_failure": "ai.provider.failed"
+  },
+  "safe_operational_attributes": [
+    "component",
+    "operation",
+    "provider",
+    "duration_ms",
+    "error_code",
+    "configuration_version",
+    "operator"
+  ],
+  "required_properties": {
+    "correlation_id": true,
+    "provider_identified": true,
+    "configuration_version_for_provider_events": true,
+    "operator_for_activation_and_rollback": true,
+    "redacted": true,
+    "telemetry_non_authoritative": true,
+    "telemetry_failure_does_not_break_execution": true
+  },
+  "prohibited_data": [
+    "credentials",
+    "authorization_headers",
+    "prompts",
+    "input_refs",
+    "evidence_refs",
+    "provider_outputs",
+    "model_inputs"
+  ],
+  "scope_stop": {
+    "no_new_telemetry_backend": true,
+    "no_new_provider": true,
+    "no_http_route_change": true,
+    "no_database_schema_change": true,
+    "no_kernel_semantic_change": true,
+    "no_automatic_activation": true,
+    "no_live_provider_traffic": true
+  }
+}

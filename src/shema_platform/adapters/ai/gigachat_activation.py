@@ -205,6 +205,8 @@ class GigaChatProductionGate:
             name="ai.production.activated",
             operation="activate",
             provider="gigachat",
+            operator=activated_by,
+            configuration_version=configuration.configuration_version,
         )
         return self._provider
 
@@ -235,6 +237,8 @@ class GigaChatProductionGate:
             name="ai.production.rolled_back",
             operation="rollback",
             provider="gigachat",
+            operator=rolled_back_by,
+            configuration_version=previous.configuration_version,
             error_code="production_activation_rolled_back",
         )
 
@@ -282,6 +286,8 @@ class GigaChatProductionGate:
         name: str,
         operation: str,
         provider: str,
+        operator: str | None = None,
+        configuration_version: str | None = None,
         error_code: str | None = None,
     ) -> None:
         try:
@@ -297,6 +303,8 @@ class GigaChatProductionGate:
                         "component": "ai.production",
                         "operation": operation,
                         "provider": provider,
+                        "operator": operator,
+                        "configuration_version": configuration_version,
                         "error_code": error_code,
                     },
                 )

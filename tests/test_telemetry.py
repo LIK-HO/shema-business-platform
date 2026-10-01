@@ -20,7 +20,14 @@ def test_telemetry_allowlists_operational_attributes() -> None:
             "duration_ms": 18,
             "authorization": "Bearer secret-token",
             "body": "sensitive-payload",
+            "prompt": "confidential prompt",
+            "evidence_refs": ["evidence:1"],
+            "authorization_key": "giga-secret",
+            "api_key": "yandex-secret",
+            "output": "confidential output",
             "provider": "max",
+            "configuration_version": "cfg:v1",
+            "operator": "operator-1",
         },
     )
 
@@ -29,6 +36,8 @@ def test_telemetry_allowlists_operational_attributes() -> None:
         "status": 200,
         "duration_ms": 18,
         "provider": "max",
+        "configuration_version": "cfg:v1",
+        "operator": "operator-1",
     }
 
 
