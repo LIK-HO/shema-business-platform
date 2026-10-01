@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "status": "ai_controlled_activation_rehearsal",
+  "frozen_kernel_impact": false,
+  "rehearsal": {
+    "promotion_gate": "P39",
+    "providers": [
+      "yandexgpt",
+      "gigachat"
+    ],
+    "deterministic_transport_only": true,
+    "live_provider_network": false,
+    "explicit_activation_required": true,
+    "explicit_rollback_required": true,
+    "post_rollback_traffic_blocked": true,
+    "promotion_approval_does_not_activate": true
+  },
+  "proof": {
+    "activation_telemetry": true,
+    "rollback_telemetry": true,
+    "activation_starts_from_disabled": true,
+    "no_requester_called_during_activation": true,
+    "configuration_version_gate_restored": true
+  },
+  "scope_stop": {
+    "no_new_provider": true,
+    "no_http_route_change": true,
+    "no_database_schema_change": true,
+    "no_kernel_semantic_change": true,
+    "no_automatic_activation": true,
+    "no_cloud_local_fallback": true,
+    "no_live_provider_traffic": true,
+    "no_merge_or_deploy": true
+  }
+}
