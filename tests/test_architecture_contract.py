@@ -558,3 +558,29 @@ def test_max_ambiguous_outcome_safety_contract_is_bounded() -> None:
     assert contract["scope_stop"]["no_frozen_kernel_semantic_change"] is True
     assert contract["scope_stop"]["no_http_route_change"] is True
     assert contract["scope_stop"]["no_provider_reconciliation_guess"] is True
+
+def test_quarantine_read_model_contract_is_bounded() -> None:
+    contract = loads(read("architecture/quarantine_read_model_contract.json"))
+
+    assert contract["version"] == "1.0"
+    assert contract["frozen_kernel_impact"] is False
+    assert contract["storage"]["table"] == "quarantine_record"
+    assert contract["storage"]["schema_change_required"] is False
+    assert contract["storage"]["read_only"] is True
+    assert contract["inspection"]["lookup_by_object"] is True
+    assert contract["inspection"]["lookup_by_reason"] is True
+    assert contract["inspection"]["list_open_with_bounded_limit"] is True
+    assert contract["state_change"]["resolve_quarantine"] is False
+    assert contract["state_change"]["commercial_action_mutation"] is False
+    assert contract["state_change"]["failed_to_sent_transition"] is False
+    assert contract["state_change"]["external_send"] is False
+    assert contract["authorization"]["no_new_permission"] is True
+    assert contract["authorization"]["operator_experience_boundary"] == "future"
+    assert contract["authorization"]["platform_reader_is_not_a_public_route"] is True
+    assert contract["scope_stop"]["no_live_max_network"] is True
+    assert contract["scope_stop"]["no_credentials"] is True
+    assert contract["scope_stop"]["no_new_provider"] is True
+    assert contract["scope_stop"]["no_database_migration"] is True
+    assert contract["scope_stop"]["no_frozen_kernel_semantic_change"] is True
+    assert contract["scope_stop"]["no_automatic_retry"] is True
+    assert contract["scope_stop"]["no_http_route_change"] is True
