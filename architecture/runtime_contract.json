@@ -1,0 +1,48 @@
+{
+  "version": "1.5.0",
+  "baseline_kernel_contract": "1.4",
+  "runtime": "modular_monolith",
+  "purpose": "Productization/runtime controls over the frozen v1.4 kernel",
+  "iam": {
+    "authentication_boundary": "oidc_jwt_adapter",
+    "issuer_must_use_https": true,
+    "jwks_must_use_https": true,
+    "permission_materialization": true,
+    "unknown_permissions_fail_closed": true,
+    "jwks_cache_bounded": true
+  },
+  "observability": {
+    "telemetry_non_authoritative": true,
+    "telemetry_allowlist_based_redaction": true,
+    "telemetry_does_not_store_request_bodies": true,
+    "telemetry_does_not_store_authorization_headers": true,
+    "correlation_id_propagated": true
+  },
+  "security": {
+    "production_docs_disabled": true,
+    "enforced_at_runtime_startup": true,
+    "production_oidc_https_required": true,
+    "production_oidc_audience_required": true,
+    "development_database_url_forbidden_in_production": true
+  },
+  "supply_chain": {
+    "dependency_audit": "pip-audit",
+    "audit_is_release_gate": true
+  },
+  "recovery": {
+    "durable_jobs": true,
+    "lease_guarded_execution": true,
+    "bounded_retry": true,
+    "outbox_reclaim": true,
+    "commercial_send_reclaim": true
+  },
+  "frozen_kernel_authority": [
+    "postgresql",
+    "domain_semantics",
+    "authorization_policy",
+    "evidence",
+    "idempotency",
+    "audit",
+    "outbox"
+  ]
+}
