@@ -81,7 +81,17 @@ jobs:
           )
           if values.get("evidence_runner_enabled") is not True:
               raise SystemExit("Phase 7C live provisioning requires evidence_runner_enabled=true")
-          for key in ("database_name", "database_user", "database_secret_input", "database_url"):
+          for key in (
+              "cloud_id",
+              "folder_id",
+              "oidc_issuer",
+              "oidc_audience",
+              "oidc_jwks_url",
+              "bucket_name",
+              "database_name",
+              "database_user",
+              "database_secret_input",
+          ):
               if not values.get(key):
                   raise SystemExit(f"Phase 7C requires protected Terraform input: {key}")
           PY
@@ -93,6 +103,70 @@ jobs:
         run: |
           terraform -chdir=deploy/terraform init -input=false \
             -backend-config="bucket=$PHASE7C_TERRAFORM_STATE_BUCKET"
+
+      - name: Bootstrap registry and publish immutable application image
+        id: bootstrap_image
+        env:
+          YC_FOLDER_ID: ${{ secrets.PHASE7C_FOLDER_ID }}
+        run: |
+          set -Eeuo pipefail
+          eval "$(python - <<'PY'
+          import json
+          from pathlib import Path
+
+          values = json.loads(Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8"))
+          app_name = values.get("app_name", "shema")
+          print(f"export APP_NAME={json.dumps(app_name)}")
+          print(f"export REGISTRY_NAME={json.dumps(app_name + "-images")}")
+          PY
+          )"
+
+          registry_id="$(yc container registry get "$REGISTRY_NAME" --folder-id "$YC_FOLDER_ID" --format=json 2>/dev/null | jq -r '.id // empty' || true)"
+          if [[ -z "$registry_id" ]]; then
+            yc container registry create --name "$REGISTRY_NAME" --folder-id "$YC_FOLDER_ID" >/dev/null
+            registry_id="$(yc container registry get "$REGISTRY_NAME" --folder-id "$YC_FOLDER_ID" --format=json | jq -r '.id')"
+          fi
+          test -n "$registry_id"
+
+          if ! terraform -chdir=deploy/terraform state show yandex_container_registry.app >/dev/null 2>&1; then
+            terraform -chdir=deploy/terraform import -input=false               yandex_container_registry.app "$registry_id"
+          fi
+
+          yc container registry configure-docker --profile shema-phase7c
+
+          image_tag="$GITHUB_SHA"
+          image_url="cr.yandex/$registry_id/$APP_NAME:$image_tag"
+          image_digest="$(yc container image list             --repository-name="$registry_id/$APP_NAME"             --format=json 2>/dev/null |
+            jq -r --arg tag "$image_tag" '(.images // .)[]? | select((.tags // []) | index($tag)) | .digest' |
+            head -n1 || true)"
+
+          if [[ -z "$image_digest" ]]; then
+            docker build --tag "$image_url" .
+            docker push "$image_url" >/dev/null
+            image_digest="$(yc container image list               --repository-name="$registry_id/$APP_NAME"               --format=json |
+              jq -r --arg tag "$image_tag" '(.images // .)[]? | select((.tags // []) | index($tag)) | .digest' |
+              head -n1)"
+          fi
+
+          test "$image_digest" =~ ^sha256:[0-9a-f]{64}$
+
+          IMAGE_URL="$image_url" IMAGE_DIGEST="$image_digest" python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path("deploy/terraform/terraform.tfvars.json")
+          values = json.loads(path.read_text(encoding="utf-8"))
+          values["image_url"] = os.environ["IMAGE_URL"]
+          values["image_digest"] = os.environ["IMAGE_DIGEST"]
+          path.write_text(
+              json.dumps(values, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+          echo "image_url=$image_url" >> "$GITHUB_OUTPUT"
+          echo "image_digest=$image_digest" >> "$GITHUB_OUTPUT"
 
       - name: Terraform plan
         run: |
@@ -118,7 +192,6 @@ jobs:
         env:
           YC_CONTAINER_NAME: ${{ secrets.PHASE7C_CONTAINER_NAME }}
         run: |
-          revision_id="$(yc serverless container revision list --container-name "$YC_CONTAINER_NAME" --format=json | jq -r '[.[] | select(.status == "ACTIVE") | .id][0] // empty')"
           if ! yc serverless container get "$YC_CONTAINER_NAME" >/dev/null 2>&1; then
             echo "revision_id=" >> "$GITHUB_OUTPUT"
             exit 0
@@ -172,6 +245,42 @@ jobs:
         run: |
           terraform -chdir=deploy/terraform init -input=false \
             -backend-config="bucket=$PHASE7C_TERRAFORM_STATE_BUCKET"
+
+      - name: Resolve reviewed immutable image
+        env:
+          EXPECTED_IMAGE_DIGEST: ${{ needs.plan.outputs.image_digest }}
+        run: |
+          set -Eeuo pipefail
+          eval "$(python - <<'PY'
+          import json
+          from pathlib import Path
+
+          values = json.loads(Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8"))
+          app_name = values.get("app_name", "shema")
+          print(f"export APP_NAME={json.dumps(app_name)}")
+          PY
+          )"
+          registry_id="$(terraform -chdir=deploy/terraform output -raw registry_id)"
+          image_tag="$GITHUB_SHA"
+          image_url="cr.yandex/$registry_id/$APP_NAME:$image_tag"
+          image_digest="$(yc container image list             --repository-name="$registry_id/$APP_NAME"             --format=json |
+            jq -r --arg tag "$image_tag" '(.images // .)[]? | select((.tags // []) | index($tag)) | .digest' |
+            head -n1)"
+          test "$image_digest" = "$EXPECTED_IMAGE_DIGEST"
+          IMAGE_URL="$image_url" IMAGE_DIGEST="$image_digest" python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path("deploy/terraform/terraform.tfvars.json")
+          values = json.loads(path.read_text(encoding="utf-8"))
+          values["image_url"] = os.environ["IMAGE_URL"]
+          values["image_digest"] = os.environ["IMAGE_DIGEST"]
+          path.write_text(
+              json.dumps(values, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
 
       - name: Recompute and verify reviewed Terraform plan
         env:
@@ -247,19 +356,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           test -n "$PITR_RECOVERY_TIME"
-          PITR_DATABASE_URL="$(python - <<'PY'
-          import json
-          from pathlib import Path
-
-          values = json.loads(
-              Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8")
-          )
-          value = values.get("database_url")
-          if not value:
-              raise SystemExit("database_url is required for PITR drill")
-          print(value)
-          PY
-          )"
+          PITR_DATABASE_URL="$(terraform -chdir=deploy/terraform output -raw database_url)"
           PITR_INVOCATION_SERVICE_ACCOUNT_ID="$(terraform -chdir=deploy/terraform output -raw container_puller_service_account_id)"
           test -n "$PITR_INVOCATION_SERVICE_ACCOUNT_ID"
           export PITR_DATABASE_URL PITR_INVOCATION_SERVICE_ACCOUNT_ID
