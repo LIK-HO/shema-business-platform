@@ -277,13 +277,28 @@ def test_phase7c_workflow_binds_apply_to_reviewed_plan_fingerprint() -> None:
     assert apply_command in workflow
 
 
-def test_phase7c_state_preflight_requires_versioning() -> None:
+def test_phase7c_state_preflight_requires_versioning_and_dedicated_credentials() -> None:
     script = (
         ROOT / "scripts" / "yandex_cloud_terraform_state_preflight.sh"
     ).read_text(encoding="utf-8")
     assert "YC_TERRAFORM_STATE_BUCKET" in script
-    assert "VERSIONING_ENABLED" in script
+    assert "AWS_ACCESS_KEY_ID" in script
+    assert "AWS_SECRET_ACCESS_KEY" in script
+    assert "AWS_DEFAULT_REGION" in script
+    assert "AWS CLI" in script
+    assert "aws s3api head-bucket" in script
+    assert "get-bucket-versioning" in script
+    assert 'versioning" != "Enabled"' in script
+    assert "TERRAFORM_STATE_CREDENTIAL_ISOLATION=PASS" in script
     assert "TERRAFORM_STATE_BUCKET_SECRET_VALUES=NOT_PRINTED" in script
+
+def test_phase7c_state_preflight_does_not_depend_on_deployment_identity() -> None:
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    assert workflow.count("AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}") == 4
+    assert workflow.count("AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}") == 4
+    assert workflow.count("AWS_DEFAULT_REGION: ru-central1") == 2
 
 
 def test_phase7c_workflow_has_one_state_preflight_per_execution_job() -> None:
