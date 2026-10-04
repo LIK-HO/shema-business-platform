@@ -340,8 +340,12 @@ def test_phase7c_state_preflight_does_not_depend_on_deployment_identity() -> Non
     workflow = (
         ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
     ).read_text(encoding="utf-8")
-    assert workflow.count("AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}") == 4
-    assert workflow.count("AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}") == 4
+    assert workflow.count(
+        "AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}"
+    ) == 4
+    assert workflow.count(
+        "AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}"
+    ) == 4
     assert workflow.count("AWS_DEFAULT_REGION: ru-central1") == 2
 
 
