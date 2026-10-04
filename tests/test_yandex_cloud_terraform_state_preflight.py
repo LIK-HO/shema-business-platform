@@ -1,25 +1,13 @@
-import http.server
 import os
 import pathlib
-import socketserver
 import subprocess
 import tempfile
 import textwrap
-import threading
 import unittest
 
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "scripts" / "yandex_cloud_terraform_state_preflight.sh"
-
-
-class _HealthHandler(http.server.BaseHTTPRequestHandler):
-    def do_GET(self) -> None:
-        self.send_response(200)
-        self.end_headers()
-
-    def log_message(self, format: str, *args: object) -> None:
-        return
 
 
 class StatePreflightTests(unittest.TestCase):
@@ -29,18 +17,12 @@ class StatePreflightTests(unittest.TestCase):
         self.bin = self.root / "bin"
         self.bin.mkdir()
 
-        self.server = socketserver.TCPServer(("127.0.0.1", 0), _HealthHandler)
-        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
-        self.thread.start()
-
         self.base_env = os.environ.copy()
         self.base_env.update(
             {
                 "PATH": f"{self.bin}:{self.base_env['PATH']}",
                 "YC_TERRAFORM_STATE_BUCKET": "shema-test-state",
-                "YC_TERRAFORM_STATE_ENDPOINT": (
-                    f"http://127.0.0.1:{self.server.server_address[1]}"
-                ),
+                "YC_TERRAFORM_STATE_ENDPOINT": "https://storage.example.test",
                 "AWS_ACCESS_KEY_ID": "test-access-key",
                 "AWS_SECRET_ACCESS_KEY": "test-secret-value",
                 "AWS_DEFAULT_REGION": "ru-central1",
@@ -49,13 +31,15 @@ class StatePreflightTests(unittest.TestCase):
         )
 
         self._write_executable(
+            self.bin / "curl",
+            "#!/usr/bin/env bash\nprintf '%s\\n' 200\n",
+        )
+        self._write_executable(
             self.bin / "yc",
             "#!/usr/bin/env bash\nexit 0\n",
         )
 
     def tearDown(self) -> None:
-        self.server.shutdown()
-        self.server.server_close()
         self.tempdir.cleanup()
 
     def _write_executable(self, path: pathlib.Path, content: str) -> None:
