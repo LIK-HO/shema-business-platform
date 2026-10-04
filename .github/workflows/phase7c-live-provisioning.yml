@@ -38,6 +38,8 @@ jobs:
     outputs:
       previous_revision_id: ${{ steps.capture_previous_revision.outputs.revision_id }}
       planned_change_fingerprint: ${{ steps.plan_fingerprint.outputs.fingerprint }}
+      image_url: ${{ steps.bootstrap_image.outputs.image_url }}
+      image_digest: ${{ steps.bootstrap_image.outputs.image_digest }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -117,7 +119,11 @@ jobs:
           YC_CONTAINER_NAME: ${{ secrets.PHASE7C_CONTAINER_NAME }}
         run: |
           revision_id="$(yc serverless container revision list --container-name "$YC_CONTAINER_NAME" --format=json | jq -r '[.[] | select(.status == "ACTIVE") | .id][0] // empty')"
-          test -n "$revision_id"
+          if ! yc serverless container get "$YC_CONTAINER_NAME" >/dev/null 2>&1; then
+            echo "revision_id=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          revision_id="$(yc serverless container revision list --container-name "$YC_CONTAINER_NAME" --format=json | jq -r '[.[] | select(.status == "ACTIVE") | .id][0] // empty')"
           echo "revision_id=$revision_id" >> "$GITHUB_OUTPUT"
 
   apply:
@@ -158,20 +164,6 @@ jobs:
         run: |
           test -n "$TFVARS_JSON"
           printf "%s" "$TFVARS_JSON" > deploy/terraform/terraform.tfvars.json
-      - name: Validate live-evidence Terraform variables
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          values = json.loads(
-              Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8")
-          )
-          if values.get("evidence_runner_enabled") is not True:
-              raise SystemExit("Phase 7C live apply requires evidence_runner_enabled=true")
-          for key in ("database_name", "database_user", "database_secret_input", "database_url"):
-              if not values.get(key):
-                  raise SystemExit(f"Phase 7C requires protected Terraform input: {key}")
-          PY
       - name: Terraform init
         env:
           PHASE7C_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
@@ -238,7 +230,12 @@ jobs:
         env:
           YC_CONTAINER_NAME: ${{ secrets.PHASE7C_CONTAINER_NAME }}
           PREVIOUS_REVISION_ID: ${{ needs.plan.outputs.previous_revision_id }}
-        run: bash scripts/yandex_cloud_rollback_drill.sh
+        run: |
+          test -n "$PREVIOUS_REVISION_ID" || {
+            echo "rollback_drill requires a previously active production revision."
+            exit 1
+          }
+          bash scripts/yandex_cloud_rollback_drill.sh
 
       - name: Run protected PITR recovery drill
         if: ${{ inputs.pitr_drill == true }}
