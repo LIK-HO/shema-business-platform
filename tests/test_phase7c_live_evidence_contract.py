@@ -241,6 +241,13 @@ def test_phase7c_live_evidence_uses_approved_edge_and_immutable_artifact() -> No
     assert 'values.get("image_digest")' in workflow
 
 
+def test_phase7c_audit_trail_delivery_uses_writer_role() -> None:
+    terraform = (ROOT / "deploy" / "terraform" / "main.tf").read_text(
+        encoding="utf-8"
+    )
+    assert 'role      = "logging.writer"' in terraform
+    assert 'role      = "logging.viewer"' not in terraform
+
 def test_phase7c_live_evidence_requires_mature_observability_controls() -> None:
     script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(
         encoding="utf-8"
