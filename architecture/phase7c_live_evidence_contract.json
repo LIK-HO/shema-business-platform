@@ -44,7 +44,11 @@
     "private_postgresql_security_group_verified",
     "postgresql_tls_verified",
     "credential_rotation_version_verified",
-    "terraform_state_credential_isolation_verified"
+    "terraform_state_credential_isolation_verified",
+    "runtime_log_group_verified",
+    "audit_log_group_verified",
+    "audit_trail_verified",
+    "registry_vulnerability_scan_policy_verified"
   ],
   "safety_gates": {
     "apply_requires_manual_dispatch": true,
@@ -69,7 +73,10 @@
     "postgresql_tls_verification_required": true,
     "serverless_service_subnet_allowlist": "198.19.0.0/16 only for private PostgreSQL ingress",
     "terraform_state_preflight_must_use_dedicated_credentials": true,
-    "deployment_identity_must_not_access_state_bucket": true
+    "deployment_identity_must_not_access_state_bucket": true,
+    "custom_runtime_log_group_required": true,
+    "audit_trail_required": true,
+    "registry_vulnerability_scanning_required": true
   },
   "known_environment_constraint": "GitHub-hosted runners cannot directly reach a private Managed PostgreSQL host. The approved live path is a private Serverless Containers task-mode runner attached to the same VPC, invoked with IAM authorization by the protected CI identity. The production API must not gain a debug/database-probe endpoint merely to satisfy this gate.",
   "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD and the final current-head seven-job gate is green.",
@@ -127,6 +134,17 @@
       "reviewed_plan_binding": "sha256_fingerprint_must_match_before_apply",
       "preflight_identity": "dedicated_static_object_storage_access_key_in_protected_environment",
       "deployment_identity": "yandex_service_account_key_json_for_resource_api_only"
+    },
+    "observability": {
+      "runtime_log_group": "yandex_logging_group.runtime",
+      "audit_log_group": "yandex_logging_group.audit",
+      "retention_hours_minimum": 720,
+      "audit_trail": "yandex_audit_trails_trail.production",
+      "registry_scan_policy": "yandex_cloudregistry_scan_policy.app",
+      "scan_mode": [
+        "on_push",
+        "scheduled"
+      ]
     }
   }
 }
