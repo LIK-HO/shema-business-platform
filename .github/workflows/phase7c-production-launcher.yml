@@ -29,9 +29,9 @@ permissions:
 
 jobs:
   phase7c:
-    uses: LIK-HO/shema-business-platform/.github/workflows/phase7c-live-provisioning.yml@fix/phase7c-yandex-cloud-production-readiness-20261004
+    uses: LIK-HO/shema-business-platform/.github/workflows/phase7c-live-provisioning.yml@phase7c/yandex-cloud-mature-baseline-20261004
     with:
-      source_ref: fix/phase7c-yandex-cloud-production-readiness-20261004
+      source_ref: phase7c/yandex-cloud-mature-baseline-20261004
       apply: ${{ inputs.apply }}
       rollback_drill: ${{ inputs.rollback_drill }}
       pitr_drill: ${{ inputs.pitr_drill }}
