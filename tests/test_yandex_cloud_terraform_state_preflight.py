@@ -41,7 +41,7 @@ class StatePreflightTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.tempdir.cleanup()
 
-    def _write_executable(self, path: pathlib.Path, content: str) -> None:
+    def _write_executable(self, path: Path, content: str) -> None:
         path.write_text(content, encoding="utf-8")
         path.chmod(0o700)
 
