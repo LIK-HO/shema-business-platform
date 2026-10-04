@@ -296,3 +296,17 @@ def test_phase7c_workflow_has_one_state_preflight_per_execution_job() -> None:
     assert apply.split("      - name: Collect live resource evidence", 1)[0].count(
         "Verify persistent Terraform state backend"
     ) == 1
+
+
+def test_phase7c_requires_production_network_and_database_connectivity_evidence() -> None:
+    contract = read_contract()
+    required = set(contract["required_live_evidence"])
+    assert {
+        "all_availability_zone_subnets_verified",
+        "postgresql_ha_hosts_verified",
+        "private_postgresql_security_group_verified",
+        "postgresql_tls_verified",
+        "credential_rotation_version_verified",
+    }.issubset(required)
+    assert contract["safety_gates"]["private_postgresql_only"] is True
+    assert contract["safety_gates"]["postgresql_tls_verification_required"] is True
