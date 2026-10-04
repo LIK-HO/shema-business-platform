@@ -2,7 +2,6 @@ import os
 import pathlib
 import subprocess
 import tempfile
-import textwrap
 import unittest
 
 
@@ -43,7 +42,7 @@ class StatePreflightTests(unittest.TestCase):
         self.tempdir.cleanup()
 
     def _write_executable(self, path: pathlib.Path, content: str) -> None:
-        path.write_text(textwrap.dedent(content), encoding="utf-8")
+        path.write_text(content, encoding="utf-8")
         path.chmod(0o700)
 
     def _run(self) -> subprocess.CompletedProcess[str]:
@@ -60,22 +59,22 @@ class StatePreflightTests(unittest.TestCase):
     def test_success_proves_endpoint_versioning_and_namespace_access(self) -> None:
         self._write_executable(
             self.bin / "aws",
-            r"""
-            #!/usr/bin/env bash
-            set -eu
-            if [[ "$2" == "head-bucket" ]]; then
-              exit 0
-            fi
-            if [[ "$2" == "get-bucket-versioning" ]]; then
-              printf '%s\n' 'Enabled'
-              exit 0
-            fi
-            if [[ "$2" == "list-objects-v2" ]]; then
-              printf '%s\n' '{}'
-              exit 0
-            fi
-            exit 2
-            """,
+            (
+                "#!/usr/bin/env bash\n"
+                "set -eu\n"
+                'if [[ "$2" == "head-bucket" ]]; then\n'
+                "  exit 0\n"
+                "fi\n"
+                'if [[ "$2" == "get-bucket-versioning" ]]; then\n'
+                "  printf '%s\\n' 'Enabled'\n"
+                "  exit 0\n"
+                "fi\n"
+                'if [[ "$2" == "list-objects-v2" ]]; then\n'
+                "  printf '%s\\n' '{}'\n"
+                "  exit 0\n"
+                "fi\n"
+                "exit 2\n"
+            ),
         )
 
         result = self._run()
@@ -89,14 +88,14 @@ class StatePreflightTests(unittest.TestCase):
     def test_invalid_access_key_is_classified_without_echoing_provider_error(self) -> None:
         self._write_executable(
             self.bin / "aws",
-            r"""
-            #!/usr/bin/env bash
-            set -eu
-            printf '%s\n' \
-              'An error occurred (InvalidAccessKeyId) when calling the HeadBucket operation:' \
-              'super-secret-value' >&2
-            exit 255
-            """,
+            (
+                "#!/usr/bin/env bash\n"
+                "set -eu\n"
+                "printf '%s\\n' \\\n"
+                "  'An error occurred (InvalidAccessKeyId) when calling the HeadBucket operation:' \\\n"
+                "  'super-secret-value' >&2\n"
+                "exit 255\n"
+            ),
         )
 
         result = self._run()
@@ -110,12 +109,13 @@ class StatePreflightTests(unittest.TestCase):
     def test_generic_403_is_reported_as_authorization_failure(self) -> None:
         self._write_executable(
             self.bin / "aws",
-            r"""
-            #!/usr/bin/env bash
-            set -eu
-            echo 'An error occurred (403) when calling the HeadBucket operation: Forbidden' >&2
-            exit 255
-            """,
+            (
+                "#!/usr/bin/env bash\n"
+                "set -eu\n"
+                "echo 'An error occurred (403) when calling the HeadBucket operation: "
+                "Forbidden' >&2\n"
+                "exit 255\n"
+            ),
         )
 
         result = self._run()
