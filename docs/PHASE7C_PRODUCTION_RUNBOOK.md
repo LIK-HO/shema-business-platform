@@ -38,6 +38,8 @@ The state bucket must:
 5. use a dedicated static Access Key ID + Secret Access Key;
 6. remain outside the application Terraform state to avoid a bootstrap cycle.
 
+The state preflight uses the dedicated S3 credentials directly. `YC_SERVICE_ACCOUNT_KEY_JSON` is not a substitute and must not be granted state-bucket access merely to make preflight pass.
+
 The state backend is fixed to:
 
 `shema/production/terraform.tfstate`
@@ -45,6 +47,24 @@ The state backend is fixed to:
 and uses the Yandex Object Storage S3 endpoint with Terraform S3 lockfile configuration.
 
 For the dedicated state service account, `storage.editor` is sufficient for object read/write/delete operations; bucket access should be scoped as narrowly as the operating environment permits.
+
+## Mature Yandex Cloud production baseline
+
+For this product shape the production baseline is:
+
+- Serverless Containers remain the runtime authority; Kubernetes is not introduced without a measured scaling or operational requirement.
+- Managed PostgreSQL remains the single transactional authority; the current two-host, two-AZ HA baseline is retained.
+- API Gateway is the public edge; application containers remain private and IAM-invoked.
+- Lockbox is the runtime secret authority; production credentials are externalized.
+- Container images are immutable digest-pinned artifacts.
+- Terraform uses remote Object Storage state, dedicated state credentials, bucket versioning and S3 lockfile semantics.
+- Runtime and task logs use dedicated Cloud Logging groups with bounded retention.
+- Audit Trails collects management and relevant Object Storage data events into the dedicated audit log group.
+- Container Registry vulnerability scanning is enabled on push and on a scheduled rescan.
+- Custom-domain support is conditional and requires a Certificate Manager certificate ID.
+- Budget configuration remains a protected external input; live evidence verifies an active budget and at least one threshold.
+
+The deployment identity and Terraform-state identity are intentionally separate as a least-privilege boundary.
 
 ## First-run bootstrap boundary
 
@@ -79,6 +99,9 @@ Phase 7C can move to CLOSED / VERIFIED only after live evidence proves:
 - API Gateway edge readiness and production smoke;
 - immutable image digest integrity;
 - logging/observability and budget thresholds;
+- dedicated runtime and audit log groups;
+- active Audit Trail;
+- active Container Registry vulnerability-scan policy with push and scheduled rules;
 - backup retention;
 - PITR recovery and cleanup;
 - immutable rollback and restoration;
