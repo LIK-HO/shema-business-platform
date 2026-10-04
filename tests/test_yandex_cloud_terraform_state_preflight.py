@@ -1,18 +1,18 @@
 import os
-import pathlib
 import subprocess
-import tempfile
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 
-REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "scripts" / "yandex_cloud_terraform_state_preflight.sh"
 
 
 class StatePreflightTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.tempdir = tempfile.TemporaryDirectory()
-        self.root = pathlib.Path(self.tempdir.name)
+        self.tempdir = TemporaryDirectory()
+        self.root = Path(self.tempdir.name)
         self.bin = self.root / "bin"
         self.bin.mkdir()
 
