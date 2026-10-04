@@ -3,21 +3,24 @@
 - Closed sub-boundary: Phase 7B — Production runtime/artifact composition — CLOSED / VERIFIED.
 - Active boundary: Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS.
 - Mature baseline branch: phase7c/yandex-cloud-mature-baseline-20261004.
-- Current implementation HEAD: 3d0a7317c75f9dba0a7002ac31125778a5f84331.
+- Current implementation HEAD: 4fb39aeb89058f58f65ad344164dac1a42cab816.
 - Draft PR: #69 — Phase 7C: align Yandex Cloud deployment with mature production baseline.
-- Current repository release gate: CI run 37224174759 — 7/7 GREEN (quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery, release-contract).
-- Terraform IaC gate: run 37224174701 — GREEN.
+- Repository release gate before this final documentation-only delta: CI run 37224391371 — 7/7 GREEN on the preceding implementation HEAD.
+- Terraform IaC gate: green on the preceding implementation HEAD.
 - Mature baseline: deployment and Terraform-state identities are separated; remote Object Storage state uses dedicated S3 credentials, versioning and S3 lockfile; runtime/audit log groups are explicit; Audit Trails is provisioned; Container Registry vulnerability scanning is enabled on push and scheduled rescan; optional custom-domain binding fails closed without a Certificate Manager certificate.
+- Audit Trail delivery identity uses logging.writer on the destination log group and audit-trails.viewer on the collection scope.
 - Runtime architecture: Serverless Containers + API Gateway + Managed PostgreSQL + Lockbox + Container Registry + Object Storage; Kubernetes is intentionally not introduced without a measured scaling/operational requirement.
 - Data authority: Managed PostgreSQL remains the single transactional authority; current HA baseline is two hosts in separate availability zones; no public PostgreSQL ingress.
 - Recovery boundary: private same-VPC task-mode migration/evidence runner, protected rollback drill and separate-cluster PITR are implemented in the protected workflow.
+- Observability lifecycle: current Terraform-supported path is Yandex Cloud Logging; Monium is the required migration target before the Cloud Logging retirement window. No unsupported Monium integration is claimed.
 - Repository-side maturity contract: docs/YANDEX_CLOUD_MATURE_PRODUCTION_BASELINE.md.
 - Operational runbook: docs/PHASE7C_PRODUCTION_RUNBOOK.md.
 - Live evidence contract: architecture/phase7c_live_evidence_contract.json.
 - Real cloud state: NOT CLAIMED until the protected Yandex provisioning/evidence workflow executes successfully against the exact current implementation HEAD.
-- Remaining 7C closure blockers: real state-bucket access through the dedicated state credentials; successful Terraform init/plan/apply; live infrastructure/database/Lockbox/API Gateway evidence; runtime/audit observability evidence; budget evidence; production smoke; live rollback; live PITR + cleanup; final live adversarial review on the exact deployed HEAD.
+- Remaining 7C closure blockers: real state-bucket access through the dedicated state credentials; successful Terraform init/plan/apply; live infrastructure/database/Lockbox/API Gateway evidence; runtime/audit observability evidence; budget evidence; production smoke; live rollback; live PITR + cleanup; final live adversarial review; and the final current-head seven-job gate on this exact final HEAD.
 - Verified historical blocker: the previous production run failed at state-bucket access with Yandex PermissionDenied / Access Denied while using the deployment service-account identity. The workflow is now corrected so state preflight uses the dedicated Terraform-state credentials.
 - Closure rule: Phase 7C remains IN_PROGRESS until every required live-evidence item in architecture/phase7c_live_evidence_contract.json is attached to the exact deployed HEAD and the final current-head seven-job gate remains GREEN.
+
 # Phase 6 Web/PWA Consolidation — CLOSED / VERIFIED (2026-09-30)
 
 - **Boundary:** Phase 6 — Production Web/PWA Consolidation.
