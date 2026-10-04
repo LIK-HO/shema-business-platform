@@ -342,7 +342,7 @@ def test_phase7c_state_preflight_requires_versioning_and_dedicated_credentials()
     assert "get-bucket-versioning" in script
     assert 'versioning" != "Enabled"' in script
     assert "TERRAFORM_STATE_CREDENTIAL_ISOLATION=PASS" in script
-    assert "TERRAFORM_STATE_BUCKET_SECRET_VALUES=NOT_PRINTED" in script
+    assert "TERRAFORM_STATE_CREDENTIAL_VALUES=NOT_PRINTED" in script
 
 def test_phase7c_state_preflight_does_not_depend_on_deployment_identity() -> None:
     workflow = (
