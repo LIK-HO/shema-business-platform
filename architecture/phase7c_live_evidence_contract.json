@@ -65,7 +65,8 @@
     "terraform_state_bucket_versioning_required": true,
     "terraform_state_lockfile_must_be_enabled": true,
     "private_postgresql_only": true,
-    "postgresql_tls_verification_required": true
+    "postgresql_tls_verification_required": true,
+    "serverless_service_subnet_allowlist": "198.19.0.0/16 only for private PostgreSQL ingress"
   },
   "known_environment_constraint": "GitHub-hosted runners cannot directly reach a private Managed PostgreSQL host. The approved live path is a private Serverless Containers task-mode runner attached to the same VPC, invoked with IAM authorization by the protected CI identity. The production API must not gain a debug/database-probe endpoint merely to satisfy this gate.",
   "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD and the final current-head seven-job gate is green.",
