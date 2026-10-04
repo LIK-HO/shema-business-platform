@@ -11,6 +11,7 @@ oidc_audience  = "REPLACE_ME"
 oidc_jwks_url  = "https://REPLACE_ME"
 bucket_name    = "shema-prod-bounded-objects"
 custom_domain = ""
+custom_domain_certificate_id = ""
 evidence_runner_enabled = false
 migration_runner_name = "shema-migration-runner"
 
