@@ -9,7 +9,7 @@ This runbook is the operational handoff for the final Phase 7C live-evidence bou
 The `production-yandex` environment must contain the already-defined Phase 7C inputs plus the persistent Terraform state credentials:
 
 - `YC_SERVICE_ACCOUNT_KEY_JSON`
-- `PHASE7C_TFVARS_JSON`
+- `PHASE7C_TFVARS_JSON` (contains operator-supplied OIDC values and the write-only PostgreSQL credential input; image URL/digest are filled by the protected bootstrap)
 - `PHASE7C_CLOUD_ID`
 - `PHASE7C_FOLDER_ID`
 - `PHASE7C_CONTAINER_NAME`
@@ -22,6 +22,8 @@ The `production-yandex` environment must contain the already-defined Phase 7C in
 - `PHASE7C_TERRAFORM_STATE_SECRET_KEY`
 
 No secret value belongs in the repository, workflow YAML, plan output, logs, or evidence files.
+
+The protected workflow derives the PostgreSQL connection DSN from the private cluster primary FQDN after cluster creation and stores it in Lockbox. `database_url` is therefore not an operator input and must not be added as a GitHub secret.
 
 ## Terraform state bootstrap
 
@@ -43,6 +45,12 @@ The state backend is fixed to:
 and uses the Yandex Object Storage S3 endpoint with Terraform S3 lockfile configuration.
 
 For the dedicated state service account, `storage.editor` is sufficient for object read/write/delete operations; bucket access should be scoped as narrowly as the operating environment permits.
+
+## First-run bootstrap boundary
+
+The first protected run has one deliberate bootstrap side effect before the reviewed production plan: it creates the expected `shema-images` Container Registry when absent, imports that registry into the production Terraform state, and builds/pushes the current Git commit as an immutable digest-pinned image. The workflow never deploys a mutable tag as the runtime authority. With `apply=false`, no production runtime resources are applied; registry/image bootstrap is the only intentional preparation side effect.
+
+The initial installation has no previous serverless-container revision, so `rollback_drill` must remain `false` on the first successful production apply. Subsequent runs may enable it.
 
 ## Execution sequence
 
