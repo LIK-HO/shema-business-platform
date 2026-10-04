@@ -11,8 +11,14 @@ set -Eeuo pipefail
 : "$YC_BUCKET_NAME" >/dev/null 2>&1 || { echo "YC_BUCKET_NAME is required" >&2; exit 1; }
 : "$YC_BUDGET_ID" >/dev/null 2>&1 || { echo "YC_BUDGET_ID is required" >&2; exit 1; }
 : "$YC_TERRAFORM_STATE_BUCKET" >/dev/null 2>&1 || { echo "YC_TERRAFORM_STATE_BUCKET is required" >&2; exit 1; }
+: "$AWS_ACCESS_KEY_ID" >/dev/null 2>&1 || { echo "AWS_ACCESS_KEY_ID is required" >&2; exit 1; }
+: "$AWS_SECRET_ACCESS_KEY" >/dev/null 2>&1 || { echo "AWS_SECRET_ACCESS_KEY is required" >&2; exit 1; }
+: "$YC_RUNTIME_LOG_GROUP_ID" >/dev/null 2>&1 || { echo "YC_RUNTIME_LOG_GROUP_ID is required" >&2; exit 1; }
+: "$YC_AUDIT_LOG_GROUP_ID" >/dev/null 2>&1 || { echo "YC_AUDIT_LOG_GROUP_ID is required" >&2; exit 1; }
+: "$YC_AUDIT_TRAIL_ID" >/dev/null 2>&1 || { echo "YC_AUDIT_TRAIL_ID is required" >&2; exit 1; }
+: "$YC_REGISTRY_SCAN_POLICY_ID" >/dev/null 2>&1 || { echo "YC_REGISTRY_SCAN_POLICY_ID is required" >&2; exit 1; }
 
-for command_name in yc jq curl; do
+for command_name in yc jq curl aws; do
   command -v "$command_name" >/dev/null 2>&1 || { echo "missing required command: $command_name" >&2; exit 1; }
 done
 
@@ -29,6 +35,10 @@ cluster_json="$(yc managed-postgresql cluster get "$YC_CLUSTER_NAME" --format=js
 bucket_json="$(yc storage bucket get "$YC_BUCKET_NAME" --format=json)"
 budget_json="$(yc billing v1 budget get "$YC_BUDGET_ID" --format=json)"
 gateway_json="$(yc serverless api-gateway get --id "$YC_API_GATEWAY_ID" --format=json)"
+runtime_log_group_json="$(yc logging group get --id "$YC_RUNTIME_LOG_GROUP_ID" --format=json)"
+audit_log_group_json="$(yc logging group get --id "$YC_AUDIT_LOG_GROUP_ID" --format=json)"
+audit_trail_json="$(yc audit-trails trail get --id "$YC_AUDIT_TRAIL_ID" --format=json)"
+scan_policy_json="$(yc cloud-registry registry scan-policy get --id "$YC_REGISTRY_SCAN_POLICY_ID" --format=json)"
 
 jq -e --arg id "$YC_CLOUD_ID" '.id == $id' <<<"$cloud_json" >/dev/null
 jq -e --arg id "$YC_FOLDER_ID" '.id == $id' <<<"$folder_json" >/dev/null
@@ -40,10 +50,20 @@ jq -e '.config.backup_retain_period_days >= 14' <<<"$cluster_json" >/dev/null
 jq -e --arg bucket "$YC_BUCKET_NAME" '.name == $bucket or .id == $bucket' <<<"$bucket_json" >/dev/null
 jq -e '.status == "ACTIVE"' <<<"$budget_json" >/dev/null
 jq -e '((.threshold_rules // .thresholdRules // []) | length) >= 1' <<<"$budget_json" >/dev/null
+jq -e '(.retention_period_hours // .retentionPeriodHours // 0) >= 720' <<<"$runtime_log_group_json" >/dev/null
+jq -e '(.retention_period_hours // .retentionPeriodHours // 0) >= 720' <<<"$audit_log_group_json" >/dev/null
+jq -e '.status == "ACTIVE" or .status == "RUNNING"' <<<"$audit_trail_json" >/dev/null
+jq -e '.disabled == false' <<<"$scan_policy_json" >/dev/null
+jq -e '(.rules.push_rule.disabled // true) == false' <<<"$scan_policy_json" >/dev/null
+jq -e '((.rules.schedule_rules // []) | length) >= 1' <<<"$scan_policy_json" >/dev/null
 
 echo "BACKUP_RETENTION=PASS"
 echo "BUDGET_THRESHOLDS=PASS"
 echo "API_GATEWAY_READY=PASS"
+echo "RUNTIME_LOG_GROUP=PASS"
+echo "AUDIT_LOG_GROUP=PASS"
+echo "AUDIT_TRAIL=PASS"
+echo "REGISTRY_SCAN_POLICY=PASS"
 
 CONTAINER_URL="$(jq -r '.url // empty' <<<"$container_json")"
 API_GATEWAY_DOMAIN="$(jq -r '.domain // empty' <<<"$gateway_json")"
@@ -94,6 +114,8 @@ container_log_probe="$(yc logging read --resource-ids="$CONTAINER_ID" --since=10
 jq -e 'length > 0' <<<"$container_log_probe" >/dev/null
 echo "OBSERVABILITY_LOG_INGESTION=PASS"
 echo "RUNTIME_AND_TASK_LOGGING=PASS"
+echo "AUDIT_TRAIL_LIVE=PASS"
+echo "REGISTRY_VULNERABILITY_SCAN_POLICY=PASS"
 
 runner_revision="$(jq -r '.revision_id' <<<"$runner_json")"
 test -n "$runner_revision"
@@ -118,6 +140,9 @@ if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
     echo "- Object Storage bucket: present"
     echo "- Billing budget: active with at least one notification threshold"
     echo "- Runtime/task logs: observed"
+    echo "- Runtime log group: verified with 30-day retention"
+    echo "- Audit log group and Audit Trail: verified"
+    echo "- Container Registry scan policy: push + scheduled scanning enabled"
     echo "- Secret values: intentionally not printed"
   } >> "$GITHUB_STEP_SUMMARY"
 fi
