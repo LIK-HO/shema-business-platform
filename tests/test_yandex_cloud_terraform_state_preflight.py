@@ -1,11 +1,11 @@
 import http.server
-import pathlib
-import threading
 import os
+import pathlib
 import socketserver
 import subprocess
 import tempfile
 import textwrap
+import threading
 import unittest
 
 
