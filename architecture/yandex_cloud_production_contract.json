@@ -103,8 +103,9 @@
       ],
       "runtime_subnets": "one private subnet per availability zone",
       "database_hosts": "two hosts in different availability zones",
-      "database_ingress": "private subnet CIDRs to TCP/6432 only",
-      "database_public_access": false
+      "database_ingress": "Serverless service subnet 198.19.0.0/16 to TCP/6432 only",
+      "database_public_access": false,
+      "serverless_service_subnets": "198.19.0.0/16 per availability zone"
     }
   },
   "iam": {
