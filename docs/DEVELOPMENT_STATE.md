@@ -1,3 +1,13 @@
+## Phase 7C Live Bootstrap Blocker — 2026-10-05
+
+- Current branch HEAD: `993e1857b362e80069d84789f2fd68ed0660715e`.
+- Verified live state boundary: dedicated Terraform-state S3 credentials are now accepted; Object Storage endpoint reachability is PASS; deployment-identity bucket visibility is PASS; `terraform init` completes successfully against the persistent remote state.
+- New live blocker: deployment identity used by `YC_SERVICE_ACCOUNT_KEY_JSON` receives Yandex `PermissionDenied` during Container Registry bootstrap. The failing operation is `yc container registry create` before image publication.
+- Required external permission: `container-registry.editor` on the target folder for the deployment service account. Yandex documents this role as sufficient to create registries and manage registry/images/scan settings. Runtime/migration identities remain pull-only.
+- Workflow hardening committed: registry lookup/create now fails closed on access denial instead of treating permission errors as “registry absent”.
+- Important execution detail: rerunning the old workflow attempt reuses its original reusable-workflow revision, so the new registry diagnostic appears in the branch but requires a fresh Phase 7C launcher dispatch to execute that revised workflow.
+- Phase 7C remains IN_PROGRESS. No Terraform plan/apply or production resource provisioning has been claimed.
+
 # Phase 7 — Yandex Cloud Production Foundation — IN_PROGRESS (2026-10-04)
 ## Phase 7C State Preflight Diagnostic Boundary — 2026-10-05
 
