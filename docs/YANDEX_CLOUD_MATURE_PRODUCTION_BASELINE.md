@@ -119,6 +119,14 @@ Live evidence therefore distinguishes:
 - audit trail activity;
 - billing budget controls.
 
+## 8A. Observability platform lifecycle
+
+Yandex currently documents Cloud Logging as a transition path and states that the service is planned to close in Q2 2027, recommending the Monium Observability Platform. The current Terraform provider surface used by this project does not expose a first-class Monium resource model, and the current Yandex CLI search surface does not provide a Monium provisioning command suitable for deterministic IaC.
+
+Therefore this baseline deliberately does not invent an unsupported Monium Terraform resource or an undocumented API integration. The current production code uses explicit Cloud Logging groups with bounded retention, while the architecture records **Monium as the mandatory migration target before the Cloud Logging retirement window**.
+
+The migration is a separate controlled architecture change: provider/API support must first be verified, then logging destinations, live evidence and runbook checks must be migrated together, followed by the same seven-job release gate plus live observability evidence.
+
 ## 9. Budget and cost controls
 
 A mature deployment does not assume that a budget threshold stops resource consumption. Budget thresholds are an alerting/control-plane boundary.
