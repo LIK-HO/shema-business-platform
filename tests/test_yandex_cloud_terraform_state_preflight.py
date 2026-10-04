@@ -1,18 +1,18 @@
 import os
+import pathlib
 import subprocess
+import tempfile
 import unittest
-from pathlib import Path
-from tempfile import TemporaryDirectory
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "scripts" / "yandex_cloud_terraform_state_preflight.sh"
 
 
 class StatePreflightTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.tempdir = TemporaryDirectory()
-        self.root = Path(self.tempdir.name)
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self.tempdir.name)
         self.bin = self.root / "bin"
         self.bin.mkdir()
 
@@ -41,7 +41,7 @@ class StatePreflightTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.tempdir.cleanup()
 
-    def _write_executable(self, path: Path, content: str) -> None:
+    def _write_executable(self, path: pathlib.Path, content: str) -> None:
         path.write_text(content, encoding="utf-8")
         path.chmod(0o700)
 
@@ -92,7 +92,8 @@ class StatePreflightTests(unittest.TestCase):
                 "#!/usr/bin/env bash\n"
                 "set -eu\n"
                 "printf '%s\\n' \\\n"
-                "  'An error occurred (InvalidAccessKeyId) when calling the HeadBucket operation:' \\\n"
+                "  'An error occurred (InvalidAccessKeyId) when calling the "
+                "HeadBucket operation:' \\\n"
                 "  'super-secret-value' >&2\n"
                 "exit 255\n"
             ),
