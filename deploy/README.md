@@ -18,7 +18,7 @@ The application remains a modular monolith with PostgreSQL as the transactional 
 
 ## Deployment invariant
 
-Production containers must reference an image by immutable digest, not a mutable tag. Secrets are injected from Lockbox and never baked into the image. The database stays inside the VPC/private-network boundary.
+Production containers must reference an image by immutable digest, not a mutable tag. Secrets are injected from Lockbox and never baked into the image. The database stays inside the VPC/private-network boundary. The protected Phase 7C workflow performs the unavoidable first-run bootstrap by creating/importing the Container Registry, publishing the current commit image by immutable digest, then generating the reviewed Terraform plan. The PostgreSQL DSN is derived from the private cluster host after the cluster is created and is delivered only through Lockbox.
 
 ## Required operator inputs
 
