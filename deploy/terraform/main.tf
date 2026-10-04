@@ -76,9 +76,60 @@ resource "yandex_iam_service_account" "migration_runner" {
   description = "Bounded same-VPC task runner for production migration and live database evidence."
 }
 
+resource "yandex_iam_service_account" "audit_trail" {
+  name        = "${var.app_name}-audit-trail"
+  description = "Least-privilege identity used by Yandex Audit Trails to collect and deliver audit events."
+}
+
+resource "yandex_logging_group" "runtime" {
+  name             = "${var.app_name}-runtime"
+  folder_id        = var.folder_id
+  retention_period = "720h"
+}
+
+resource "yandex_logging_group" "audit" {
+  name             = "${var.app_name}-audit"
+  folder_id        = var.folder_id
+  retention_period = "720h"
+}
+
+resource "yandex_resourcemanager_folder_iam_member" "audit_trail_viewer" {
+  folder_id = var.folder_id
+  role      = "audit-trails.viewer"
+  member    = "serviceAccount:${yandex_iam_service_account.audit_trail.id}"
+}
+
+resource "yandex_resourcemanager_folder_iam_member" "audit_logging_viewer" {
+  folder_id = var.folder_id
+  role      = "logging.viewer"
+  member    = "serviceAccount:${yandex_iam_service_account.audit_trail.id}"
+}
+
 resource "yandex_container_registry" "app" {
   name   = "${var.app_name}-images"
   labels = local.common_labels
+}
+
+resource "yandex_cloudregistry_scan_policy" "app" {
+  registry_id        = yandex_container_registry.app.id
+  name               = "${var.app_name}-image-scan"
+  description        = "Production vulnerability scanning on push plus daily rescan."
+  disabled           = false
+  scan_lang_packages = true
+
+  rules {
+    push_rule {
+      disabled = false
+      paths    = ["*"]
+    }
+
+    schedule_rules {
+      disabled      = false
+      amount        = 1
+      interval_unit = "day"
+      paths         = ["*"]
+    }
+  }
 }
 
 resource "yandex_container_registry_iam_binding" "puller" {
@@ -118,6 +169,40 @@ resource "yandex_lockbox_secret_iam_member" "runtime" {
   secret_id = yandex_lockbox_secret.runtime.id
   role      = "lockbox.payloadViewer"
   member    = "serviceAccount:${yandex_iam_service_account.container_runtime.id}"
+}
+
+resource "yandex_audit_trails_trail" "production" {
+  name               = "${var.app_name}-production"
+  folder_id          = var.folder_id
+  description        = "Production management and Object Storage audit events."
+  service_account_id = yandex_iam_service_account.audit_trail.id
+
+  logging_destination {
+    log_group_id = yandex_logging_group.audit.id
+  }
+
+  filtering_policy {
+    management_events_filter {
+      resource_scope {
+        resource_id   = var.folder_id
+        resource_type = "resource-manager.folder"
+      }
+    }
+
+    data_events_filter {
+      service = "storage"
+
+      resource_scope {
+        resource_id   = var.folder_id
+        resource_type = "resource-manager.folder"
+      }
+    }
+  }
+
+  depends_on = [
+    yandex_resourcemanager_folder_iam_member.audit_trail_viewer,
+    yandex_resourcemanager_folder_iam_member.audit_logging_viewer,
+  ]
 }
 
 resource "yandex_mdb_postgresql_cluster_v2" "prod" {
@@ -189,8 +274,8 @@ resource "yandex_serverless_container" "api" {
   folder_id          = var.folder_id
 
   log_options {
-    folder_id = var.folder_id
-    min_level = "INFO"
+    log_group_id = yandex_logging_group.runtime.id
+    min_level    = "INFO"
   }
 
   image {
@@ -259,6 +344,25 @@ resource "yandex_api_gateway" "edge" {
     network_id = yandex_vpc_network.prod.id
   }
 
+  dynamic "custom_domains" {
+    for_each = trimspace(var.custom_domain) != "" && trimspace(var.custom_domain_certificate_id) != "" ? [1] : []
+
+    content {
+      fqdn           = trimspace(var.custom_domain)
+      certificate_id = trimspace(var.custom_domain_certificate_id)
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition = (
+        trimspace(var.custom_domain) == "" ||
+        trimspace(var.custom_domain_certificate_id) != ""
+      )
+      error_message = "custom_domain_certificate_id is required when custom_domain is configured."
+    }
+  }
+
   spec = templatefile("${path.module}/openapi.yaml.tftpl", {
     container_id              = yandex_serverless_container.api.id
     container_service_account = yandex_iam_service_account.gateway_invoker.id
@@ -289,8 +393,8 @@ resource "yandex_serverless_container" "migration_runner" {
   }
 
   log_options {
-    folder_id = var.folder_id
-    min_level = "INFO"
+    log_group_id = yandex_logging_group.runtime.id
+    min_level    = "INFO"
   }
 
   image {
