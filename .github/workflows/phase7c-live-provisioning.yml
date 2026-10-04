@@ -81,6 +81,10 @@ jobs:
           )
           if values.get("evidence_runner_enabled") is not True:
               raise SystemExit("Phase 7C live provisioning requires evidence_runner_enabled=true")
+          if values.get("database_secret_version", 0) < 1:
+              raise SystemExit("Phase 7C requires database_secret_version >= 1")
+          if values.get("availability_zones") != ["ru-central1-d", "ru-central1-b", "ru-central1-a"]:
+              raise SystemExit("Phase 7C requires all three ru-central1 availability zones")
           for key in (
               "cloud_id",
               "folder_id",
@@ -91,6 +95,8 @@ jobs:
               "database_name",
               "database_user",
               "database_secret_input",
+              "database_secret_version",
+              "availability_zones",
           ):
               if not values.get(key):
                   raise SystemExit(f"Phase 7C requires protected Terraform input: {key}")
