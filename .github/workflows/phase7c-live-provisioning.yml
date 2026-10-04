@@ -1,8 +1,39 @@
 name: Phase 7C Live Provisioning and Evidence
 
 on:
+  workflow_call:
+    inputs:
+      source_ref:
+        description: "Exact source branch/ref to deploy and verify."
+        required: true
+        type: string
+      apply:
+        description: "After reviewing the Terraform plan produced in this workflow run, allow the protected apply job to execute."
+        required: true
+        default: false
+        type: boolean
+      rollback_drill:
+        description: "After apply and smoke, prove rollback to the prior immutable revision and restore the new revision."
+        required: true
+        default: false
+        type: boolean
+      pitr_drill:
+        description: "Restore to a separate temporary PostgreSQL cluster and verify recovery through a private task."
+        required: true
+        default: false
+        type: boolean
+      pitr_recovery_time:
+        description: "RFC3339 UTC recovery target, after an available automated backup and not in the future."
+        required: false
+        default: ""
+        type: string
   workflow_dispatch:
     inputs:
+      source_ref:
+        description: "Exact source branch/ref to deploy and verify. Defaults to the selected workflow branch."
+        required: false
+        default: ""
+        type: string
       apply:
         description: "After reviewing the Terraform plan produced in this workflow run, allow the protected apply job to execute."
         required: true
@@ -40,10 +71,30 @@ jobs:
       planned_change_fingerprint: ${{ steps.plan_fingerprint.outputs.fingerprint }}
       image_url: ${{ steps.bootstrap_image.outputs.image_url }}
       image_digest: ${{ steps.bootstrap_image.outputs.image_digest }}
+      source_sha: ${{ steps.source_identity.outputs.source_sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Resolve exact source revision
+        id: source_identity
+        env:
+          SOURCE_REF: ${{ inputs.source_ref || github.ref }}
+        run: |
+          set -Eeuo pipefail
+          if [[ "$SOURCE_REF" == refs/* ]]; then
+            git fetch --no-tags --prune --depth=1 origin "$SOURCE_REF"
+            git checkout --detach "$SOURCE_REF"
+          else
+            git fetch --no-tags --prune --depth=1 origin "$SOURCE_REF"
+            git checkout --detach "origin/$SOURCE_REF"
+          fi
+          source_sha="$(git rev-parse HEAD)"
+          test "$source_sha" =~ ^[0-9a-f]{40}$
+          echo "source_ref=$SOURCE_REF"
+          echo "source_sha=$source_sha"
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+
       - name: Install Yandex Cloud CLI
         run: |
           curl -fsSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
@@ -140,7 +191,7 @@ jobs:
 
           yc container registry configure-docker --profile shema-phase7c
 
-          image_tag="$GITHUB_SHA"
+          image_tag="${{ steps.source_identity.outputs.source_sha }}"
           image_url="cr.yandex/$registry_id/$APP_NAME:$image_tag"
           image_digest="$(yc container image list             --repository-name="$registry_id/$APP_NAME"             --format=json 2>/dev/null |
             jq -r --arg tag "$image_tag" '(.images // .)[]? | select((.tags // []) | index($tag)) | .digest' |
@@ -214,6 +265,25 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify exact source revision
+        env:
+          SOURCE_REF: ${{ inputs.source_ref || github.ref }}
+          EXPECTED_SOURCE_SHA: ${{ needs.plan.outputs.source_sha }}
+        run: |
+          set -Eeuo pipefail
+          if [[ "$SOURCE_REF" == refs/* ]]; then
+            git fetch --no-tags --prune --depth=1 origin "$SOURCE_REF"
+            git checkout --detach "$SOURCE_REF"
+          else
+            git fetch --no-tags --prune --depth=1 origin "$SOURCE_REF"
+            git checkout --detach "origin/$SOURCE_REF"
+          fi
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "$actual_source_sha" = "$EXPECTED_SOURCE_SHA" || {
+            echo "Source ref changed between plan and apply; refusing deployment."
+            exit 1
+          }
+
       - name: Install Yandex Cloud CLI
         run: |
           curl -fsSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
@@ -267,7 +337,7 @@ jobs:
           PY
           )"
           registry_id="$(terraform -chdir=deploy/terraform output -raw registry_id)"
-          image_tag="$GITHUB_SHA"
+          image_tag="${{ needs.plan.outputs.source_sha }}"
           image_url="cr.yandex/$registry_id/$APP_NAME:$image_tag"
           image_digest="$(yc container image list             --repository-name="$registry_id/$APP_NAME"             --format=json |
             jq -r --arg tag "$image_tag" '(.images // .)[]? | select((.tags // []) | index($tag)) | .digest' |
