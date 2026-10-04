@@ -79,6 +79,12 @@ variable "custom_domain" {
   default     = ""
 }
 
+variable "custom_domain_certificate_id" {
+  type        = string
+  description = "Optional Certificate Manager certificate ID for the custom API Gateway domain."
+  default     = ""
+}
+
 variable "evidence_runner_enabled" {
   type        = bool
   description = "Enable the private same-VPC task runner used only for live migration/database evidence."
