@@ -111,6 +111,9 @@ jobs:
       - name: Verify persistent Terraform state backend
         env:
           YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
         run: bash scripts/yandex_cloud_terraform_state_preflight.sh
 
       - name: Set up Terraform
@@ -300,6 +303,9 @@ jobs:
       - name: Verify persistent Terraform state backend
         env:
           YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
         run: bash scripts/yandex_cloud_terraform_state_preflight.sh
 
       - name: Set up Terraform
