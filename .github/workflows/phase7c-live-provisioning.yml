@@ -168,6 +168,9 @@ jobs:
         id: bootstrap_image
         env:
           YC_FOLDER_ID: ${{ secrets.PHASE7C_FOLDER_ID }}
+          PHASE7C_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
         run: |
           set -Eeuo pipefail
           eval "$(python - <<'PY'
@@ -268,6 +271,10 @@ jobs:
           echo "image_digest=$image_digest" >> "$GITHUB_OUTPUT"
 
       - name: Terraform plan
+        env:
+          PHASE7C_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
         run: |
           set -Eeuo pipefail
           terraform -chdir=deploy/terraform plan \
@@ -370,6 +377,8 @@ jobs:
       - name: Resolve reviewed immutable image
         env:
           EXPECTED_IMAGE_DIGEST: ${{ needs.plan.outputs.image_digest }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
         run: |
           set -Eeuo pipefail
           eval "$(python - <<'PY'
@@ -481,6 +490,8 @@ jobs:
           YC_CLUSTER_NAME: ${{ secrets.PHASE7C_CLUSTER_NAME }}
           YC_MIGRATION_RUNNER_NAME: ${{ secrets.PHASE7C_MIGRATION_RUNNER_NAME }}
           PITR_RECOVERY_TIME: ${{ inputs.pitr_recovery_time }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
         run: |
           set -Eeuo pipefail
           test -n "$PITR_RECOVERY_TIME"
