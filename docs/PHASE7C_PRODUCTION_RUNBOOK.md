@@ -66,6 +66,12 @@ For this product shape the production baseline is:
 
 The deployment identity and Terraform-state identity are intentionally separate as a least-privilege boundary.
 
+### Deployment identity minimum for the registry bootstrap
+
+The service account behind `YC_SERVICE_ACCOUNT_KEY_JSON` must have `container-registry.editor` on the target folder. The protected workflow creates the production Container Registry when it is absent and manages its scan policy and image lifecycle. A pull-only registry role is insufficient for this deployment identity.
+
+The runtime and migration identities remain separately scoped to image pulling; they must not inherit the deployment bootstrap role merely for runtime operation.
+
 ## First-run bootstrap boundary
 
 The first protected run has one deliberate bootstrap side effect before the reviewed production plan: it creates the expected `shema-images` Container Registry when absent, imports that registry into the production Terraform state, and builds/pushes the current Git commit as an immutable digest-pinned image. The workflow never deploys a mutable tag as the runtime authority. With `apply=false`, no production runtime resources are applied; registry/image bootstrap is the only intentional preparation side effect.
