@@ -76,10 +76,11 @@
     "deployment_identity_must_not_access_state_bucket": true,
     "custom_runtime_log_group_required": true,
     "audit_trail_required": true,
-    "registry_vulnerability_scanning_required": true
+    "registry_vulnerability_scanning_required": true,
+    "observability_platform_lifecycle_declared": true
   },
   "known_environment_constraint": "GitHub-hosted runners cannot directly reach a private Managed PostgreSQL host. The approved live path is a private Serverless Containers task-mode runner attached to the same VPC, invoked with IAM authorization by the protected CI identity. The production API must not gain a debug/database-probe endpoint merely to satisfy this gate.",
-  "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD and the final current-head seven-job gate is green.",
+  "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD, the final current-head seven-job gate is green, and no unsupported observability integration is claimed.",
   "execution": {
     "migration_runner": "private_serverless_container_commands_mode",
     "migration_runner_runtime": "task",
@@ -144,7 +145,10 @@
       "scan_mode": [
         "on_push",
         "scheduled"
-      ]
+      ],
+      "platform_current": "yandex_cloud_logging",
+      "platform_migration_target": "monium",
+      "platform_lifecycle": "current_terraform_supported_path_with_required_pre_retirement_migration"
     }
   }
 }
