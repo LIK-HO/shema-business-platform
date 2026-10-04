@@ -11,6 +11,9 @@ def test_critical_visual_contract_regions() -> None:
     js=(root/"app.js").read_text()
     for token in ['id="nav"','id="surface"','id="title"','id="view"','id="auth"','id="toast"']:
         assert token in html
+    assert '/web/scheme.png' in html
+    assert 'alt="СХЕМА"' in html
+    assert (root/"scheme.png").is_file()
     for token in [".shell",".side","header",".card",".hero",".table","@media"]:
         assert token in css
     for token in [
