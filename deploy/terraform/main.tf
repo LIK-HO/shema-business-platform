@@ -99,9 +99,9 @@ resource "yandex_resourcemanager_folder_iam_member" "audit_trail_viewer" {
   member    = "serviceAccount:${yandex_iam_service_account.audit_trail.id}"
 }
 
-resource "yandex_resourcemanager_folder_iam_member" "audit_logging_viewer" {
+resource "yandex_resourcemanager_folder_iam_member" "audit_logging_writer" {
   folder_id = var.folder_id
-  role      = "logging.viewer"
+  role      = "logging.writer"
   member    = "serviceAccount:${yandex_iam_service_account.audit_trail.id}"
 }
 
@@ -200,7 +200,7 @@ resource "yandex_audit_trails_trail" "production" {
 
   depends_on = [
     yandex_resourcemanager_folder_iam_member.audit_trail_viewer,
-    yandex_resourcemanager_folder_iam_member.audit_logging_viewer,
+    yandex_resourcemanager_folder_iam_member.audit_logging_writer,
   ]
 }
 
