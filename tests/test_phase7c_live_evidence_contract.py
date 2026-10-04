@@ -281,9 +281,10 @@ def test_phase7c_live_evidence_workflow_passes_dedicated_state_credentials() -> 
     )[0]
     assert "PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID" in block
     assert "PHASE7C_TERRAFORM_STATE_SECRET_KEY" in block
-    assert "YC_RUNTIME_LOG_GROUP_ID" in block
-    assert "YC_AUDIT_TRAIL_ID" in block
-    assert "YC_REGISTRY_SCAN_POLICY_ID" in block
+    assert 'terraform -chdir=deploy/terraform output -raw runtime_log_group_id' in block
+    assert 'terraform -chdir=deploy/terraform output -raw audit_log_group_id' in block
+    assert 'terraform -chdir=deploy/terraform output -raw audit_trail_id' in block
+    assert 'terraform -chdir=deploy/terraform output -raw registry_scan_policy_id' in block
 
 def test_phase7c_live_evidence_requires_budget_thresholds_and_runtime_logs() -> None:
     script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(
