@@ -1,4 +1,13 @@
 # Phase 7 — Yandex Cloud Production Foundation — IN_PROGRESS (2026-10-04)
+## Phase 7C State Preflight Diagnostic Boundary — 2026-10-05
+
+- Latest implementation HEAD before this ledger commit: `971657613d02ef6d883f8043fc9c7df5fc99b81b`.
+- Diagnostic preflight separates endpoint reachability, deployment-identity bucket visibility, S3 authentication/error classification, versioning and state-key namespace access without printing credentials or raw provider errors.
+- Protected rerun evidence: endpoint reachability **PASS** (HTTP 200); deployment-identity bucket visibility **PASS**; dedicated Terraform-state S3 `HeadBucket` **FAIL / ACCESS_DENIED**.
+- The live blocker is therefore effective authorization of the dedicated state S3 credential against the existing state bucket. Endpoint reachability and deployment-identity bucket visibility are not blockers.
+- Terraform/IaC validation was green on the diagnostic lineage; the latest seven-job CI is still pending/corrective on the final test cleanup.
+- Safe next action: repair the dedicated state service-account/S3 access-key authorization in the protected `production-yandex` environment, then rerun Phase 7C. Do not fall back to the deployment identity for Terraform state.
+
 
 - Closed sub-boundary: Phase 7B — Production runtime/artifact composition — CLOSED / VERIFIED.
 - Active boundary: Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS.
