@@ -50,8 +50,23 @@ jq -e '.config.backup_retain_period_days >= 14' <<<"$cluster_json" >/dev/null
 jq -e --arg bucket "$YC_BUCKET_NAME" '.name == $bucket or .id == $bucket' <<<"$bucket_json" >/dev/null
 jq -e '.status == "ACTIVE"' <<<"$budget_json" >/dev/null
 jq -e '((.threshold_rules // .thresholdRules // []) | length) >= 1' <<<"$budget_json" >/dev/null
-jq -e '(.retention_period_hours // .retentionPeriodHours // 0) >= 720' <<<"$runtime_log_group_json" >/dev/null
-jq -e '(.retention_period_hours // .retentionPeriodHours // 0) >= 720' <<<"$audit_log_group_json" >/dev/null
+retention_to_hours() {
+  local value="$1"
+  case "$value" in
+    *h) awk "BEGIN {print ${value%h}+0}" ;;
+    *m) awk "BEGIN {print (${value%m}+0)/60}" ;;
+    *s) awk "BEGIN {print (${value%s}+0)/3600}" ;;
+    *d) awk "BEGIN {print (${value%d}+0)*24}" ;;
+    *) echo "0" ;;
+  esac
+}
+
+runtime_retention="$(jq -r '.retention_period // .retentionPeriod // empty' <<<"$runtime_log_group_json")"
+audit_retention="$(jq -r '.retention_period // .retentionPeriod // empty' <<<"$audit_log_group_json")"
+runtime_retention_hours="$(retention_to_hours "$runtime_retention")"
+audit_retention_hours="$(retention_to_hours "$audit_retention")"
+awk "BEGIN {exit !($runtime_retention_hours >= 720)}"
+awk "BEGIN {exit !($audit_retention_hours >= 720)}"
 jq -e '.status == "ACTIVE" or .status == "RUNNING"' <<<"$audit_trail_json" >/dev/null
 jq -e '.disabled == false' <<<"$scan_policy_json" >/dev/null
 jq -e '(.rules.push_rule.disabled // true) == false' <<<"$scan_policy_json" >/dev/null
