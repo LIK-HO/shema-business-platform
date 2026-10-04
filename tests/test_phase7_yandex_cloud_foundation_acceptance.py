@@ -180,7 +180,9 @@ def test_phase7_postgres_network_is_private_and_scoped() -> None:
     assert 'resource "yandex_vpc_security_group" "postgres"' in main
     assert 'port           = 6432' in main
     assert 'v4_cidr_blocks = values(local.subnet_cidrs)' in main
-    assert 'assign_public_ip' not in main.split('resource "yandex_mdb_postgresql_cluster_v2" "prod"', 1)[1].split('resource "yandex_mdb_postgresql_user"', 1)[0]
+    cluster_block = main.split('resource "yandex_mdb_postgresql_cluster_v2" "prod"', 1)[1]
+    cluster_block = cluster_block.split('resource "yandex_mdb_postgresql_user"', 1)[0]
+    assert 'assign_public_ip' not in cluster_block
 
 
 def test_phase7_database_password_rotation_is_explicit() -> None:
