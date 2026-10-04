@@ -6,6 +6,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     APP_ENV=production \
     PYTHONPATH=/app/src
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && curl --fail --silent --show-error --location \
+        https://storage.yandexcloud.net/cloud-certs/CA.pem \
+        --output /etc/ssl/certs/yandex-cloud-ca.pem \
+    && chmod 0644 /etc/ssl/certs/yandex-cloud-ca.pem \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN addgroup --system shema && adduser --system --ingroup shema --home /app shema
 WORKDIR /app
 
