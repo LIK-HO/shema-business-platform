@@ -4,6 +4,14 @@ locals {
     environment = "production"
     authority   = "shema-canonical"
   }
+
+  database_url = format(
+    "postgresql://%s:%s@%s:6432/%s?sslmode=disable&target_session_attrs=read-write",
+    var.database_user,
+    urlencode(var.database_secret_input),
+    yandex_mdb_postgresql_cluster_v2.prod.hosts["primary"].fqdn,
+    var.database_name,
+  )
 }
 
 resource "yandex_vpc_network" "prod" {
@@ -74,7 +82,7 @@ resource "yandex_lockbox_secret_version_hashed" "runtime" {
   key_3        = "OIDC_JWKS_URL"
   text_value_3 = var.oidc_jwks_url
   key_4        = "DATABASE_URL"
-  text_value_4 = var.database_url
+  text_value_4 = local.database_url
 }
 
 resource "yandex_lockbox_secret_iam_member" "runtime" {
@@ -156,6 +164,17 @@ resource "yandex_serverless_container" "api" {
     digest = var.image_digest
     environment = {
       APP_ENV = "production"
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = trimspace(var.image_url) != ""
+      error_message = "image_url must be populated by the protected deployment bootstrap."
+    }
+    precondition {
+      condition     = can(regex("^sha256:[0-9a-f]{64}$", var.image_digest))
+      error_message = "image_digest must be an exact sha256 digest populated by the protected deployment bootstrap."
     }
   }
 
