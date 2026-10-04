@@ -93,7 +93,7 @@ echo "STATE_S3_ENDPOINT_HTTP_STATUS=$endpoint_http_status"
 # separate. This management-plane probe is diagnostic only.
 if command -v yc >/dev/null 2>&1; then
   set +e
-  yc storage bucket get "$YC_TERRAFORM_STATE_BUCKET" --full >/dev/null 2>"$RUNNER_TEMP/phase7c-state-management-error" 2>/dev/null
+  yc storage bucket get "$YC_TERRAFORM_STATE_BUCKET" --full >/dev/null 2>&1
   management_rc=$?
   set -e
   if (( management_rc == 0 )); then
