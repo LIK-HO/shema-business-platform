@@ -88,6 +88,12 @@ The workflow is deliberately fail-closed:
 - the apply job recomputes the plan and refuses execution if the fingerprint changed;
 - the apply uses the verified plan file rather than generating an unrelated second apply plan.
 
+## 8A. Observability platform lifecycle
+
+Yandex currently documents Cloud Logging as a transition path and recommends migration to the Monium Observability Platform before the Cloud Logging retirement window. The current Terraform provider surface used by this repository does not expose a first-class Monium resource model.
+
+Accordingly, the deployed 7C Terraform baseline uses explicit Cloud Logging groups as the currently supported IaC path, with the migration target recorded as Monium. No unsupported provider resource or undocumented API call is introduced. Any Monium migration must update Terraform/ops configuration, live-evidence checks and this runbook as one controlled change and must pass the same complete release gate and live observability evidence before closure.
+
 ## Closure evidence
 
 Phase 7C can move to CLOSED / VERIFIED only after live evidence proves:
