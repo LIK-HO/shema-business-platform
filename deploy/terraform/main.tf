@@ -5,11 +5,17 @@ locals {
     authority   = "shema-canonical"
   }
 
+  availability_zones = var.availability_zones
+  subnet_cidrs = {
+    for index, zone in local.availability_zones :
+    zone => cidrsubnet("10.20.0.0/21", 3, index)
+  }
+
   database_url = format(
-    "postgresql://%s:%s@%s:6432/%s?sslmode=disable&target_session_attrs=read-write",
+    "postgresql://%s:%s@c-%s.rw.mdb.yandexcloud.net:6432/%s?sslmode=verify-full&sslrootcert=/etc/shema/yandex-cloud-ca.pem&target_session_attrs=read-write",
     var.database_user,
     urlencode(var.database_secret_input),
-    yandex_mdb_postgresql_cluster_v2.prod.hosts["primary"].fqdn,
+    yandex_mdb_postgresql_cluster_v2.prod.id,
     var.database_name,
   )
 }
@@ -20,10 +26,33 @@ resource "yandex_vpc_network" "prod" {
 }
 
 resource "yandex_vpc_subnet" "runtime" {
-  name           = "${var.app_name}-runtime"
-  zone           = var.zone
+  for_each       = local.subnet_cidrs
+  name           = "${var.app_name}-runtime-${each.key}"
+  zone           = each.key
   network_id     = yandex_vpc_network.prod.id
-  v4_cidr_blocks = ["10.20.0.0/24"]
+  v4_cidr_blocks = [each.value]
+}
+
+resource "yandex_vpc_security_group" "postgres" {
+  name        = "${var.app_name}-postgres"
+  description = "Private PostgreSQL access from the canonical runtime network only."
+  network_id  = yandex_vpc_network.prod.id
+  labels      = local.common_labels
+
+  ingress {
+    protocol       = "TCP"
+    description    = "PostgreSQL/ODYSSEY from private Shema subnets only."
+    v4_cidr_blocks = values(local.subnet_cidrs)
+    port           = 6432
+  }
+
+  egress {
+    protocol       = "ANY"
+    description    = "Required managed database egress."
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    from_port      = 0
+    to_port        = 65535
+  }
 }
 
 resource "yandex_iam_service_account" "container_runtime" {
@@ -95,6 +124,7 @@ resource "yandex_mdb_postgresql_cluster_v2" "prod" {
   name                = "${var.app_name}-prod"
   environment         = "PRODUCTION"
   network_id          = yandex_vpc_network.prod.id
+  security_group_ids  = [yandex_vpc_security_group.postgres.id]
   deletion_protection = true
 
   config {
@@ -115,8 +145,12 @@ resource "yandex_mdb_postgresql_cluster_v2" "prod" {
 
   hosts = {
     primary = {
-      zone      = var.zone
-      subnet_id = yandex_vpc_subnet.runtime.id
+      zone      = local.availability_zones[0]
+      subnet_id = yandex_vpc_subnet.runtime[local.availability_zones[0]].id
+    }
+    replica = {
+      zone      = local.availability_zones[1]
+      subnet_id = yandex_vpc_subnet.runtime[local.availability_zones[1]].id
     }
   }
 }
@@ -125,7 +159,7 @@ resource "yandex_mdb_postgresql_user" "runtime" {
   cluster_id          = yandex_mdb_postgresql_cluster_v2.prod.id
   name                = var.database_user
   password_wo         = var.database_secret_input
-  password_wo_version = 1
+  password_wo_version = var.database_secret_version
 }
 
 resource "yandex_mdb_postgresql_database" "runtime" {
