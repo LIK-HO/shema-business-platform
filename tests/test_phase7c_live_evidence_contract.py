@@ -241,6 +241,50 @@ def test_phase7c_live_evidence_uses_approved_edge_and_immutable_artifact() -> No
     assert 'values.get("image_digest")' in workflow
 
 
+def test_phase7c_live_evidence_requires_mature_observability_controls() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(
+        encoding="utf-8"
+    )
+    for marker in (
+        "YC_RUNTIME_LOG_GROUP_ID",
+        "YC_AUDIT_LOG_GROUP_ID",
+        "YC_AUDIT_TRAIL_ID",
+        "YC_REGISTRY_SCAN_POLICY_ID",
+        "RUNTIME_LOG_GROUP=PASS",
+        "AUDIT_LOG_GROUP=PASS",
+        "AUDIT_TRAIL=PASS",
+        "REGISTRY_SCAN_POLICY=PASS",
+        "REGISTRY_VULNERABILITY_SCAN_POLICY=PASS",
+    ):
+        assert marker in script
+
+    contract = read_contract()
+    required = set(contract["required_live_evidence"])
+    assert {
+        "runtime_log_group_verified",
+        "audit_log_group_verified",
+        "audit_trail_verified",
+        "registry_vulnerability_scan_policy_verified",
+    }.issubset(required)
+    gates = contract["safety_gates"]
+    assert gates["custom_runtime_log_group_required"] is True
+    assert gates["audit_trail_required"] is True
+    assert gates["registry_vulnerability_scanning_required"] is True
+    assert contract["execution"]["observability"]["retention_hours_minimum"] >= 720
+
+def test_phase7c_live_evidence_workflow_passes_dedicated_state_credentials() -> None:
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    block = workflow.split("Collect live resource evidence", 1)[1].split(
+        "bash scripts/yandex_cloud_live_evidence.sh", 1
+    )[0]
+    assert "PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID" in block
+    assert "PHASE7C_TERRAFORM_STATE_SECRET_KEY" in block
+    assert "YC_RUNTIME_LOG_GROUP_ID" in block
+    assert "YC_AUDIT_TRAIL_ID" in block
+    assert "YC_REGISTRY_SCAN_POLICY_ID" in block
+
 def test_phase7c_live_evidence_requires_budget_thresholds_and_runtime_logs() -> None:
     script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(
         encoding="utf-8"
