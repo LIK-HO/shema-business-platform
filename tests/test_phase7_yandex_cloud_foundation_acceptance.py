@@ -42,8 +42,17 @@ def test_phase7_terraform_is_pinned_and_digest_based() -> None:
     assert "digest = var.image_digest" in main
     assert "yandex_serverless_container" in main
     assert "log_options" in main
+    assert 'for_each       = local.subnet_cidrs' in main
+    assert 'security_group_ids  = [yandex_vpc_security_group.postgres.id]' in main
+    assert 'availability_zones' in main
     assert "yandex_api_gateway" in main
     assert "yandex_mdb_postgresql_cluster_v2" in main
+    assert 'primary = {' in main
+    assert 'replica = {' in main
+    assert 'port=6432' in main or ':6432/' in main
+    assert 'sslmode=verify-full' in main
+    assert 'sslrootcert=/etc/shema/yandex-cloud-ca.pem' in main
+    assert 'target_session_attrs=read-write' in main
 
 
 def test_phase7_terraform_separates_runtime_and_artifact_roles() -> None:
@@ -164,3 +173,31 @@ def test_phase7_contract_names_gateway_identity_role() -> None:
     assert contract["iam"]["role_model"]["gateway_invoker"] == (
         "API Gateway only; serverless-containers.containerInvoker on the private API container"
     )
+
+
+def test_phase7_postgres_network_is_private_and_scoped() -> None:
+    main = read("deploy/terraform/main.tf")
+    assert 'resource "yandex_vpc_security_group" "postgres"' in main
+    assert 'port           = 6432' in main
+    assert 'v4_cidr_blocks = values(local.subnet_cidrs)' in main
+    assert 'assign_public_ip' not in main.split('resource "yandex_mdb_postgresql_cluster_v2" "prod"', 1)[1].split('resource "yandex_mdb_postgresql_user"', 1)[0]
+
+
+def test_phase7_database_password_rotation_is_explicit() -> None:
+    main = read("deploy/terraform/main.tf")
+    variables = read("deploy/terraform/variables.tf")
+    assert "password_wo_version = var.database_secret_version" in main
+    assert 'variable "database_secret_version"' in variables
+
+
+def test_phase7_runtime_image_contains_yandex_cloud_ca() -> None:
+    dockerfile = read("Dockerfile")
+    assert "cloud-certs/CA.pem" in dockerfile
+    assert "/etc/ssl/certs/yandex-cloud-ca.pem" in dockerfile
+    assert "curl --fail --silent --show-error --location" in dockerfile
+
+
+def test_phase7_network_has_all_yandex_availability_zones() -> None:
+    variables = read("deploy/terraform/variables.tf")
+    assert '["ru-central1-d", "ru-central1-b", "ru-central1-a"]' in variables
+    assert "length(distinct(var.availability_zones)) == 3" in variables
