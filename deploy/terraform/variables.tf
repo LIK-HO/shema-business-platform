@@ -23,12 +23,14 @@ variable "app_name" {
 
 variable "image_url" {
   type        = string
-  description = "Container Registry image URL."
+  description = "Container Registry image URL. Filled by the protected deployment bootstrap."
+  default     = ""
 }
 
 variable "image_digest" {
   type        = string
-  description = "Exact sha256 digest of the deployed image."
+  description = "Exact sha256 digest of the deployed image. Filled by the protected deployment bootstrap."
+  default     = ""
 }
 
 variable "oidc_issuer" {
@@ -44,12 +46,6 @@ variable "oidc_audience" {
 variable "oidc_jwks_url" {
   type      = string
   sensitive = true
-}
-
-variable "database_url" {
-  type        = string
-  description = "Managed PostgreSQL DSN delivered through Lockbox."
-  sensitive   = true
 }
 
 variable "bucket_name" {
