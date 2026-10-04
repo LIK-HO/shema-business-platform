@@ -33,3 +33,8 @@ output "migration_runner_revision_id" {
 output "container_puller_service_account_id" {
   value = yandex_iam_service_account.container_puller.id
 }
+
+output "database_url" {
+  value     = local.database_url
+  sensitive = true
+}
