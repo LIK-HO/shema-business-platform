@@ -16,6 +16,26 @@ variable "zone" {
   default     = "ru-central1-d"
 }
 
+variable "availability_zones" {
+  type        = list(string)
+  description = "All availability zones required by a user network; first two host the production PostgreSQL HA pair."
+  default     = ["ru-central1-d", "ru-central1-b", "ru-central1-a"]
+
+  validation {
+    condition = (
+      length(var.availability_zones) == 3 &&
+      length(distinct(var.availability_zones)) == 3 &&
+      alltrue([
+        for zone in var.availability_zones : contains(
+          ["ru-central1-a", "ru-central1-b", "ru-central1-d"],
+          zone
+        )
+      ])
+    )
+    error_message = "availability_zones must contain ru-central1-a, ru-central1-b and ru-central1-d exactly once."
+  }
+}
+
 variable "app_name" {
   type    = string
   default = "shema"
@@ -87,4 +107,15 @@ variable "database_secret_input" {
   type        = string
   description = "Write-only value for the canonical PostgreSQL runtime credential; supplied only through the protected operator environment."
   sensitive   = true
+}
+
+variable "database_secret_version" {
+  type        = number
+  description = "Monotonic version for the write-only PostgreSQL credential. Increment when the protected credential changes."
+  default     = 1
+
+  validation {
+    condition     = var.database_secret_version >= 1 && floor(var.database_secret_version) == var.database_secret_version
+    error_message = "database_secret_version must be a positive integer and must be incremented for credential rotation."
+  }
 }
