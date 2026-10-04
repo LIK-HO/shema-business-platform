@@ -4,7 +4,6 @@ import subprocess
 import tempfile
 import unittest
 
-
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "scripts" / "yandex_cloud_terraform_state_preflight.sh"
 
