@@ -42,7 +42,7 @@ resource "yandex_vpc_security_group" "postgres" {
   ingress {
     protocol       = "TCP"
     description    = "PostgreSQL/ODYSSEY from private Shema subnets only."
-    v4_cidr_blocks = values(local.subnet_cidrs)
+    v4_cidr_blocks = ["198.19.0.0/16"]
     port           = 6432
   }
 
