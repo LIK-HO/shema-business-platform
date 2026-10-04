@@ -38,7 +38,12 @@
     "api_gateway_edge_ready",
     "immutable_image_digest_verified",
     "budget_thresholds_verified",
-    "runtime_and_task_observability_verified"
+    "runtime_and_task_observability_verified",
+    "all_availability_zone_subnets_verified",
+    "postgresql_ha_hosts_verified",
+    "private_postgresql_security_group_verified",
+    "postgresql_tls_verified",
+    "credential_rotation_version_verified"
   ],
   "safety_gates": {
     "apply_requires_manual_dispatch": true,
@@ -58,7 +63,9 @@
     "pitr_cleanup_must_run_on_success_and_failure": true,
     "terraform_state_must_be_remote": true,
     "terraform_state_bucket_versioning_required": true,
-    "terraform_state_lockfile_must_be_enabled": true
+    "terraform_state_lockfile_must_be_enabled": true,
+    "private_postgresql_only": true,
+    "postgresql_tls_verification_required": true
   },
   "known_environment_constraint": "GitHub-hosted runners cannot directly reach a private Managed PostgreSQL host. The approved live path is a private Serverless Containers task-mode runner attached to the same VPC, invoked with IAM authorization by the protected CI identity. The production API must not gain a debug/database-probe endpoint merely to satisfy this gate.",
   "closure_rule": "Phase 7C cannot close until every required live evidence item is attached to the exact current implementation HEAD and the final current-head seven-job gate is green.",
