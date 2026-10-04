@@ -84,8 +84,9 @@ def test_phase7_parameterized_inputs_do_not_commit_real_credentials() -> None:
     assert "DATABASE_URL" in main
 
 
-def test_phase7_runtime_does_not_bake_secrets_into_image() -> None:
+def test_phase7_runtime_image_contains_migration_assets_without_secrets() -> None:
     dockerfile = read("Dockerfile")
+    assert "COPY db ./db" in dockerfile
     assert "Lockbox" not in dockerfile
     assert "DATABASE_URL=" not in dockerfile
     assert "OIDC_" not in dockerfile
