@@ -1,6 +1,7 @@
 cloud_id       = "REPLACE_ME"
 folder_id      = "REPLACE_ME"
 zone           = "ru-central1-d"
+availability_zones = ["ru-central1-d", "ru-central1-b", "ru-central1-a"]
 app_name       = "shema"
 # The protected Phase 7C workflow fills these from the immutable build.
 image_url      = ""
@@ -16,3 +17,4 @@ migration_runner_name = "shema-migration-runner"
 database_name = "shema"
 database_user = "shema_runtime"
 database_secret_input = "REPLACE_IN_PROTECTED_ENV"
+database_secret_version = 1
