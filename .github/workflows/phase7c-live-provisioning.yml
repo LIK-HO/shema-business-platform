@@ -72,10 +72,6 @@ jobs:
       image_url: ${{ steps.bootstrap_image.outputs.image_url }}
       image_digest: ${{ steps.bootstrap_image.outputs.image_digest }}
       source_sha: ${{ steps.source_identity.outputs.source_sha }}
-      runtime_log_group_id: ${{ steps.infra_outputs.outputs.runtime_log_group_id }}
-      audit_log_group_id: ${{ steps.infra_outputs.outputs.audit_log_group_id }}
-      audit_trail_id: ${{ steps.infra_outputs.outputs.audit_trail_id }}
-      registry_scan_policy_id: ${{ steps.infra_outputs.outputs.registry_scan_policy_id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -251,15 +247,6 @@ jobs:
           echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
           echo "Terraform plan fingerprint: $fingerprint"
 
-      - name: Capture production observability outputs
-        id: infra_outputs
-        run: |
-          set -Eeuo pipefail
-          echo "runtime_log_group_id=$(terraform -chdir=deploy/terraform output -raw runtime_log_group_id)" >> "$GITHUB_OUTPUT"
-          echo "audit_log_group_id=$(terraform -chdir=deploy/terraform output -raw audit_log_group_id)" >> "$GITHUB_OUTPUT"
-          echo "audit_trail_id=$(terraform -chdir=deploy/terraform output -raw audit_trail_id)" >> "$GITHUB_OUTPUT"
-          echo "registry_scan_policy_id=$(terraform -chdir=deploy/terraform output -raw registry_scan_policy_id)" >> "$GITHUB_OUTPUT"
-
       - name: Capture previous active revision
         id: capture_previous_revision
         env:
@@ -417,13 +404,13 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
           AWS_DEFAULT_REGION: ru-central1
-          YC_RUNTIME_LOG_GROUP_ID: ${{ needs.plan.outputs.runtime_log_group_id }}
-          YC_AUDIT_LOG_GROUP_ID: ${{ needs.plan.outputs.audit_log_group_id }}
-          YC_AUDIT_TRAIL_ID: ${{ needs.plan.outputs.audit_trail_id }}
-          YC_REGISTRY_SCAN_POLICY_ID: ${{ needs.plan.outputs.registry_scan_policy_id }}
         run: |
           set -Eeuo pipefail
           export YC_API_GATEWAY_ID="$(terraform -chdir=deploy/terraform output -raw api_gateway_id)"
+          export YC_RUNTIME_LOG_GROUP_ID="$(terraform -chdir=deploy/terraform output -raw runtime_log_group_id)"
+          export YC_AUDIT_LOG_GROUP_ID="$(terraform -chdir=deploy/terraform output -raw audit_log_group_id)"
+          export YC_AUDIT_TRAIL_ID="$(terraform -chdir=deploy/terraform output -raw audit_trail_id)"
+          export YC_REGISTRY_SCAN_POLICY_ID="$(terraform -chdir=deploy/terraform output -raw registry_scan_policy_id)"
           export YC_EXPECTED_IMAGE_DIGEST="$(python - <<'PY'
           import json
           from pathlib import Path
