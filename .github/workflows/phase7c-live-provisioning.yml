@@ -90,7 +90,7 @@ jobs:
             git checkout --detach "origin/$SOURCE_REF"
           fi
           source_sha="$(git rev-parse HEAD)"
-          test "$source_sha" =~ ^[0-9a-f]{40}$
+          [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]]
           echo "source_ref=$SOURCE_REF"
           echo "source_sha=$source_sha"
           echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
