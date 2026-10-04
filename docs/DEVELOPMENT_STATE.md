@@ -1,23 +1,23 @@
-# Phase 7 — Yandex Cloud Production Foundation — IN_PROGRESS (2026-09-30)
+# Phase 7 — Yandex Cloud Production Foundation — IN_PROGRESS (2026-10-04)
 
-- **Closed sub-boundary:** Phase 7B — Production runtime/artifact composition — CLOSED / VERIFIED.
-- **Active boundary:** Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS.
-- **7C implementation branch:** `phase7/phase7c-live-evidence-20260930`.
-- **Synchronized repository HEAD:** `5b6a295be71e20a8791bb2caa1009d94952c687a`.
-- **Repository-side release gate:** CI `36736299054` — **7/7 GREEN** on the prior synchronized implementation state; Terraform IaC Validation `36736299157` — **GREEN**.
-- **Current synchronization delta:** workflow/IaC hardening + operational documentation; live production evidence is still not claimed. A new current-head gate is required after these fixes.
-- **7C safety:** production apply and recovery drills are manual-dispatch and protected by the `production-yandex` environment; credentials remain externalized.
-- **Terraform state safety:** remote Yandex Object Storage backend is mandatory; state bucket versioning is mandatory; S3 lockfile configuration is enabled; apply is refused when the reviewed plan fingerprint changes.
-- **Operational runbook:** `docs/PHASE7C_PRODUCTION_RUNBOOK.md`.
-- **Recovery baseline:** Managed PostgreSQL v2 is deletion-protected with 14-day backup retention and an explicit backup window.
-- **Same-VPC evidence runner:** private Serverless Containers task-mode runner on the same immutable image digest, attached to the same VPC, with Lockbox DATABASE_URL and CI-only `containerInvoker`.
-- **PITR drill implementation:** protected restore to a separate PRESTABLE PostgreSQL cluster, same VPC, no public DB IP, temporary Lockbox secret, ephemeral same-digest task verifier, verified cleanup, and INT/TERM-safe cleanup.
-- **Live-edge hardening:** live evidence now uses the API Gateway domain, verifies the applied immutable image digest, requires a budget notification threshold, and checks both API-runtime and migration-task logs.
-- **Rollback implementation:** protected manual rollback drill captures the prior active immutable revision, verifies health after rollback, restores the new revision, and verifies health again.
-- **Global adversarial review:** fresh Phase 7C PITR review completed; no new P0/P1 architecture/security blocker found.
-- **Real cloud state:** **not claimed** until the protected Yandex provisioning/PITR/rollback workflow is actually executed with authorized credentials.
-- **Closure blockers:** live resource provisioning/evidence, live DB connectivity/migrations, secret delivery, observability, budget/alerts, live PITR, live rollback, production smoke, and final current-head gate after the final state synchronization — verified GREEN on the synchronized HEAD.
-
+- Closed sub-boundary: Phase 7B — Production runtime/artifact composition — CLOSED / VERIFIED.
+- Active boundary: Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS.
+- Mature baseline branch: phase7c/yandex-cloud-mature-baseline-20261004.
+- Current implementation HEAD: 3d0a7317c75f9dba0a7002ac31125778a5f84331.
+- Draft PR: #69 — Phase 7C: align Yandex Cloud deployment with mature production baseline.
+- Current repository release gate: CI run 37224174759 — 7/7 GREEN (quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery, release-contract).
+- Terraform IaC gate: run 37224174701 — GREEN.
+- Mature baseline: deployment and Terraform-state identities are separated; remote Object Storage state uses dedicated S3 credentials, versioning and S3 lockfile; runtime/audit log groups are explicit; Audit Trails is provisioned; Container Registry vulnerability scanning is enabled on push and scheduled rescan; optional custom-domain binding fails closed without a Certificate Manager certificate.
+- Runtime architecture: Serverless Containers + API Gateway + Managed PostgreSQL + Lockbox + Container Registry + Object Storage; Kubernetes is intentionally not introduced without a measured scaling/operational requirement.
+- Data authority: Managed PostgreSQL remains the single transactional authority; current HA baseline is two hosts in separate availability zones; no public PostgreSQL ingress.
+- Recovery boundary: private same-VPC task-mode migration/evidence runner, protected rollback drill and separate-cluster PITR are implemented in the protected workflow.
+- Repository-side maturity contract: docs/YANDEX_CLOUD_MATURE_PRODUCTION_BASELINE.md.
+- Operational runbook: docs/PHASE7C_PRODUCTION_RUNBOOK.md.
+- Live evidence contract: architecture/phase7c_live_evidence_contract.json.
+- Real cloud state: NOT CLAIMED until the protected Yandex provisioning/evidence workflow executes successfully against the exact current implementation HEAD.
+- Remaining 7C closure blockers: real state-bucket access through the dedicated state credentials; successful Terraform init/plan/apply; live infrastructure/database/Lockbox/API Gateway evidence; runtime/audit observability evidence; budget evidence; production smoke; live rollback; live PITR + cleanup; final live adversarial review on the exact deployed HEAD.
+- Verified historical blocker: the previous production run failed at state-bucket access with Yandex PermissionDenied / Access Denied while using the deployment service-account identity. The workflow is now corrected so state preflight uses the dedicated Terraform-state credentials.
+- Closure rule: Phase 7C remains IN_PROGRESS until every required live-evidence item in architecture/phase7c_live_evidence_contract.json is attached to the exact deployed HEAD and the final current-head seven-job gate remains GREEN.
 # Phase 6 Web/PWA Consolidation — CLOSED / VERIFIED (2026-09-30)
 
 - **Boundary:** Phase 6 — Production Web/PWA Consolidation.
