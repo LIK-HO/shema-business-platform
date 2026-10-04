@@ -338,7 +338,7 @@ def test_phase7c_state_preflight_requires_versioning_and_dedicated_credentials()
     assert "AWS_SECRET_ACCESS_KEY" in script
     assert "AWS_DEFAULT_REGION" in script
     assert "AWS CLI" in script
-    assert "aws s3api head-bucket" in script
+    assert "run_s3 head-bucket" in script
     assert "get-bucket-versioning" in script
     assert 'versioning" != "Enabled"' in script
     assert "TERRAFORM_STATE_CREDENTIAL_ISOLATION=PASS" in script
