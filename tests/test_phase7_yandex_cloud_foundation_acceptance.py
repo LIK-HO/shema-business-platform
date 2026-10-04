@@ -74,8 +74,14 @@ def test_phase7_object_storage_is_bounded_non_authoritative() -> None:
 def test_phase7_parameterized_inputs_do_not_commit_real_credentials() -> None:
     tfvars = read("deploy/terraform/terraform.tfvars.example")
     assert "REPLACE_ME" in tfvars
-    assert "REPLACE_IN_LOCKBOX" in tfvars
-    assert "sha256:REPLACE_ME" in tfvars
+    assert "REPLACE_IN_PROTECTED_ENV" in tfvars
+    assert 'image_url      = ""' in tfvars
+    assert 'image_digest   = ""' in tfvars
+    assert "database_url" not in tfvars
+
+    main = read("deploy/terraform/main.tf")
+    assert "local.database_url" in main
+    assert "DATABASE_URL" in main
 
 
 def test_phase7_runtime_does_not_bake_secrets_into_image() -> None:
