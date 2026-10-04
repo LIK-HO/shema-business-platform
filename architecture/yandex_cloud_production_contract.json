@@ -41,14 +41,22 @@
       "private_network_preferred": true,
       "existing_postgresql_migration_authority": true,
       "backup_recovery_required": true,
-      "dual_write_forbidden": true
+      "dual_write_forbidden": true,
+      "connection": {
+        "endpoint": "current-master special FQDN c-<cluster_id>.rw.mdb.yandexcloud.net",
+        "port": 6432,
+        "tls": "verify-full",
+        "ca_path": "/etc/shema/yandex-cloud-ca.pem",
+        "target_session_attrs": "read-write"
+      }
     },
     "secrets": {
       "service": "lockbox",
       "service_account_binding_required": true,
       "secrets_must_not_be_baked_into_images": true,
       "oidc_and_database_credentials_externalized": true,
-      "secret_rotation_requires_new_safe_revision": true
+      "secret_rotation_requires_new_safe_revision": true,
+      "postgresql_rotation": "password_wo_version must increment for every credential rotation"
     },
     "artifacts": {
       "service": "container_registry",
@@ -85,6 +93,18 @@
       "serverless_shell_can_start_minimal": true,
       "managed_postgresql_is_costed_production_resource": true,
       "free_allowance_must_not_drive_duplicate_storage_authority": true
+    },
+    "networking": {
+      "user_network_requires_all_availability_zones": true,
+      "availability_zones": [
+        "ru-central1-a",
+        "ru-central1-b",
+        "ru-central1-d"
+      ],
+      "runtime_subnets": "one private subnet per availability zone",
+      "database_hosts": "two hosts in different availability zones",
+      "database_ingress": "private subnet CIDRs to TCP/6432 only",
+      "database_public_access": false
     }
   },
   "iam": {
@@ -126,7 +146,11 @@
     "backup_and_recovery_verified",
     "rollback_verified",
     "full_current_head_release_gate_green",
-    "global_adversarial_review_complete"
+    "global_adversarial_review_complete",
+    "multi_az_network_verified",
+    "postgresql_ha_verified",
+    "postgresql_tls_verified",
+    "credential_rotation_contract_verified"
   ],
   "official_reference_basis": {
     "serverless_postgresql_connection": "https://yandex.cloud/en/docs/container-registry/tutorials/container-pg-connect",
