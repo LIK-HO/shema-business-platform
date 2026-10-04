@@ -11,6 +11,7 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY src ./src
+COPY db ./db
 RUN python -m pip install --upgrade pip && python -m pip install .
 
 USER shema
