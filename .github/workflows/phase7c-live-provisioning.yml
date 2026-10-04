@@ -181,12 +181,51 @@ jobs:
           PY
           )"
 
-          registry_id="$(yc container registry get "$REGISTRY_NAME" --folder-id "$YC_FOLDER_ID" --format=json 2>/dev/null | jq -r '.id // empty' || true)"
-          if [[ -z "$registry_id" ]]; then
-            yc container registry create --name "$REGISTRY_NAME" --folder-id "$YC_FOLDER_ID" >/dev/null
-            registry_id="$(yc container registry get "$REGISTRY_NAME" --folder-id "$YC_FOLDER_ID" --format=json | jq -r '.id')"
+          set +e
+          registry_lookup_output="$(yc container registry get "$REGISTRY_NAME" --folder-id "$YC_FOLDER_ID" --format=json 2>&1)"
+          registry_lookup_rc=$?
+          set -e
+
+          if (( registry_lookup_rc == 0 )); then
+            registry_id="$(printf '%s' "$registry_lookup_output" | jq -r '.id // empty')"
+            test -n "$registry_id"
+          else
+            if grep -qiE 'PermissionDenied|permission denied|PERMISSION_DENIED' <<<"$registry_lookup_output"; then
+              echo "CONTAINER_REGISTRY_LOOKUP=FAIL"
+              echo "CONTAINER_REGISTRY_ERROR_CLASS=ACCESS_DENIED"
+              echo "CONTAINER_REGISTRY_REQUIRED_ROLE=container-registry.editor"
+              echo "CONTAINER_REGISTRY_ERROR_OUTPUT=SUPPRESSED"
+              exit 1
+            fi
+
+            if ! grep -qiE 'NotFound|not found|NOT_FOUND' <<<"$registry_lookup_output"; then
+              echo "CONTAINER_REGISTRY_LOOKUP=FAIL"
+              echo "CONTAINER_REGISTRY_ERROR_CLASS=UNCLASSIFIED"
+              echo "CONTAINER_REGISTRY_ERROR_OUTPUT=SUPPRESSED"
+              exit 1
+            fi
+
+            set +e
+            registry_create_output="$(yc container registry create --name "$REGISTRY_NAME" --folder-id "$YC_FOLDER_ID" 2>&1)"
+            registry_create_rc=$?
+            set -e
+            if (( registry_create_rc != 0 )); then
+              if grep -qiE 'PermissionDenied|permission denied|PERMISSION_DENIED' <<<"$registry_create_output"; then
+                echo "CONTAINER_REGISTRY_CREATE=FAIL"
+                echo "CONTAINER_REGISTRY_ERROR_CLASS=ACCESS_DENIED"
+                echo "CONTAINER_REGISTRY_REQUIRED_ROLE=container-registry.editor"
+                echo "CONTAINER_REGISTRY_ERROR_OUTPUT=SUPPRESSED"
+                exit 1
+              fi
+              echo "CONTAINER_REGISTRY_CREATE=FAIL"
+              echo "CONTAINER_REGISTRY_ERROR_CLASS=UNCLASSIFIED"
+              echo "CONTAINER_REGISTRY_ERROR_OUTPUT=SUPPRESSED"
+              exit 1
+            fi
+
+            registry_id="$(yc container registry get "$REGISTRY_NAME" --folder-id "$YC_FOLDER_ID" --format=json | jq -r '.id // empty')"
+            test -n "$registry_id"
           fi
-          test -n "$registry_id"
 
           if ! terraform -chdir=deploy/terraform state show yandex_container_registry.app >/dev/null 2>&1; then
             terraform -chdir=deploy/terraform import -input=false               yandex_container_registry.app "$registry_id"
