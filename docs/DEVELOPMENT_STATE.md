@@ -12,10 +12,10 @@
 - Closed sub-boundary: Phase 7B — Production runtime/artifact composition — CLOSED / VERIFIED.
 - Active boundary: Phase 7C — Cloud resource provisioning + live evidence — IN_PROGRESS.
 - Mature baseline branch: phase7c/yandex-cloud-mature-baseline-20261004.
-- Current implementation HEAD: 4fb39aeb89058f58f65ad344164dac1a42cab816.
+- Current branch HEAD: `cc6d35d493a3e878a7bd60b4f67b2fe479c82e3d`.
 - Draft PR: #69 — Phase 7C: align Yandex Cloud deployment with mature production baseline.
-- Repository release gate before this final documentation-only delta: CI run 37224391371 — 7/7 GREEN on the preceding implementation HEAD.
-- Terraform IaC gate: green on the preceding implementation HEAD.
+- Last fully verified repository release gate: CI run 37224391371 — 7/7 GREEN on the preceding mature implementation HEAD.
+- Terraform IaC run 138: GREEN. Latest final-head CI/IaC validation is pending after the diagnostic-test cleanup commits.
 - Mature baseline: deployment and Terraform-state identities are separated; remote Object Storage state uses dedicated S3 credentials, versioning and S3 lockfile; runtime/audit log groups are explicit; Audit Trails is provisioned; Container Registry vulnerability scanning is enabled on push and scheduled rescan; optional custom-domain binding fails closed without a Certificate Manager certificate.
 - Audit Trail delivery identity uses logging.writer on the destination log group and audit-trails.viewer on the collection scope.
 - Runtime architecture: Serverless Containers + API Gateway + Managed PostgreSQL + Lockbox + Container Registry + Object Storage; Kubernetes is intentionally not introduced without a measured scaling/operational requirement.
