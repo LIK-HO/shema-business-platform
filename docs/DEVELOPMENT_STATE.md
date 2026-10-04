@@ -1,12 +1,13 @@
-## Phase 7C Live Bootstrap Blocker — 2026-10-05
+## Phase 7C Repository + Live-Gate Status — 2026-10-05
 
-- Current branch HEAD: `993e1857b362e80069d84789f2fd68ed0660715e`.
-- Verified live state boundary: dedicated Terraform-state S3 credentials are now accepted; Object Storage endpoint reachability is PASS; deployment-identity bucket visibility is PASS; `terraform init` completes successfully against the persistent remote state.
-- New live blocker: deployment identity used by `YC_SERVICE_ACCOUNT_KEY_JSON` receives Yandex `PermissionDenied` during Container Registry bootstrap. The failing operation is `yc container registry create` before image publication.
-- Required external permission: `container-registry.editor` on the target folder for the deployment service account. Yandex documents this role as sufficient to create registries and manage registry/images/scan settings. Runtime/migration identities remain pull-only.
-- Workflow hardening committed: registry lookup/create now fails closed on access denial instead of treating permission errors as “registry absent”.
-- Important execution detail: rerunning the old workflow attempt reuses its original reusable-workflow revision, so the new registry diagnostic appears in the branch but requires a fresh Phase 7C launcher dispatch to execute that revised workflow.
-- Phase 7C remains IN_PROGRESS. No Terraform plan/apply or production resource provisioning has been claimed.
+- Current implementation HEAD: `02c3043dac102614549611ea02336d44b1f6c02a`.
+- PR #69 remains open and mergeable; no landing mutation is authorized by this turn.
+- Repository gate on the exact current HEAD is GREEN: CI run **2352** completed successfully with supply-chain, quality 3.12/3.13, integration 3.12/3.13, backup/recovery and release-contract all PASS.
+- Terraform IaC Validation run **154** is GREEN on the exact current HEAD.
+- Protected Phase 7C rerun evidence after the external IAM correction reached Container Registry bootstrap successfully. The next failure was an internal workflow defect: later Terraform commands lost the dedicated S3 state credentials after `terraform init`. This is fixed in the current branch; the credentials are now explicitly supplied to every post-init Terraform operation that needs the remote state.
+- Additional regression coverage now proves state-preflight error classification/redaction and the workflow's separation of deployment vs. Terraform-state credentials.
+- Important execution detail: rerunning the historical launcher run reuses the reusable-workflow revision captured by that run. Therefore the historical run cannot prove the current workflow head. A fresh **Phase 7C Production Launcher** dispatch from `main`, using `source_ref=phase7c/yandex-cloud-mature-baseline-20261004`, is required for the live gate to execute the current implementation.
+- Phase 7C remains **IN_PROGRESS**. No live Terraform apply or production-resource readiness is claimed until the fresh protected launcher and live-evidence contract pass.
 
 # Phase 7 — Yandex Cloud Production Foundation — IN_PROGRESS (2026-10-04)
 ## Phase 7C State Preflight Diagnostic Boundary — 2026-10-05
@@ -36,7 +37,7 @@
 - Operational runbook: docs/PHASE7C_PRODUCTION_RUNBOOK.md.
 - Live evidence contract: architecture/phase7c_live_evidence_contract.json.
 - Real cloud state: NOT CLAIMED until the protected Yandex provisioning/evidence workflow executes successfully against the exact current implementation HEAD.
-- Remaining 7C closure blockers: real state-bucket access through the dedicated state credentials; successful Terraform init/plan/apply; live infrastructure/database/Lockbox/API Gateway evidence; runtime/audit observability evidence; budget evidence; production smoke; live rollback; live PITR + cleanup; final live adversarial review; and the final current-head seven-job gate on this exact final HEAD.
+- Remaining 7C closure blockers: fresh protected launcher execution against the exact current HEAD; successful live Terraform plan/apply; live infrastructure/database/Lockbox/API Gateway evidence; runtime/audit observability evidence; budget evidence; production smoke; live rollback; live PITR + cleanup; final live adversarial review; licensing/documentation/release audit; and final acceptance on the deployed exact HEAD.
 - Verified historical blocker: the previous production run failed at state-bucket access with Yandex PermissionDenied / Access Denied while using the deployment service-account identity. The workflow is now corrected so state preflight uses the dedicated Terraform-state credentials.
 - Closure rule: Phase 7C remains IN_PROGRESS until every required live-evidence item in architecture/phase7c_live_evidence_contract.json is attached to the exact deployed HEAD and the final current-head seven-job gate remains GREEN.
 
