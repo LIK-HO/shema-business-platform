@@ -125,7 +125,7 @@ resource "yandex_cloudregistry_scan_policy" "app" {
     schedule_rules = [{
       disabled      = false
       amount        = 1
-      interval_unit = "day"
+      interval_unit = "DAYS"
       paths         = ["*"]
     }]
   }
