@@ -1,17 +1,15 @@
-from __future__ import annotations
-
 import http.server
+import pathlib
+import threading
 import os
 import socketserver
 import subprocess
 import tempfile
 import textwrap
 import unittest
-from pathlib import Path
-from threading import Thread
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "scripts" / "yandex_cloud_terraform_state_preflight.sh"
 
 
@@ -27,12 +25,12 @@ class _HealthHandler(http.server.BaseHTTPRequestHandler):
 class StatePreflightTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tempdir = tempfile.TemporaryDirectory()
-        self.root = Path(self.tempdir.name)
+        self.root = pathlib.Path(self.tempdir.name)
         self.bin = self.root / "bin"
         self.bin.mkdir()
 
         self.server = socketserver.TCPServer(("127.0.0.1", 0), _HealthHandler)
-        self.thread = Thread(target=self.server.serve_forever, daemon=True)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
 
         self.base_env = os.environ.copy()
@@ -60,7 +58,7 @@ class StatePreflightTests(unittest.TestCase):
         self.server.server_close()
         self.tempdir.cleanup()
 
-    def _write_executable(self, path: Path, content: str) -> None:
+    def _write_executable(self, path: pathlib.Path, content: str) -> None:
         path.write_text(textwrap.dedent(content), encoding="utf-8")
         path.chmod(0o700)
 
@@ -110,7 +108,9 @@ class StatePreflightTests(unittest.TestCase):
             r"""
             #!/usr/bin/env bash
             set -eu
-            echo 'An error occurred (InvalidAccessKeyId) when calling the HeadBucket operation: super-secret-value' >&2
+            printf '%s\\n' \\
+              'An error occurred (InvalidAccessKeyId) when calling the HeadBucket operation:' \\
+              'super-secret-value' >&2
             exit 255
             """,
         )
