@@ -108,8 +108,8 @@ class StatePreflightTests(unittest.TestCase):
             r"""
             #!/usr/bin/env bash
             set -eu
-            printf '%s\\n' \\
-              'An error occurred (InvalidAccessKeyId) when calling the HeadBucket operation:' \\
+            printf '%s\n' \
+              'An error occurred (InvalidAccessKeyId) when calling the HeadBucket operation:' \
               'super-secret-value' >&2
             exit 255
             """,
