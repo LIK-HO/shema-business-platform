@@ -117,18 +117,17 @@ resource "yandex_cloudregistry_scan_policy" "app" {
   disabled           = false
   scan_lang_packages = true
 
-  rules {
-    push_rule {
+  rules = {
+    push_rule = {
       disabled = false
       paths    = ["*"]
     }
-
-    schedule_rules {
+    schedule_rules = [{
       disabled      = false
       amount        = 1
       interval_unit = "day"
       paths         = ["*"]
-    }
+    }]
   }
 }
 
@@ -256,10 +255,14 @@ resource "yandex_mdb_postgresql_database" "runtime" {
 resource "yandex_storage_bucket" "bounded_objects" {
   bucket                = var.bucket_name
   folder_id             = var.folder_id
-  acl                   = "private"
   default_storage_class = "STANDARD"
   force_destroy         = false
   tags                  = local.common_labels
+}
+
+resource "yandex_storage_bucket_grant" "bounded_objects_private" {
+  bucket = yandex_storage_bucket.bounded_objects.bucket
+  acl    = "private"
 }
 
 resource "yandex_serverless_container" "api" {
