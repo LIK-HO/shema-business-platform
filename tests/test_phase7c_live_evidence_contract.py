@@ -489,7 +489,7 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert "iam.api.cloud.yandex.net" in workflow
     assert "Create Container Registry API IAM token" in workflow
     assert '--endpoint iam.api.cloud.yandex.net' in workflow
-    assert '--retry=1' in workflow
+    assert '--retry=2' in workflow
     assert "not found" in bootstrap
     assert "yc container registry configure-docker" not in workflow
     assert 'docker login --username iam --password-stdin cr.yandex' in workflow
