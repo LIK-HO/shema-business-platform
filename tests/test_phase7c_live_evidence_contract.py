@@ -326,7 +326,10 @@ def test_phase7c_existing_bucket_is_imported_before_plan() -> None:
         ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
     ).read_text(encoding="utf-8")
     assert "yc storage bucket get --name" in workflow
-    assert "terraform -chdir=deploy/terraform import -input=false yandex_storage_bucket.bounded_objects" in workflow
+    assert (
+        "terraform -chdir=deploy/terraform import -input=false "
+        "yandex_storage_bucket.bounded_objects"
+    ) in workflow
 
 
 def test_phase7c_api_gateway_waits_for_invoker_and_service_account_use() -> None:
