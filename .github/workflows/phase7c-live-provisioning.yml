@@ -299,19 +299,57 @@ jobs:
           image_tag="${{ steps.source_identity.outputs.source_sha }}"
           image_url="cr.yandex/$registry_id/$APP_NAME:$image_tag"
 
-          image_digest="$(timeout 20s yc container image list --retry=0             --repository-name="$registry_id/$APP_NAME"             --format=json 2>/dev/null |
-            jq -r --arg tag "$image_tag"               '(if type == "object" then (.images // []) else . end)[]? |
+          image_digest="$(timeout 20s yc container image list --retry=0 \
+            --repository-name="$registry_id/$APP_NAME" \
+            --format=json 2>/dev/null |
+            jq -r --arg tag "$image_tag" \
+              '(if type == "object" then (.images // []) else . end)[]? |
                select((.tags // []) | index($tag)) | .digest' |
             head -n1 || true)"
 
           if [[ -z "$image_digest" ]]; then
             docker build --tag "$image_url" .
-            docker push "$image_url" >/dev/null
+
+            push_succeeded=false
+            for attempt in $(seq 1 6); do
+              set +e
+              push_output="$(timeout 90s docker push "$image_url" 2>&1)"
+              push_rc=$?
+              set -e
+
+              if (( push_rc == 0 )); then
+                push_succeeded=true
+                printf '%s\n' "$push_output"
+                echo "CONTAINER_REGISTRY_IMAGE_PUSH=PASS"
+                break
+              fi
+
+              if grep -qiE 'denied|forbidden|unauthorized|authentication required|insufficient_scope' <<<"$push_output"; then
+                echo "CONTAINER_REGISTRY_IMAGE_PUSH_ATTEMPT=$attempt"
+                echo "CONTAINER_REGISTRY_IMAGE_PUSH_ERROR_CLASS=ACCESS_OR_PROPAGATION"
+              else
+                echo "CONTAINER_REGISTRY_IMAGE_PUSH_ATTEMPT=$attempt"
+                echo "CONTAINER_REGISTRY_IMAGE_PUSH_ERROR_CLASS=TRANSIENT_OR_REGISTRY"
+              fi
+              if (( attempt < 6 )); then
+                sleep 8
+                cat "$YC_REGISTRY_IAM_TOKEN_FILE" | docker login --username iam --password-stdin cr.yandex >/dev/null
+              fi
+            done
+
+            if [[ "$push_succeeded" != "true" ]]; then
+              echo "CONTAINER_REGISTRY_IMAGE_PUSH=FAIL"
+              echo "CONTAINER_REGISTRY_IMAGE_PUSH_OUTPUT=SUPPRESSED"
+              exit 1
+            fi
 
             image_digest=""
             for attempt in $(seq 1 10); do
-              image_digest="$(timeout 15s yc container image list --retry=1                 --repository-name="$registry_id/$APP_NAME"                 --format=json 2>/dev/null |
-                jq -r --arg tag "$image_tag"                   '(if type == "object" then (.images // []) else . end)[]? |
+              image_digest="$(timeout 15s yc container image list --retry=1 \
+                --repository-name="$registry_id/$APP_NAME" \
+                --format=json 2>/dev/null |
+                jq -r --arg tag "$image_tag" \
+                  '(if type == "object" then (.images // []) else . end)[]? |
                    select((.tags // []) | index($tag)) | .digest' |
                 head -n1 || true)"
               [[ -n "$image_digest" ]] && break
