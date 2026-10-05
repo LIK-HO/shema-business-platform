@@ -1,3 +1,15 @@
+## Phase 7C Live-Gate Diagnostic — Run #7 and Registry Payload Fix — 2026-10-05
+
+- Protected Production Launcher run #7 (`37261087310`) used the corrected Phase 7C workflow and passed state preflight, Terraform init, Registry access and immutable image build.
+- Run #7 stopped before Terraform plan at the registry image lookup step with: `jq: error (at <stdin>:12): Cannot index array with string "images"`.
+- Root cause: the workflow parser assumed the Yandex Cloud CLI image-list response was always an object containing `.images`; the observed response was a top-level JSON array.
+- No Terraform plan, Terraform apply, or live infrastructure mutation occurred in Run #7.
+- Corrective change: registry image-list parsing now accepts both supported payload shapes (object with `.images` and top-level array).
+- Regression coverage: `tests/test_phase7c_live_evidence_contract.py` now explicitly rejects the old array-incompatible expression and requires the dual-shape parser.
+- Exact corrective HEAD: `ec4335488bdd0f97421e02e9faca56f2465e902a`.
+- Repository gates on that exact HEAD: **CI #2357 — 7/7 GREEN**; **Terraform IaC #159 — GREEN**.
+- PR #69 remains **OPEN / MERGEABLE / UNMERGED**. Phase 7C remains **IN_PROGRESS**. Production readiness is not claimed until a fresh protected launcher proves Terraform plan/apply and all required live-evidence, rollback, PITR and acceptance controls.
+
 ## Phase 7C Live-Gate Result + Provider Authentication Hardening — 2026-10-05
 
 - Latest completed repository gate before this hardening commit: HEAD `ad2601712af74353cde12c16a00f6a14531b9bd6`; CI run **2355 GREEN** and Terraform IaC Validation run **157 GREEN**.
