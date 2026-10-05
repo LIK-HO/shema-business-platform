@@ -20,7 +20,7 @@ for command_name in yc jq curl; do
   }
 done
 
-API_BASE="https://registry.api.cloud.yandex.net/cloud-registry/v1"
+API_BASE="https://container-registry.api.cloud.yandex.net/container-registry/v1"
 OPERATION_BASE="https://operation.api.cloud.yandex.net/operations"
 IAM_TOKEN="$(yc iam create-token)"
 test -n "$IAM_TOKEN"
@@ -31,27 +31,24 @@ desired_policy="$(jq -n   --arg registry_id "$YC_REGISTRY_ID"   --arg name "$pol
     registryId: $registry_id,
     name: $name,
     description: $description,
-    scanLangPackages: false,
     rules: {
       pushRule: {
-        paths: ["*"],
+        repositoryPrefixes: ["*"],
         disabled: false
       },
       scheduleRules: [
         {
-          amount: "1",
-          intervalUnit: "DAYS",
-          paths: ["*"],
+          repositoryPrefixes: ["*"],
+          rescanPeriod: "24h",
           disabled: false
         }
       ]
-    },
-    disabled: false
+    }
   }')"
 
 get_policy() {
   local output_file="$1"
-  curl -sS -o "$output_file" -w "%{http_code}"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Accept: application/json"     "$API_BASE/registries/$YC_REGISTRY_ID/scanPolicy"
+  curl -sS -o "$output_file" -w "%{http_code}"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Accept: application/json"     "$API_BASE/scanPolicies/$YC_REGISTRY_ID:byRegistry"
 }
 
 poll_operation() {
@@ -63,14 +60,14 @@ poll_operation() {
     done="$(jq -r '.done // false' <<<"$operation_json")"
     if [[ "$done" == "true" ]]; then
       if jq -e '.error' <<<"$operation_json" >/dev/null; then
-        jq -r '.error.message // "Cloud Registry scan policy operation failed."' <<<"$operation_json" >&2
+        jq -r '.error.message // "Container Registry scan policy operation failed."' <<<"$operation_json" >&2
         return 1
       fi
       return 0
     fi
     sleep 2
   done
-  echo "Cloud Registry scan policy operation timed out." >&2
+  echo "Container Registry scan policy operation timed out." >&2
   return 1
 }
 
@@ -85,7 +82,7 @@ apply_policy() {
 
   operation_id="$(jq -r '.id // empty' <<<"$response")"
   if [[ -z "$operation_id" ]]; then
-    echo "Cloud Registry scan policy API returned no operation id." >&2
+    echo "Container Registry scan policy API returned no operation id." >&2
     jq -r '.message // .error.message // "No operation id in API response."' <<<"$response" >&2 || true
     exit 1
   fi
@@ -120,8 +117,8 @@ policy_matches() {
     and (.disabled // false) == false
     and ((.rules.pushRule // .rules.push_rule).disabled // true) == false
     and (
-      (((.rules.pushRule // .rules.push_rule).paths
-        // (.rules.push_rule.paths // []))
+      (((.rules.pushRule // .rules.push_rule).repositoryPrefixes
+        // (.rules.push_rule.repository_prefixes // []))
         | index("*")) != null
     )
     and (
@@ -131,15 +128,9 @@ policy_matches() {
       ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).disabled // false) == false)
     )
     and (
-      ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).amount // "") | tostring) == "1"
-    )
-    and (
-      ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).intervalUnit
-        // ( .rules.schedule_rules // [])[0].interval_unit
-        // "") == "DAYS")
-    )
-    and (
-      ((.scanLangPackages // .scanPolicyOptions.scanLangPackages // false) == false)
+      ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).rescanPeriod
+        // ( .rules.schedule_rules // [])[0].rescan_period
+        // "") == "24h")
     )
   ' --arg registry "$YC_REGISTRY_ID" <<<"$policy_json" >/dev/null
 }
