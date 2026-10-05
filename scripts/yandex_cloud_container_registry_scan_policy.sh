@@ -20,8 +20,14 @@ for command_name in yc jq curl; do
   }
 done
 
-IAM_TOKEN="$(yc iam create-token)"
+TOKEN_PROFILE="phase7c-iam-token"
+YC_PRIMARY_PROFILE="shema-phase7c"
+yc config profile create "$TOKEN_PROFILE" >/dev/null 2>&1 || true
+yc --profile="$TOKEN_PROFILE" config set endpoint iam.api.cloud.yandex.net
+yc --profile="$TOKEN_PROFILE" config set service-account-key "${YC_SERVICE_ACCOUNT_KEY_FILE:?YC_SERVICE_ACCOUNT_KEY_FILE is required}"
+IAM_TOKEN="$(timeout 45s yc --profile="$TOKEN_PROFILE" iam create-token)"
 test -n "$IAM_TOKEN"
+yc config profile activate "$YC_PRIMARY_PROFILE" >/dev/null 2>&1 || true
 
 if [[ -n "${YC_REGISTRY_IAM_TOKEN_FILE:-}" ]]; then
   umask 077
