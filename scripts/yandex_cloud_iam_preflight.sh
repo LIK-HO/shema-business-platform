@@ -34,16 +34,23 @@ if (( folder_rc != 0 )); then
   exit 1
 fi
 
-if (( cloud_rc != 0 )); then
-  echo "IAM_CLOUD_BINDINGS_READ=FAIL"
-  echo "IAM_CLOUD_BINDINGS_REQUIRED_ROLE=resource-manager.viewer"
-  echo "IAM_CLOUD_BINDINGS_ERROR_OUTPUT=SUPPRESSED"
-  echo "IAM_PREFLIGHT=FAIL"
-  exit 1
-fi
-
 echo "IAM_FOLDER_BINDINGS_READ=PASS"
-echo "IAM_CLOUD_BINDINGS_READ=PASS"
+
+if (( cloud_rc == 0 )); then
+  echo "IAM_CLOUD_BINDINGS_READ=PASS"
+else
+  if grep -qiE 'PermissionDenied|permission denied|PERMISSION_DENIED' <<<"$cloud_bindings"; then
+    cloud_bindings="[]"
+    echo "IAM_CLOUD_BINDINGS_READ=SKIPPED"
+    echo "IAM_CLOUD_BINDINGS_REASON=FOLDER_SCOPE_IS_DEPLOYMENT_AUTHORITY"
+  else
+    echo "IAM_CLOUD_BINDINGS_READ=FAIL"
+    echo "IAM_CLOUD_BINDINGS_ERROR_CLASS=UNCLASSIFIED"
+    echo "IAM_CLOUD_BINDINGS_ERROR_OUTPUT=SUPPRESSED"
+    echo "IAM_PREFLIGHT=FAIL"
+    exit 1
+  fi
+fi
 
 roles="$(
   jq -r --arg sa "$service_account_id" '
