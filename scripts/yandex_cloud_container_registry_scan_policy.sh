@@ -134,8 +134,9 @@ curl_json() {
 get_policy() {
   local output_file="$1"
   local http_code
-  if ! http_code="$(curl_json GET     "$API_BASE/scanPolicies/$YC_REGISTRY_ID:byRegistry"     ""     "$output_file")"; then
+  if ! http_code="$(curl_json GET       "$API_BASE/scanPolicies/$YC_REGISTRY_ID:byRegistry"       ""       "$output_file")"; then
     echo "Container Registry scan policy lookup failed at transport layer." >&2
+    cat "$output_file" >&2 || true
     return 1
   fi
   if [[ "$http_code" == "200" ]]; then
@@ -176,6 +177,8 @@ apply_policy() {
   local response_file="$jwt_workdir/operation.json"
   local http_code
   if ! http_code="$(curl_json "$method" "$url" "$body" "$response_file")"; then
+    echo "Container Registry scan policy request failed at transport layer." >&2
+    cat "$response_file" >&2 || true
     exit 1
   fi
   case "$http_code" in
@@ -189,7 +192,11 @@ apply_policy() {
   esac
   local operation_id
   operation_id="$(jq -r '.id // empty' "$response_file")"
-  test -n "$operation_id"
+  if [[ -z "$operation_id" ]]; then
+    echo "Container Registry scan policy API response did not contain operation id." >&2
+    cat "$response_file" >&2 || true
+    exit 1
+  fi
   poll_operation "$operation_id"
 }
 
