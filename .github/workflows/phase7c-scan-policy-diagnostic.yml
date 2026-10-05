@@ -1,0 +1,51 @@
+name: Phase 7C Scan Policy Diagnostic
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    if: ${{ github.event.head_commit.message == 'chore: inspect current Container Registry scan policy' }}
+    runs-on: ubuntu-latest
+    environment: production-yandex
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install Yandex Cloud CLI
+        run: |
+          set -Eeuo pipefail
+          curl --fail --show-error --silent --location --connect-timeout 15 --max-time 120             https://storage.yandexcloud.net/yandexcloud-yc/install.sh             | bash -s -- -i "$HOME/yandex-cloud" -n
+          echo "$HOME/yandex-cloud/bin" >> "$GITHUB_PATH"
+          yc version
+      - name: Configure Yandex Cloud credentials
+        env:
+          YC_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.YC_SERVICE_ACCOUNT_KEY_JSON }}
+        run: |
+          set -Eeuo pipefail
+          test -n "$YC_SERVICE_ACCOUNT_KEY_JSON"
+          mkdir -p "$RUNNER_TEMP/yc"
+          printf "%s" "$YC_SERVICE_ACCOUNT_KEY_JSON" > "$RUNNER_TEMP/yc/key.json"
+          yc config profile create shema-phase7c
+          yc config set endpoint api.cloud.yandex.net
+          yc config set service-account-key "$RUNNER_TEMP/yc/key.json"
+      - name: Read current Container Registry scan policy
+        env:
+          YC_REGISTRY_ID: ${{ secrets.PHASE7C_CONTAINER_REGISTRY_ID }}
+        run: |
+          set -Eeuo pipefail
+          test -n "$YC_REGISTRY_ID"
+          set +e
+          output="$(yc cloud-registry registry scan-policy get-by-registry "$YC_REGISTRY_ID"             --profile shema-phase7c --format=json 2>&1)"
+          rc=$?
+          set -e
+          printf '%s
+' "$output"
+          printf 'SCAN_POLICY_GET_RC=%s
+' "$rc"
+          exit "$rc"
