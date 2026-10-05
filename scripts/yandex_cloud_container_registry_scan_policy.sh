@@ -106,6 +106,10 @@ fi
 
 IAM_TOKEN="$(jq -r '.iamToken // .iam_token // empty' "$token_response_file")"
 test -n "$IAM_TOKEN"
+if [[ -n "${YC_REGISTRY_IAM_TOKEN_FILE:-}" ]]; then
+  umask 077
+  printf "%s" "$IAM_TOKEN" > "$YC_REGISTRY_IAM_TOKEN_FILE"
+fi
 
 policy_name="${APP_NAME}-image-scan"
 policy_description="Production vulnerability scanning on push plus daily rescan."
