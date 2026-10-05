@@ -198,7 +198,7 @@ jobs:
           set -Eeuo pipefail
           timeout 45s yc --profile shema-phase7c iam create-token \
             --endpoint iam.api.cloud.yandex.net \
-            --retry=1 > "$YC_REGISTRY_IAM_TOKEN_FILE"
+            --retry=2 > "$YC_REGISTRY_IAM_TOKEN_FILE"
           test -s "$YC_REGISTRY_IAM_TOKEN_FILE"
           chmod 600 "$YC_REGISTRY_IAM_TOKEN_FILE"
 
