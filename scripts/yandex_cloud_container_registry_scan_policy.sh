@@ -33,13 +33,14 @@ desired_policy="$(jq -n   --arg registry_id "$YC_REGISTRY_ID"   --arg name "$pol
     description: $description,
     rules: {
       pushRule: {
-        repositoryPrefixes: ["*"],
+        paths: ["*"],
         disabled: false
       },
       scheduleRules: [
         {
-          repositoryPrefixes: ["*"],
-          rescanPeriod: "86400s",
+          paths: ["*"],
+          amount: "1",
+          intervalUnit: "DAYS",
           disabled: false
         }
       ]
@@ -123,21 +124,18 @@ policy_matches() {
     and (.disabled // false) == false
     and ((.rules.pushRule // .rules.push_rule).disabled // true) == false
     and (
-      (((.rules.pushRule // .rules.push_rule).repositoryPrefixes
-        // (.rules.push_rule.repository_prefixes // []))
-        | index("*")) != null
-    )
+      (((.rules.pushRule // .rules.push_rule).paths // []))
+      | index("*")
+    ) != null
+    and (((.rules.scheduleRules // .rules.schedule_rules // [])) | length) >= 1
+    and ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).disabled // false) == false)
+    and ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).amount // "") | tostring) == "1"
+    and ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).intervalUnit
+      // ( .rules.schedule_rules // [])[0].interval_unit // "") == "DAYS")
     and (
-      (((.rules.scheduleRules // .rules.schedule_rules // [])) | length) >= 1
-    )
-    and (
-      ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).disabled // false) == false)
-    )
-    and (
-      ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).rescanPeriod
-        // ( .rules.schedule_rules // [])[0].rescan_period
-        // "") == "86400s")
-    )
+      ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).paths // []))
+      | index("*")
+    ) != null
   ' --arg registry "$YC_REGISTRY_ID" <<<"$policy_json" >/dev/null
 }
 
