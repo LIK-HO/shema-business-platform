@@ -60,7 +60,7 @@ For this product shape the production baseline is:
 - Terraform uses remote Object Storage state, dedicated state credentials, bucket versioning and S3 lockfile semantics.
 - Runtime and task logs use dedicated Cloud Logging groups with bounded retention.
 - Audit Trails collects management and relevant Object Storage data events into the dedicated audit log group.
-- Container Registry vulnerability scanning is enabled on push and on a scheduled rescan.
+- Container Registry vulnerability scanning is enabled through the native Container Registry scan-policy API, on push for all repositories and with a 24-hour scheduled rescan.
 - Custom-domain support is conditional and requires a Certificate Manager certificate ID.
 - Budget configuration remains a protected external input; live evidence verifies an active budget and at least one threshold.
 
@@ -68,7 +68,7 @@ The deployment identity and Terraform-state identity are intentionally separate 
 
 ### Deployment identity minimum for the registry bootstrap
 
-The service account behind `YC_SERVICE_ACCOUNT_KEY_JSON` must have `container-registry.editor` on the target folder. The protected workflow creates the production Container Registry when it is absent and manages its scan policy and image lifecycle. A pull-only registry role is insufficient for this deployment identity.
+The service account behind `YC_SERVICE_ACCOUNT_KEY_JSON` must have `container-registry.editor` on the target folder. The protected workflow creates the production Container Registry when it is absent, converges its native Container Registry scan policy through the official Container Registry API, and manages the immutable image lifecycle. A pull-only registry role is insufficient for this deployment identity.
 
 The runtime and migration identities remain separately scoped to image pulling; they must not inherit the deployment bootstrap role merely for runtime operation.
 
@@ -99,7 +99,7 @@ The first successful apply should be retried only after these external IAM prere
 
 ## First-run bootstrap boundary
 
-The first protected run has one deliberate bootstrap side effect before the reviewed production plan: it creates the expected `shema-images` Container Registry when absent, imports that registry into the production Terraform state, and builds/pushes the current Git commit as an immutable digest-pinned image. The workflow never deploys a mutable tag as the runtime authority. With `apply=false`, no production runtime resources are applied; registry/image bootstrap is the only intentional preparation side effect.
+The first protected run has a bounded registry bootstrap before the reviewed production plan: it creates the expected `shema-images` Container Registry when absent, imports that registry into the production Terraform state, converges the native Container Registry scan policy to push scanning plus a 24-hour scheduled rescan, and builds/pushes the current Git commit as an immutable digest-pinned image. The workflow never deploys a mutable tag as the runtime authority. With `apply=false`, no production runtime resources are applied; registry, scan-policy convergence, and immutable image preparation are the only intentional preparation side effects.
 
 The initial installation has no previous serverless-container revision, so `rollback_drill` must remain `false` on the first successful production apply. Subsequent runs may enable it.
 
@@ -138,7 +138,7 @@ Phase 7C can move to CLOSED / VERIFIED only after live evidence proves:
 - logging/observability and budget thresholds;
 - dedicated runtime and audit log groups;
 - active Audit Trail;
-- active Container Registry vulnerability-scan policy with push and scheduled rules;
+- active Container Registry vulnerability-scan policy with push and 24-hour scheduled rescan rules;
 - backup retention;
 - PITR recovery and cleanup;
 - immutable rollback and restoration;
@@ -158,3 +158,8 @@ Rotate the dedicated Object Storage state access key and all production service 
 ## License
 
 The repository is licensed under Apache-2.0. Third-party dependencies remain under their respective licenses.
+
+
+## Container Registry scan-policy boundary
+
+The production artifact store is Yandex Container Registry, not the separate Yandex Cloud Registry service. The Terraform provider exposes Container Registry resources but does not expose the Container Registry scan-policy resource used by this baseline. The protected bootstrap therefore converges the Container Registry scan policy through the documented Container Registry REST API and the live-evidence stage verifies the same policy directly. The policy must cover all repositories, remain enabled, scan on push, and rescan every 24 hours. This boundary is deliberately outside Terraform state so the implementation does not mix the two distinct registry services.
