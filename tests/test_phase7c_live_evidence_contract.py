@@ -568,4 +568,3 @@ def test_phase7c_live_evidence_treats_cloud_scope_read_as_informational() -> Non
     assert 'CLOUD_METADATA_READ_REASON=FOLDER_SCOPE_IS_DEPLOYMENT_AUTHORITY' in script
     assert 'CLOUD_FOLDER_RELATION=PASS' in script
     assert ".cloud_id // .cloudId" in script
-\n
