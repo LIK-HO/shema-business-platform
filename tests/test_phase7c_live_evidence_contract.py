@@ -384,3 +384,14 @@ def test_phase7c_requires_production_network_and_database_connectivity_evidence(
     }.issubset(required)
     assert contract["safety_gates"]["private_postgresql_only"] is True
     assert contract["safety_gates"]["postgresql_tls_verification_required"] is True
+
+
+def test_phase7c_terraform_steps_receive_yandex_provider_key() -> None:
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    assert workflow.count("YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json") >= 5
+    assert "Bootstrap registry and publish immutable application image" in workflow
+    assert "Terraform plan" in workflow
+    assert "Recompute and verify reviewed Terraform plan" in workflow
+    assert "Terraform apply reviewed plan" in workflow
