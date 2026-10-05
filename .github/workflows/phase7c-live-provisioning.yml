@@ -190,6 +190,18 @@ jobs:
           terraform -chdir=deploy/terraform init -input=false \
             -backend-config="bucket=$PHASE7C_TERRAFORM_STATE_BUCKET"
 
+      - name: Create Container Registry API IAM token
+        env:
+          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
+          YC_REGISTRY_IAM_TOKEN_FILE: ${{ runner.temp }}/yc/registry-iam-token
+        run: |
+          set -Eeuo pipefail
+          timeout 45s yc --profile shema-phase7c iam create-token \
+            --endpoint iam.api.cloud.yandex.net \
+            --retry=1 > "$YC_REGISTRY_IAM_TOKEN_FILE"
+          test -s "$YC_REGISTRY_IAM_TOKEN_FILE"
+          chmod 600 "$YC_REGISTRY_IAM_TOKEN_FILE"
+
       - name: Bootstrap registry and publish immutable application image
         id: bootstrap_image
         env:
