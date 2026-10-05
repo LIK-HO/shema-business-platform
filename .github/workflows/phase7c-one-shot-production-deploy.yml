@@ -23,3 +23,5 @@ jobs:
       pitr_drill: false
       pitr_recovery_time: ""
     secrets: inherit
+
+# trigger production deploy on current Phase 7C branch head
