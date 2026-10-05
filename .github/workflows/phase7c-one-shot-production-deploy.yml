@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   deploy:
-    if: ${{ github.event.head_commit.message == 'chore: one-shot Phase 7C production deploy' }}
     uses: LIK-HO/shema-business-platform/.github/workflows/phase7c-live-provisioning.yml@phase7c/yandex-cloud-mature-baseline-20261004
     with:
       source_ref: phase7c/yandex-cloud-mature-baseline-20261004
