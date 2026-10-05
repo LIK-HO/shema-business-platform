@@ -482,3 +482,15 @@ def test_phase7c_has_fail_closed_deployment_iam_preflight() -> None:
     assert "IAM_PREFLIGHT=FAIL" in script
     assert workflow.count("Verify deployment identity IAM baseline") == 2
     assert workflow.count("bash scripts/yandex_cloud_iam_preflight.sh") == 2
+
+def test_phase7c_iam_preflight_requires_vpc_use_and_forbids_primitive_admin_fallbacks() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_iam_preflight.sh").read_text(
+        encoding="utf-8"
+    )
+    assert "require_role_set VPC_USE vpc.user vpc.admin" in script
+    assert "require_role_set VPC_NETWORK vpc.privateAdmin vpc.admin" in script
+    assert "require_role_set VPC_SECURITY_GROUPS vpc.securityGroups.admin vpc.admin" in script
+    assert "require_role_set SERVICE_ACCOUNTS iam.serviceAccounts.admin" in script
+    assert "require_role_set FOLDER_IAM_MANAGEMENT resource-manager.admin" in script
+    assert " resource-manager.clouds.owner" not in script
+    assert "require_role_set OBJECT_STORAGE storage.editor" in script
