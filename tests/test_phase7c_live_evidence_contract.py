@@ -386,6 +386,15 @@ def test_phase7c_requires_production_network_and_database_connectivity_evidence(
     assert contract["safety_gates"]["postgresql_tls_verification_required"] is True
 
 
+def test_phase7c_registry_image_listing_accepts_object_and_array_payloads() -> None:
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    jq_expression = '(if type == "object" then (.images // []) else . end)[]?'
+    assert workflow.count(jq_expression) == 3
+    assert '(.images // .)[]?' not in workflow
+
+
 def test_phase7c_terraform_steps_receive_yandex_provider_key() -> None:
     workflow = (
         ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
