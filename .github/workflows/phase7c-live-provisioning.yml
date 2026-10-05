@@ -133,6 +133,36 @@ jobs:
         run: |
           test -n "$TFVARS_JSON"
           printf "%s" "$TFVARS_JSON" > deploy/terraform/terraform.tfvars.json
+          deployment_service_account_id="$(jq -r '.service_account_id // empty' "$RUNNER_TEMP/yc/key.json")"
+          test -n "$deployment_service_account_id"
+          DEPLOYMENT_SERVICE_ACCOUNT_ID="$deployment_service_account_id" python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path("deploy/terraform/terraform.tfvars.json")
+          values = json.loads(path.read_text(encoding="utf-8"))
+          values["deployment_service_account_id"] = os.environ["DEPLOYMENT_SERVICE_ACCOUNT_ID"]
+          path.write_text(
+              json.dumps(values, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          deployment_service_account_id="$(jq -r '.service_account_id // empty' "$RUNNER_TEMP/yc/key.json")"
+          test -n "$deployment_service_account_id"
+          DEPLOYMENT_SERVICE_ACCOUNT_ID="$deployment_service_account_id" python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path("deploy/terraform/terraform.tfvars.json")
+          values = json.loads(path.read_text(encoding="utf-8"))
+          values["deployment_service_account_id"] = os.environ["DEPLOYMENT_SERVICE_ACCOUNT_ID"]
+          path.write_text(
+              json.dumps(values, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
           python - <<'PY'
           import json
           from pathlib import Path
@@ -239,6 +269,22 @@ jobs:
 
           if ! terraform -chdir=deploy/terraform state show yandex_container_registry.app >/dev/null 2>&1; then
             terraform -chdir=deploy/terraform import -input=false               yandex_container_registry.app "$registry_id"
+          fi
+
+          bucket_name="$(jq -r '.bucket_name // empty' deploy/terraform/terraform.tfvars.json)"
+          test -n "$bucket_name"
+          if ! terraform -chdir=deploy/terraform state show yandex_storage_bucket.bounded_objects >/dev/null 2>&1; then
+            set +e
+            bucket_lookup_output="$(yc storage bucket get --name "$bucket_name" --format=json 2>&1)"
+            bucket_lookup_rc=$?
+            set -e
+            if (( bucket_lookup_rc == 0 )); then
+              terraform -chdir=deploy/terraform import -input=false yandex_storage_bucket.bounded_objects "$bucket_name"
+            elif ! grep -qiE 'NotFound|not found|NOT_FOUND' <<<"$bucket_lookup_output"; then
+              echo "OBJECT_STORAGE_BUCKET_LOOKUP=FAIL"
+              echo "OBJECT_STORAGE_BUCKET_ERROR=SUPPRESSED"
+              exit 1
+            fi
           fi
 
           YC_REGISTRY_ID="$registry_id" APP_NAME="$APP_NAME" \
