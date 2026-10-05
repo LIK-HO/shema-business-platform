@@ -514,6 +514,10 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert "timeout 20s yc container image list --retry=0" in workflow
     assert "timeout 15s yc container image list --retry=1" in workflow
     assert "for attempt in $(seq 1 10)" in workflow
+    assert 'docker push "$image_url" >/dev/null' not in workflow
+    assert "push_succeeded=false" in workflow
+    assert "for attempt in $(seq 1 6)" in workflow
+    assert "CONTAINER_REGISTRY_IMAGE_PUSH_ERROR_CLASS=ACCESS_OR_PROPAGATION" in workflow
 
 
 def test_phase7c_scan_policy_live_evidence_uses_registry_id_not_terraform_policy_output() -> None:
