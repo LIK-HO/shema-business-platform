@@ -82,7 +82,7 @@ The identity behind `YC_SERVICE_ACCOUNT_KEY_JSON` is the protected Terraform pro
 
 Required roles for the current graph, assigned at folder scope unless the service documents a narrower resource scope:
 
-- `container-registry.editor` and `container-registry.admin` where registry IAM bindings are managed;
+- `container-registry.editor` for registry creation/bootstrap; registry pull bindings are converged through the native Container Registry CLI boundary after the runtime identities exist;
 - `iam.serviceAccounts.admin` for creating the runtime, gateway, migration and audit-trail service accounts;
 - `iam.serviceAccounts.user` for using those service accounts in managed resources/trails when not already inherited;
 - `vpc.privateAdmin`, `vpc.securityGroups.admin` and `vpc.user` for the private network, subnets, security group and Managed PostgreSQL attachment;
@@ -162,6 +162,10 @@ Rotate the dedicated Object Storage state access key and all production service 
 
 The repository is licensed under Apache-2.0. Third-party dependencies remain under their respective licenses.
 
+
+## Container Registry runtime-pull access boundary
+
+The production runtime and migration service accounts require `container-registry.images.puller` on the application registry. The current Yandex Terraform provider path for registry IAM binding failed during live provisioning with a provider-level `PermissionDenied` while attaching resource policies. The recovery path therefore keeps the role resource-scoped but manages the binding through the official Container Registry CLI/API boundary in an idempotent `terraform_data` step, followed by live verification. This is intentionally separate from the Terraform-managed registry object and from the separate scan-policy boundary.
 
 ## Container Registry scan-policy boundary
 
