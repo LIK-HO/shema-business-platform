@@ -141,7 +141,7 @@
       "audit_log_group": "yandex_logging_group.audit",
       "retention_hours_minimum": 720,
       "audit_trail": "yandex_audit_trails_trail.production",
-      "registry_scan_policy": "yandex_cloudregistry_scan_policy.app",
+      "registry_scan_policy": "container_registry_scan_policy_via_official_api",
       "scan_mode": [
         "on_push",
         "scheduled"
