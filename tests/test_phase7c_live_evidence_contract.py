@@ -491,7 +491,7 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     ).read_text(encoding="utf-8")
     assert "https://iam.api.cloud.yandex.net/iam/v1/tokens" in token_helper
     assert '"alg": "PS256"' in token_helper
-    assert '"aud":"https://iam.api.cloud.yandex.net/iam/v1/tokens"' in token_helper
+    assert '"aud": "https://iam.api.cloud.yandex.net/iam/v1/tokens"' in token_helper
     assert "bash scripts/yandex_cloud_service_account_iam_token.sh" in workflow
     assert "not found" in bootstrap
     assert "yc container registry configure-docker" not in workflow
