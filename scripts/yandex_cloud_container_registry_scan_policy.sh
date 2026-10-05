@@ -48,7 +48,13 @@ desired_policy="$(jq -n   --arg registry_id "$YC_REGISTRY_ID"   --arg name "$pol
 
 get_policy() {
   local output_file="$1"
-  curl -sS -o "$output_file" -w "%{http_code}"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Accept: application/json"     "$API_BASE/scanPolicies/$YC_REGISTRY_ID:byRegistry"
+  local http_code
+  http_code="$(curl -sS -o "$output_file" -w "%{http_code}"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Accept: application/json"     "$API_BASE/scanPolicies/$YC_REGISTRY_ID:byRegistry")"
+  if [[ "$http_code" == "400" ]] && grep -qiE     'Scan policy not found for registry|scanPolicyForRegistryNotFoundException'     "$output_file"; then
+    echo "404"
+    return 0
+  fi
+  echo "$http_code"
 }
 
 poll_operation() {
