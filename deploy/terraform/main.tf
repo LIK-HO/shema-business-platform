@@ -260,10 +260,6 @@ resource "yandex_storage_bucket" "bounded_objects" {
   tags                  = local.common_labels
 }
 
-resource "yandex_storage_bucket_grant" "bounded_objects_private" {
-  bucket = yandex_storage_bucket.bounded_objects.bucket
-  acl    = "private"
-}
 
 resource "yandex_serverless_container" "api" {
   name               = "${var.app_name}-api"
