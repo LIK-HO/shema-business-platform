@@ -489,6 +489,9 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert "Scan policy not found for registry" in bootstrap
     assert "scanPolicyForRegistryNotFoundException" in bootstrap
     assert 'yc iam create-token' not in bootstrap
+    assert "yc container registry configure-docker" not in bootstrap
+    assert 'docker login --username iam --password-stdin cr.yandex' in bootstrap
+    assert "YC_REGISTRY_IAM_TOKEN_FILE" in bootstrap
     registry_policy_contract = contract["execution"]["observability"]["registry_scan_policy"]
     assert "yandex_cloudregistry_scan_policy.app" not in registry_policy_contract
     assert contract["execution"]["observability"]["registry_scan_policy"] == (
