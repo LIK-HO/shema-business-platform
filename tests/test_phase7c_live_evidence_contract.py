@@ -439,11 +439,9 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert 'resource "yandex_container_registry" "app"' in main
     assert "yandex_cloudregistry_scan_policy" not in main
     assert "registry_scan_policy_id" not in outputs
-    assert "registry.api.cloud.yandex.net/cloud-registry/v1" in bootstrap
-    assert 'amount: "1"' in bootstrap
-    assert 'intervalUnit: "DAYS"' in bootstrap
-    assert 'paths: ["*"]' in bootstrap
-    assert "scanLangPackages: false" in bootstrap
+    assert "container-registry.api.cloud.yandex.net/container-registry/v1" in bootstrap
+    assert 'rescanPeriod: "24h"' in bootstrap
+    assert 'repositoryPrefixes: ["*"]' in bootstrap
     assert 'yc iam create-token' in bootstrap
     registry_policy_contract = contract["execution"]["observability"]["registry_scan_policy"]
     assert "yandex_cloudregistry_scan_policy.app" not in registry_policy_contract
