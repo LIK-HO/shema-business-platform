@@ -12,7 +12,7 @@ locals {
   }
 
   database_url = format(
-    "postgresql://%s:%s@c-%s.rw.mdb.yandexcloud.net:6432/%s?sslmode=verify-full&sslrootcert=/etc/shema/yandex-cloud-ca.pem&target_session_attrs=read-write",
+    "postgresql://%s:%s@c-%s.rw.mdb.yandexcloud.net:6432/%s?sslmode=verify-full&sslrootcert=/etc/ssl/certs/yandex-cloud-ca.pem&target_session_attrs=read-write",
     var.database_user,
     urlencode(var.database_secret_input),
     yandex_mdb_postgresql_cluster_v2.prod.id,
