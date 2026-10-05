@@ -498,6 +498,11 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     ).read_text(encoding="utf-8")
     assert 'bash scripts/yandex_cloud_container_registry_scan_policy.sh ensure' in workflow
 
+    assert "--retry=-1" not in workflow
+    assert "timeout 20s yc container image list --retry=0" in workflow
+    assert "timeout 15s yc container image list --retry=1" in workflow
+    assert "for attempt in $(seq 1 10)" in workflow
+
 
 def test_phase7c_scan_policy_live_evidence_uses_registry_id_not_terraform_policy_output() -> None:
     workflow = (
