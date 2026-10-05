@@ -67,6 +67,7 @@ For this product shape the production baseline is:
 The deployment identity and Terraform-state identity are intentionally separate as a least-privilege boundary.
 
 The protected workflow performs a fail-closed deployment IAM preflight before both Terraform plan and Terraform apply. The preflight reads the authenticated deployment service-account ID from the protected key file and checks effective direct service-account bindings at the target folder and cloud. It does not mutate IAM. Missing required roles stop the run before any Terraform apply operation.
+The preflight matrix includes `vpc.user` separately from `vpc.privateAdmin` because Managed Service for PostgreSQL cluster creation and resource-to-network assignment require VPC resource use in addition to network management. Primitive `admin` and cloud-owner fallbacks are intentionally not accepted by the preflight; the deployment identity must use service-specific or resource-manager roles consistent with the least-privilege baseline.
 
 ### Deployment identity minimum for the registry bootstrap
 
