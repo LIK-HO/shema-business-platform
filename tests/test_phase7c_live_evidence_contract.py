@@ -568,3 +568,16 @@ def test_phase7c_live_evidence_treats_cloud_scope_read_as_informational() -> Non
     assert 'CLOUD_METADATA_READ_REASON=FOLDER_SCOPE_IS_DEPLOYMENT_AUTHORITY' in script
     assert 'CLOUD_FOLDER_RELATION=PASS' in script
     assert ".cloud_id // .cloudId" in script
+
+def test_phase7c_live_evidence_uses_billing_rest_budget_api() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(
+        encoding="utf-8"
+    )
+    assert (
+        "https://billing.api.cloud.yandex.net/billing/v1/budgets/$YC_BUDGET_ID"
+        in script
+    )
+    assert "yc billing v1 budget get" not in script
+    assert "BUDGET_READ=PASS" in script
+    assert "costBudget // .cost_budget // .expenseBudget" in script
+
