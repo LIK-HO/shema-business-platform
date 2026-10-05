@@ -13,23 +13,19 @@ case "$MODE" in
     ;;
 esac
 
-for command_name in yc jq curl; do
+for command_name in jq curl; do
   command -v "$command_name" >/dev/null 2>&1 || {
     echo "missing required command: $command_name" >&2
     exit 1
   }
 done
 
-YC_PRIMARY_PROFILE="${YC_PRIMARY_PROFILE:-shema-phase7c}"
-IAM_TOKEN="$(timeout 45s yc --profile="$YC_PRIMARY_PROFILE" iam create-token)"
+: "${YC_REGISTRY_IAM_TOKEN_FILE:?YC_REGISTRY_IAM_TOKEN_FILE is required}"
+test -s "$YC_REGISTRY_IAM_TOKEN_FILE"
+IAM_TOKEN="$(cat "$YC_REGISTRY_IAM_TOKEN_FILE")"
 test -n "$IAM_TOKEN"
 jwt_workdir="$(mktemp -d)"
 trap "rm -rf \"$jwt_workdir\"" EXIT
-
-if [[ -n "${YC_REGISTRY_IAM_TOKEN_FILE:-}" ]]; then
-  umask 077
-  printf "%s" "$IAM_TOKEN" > "$YC_REGISTRY_IAM_TOKEN_FILE"
-fi
 
 API_BASE="https://container-registry.api.cloud.yandex.net/container-registry/v1"
 OPERATION_BASE="https://operation.api.cloud.yandex.net/operations"
