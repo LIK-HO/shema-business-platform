@@ -251,7 +251,7 @@ jobs:
               head -n1)"
           fi
 
-          test "$image_digest" =~ ^sha256:[0-9a-f]{64}$
+          [[ "$image_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
 
           IMAGE_URL="$image_url" IMAGE_DIGEST="$image_digest" python - <<'PY'
           import json
