@@ -386,6 +386,14 @@ def test_phase7c_requires_production_network_and_database_connectivity_evidence(
     assert contract["safety_gates"]["postgresql_tls_verification_required"] is True
 
 
+def test_phase7c_digest_guard_uses_bash_regex_syntax() -> None:
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    assert '[[ "$image_digest" =~ ^sha256:[0-9a-f]{64}$ ]]' in workflow
+    assert 'test "$image_digest" =~' not in workflow
+
+
 def test_phase7c_registry_image_listing_accepts_object_and_array_payloads() -> None:
     workflow = (
         ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
