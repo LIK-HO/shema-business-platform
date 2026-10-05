@@ -110,6 +110,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/yc"
           printf "%s" "$YC_SERVICE_ACCOUNT_KEY_JSON" > "$RUNNER_TEMP/yc/key.json"
           yc config profile create shema-phase7c
+          yc config set endpoint api.cloud.yandex.net
           yc config set service-account-key "$RUNNER_TEMP/yc/key.json"
       - name: Verify deployment identity IAM baseline
         env:
