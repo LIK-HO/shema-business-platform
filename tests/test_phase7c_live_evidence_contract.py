@@ -493,7 +493,10 @@ def test_phase7c_iam_preflight_requires_vpc_use_and_forbids_primitive_admin_fall
     assert "require_role_set VPC_USE vpc.user vpc.admin" in script
     assert "require_role_set VPC_NETWORK vpc.privateAdmin vpc.admin" in script
     assert "require_role_set VPC_SECURITY_GROUPS vpc.securityGroups.admin vpc.admin" in script
-    assert "require_role_set SERVICE_ACCOUNTS iam.serviceAccounts.admin" in script
+    assert "require_role_set SERVICE_ACCOUNTS iam.serviceAccounts.admin iam.admin" in script
+    assert "require_role_set SERVICE_ACCOUNT_USE iam.serviceAccounts.user iam.serviceAccounts.admin iam.admin" in script
+    assert "require_role_set SERVERLESS_CONTAINERS serverless-containers.editor serverless-containers.admin serverless.containers.editor serverless.containers.admin" in script
+    assert "require_role_set SERVERLESS_CONTAINER_IAM serverless-containers.admin serverless.containers.admin" in script
     assert "require_role_set FOLDER_IAM_MANAGEMENT resource-manager.admin" in script
     assert " resource-manager.clouds.owner" not in script
     assert "require_role_set OBJECT_STORAGE storage.editor" in script
