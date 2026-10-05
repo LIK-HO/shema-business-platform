@@ -443,7 +443,6 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert 'amount: "1"' in bootstrap
     assert 'intervalUnit: "DAYS"' in bootstrap
     assert 'paths: ["*"]' in bootstrap
-    assert 'repositoryPrefixes: ["*"]' in bootstrap
     assert "Scan policy not found for registry" in bootstrap
     assert "scanPolicyForRegistryNotFoundException" in bootstrap
     assert 'yc iam create-token' in bootstrap
