@@ -308,6 +308,40 @@ def test_phase7c_live_evidence_requires_budget_thresholds_and_runtime_logs() -> 
     assert "runtime_and_task_observability_verified" in required
 
 
+def test_phase7c_registry_pull_access_uses_native_cli_boundary() -> None:
+    main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
+    script = (
+        ROOT / "scripts" / "yandex_cloud_container_registry_access.sh"
+    ).read_text(encoding="utf-8")
+    assert 'resource "yandex_container_registry_iam_binding" "puller"' not in main
+    assert 'resource "terraform_data" "container_registry_pull_access"' in main
+    assert 'yandex_cloud_container_registry_access.sh ensure' in main
+    assert "yc container registry add-access-binding" in script
+    assert "container-registry.images.puller" in script
+    assert "CONTAINER_REGISTRY_PULL_ACCESS=PASS" in script
+
+
+def test_phase7c_existing_bucket_is_imported_before_plan() -> None:
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    assert "yc storage bucket get --name" in workflow
+    assert "terraform -chdir=deploy/terraform import -input=false yandex_storage_bucket.bounded_objects" in workflow
+
+
+def test_phase7c_api_gateway_waits_for_invoker_and_service_account_use() -> None:
+    main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
+    variables = (ROOT / "deploy" / "terraform" / "variables.tf").read_text(encoding="utf-8")
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    assert 'role      = "iam.serviceAccounts.user"' in main
+    assert "yandex_serverless_container_iam_member.gateway_invoker" in main
+    assert "yandex_resourcemanager_folder_iam_member.deployment_service_account_user" in main
+    assert "deployment_service_account_id" in variables
+    assert 'values["deployment_service_account_id"]' in workflow
+
+
 def test_phase7c_bounded_bucket_uses_private_platform_default_without_acl_mutation() -> None:
     main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
     assert 'resource "yandex_storage_bucket" "bounded_objects"' in main
