@@ -76,6 +76,12 @@ resource "yandex_resourcemanager_folder_iam_member" "deployment_service_account_
   member    = "serviceAccount:${var.deployment_service_account_id}"
 }
 
+resource "yandex_resourcemanager_folder_iam_member" "deployment_container_registry_admin" {
+  folder_id = var.folder_id
+  role      = "container-registry.admin"
+  member    = "serviceAccount:${var.deployment_service_account_id}"
+}
+
 resource "yandex_iam_service_account" "migration_runner" {
   count       = var.evidence_runner_enabled ? 1 : 0
   name        = var.migration_runner_name
@@ -141,6 +147,7 @@ resource "terraform_data" "container_registry_pull_access" {
     yandex_iam_service_account.container_puller,
     yandex_iam_service_account.container_runtime,
     yandex_iam_service_account.migration_runner,
+    yandex_resourcemanager_folder_iam_member.deployment_container_registry_admin,
   ]
 }
 
