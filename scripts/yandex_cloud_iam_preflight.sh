@@ -19,8 +19,31 @@ test -n "$service_account_id" || {
   exit 1
 }
 
-folder_bindings="$(yc resource-manager folder list-access-bindings --id "$YC_FOLDER_ID" --format=json)"
-cloud_bindings="$(yc resource-manager cloud list-access-bindings --id "$YC_CLOUD_ID" --format=json)"
+set +e
+folder_bindings="$(yc resource-manager folder list-access-bindings --id "$YC_FOLDER_ID" --format=json 2>&1)"
+folder_rc=$?
+cloud_bindings="$(yc resource-manager cloud list-access-bindings --id "$YC_CLOUD_ID" --format=json 2>&1)"
+cloud_rc=$?
+set -e
+
+if (( folder_rc != 0 )); then
+  echo "IAM_FOLDER_BINDINGS_READ=FAIL"
+  echo "IAM_FOLDER_BINDINGS_REQUIRED_ROLE=resource-manager.viewer"
+  echo "IAM_FOLDER_BINDINGS_ERROR_OUTPUT=SUPPRESSED"
+  echo "IAM_PREFLIGHT=FAIL"
+  exit 1
+fi
+
+if (( cloud_rc != 0 )); then
+  echo "IAM_CLOUD_BINDINGS_READ=FAIL"
+  echo "IAM_CLOUD_BINDINGS_REQUIRED_ROLE=resource-manager.viewer"
+  echo "IAM_CLOUD_BINDINGS_ERROR_OUTPUT=SUPPRESSED"
+  echo "IAM_PREFLIGHT=FAIL"
+  exit 1
+fi
+
+echo "IAM_FOLDER_BINDINGS_READ=PASS"
+echo "IAM_CLOUD_BINDINGS_READ=PASS"
 
 roles="$(
   jq -r --arg sa "$service_account_id" '
