@@ -22,8 +22,24 @@ done
 
 API_BASE="https://container-registry.api.cloud.yandex.net/container-registry/v1"
 OPERATION_BASE="https://operation.api.cloud.yandex.net/operations"
-IAM_TOKEN="$(yc iam create-token)"
-test -n "$IAM_TOKEN"
+IAM_TOKEN=""
+for attempt in 1 2 3 4; do
+  set +e
+  token_output="$(timeout 45s yc iam create-token 2>&1)"
+  token_rc=$?
+  set -e
+  if (( token_rc == 0 )) && [[ -n "$token_output" ]]; then
+    IAM_TOKEN="$token_output"
+    break
+  fi
+  if (( attempt < 4 )); then
+    sleep 5
+  fi
+done
+if [[ -z "$IAM_TOKEN" ]]; then
+  echo "Container Registry scan policy could not obtain an IAM token after 4 attempts." >&2
+  exit 1
+fi
 
 policy_name="${APP_NAME}-image-scan"
 policy_description="Production vulnerability scanning on push plus daily rescan."
