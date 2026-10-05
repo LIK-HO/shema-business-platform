@@ -278,14 +278,14 @@ jobs:
 
           image_tag="${{ steps.source_identity.outputs.source_sha }}"
           image_url="cr.yandex/$registry_id/$APP_NAME:$image_tag"
-          image_digest="$(yc container image list             --repository-name="$registry_id/$APP_NAME"             --format=json 2>/dev/null |
+          image_digest="$(yc container image list --retry=-1             --repository-name="$registry_id/$APP_NAME"             --format=json 2>/dev/null |
             jq -r --arg tag "$image_tag" '(if type == "object" then (.images // []) else . end)[]? | select((.tags // []) | index($tag)) | .digest' |
             head -n1 || true)"
 
           if [[ -z "$image_digest" ]]; then
             docker build --tag "$image_url" .
             docker push "$image_url" >/dev/null
-            image_digest="$(yc container image list               --repository-name="$registry_id/$APP_NAME"               --format=json |
+            image_digest="$(yc container image list --retry=-1               --repository-name="$registry_id/$APP_NAME"               --format=json |
               jq -r --arg tag "$image_tag" '(if type == "object" then (.images // []) else . end)[]? | select((.tags // []) | index($tag)) | .digest' |
               head -n1)"
           fi
@@ -455,7 +455,7 @@ jobs:
           registry_id="$(terraform -chdir=deploy/terraform output -raw registry_id)"
           image_tag="${{ needs.plan.outputs.source_sha }}"
           image_url="cr.yandex/$registry_id/$APP_NAME:$image_tag"
-          image_digest="$(yc container image list             --repository-name="$registry_id/$APP_NAME"             --format=json |
+          image_digest="$(yc container image list --retry=-1             --repository-name="$registry_id/$APP_NAME"             --format=json |
             jq -r --arg tag "$image_tag" '(if type == "object" then (.images // []) else . end)[]? | select((.tags // []) | index($tag)) | .digest' |
             head -n1)"
           test "$image_digest" = "$EXPECTED_IMAGE_DIGEST"
