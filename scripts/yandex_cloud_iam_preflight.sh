@@ -60,20 +60,21 @@ require_role_set() {
 
 failures=0
 
-require_role_set CONTAINER_REGISTRY container-registry.editor container-registry.admin admin || failures=$((failures + 1))
-require_role_set SERVICE_ACCOUNTS iam.serviceAccounts.admin iam.editor iam.admin admin || failures=$((failures + 1))
-require_role_set SERVICE_ACCOUNT_USE iam.serviceAccounts.user iam.serviceAccounts.admin iam.editor iam.admin admin || failures=$((failures + 1))
-require_role_set VPC_NETWORK vpc.privateAdmin vpc.admin admin || failures=$((failures + 1))
-require_role_set VPC_SECURITY_GROUPS vpc.securityGroups.admin vpc.admin admin || failures=$((failures + 1))
-require_role_set POSTGRES managed-postgresql.editor managed-postgresql.admin admin || failures=$((failures + 1))
-require_role_set LOGGING logging.editor logging.admin admin || failures=$((failures + 1))
-require_role_set LOCKBOX_ACCESS lockbox.admin admin || failures=$((failures + 1))
-require_role_set AUDIT_TRAILS audit-trails.editor audit-trails.admin admin || failures=$((failures + 1))
-require_role_set SERVERLESS_CONTAINERS serverless-containers.editor serverless-containers.admin admin || failures=$((failures + 1))
-require_role_set SERVERLESS_CONTAINER_IAM serverless-containers.admin admin || failures=$((failures + 1))
-require_role_set API_GATEWAY api-gateway.editor api-gateway.admin admin || failures=$((failures + 1))
-require_role_set OBJECT_STORAGE storage.editor admin || failures=$((failures + 1))
-require_role_set FOLDER_IAM_MANAGEMENT resource-manager.admin admin resource-manager.clouds.owner || failures=$((failures + 1))
+require_role_set CONTAINER_REGISTRY container-registry.editor container-registry.admin || failures=$((failures + 1))
+require_role_set SERVICE_ACCOUNTS iam.serviceAccounts.admin || failures=$((failures + 1))
+require_role_set SERVICE_ACCOUNT_USE iam.serviceAccounts.user iam.serviceAccounts.admin || failures=$((failures + 1))
+require_role_set VPC_NETWORK vpc.privateAdmin vpc.admin || failures=$((failures + 1))
+require_role_set VPC_USE vpc.user vpc.admin || failures=$((failures + 1))
+require_role_set VPC_SECURITY_GROUPS vpc.securityGroups.admin vpc.admin || failures=$((failures + 1))
+require_role_set POSTGRES managed-postgresql.editor managed-postgresql.admin || failures=$((failures + 1))
+require_role_set LOGGING logging.editor logging.admin || failures=$((failures + 1))
+require_role_set LOCKBOX_ACCESS lockbox.admin || failures=$((failures + 1))
+require_role_set AUDIT_TRAILS audit-trails.editor audit-trails.admin || failures=$((failures + 1))
+require_role_set SERVERLESS_CONTAINERS serverless-containers.editor serverless-containers.admin || failures=$((failures + 1))
+require_role_set SERVERLESS_CONTAINER_IAM serverless-containers.admin || failures=$((failures + 1))
+require_role_set API_GATEWAY api-gateway.editor api-gateway.admin || failures=$((failures + 1))
+require_role_set OBJECT_STORAGE storage.editor || failures=$((failures + 1))
+require_role_set FOLDER_IAM_MANAGEMENT resource-manager.admin || failures=$((failures + 1))
 
 echo "IAM_SERVICE_ACCOUNT_ID=$service_account_id"
 echo "IAM_EFFECTIVE_ROLES_BEGIN"
