@@ -142,7 +142,7 @@
       "retention_hours_minimum": 720,
       "audit_trail": "yandex_audit_trails_trail.production",
       "registry_pull_access": "container_registry_pull_access_via_official_cli_api",
-      "registry_scan_policy": "container_registry_scan_policy_via_official_api",
+      "registry_scan_policy": "container_registry_scan_policy_via_official_cli",
       "scan_mode": [
         "on_push",
         "scheduled"
