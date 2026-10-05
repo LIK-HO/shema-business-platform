@@ -285,15 +285,43 @@ jobs:
           deployment_service_account_id="$(jq -r '.service_account_id // empty' "$RUNNER_TEMP/yc/key.json")"
           test -n "$deployment_service_account_id"
 
-          yc container registry add-access-binding "$registry_id" \
-            --role container-registry.images.pusher \
-            --service-account-id "$deployment_service_account_id" \
-            >/tmp/container-registry-pusher-binding.txt 2>&1 || {
-              if ! grep -qiE 'already exists|already assigned|ALREADY_EXISTS' /tmp/container-registry-pusher-binding.txt; then
-                cat /tmp/container-registry-pusher-binding.txt >&2
-                exit 1
-              fi
-            }
+          pusher_binding_succeeded=false
+          for attempt in 1 2 3 4 5; do
+            set +e
+            pusher_binding_output="$(timeout 45s yc container registry add-access-binding "$registry_id" \
+              --role container-registry.images.pusher \
+              --service-account-id "$deployment_service_account_id" 2>&1)"
+            pusher_binding_rc=$?
+            set -e
+
+            if (( pusher_binding_rc == 0 )); then
+              pusher_binding_succeeded=true
+              break
+            fi
+
+            if grep -qiE 'already exists|already assigned|ALREADY_EXISTS' <<<"$pusher_binding_output"; then
+              pusher_binding_succeeded=true
+              break
+            fi
+
+            echo "CONTAINER_REGISTRY_PUSHER_BINDING_ATTEMPT=$attempt"
+            if grep -qiE 'context deadline exceeded|deadline exceeded|timeout|timed out' <<<"$pusher_binding_output"; then
+              echo "CONTAINER_REGISTRY_PUSHER_BINDING_ERROR_CLASS=TIMEOUT_OR_TRANSIENT"
+            else
+              echo "CONTAINER_REGISTRY_PUSHER_BINDING_ERROR_CLASS=TRANSIENT_OR_API"
+            fi
+
+            if (( attempt < 5 )); then
+              sleep $((attempt * 5))
+            fi
+          done
+
+          if [[ "$pusher_binding_succeeded" != "true" ]]; then
+            printf '%s\n' "$pusher_binding_output" >&2
+            echo "CONTAINER_REGISTRY_IMAGES_PUSHER=FAIL"
+            exit 1
+          fi
+
           echo "CONTAINER_REGISTRY_IMAGES_PUSHER=PASS"
 
           test -s "$YC_REGISTRY_IAM_TOKEN_FILE"
