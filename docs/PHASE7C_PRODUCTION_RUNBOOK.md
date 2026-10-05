@@ -66,6 +66,8 @@ For this product shape the production baseline is:
 
 The deployment identity and Terraform-state identity are intentionally separate as a least-privilege boundary.
 
+The protected workflow performs a fail-closed deployment IAM preflight before both Terraform plan and Terraform apply. The preflight reads the authenticated deployment service-account ID from the protected key file and checks effective direct service-account bindings at the target folder and cloud. It does not mutate IAM. Missing required roles stop the run before any Terraform apply operation.
+
 ### Deployment identity minimum for the registry bootstrap
 
 The service account behind `YC_SERVICE_ACCOUNT_KEY_JSON` must have `container-registry.editor` on the target folder. The protected workflow creates the production Container Registry when it is absent, converges its native Container Registry scan policy through the official Container Registry API, and manages the immutable image lifecycle. A pull-only registry role is insufficient for this deployment identity.
