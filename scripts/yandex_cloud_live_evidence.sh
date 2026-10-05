@@ -56,11 +56,13 @@ else
   fi
 fi
 echo "CLOUD_FOLDER_RELATION=PASS"
+: "${YC_REGISTRY_IAM_TOKEN_FILE:?YC_REGISTRY_IAM_TOKEN_FILE is required}"
+test -s "$YC_REGISTRY_IAM_TOKEN_FILE"
 container_json="$(yc serverless container get "$YC_CONTAINER_NAME" --format=json)"
 runner_json="$(yc serverless container get "$YC_MIGRATION_RUNNER_NAME" --format=json)"
 cluster_json="$(yc managed-postgresql cluster get "$YC_CLUSTER_NAME" --format=json)"
 bucket_json="$(yc storage bucket get "$YC_BUCKET_NAME" --format=json)"
-billing_iam_token="$(yc iam create-token)"
+billing_iam_token="$(cat "$YC_REGISTRY_IAM_TOKEN_FILE")"
 budget_response="$(curl -sS -w "\n%{http_code}"   -H "Authorization: Bearer $billing_iam_token"   -H "Accept: application/json"   "https://billing.api.cloud.yandex.net/billing/v1/budgets/$YC_BUDGET_ID")"
 budget_http_code="$(tail -n1 <<<"$budget_response")"
 budget_json="$(sed '$d' <<<"$budget_response")"
