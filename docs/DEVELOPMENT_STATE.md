@@ -1,3 +1,11 @@
+## Phase 7C Live-Gate Result + Provider Authentication Hardening — 2026-10-05
+
+- Latest completed repository gate before this hardening commit: HEAD `ad2601712af74353cde12c16a00f6a14531b9bd6`; CI run **2355 GREEN** and Terraform IaC Validation run **157 GREEN**.
+- Fresh protected Phase 7C launcher run **#6** used workflow revision `249c3f7a81fe75dc4cddfe472f6a35199891b685` and reached Terraform init successfully. Dedicated state credentials and Container Registry access therefore remained functional.
+- Run #6 then failed at `terraform state show/import` with Yandex provider authentication error: neither provider `token` nor `service_account_key_file` was supplied to Terraform. No Terraform plan/apply occurred.
+- Yandex's current Terraform documentation supports the `YC_SERVICE_ACCOUNT_KEY_FILE` environment variable for authorized-key authentication. The workflow is hardened to expose the runner-local authorized key only to the four Terraform steps that actually execute provider operations: registry bootstrap/import, plan, reviewed-plan recomputation, and apply.
+- The production gate must be rerun from `main` after this hardening commit so the launcher resolves the latest Phase 7C workflow revision. Phase 7C remains **IN_PROGRESS**; no live infrastructure readiness is claimed yet.
+
 ## Phase 7C Repository + Live-Gate Status — 2026-10-05
 
 - Current implementation HEAD: `02c3043dac102614549611ea02336d44b1f6c02a`.

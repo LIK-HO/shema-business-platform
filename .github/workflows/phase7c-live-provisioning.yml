@@ -113,7 +113,6 @@ jobs:
           YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
-          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
           AWS_DEFAULT_REGION: ru-central1
         run: bash scripts/yandex_cloud_terraform_state_preflight.sh
 
@@ -161,7 +160,6 @@ jobs:
           PHASE7C_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
-          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
         run: |
           terraform -chdir=deploy/terraform init -input=false \
             -backend-config="bucket=$PHASE7C_TERRAFORM_STATE_BUCKET"
@@ -355,7 +353,6 @@ jobs:
           YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
-          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
           AWS_DEFAULT_REGION: ru-central1
         run: bash scripts/yandex_cloud_terraform_state_preflight.sh
 
@@ -375,7 +372,6 @@ jobs:
           PHASE7C_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
-          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
         run: |
           terraform -chdir=deploy/terraform init -input=false \
             -backend-config="bucket=$PHASE7C_TERRAFORM_STATE_BUCKET"
@@ -385,7 +381,6 @@ jobs:
           EXPECTED_IMAGE_DIGEST: ${{ needs.plan.outputs.image_digest }}
           AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
-          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
         run: |
           set -Eeuo pipefail
           eval "$(python - <<'PY'
@@ -460,7 +455,6 @@ jobs:
           YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
-          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
           AWS_DEFAULT_REGION: ru-central1
         run: |
           set -Eeuo pipefail
@@ -502,7 +496,6 @@ jobs:
           PITR_RECOVERY_TIME: ${{ inputs.pitr_recovery_time }}
           AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.PHASE7C_TERRAFORM_STATE_SECRET_KEY }}
-          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
         run: |
           set -Eeuo pipefail
           test -n "$PITR_RECOVERY_TIME"
