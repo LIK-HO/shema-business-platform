@@ -57,10 +57,12 @@ def test_phase7_terraform_is_pinned_and_digest_based() -> None:
 
 def test_phase7_terraform_separates_runtime_and_artifact_roles() -> None:
     main = read("deploy/terraform/main.tf")
+    registry_access = read("scripts/yandex_cloud_container_registry_access.sh")
     assert "yandex_iam_service_account.container_runtime" in main
     assert "yandex_iam_service_account.container_puller" in main
     assert "lockbox.payloadViewer" in main
-    assert "container-registry.images.puller" in main
+    assert 'resource "terraform_data" "container_registry_pull_access"' in main
+    assert "container-registry.images.puller" in registry_access
 
 
 def test_phase7_gateway_is_the_public_edge() -> None:
