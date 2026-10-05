@@ -339,6 +339,7 @@ def test_phase7c_api_gateway_waits_for_invoker_and_service_account_use() -> None
         ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
     ).read_text(encoding="utf-8")
     assert 'role      = "iam.serviceAccounts.user"' in main
+    assert 'role      = "container-registry.admin"' in main
     assert "yandex_serverless_container_iam_member.gateway_invoker" in main
     assert "yandex_resourcemanager_folder_iam_member.deployment_service_account_user" in main
     assert "deployment_service_account_id" in variables
