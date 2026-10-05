@@ -107,6 +107,9 @@ fi
 IAM_TOKEN="$(jq -r '.iamToken // .iam_token // empty' "$token_response_file")"
 test -n "$IAM_TOKEN"
 
+policy_name="${APP_NAME}-image-scan"
+policy_description="Production vulnerability scanning on push plus daily rescan."
+
 desired_policy="$(jq -n   --arg registry_id "$YC_REGISTRY_ID"   --arg name "$policy_name"   --arg description "$policy_description"   '{
     registryId: $registry_id,
     name: $name,
