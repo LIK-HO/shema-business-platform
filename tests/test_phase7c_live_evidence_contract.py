@@ -462,3 +462,19 @@ def test_phase7c_scan_policy_live_evidence_uses_registry_id_not_terraform_policy
     assert 'YC_REGISTRY_ID' in evidence
     assert 'APP_NAME' in evidence
     assert 'bash scripts/yandex_cloud_container_registry_scan_policy.sh verify' in evidence
+
+
+def test_phase7c_has_fail_closed_deployment_iam_preflight() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_iam_preflight.sh").read_text(
+        encoding="utf-8"
+    )
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    assert "YC_SERVICE_ACCOUNT_KEY_FILE" in script
+    assert "resource-manager folder list-access-bindings" in script
+    assert "resource-manager cloud list-access-bindings" in script
+    assert "IAM_PREFLIGHT=PASS" in script
+    assert "IAM_PREFLIGHT=FAIL" in script
+    assert workflow.count("Verify deployment identity IAM baseline") == 2
+    assert workflow.count("bash scripts/yandex_cloud_iam_preflight.sh") == 2
