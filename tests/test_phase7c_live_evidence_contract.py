@@ -550,3 +550,11 @@ def test_phase7c_iam_preflight_requires_vpc_use_and_forbids_primitive_admin_fall
     assert "require_role_set FOLDER_IAM_MANAGEMENT resource-manager.admin" in script
     assert " resource-manager.clouds.owner" not in script
     assert "require_role_set OBJECT_STORAGE storage.editor" in script
+def test_phase7c_api_gateway_openapi_template_renders_runtime_identities() -> None:
+    template = (ROOT / "deploy" / "terraform" / "openapi.yaml.tftpl").read_text(
+        encoding="utf-8"
+    )
+    assert 'container_id: "${' + "container_id" + '}"' in template
+    assert 'service_account_id: "${' + "container_service_account" + '}"' in template
+    assert '$${container_id}' not in template
+    assert '$${container_service_account}' not in template
