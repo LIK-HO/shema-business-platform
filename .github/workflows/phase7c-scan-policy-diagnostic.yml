@@ -1,4 +1,5 @@
 name: Phase 7C Scan Policy Diagnostic
+# One-shot read-only diagnostic.
 
 on:
   push:
