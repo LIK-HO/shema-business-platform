@@ -104,7 +104,7 @@ case "$http_code" in
     policy_id=""
     ;;
   *)
-    echo "Cloud Registry scan policy lookup failed with HTTP $http_code." >&2
+    echo "Container Registry scan policy lookup failed with HTTP $http_code." >&2
     cat "$tmp_policy" >&2 || true
     exit 1
     ;;
@@ -137,7 +137,7 @@ policy_matches() {
 
 if ! policy_matches; then
   [[ "$MODE" == "ensure" ]] || {
-    echo "Cloud Registry scan policy is missing or does not match the production contract." >&2
+    echo "Container Registry scan policy is missing or does not match the production contract." >&2
     exit 1
   }
 
@@ -145,19 +145,17 @@ if ! policy_matches; then
     apply_policy POST "$API_BASE/scanPolicies" "$desired_policy"
   else
     update_body="$(jq -n       --arg name "$policy_name"       --arg description "$policy_description"       --argjson rules "$(jq '.rules' <<<"$desired_policy")"       '{
-        updateMask: "name,description,scanLangPackages,rules,disabled",
+        updateMask: "name,description,rules",
         name: $name,
         description: $description,
-        scanLangPackages: false,
-        rules: $rules,
-        disabled: false
+        rules: $rules
       }')"
     apply_policy PATCH "$API_BASE/scanPolicies/$policy_id" "$update_body"
   fi
 
   http_code="$(get_policy "$tmp_policy")"
   [[ "$http_code" == "200" ]] || {
-    echo "Cloud Registry scan policy was not readable after convergence." >&2
+    echo "Container Registry scan policy was not readable after convergence." >&2
     cat "$tmp_policy" >&2 || true
     exit 1
   }
