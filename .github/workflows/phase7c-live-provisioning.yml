@@ -1,6 +1,9 @@
 name: Phase 7C Live Provisioning and Evidence
 
 on:
+  push:
+    branches:
+      - "phase7c/yandex-cloud-mature-baseline-20261004"
   workflow_call:
     inputs:
       source_ref:
@@ -415,7 +418,7 @@ jobs:
 
   apply:
     needs: plan
-    if: ${{ inputs.apply == true }}
+    if: ${{ inputs.apply == true || github.event_name == 'push' }}
     runs-on: ubuntu-latest
     environment: production-yandex
     steps:
