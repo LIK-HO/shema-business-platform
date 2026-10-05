@@ -1,0 +1,21 @@
+name: Phase 7C One-Shot Production Deploy
+
+on:
+  push:
+    branches:
+      - phase7c/yandex-cloud-mature-baseline-20261004
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ github.event.head_commit.message == 'chore: one-shot Phase 7C production deploy' }}
+    uses: LIK-HO/shema-business-platform/.github/workflows/phase7c-live-provisioning.yml@phase7c/yandex-cloud-mature-baseline-20261004
+    with:
+      source_ref: phase7c/yandex-cloud-mature-baseline-20261004
+      apply: true
+      rollback_drill: false
+      pitr_drill: false
+      pitr_recovery_time: ""
+    secrets: inherit
