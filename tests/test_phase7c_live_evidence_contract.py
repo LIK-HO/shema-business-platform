@@ -315,7 +315,7 @@ def test_phase7c_registry_pull_access_uses_native_cli_boundary() -> None:
     ).read_text(encoding="utf-8")
     assert 'resource "yandex_container_registry_iam_binding" "puller"' not in main
     assert 'resource "terraform_data" "container_registry_pull_access"' in main
-    assert 'yandex_cloud_container_registry_access.sh ensure' in main
+    assert 'bash ../../scripts/yandex_cloud_container_registry_access.sh ensure' in main
     assert "yc container registry add-access-binding" in script
     assert "container-registry.images.puller" in script
     assert "CONTAINER_REGISTRY_PULL_ACCESS=PASS" in script
