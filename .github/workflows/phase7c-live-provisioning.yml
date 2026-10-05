@@ -194,13 +194,7 @@ jobs:
         env:
           YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
           YC_REGISTRY_IAM_TOKEN_FILE: ${{ runner.temp }}/yc/registry-iam-token
-        run: |
-          set -Eeuo pipefail
-          timeout 45s yc --profile shema-phase7c iam create-token \
-            --endpoint iam.api.cloud.yandex.net \
-            --retry=2 > "$YC_REGISTRY_IAM_TOKEN_FILE"
-          test -s "$YC_REGISTRY_IAM_TOKEN_FILE"
-          chmod 600 "$YC_REGISTRY_IAM_TOKEN_FILE"
+        run: bash scripts/yandex_cloud_service_account_iam_token.sh
 
       - name: Bootstrap registry and publish immutable application image
         id: bootstrap_image
@@ -525,6 +519,12 @@ jobs:
           YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
         run: terraform -chdir=deploy/terraform apply -input=false "$RUNNER_TEMP/phase7c.tfplan"
 
+      - name: Create live-evidence IAM token
+        env:
+          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
+          YC_REGISTRY_IAM_TOKEN_FILE: ${{ runner.temp }}/yc/registry-iam-token
+        run: bash scripts/yandex_cloud_service_account_iam_token.sh
+
       - name: Collect live resource evidence
         env:
           YC_CLOUD_ID: ${{ secrets.PHASE7C_CLOUD_ID }}
@@ -533,6 +533,7 @@ jobs:
           YC_MIGRATION_RUNNER_NAME: ${{ secrets.PHASE7C_MIGRATION_RUNNER_NAME }}
           YC_CLUSTER_NAME: ${{ secrets.PHASE7C_CLUSTER_NAME }}
           YC_BUCKET_NAME: ${{ secrets.PHASE7C_BUCKET_NAME }}
+          YC_REGISTRY_IAM_TOKEN_FILE: ${{ runner.temp }}/yc/registry-iam-token
           YC_BUDGET_ID: ${{ secrets.PHASE7C_BUDGET_ID }}
           YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.PHASE7C_TERRAFORM_STATE_ACCESS_KEY_ID }}
