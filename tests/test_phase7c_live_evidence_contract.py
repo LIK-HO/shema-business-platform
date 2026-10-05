@@ -478,6 +478,9 @@ def test_phase7c_has_fail_closed_deployment_iam_preflight() -> None:
     assert "YC_SERVICE_ACCOUNT_KEY_FILE" in script
     assert "resource-manager folder list-access-bindings" in script
     assert "resource-manager cloud list-access-bindings" in script
+    assert "IAM_FOLDER_BINDINGS_READ=FAIL" in script
+    assert "IAM_CLOUD_BINDINGS_READ=FAIL" in script
+    assert "IAM_CLOUD_BINDINGS_REQUIRED_ROLE=resource-manager.viewer" in script
     assert "IAM_PREFLIGHT=PASS" in script
     assert "IAM_PREFLIGHT=FAIL" in script
     assert workflow.count("Verify deployment identity IAM baseline") == 2
