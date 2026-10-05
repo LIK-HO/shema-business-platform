@@ -482,7 +482,7 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert 'repositoryPrefixes: ["*"]' in bootstrap
     assert 'rescanPeriod: "86400s"' in bootstrap
     assert 'updateMask: "name,description,rules"' in bootstrap
-    assert '"alg": "PS256"' in bootstrap
+    assert "yc iam create-token" in bootstrap
     assert '"aud": "https://iam.api.cloud.yandex.net/iam/v1/tokens"' in bootstrap
     assert 'rsa_padding_mode:pss' in bootstrap
     assert 'rsa_pss_saltlen:-1' in bootstrap
