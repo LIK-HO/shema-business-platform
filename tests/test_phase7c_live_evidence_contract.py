@@ -496,7 +496,7 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     registry_policy_contract = contract["execution"]["observability"]["registry_scan_policy"]
     assert "yandex_cloudregistry_scan_policy.app" not in registry_policy_contract
     assert contract["execution"]["observability"]["registry_scan_policy"] == (
-        "container_registry_scan_policy_via_official_api"
+        "container_registry_scan_policy_via_official_cli"
     )
     assert "yandex_cloudregistry" not in (
         ROOT / "scripts" / "yandex_cloud_live_evidence.sh"
