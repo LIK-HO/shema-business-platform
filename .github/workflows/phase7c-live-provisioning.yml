@@ -148,21 +148,6 @@ jobs:
               encoding="utf-8",
           )
           PY
-          deployment_service_account_id="$(jq -r '.service_account_id // empty' "$RUNNER_TEMP/yc/key.json")"
-          test -n "$deployment_service_account_id"
-          DEPLOYMENT_SERVICE_ACCOUNT_ID="$deployment_service_account_id" python - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          path = Path("deploy/terraform/terraform.tfvars.json")
-          values = json.loads(path.read_text(encoding="utf-8"))
-          values["deployment_service_account_id"] = os.environ["DEPLOYMENT_SERVICE_ACCOUNT_ID"]
-          path.write_text(
-              json.dumps(values, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
-              encoding="utf-8",
-          )
-          PY
           python - <<'PY'
           import json
           from pathlib import Path
@@ -187,6 +172,7 @@ jobs:
               "database_secret_input",
               "database_secret_version",
               "availability_zones",
+              "deployment_service_account_id",
           ):
               if not values.get(key):
                   raise SystemExit(f"Phase 7C requires protected Terraform input: {key}")
