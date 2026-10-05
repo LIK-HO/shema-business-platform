@@ -464,8 +464,9 @@ jobs:
           registry_id="$(terraform -chdir=deploy/terraform output -raw registry_id)"
           image_tag="${{ needs.plan.outputs.source_sha }}"
           image_url="cr.yandex/$registry_id/$APP_NAME:$image_tag"
-          image_digest="$(yc container image list --retry=-1             --repository-name="$registry_id/$APP_NAME"             --format=json |
-            jq -r --arg tag "$image_tag" '(if type == "object" then (.images // []) else . end)[]? | select((.tags // []) | index($tag)) | .digest' |
+          image_digest="$(timeout 30s yc container image list --retry=1             --repository-name="$registry_id/$APP_NAME"             --format=json |
+            jq -r --arg tag "$image_tag"               '(if type == "object" then (.images // []) else . end)[]? |
+               select((.tags // []) | index($tag)) | .digest' |
             head -n1)"
           test "$image_digest" = "$EXPECTED_IMAGE_DIGEST"
           IMAGE_URL="$image_url" IMAGE_DIGEST="$image_digest" python - <<'PY'
