@@ -484,6 +484,8 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert 'updateMask: "name,description,rules"' in bootstrap
     assert 'YC_PRIMARY_PROFILE="${YC_PRIMARY_PROFILE:-shema-phase7c}"' in bootstrap
     assert 'yc --profile="$YC_PRIMARY_PROFILE" iam create-token' in bootstrap
+    assert 'jwt_workdir="$(mktemp -d)"' in bootstrap
+    assert 'trap "rm -rf "$jwt_workdir"" EXIT' in bootstrap
     assert "iam.api.cloud.yandex.net" not in bootstrap
     assert "not found" in bootstrap
     assert "yc container registry configure-docker" not in workflow
