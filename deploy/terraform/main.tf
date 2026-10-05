@@ -417,6 +417,10 @@ resource "yandex_serverless_container" "migration_runner" {
     network_id = yandex_vpc_network.prod.id
   }
 
+  depends_on = [
+    terraform_data.container_registry_pull_access,
+  ]
+
   secrets {
     id                   = yandex_lockbox_secret.runtime.id
     version_id           = yandex_lockbox_secret_version_hashed.runtime.id
