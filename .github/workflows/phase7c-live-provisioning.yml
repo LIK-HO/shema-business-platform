@@ -97,8 +97,11 @@ jobs:
 
       - name: Install Yandex Cloud CLI
         run: |
-          curl -fsSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+          set -Eeuo pipefail
+          curl --fail --show-error --silent --location             --connect-timeout 15 --max-time 120             https://storage.yandexcloud.net/yandexcloud-yc/install.sh             | bash -s -- -i "$HOME/yandex-cloud" -n
+          test -x "$HOME/yandex-cloud/bin/yc"
           echo "$HOME/yandex-cloud/bin" >> "$GITHUB_PATH"
+          "$HOME/yandex-cloud/bin/yc" version
       - name: Configure Yandex Cloud credentials
         env:
           YC_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.YC_SERVICE_ACCOUNT_KEY_JSON }}
