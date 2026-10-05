@@ -38,8 +38,11 @@ test -n "$service_account_id"
 test -n "$key_id"
 
 jwt_workdir="$(mktemp -d)"
-cleanup_jwt() { rm -rf "$jwt_workdir"; }
-trap cleanup_jwt EXIT
+jwt_private_key="$jwt_workdir/private-key.pem"
+jq -r '.private_key // empty' "$YC_SERVICE_ACCOUNT_KEY_FILE" > "$jwt_private_key"
+test -s "$jwt_private_key"
+chmod 600 "$jwt_private_key"
+openssl pkey -in "$jwt_private_key" -noout >/dev/null
 
 jwt_unsigned="$jwt_workdir/unsigned"
 jwt_signature="$jwt_workdir/signature.bin"
@@ -70,7 +73,7 @@ IFS=. read -r jwt_header_part jwt_payload_part < "$jwt_unsigned"
 printf '%s.%s' "$jwt_header_part" "$jwt_payload_part" > "$jwt_workdir/signing_input"
 
 openssl dgst -sha256 \
-  -sign "$YC_SERVICE_ACCOUNT_KEY_FILE" \
+  -sign "$jwt_private_key" \
   -sigopt rsa_padding_mode:pss \
   -sigopt rsa_pss_saltlen:-1 \
   -out "$jwt_signature" "$jwt_workdir/signing_input"
@@ -105,7 +108,11 @@ IAM_TOKEN="$(jq -r '.iamToken // .iam_token // empty' "$token_response_file")"
 test -n "$IAM_TOKEN"
 
 tmp_policy="$(mktemp)"
-trap 'rm -f "$tmp_policy"' EXIT
+cleanup() {
+  rm -rf "$jwt_workdir"
+  rm -f "$tmp_policy"
+}
+trap cleanup EXIT
 
 http_code="$(get_policy "$tmp_policy")"
 case "$http_code" in
