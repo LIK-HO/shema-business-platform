@@ -558,3 +558,14 @@ def test_phase7c_api_gateway_openapi_template_renders_runtime_identities() -> No
     assert 'service_account_id: "${' + "container_service_account" + '}"' in template
     assert '$${container_id}' not in template
     assert '$${container_service_account}' not in template
+
+def test_phase7c_live_evidence_treats_cloud_scope_read_as_informational() -> None:
+    script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(
+        encoding="utf-8"
+    )
+    assert 'yc resource-manager cloud get "$YC_CLOUD_ID"' in script
+    assert 'CLOUD_METADATA_READ=SKIPPED' in script
+    assert 'CLOUD_METADATA_READ_REASON=FOLDER_SCOPE_IS_DEPLOYMENT_AUTHORITY' in script
+    assert 'CLOUD_FOLDER_RELATION=PASS' in script
+    assert ".cloud_id // .cloudId" in script
+\n
