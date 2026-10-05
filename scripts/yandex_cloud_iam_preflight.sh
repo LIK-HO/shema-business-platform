@@ -91,8 +91,8 @@ require_role_set() {
 failures=0
 
 require_role_set CONTAINER_REGISTRY container-registry.editor container-registry.admin || failures=$((failures + 1))
-require_role_set SERVICE_ACCOUNTS iam.serviceAccounts.admin || failures=$((failures + 1))
-require_role_set SERVICE_ACCOUNT_USE iam.serviceAccounts.user iam.serviceAccounts.admin || failures=$((failures + 1))
+require_role_set SERVICE_ACCOUNTS iam.serviceAccounts.admin iam.admin || failures=$((failures + 1))
+require_role_set SERVICE_ACCOUNT_USE iam.serviceAccounts.user iam.serviceAccounts.admin iam.admin || failures=$((failures + 1))
 require_role_set VPC_NETWORK vpc.privateAdmin vpc.admin || failures=$((failures + 1))
 require_role_set VPC_USE vpc.user vpc.admin || failures=$((failures + 1))
 require_role_set VPC_SECURITY_GROUPS vpc.securityGroups.admin vpc.admin || failures=$((failures + 1))
@@ -100,8 +100,8 @@ require_role_set POSTGRES managed-postgresql.editor managed-postgresql.admin || 
 require_role_set LOGGING logging.editor logging.admin || failures=$((failures + 1))
 require_role_set LOCKBOX_ACCESS lockbox.admin || failures=$((failures + 1))
 require_role_set AUDIT_TRAILS audit-trails.editor audit-trails.admin || failures=$((failures + 1))
-require_role_set SERVERLESS_CONTAINERS serverless-containers.editor serverless-containers.admin || failures=$((failures + 1))
-require_role_set SERVERLESS_CONTAINER_IAM serverless-containers.admin || failures=$((failures + 1))
+require_role_set SERVERLESS_CONTAINERS serverless-containers.editor serverless-containers.admin serverless.containers.editor serverless.containers.admin || failures=$((failures + 1))
+require_role_set SERVERLESS_CONTAINER_IAM serverless-containers.admin serverless.containers.admin || failures=$((failures + 1))
 require_role_set API_GATEWAY api-gateway.editor api-gateway.admin || failures=$((failures + 1))
 require_role_set OBJECT_STORAGE storage.editor || failures=$((failures + 1))
 require_role_set FOLDER_IAM_MANAGEMENT resource-manager.admin || failures=$((failures + 1))
