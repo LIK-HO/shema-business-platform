@@ -157,7 +157,7 @@ policy_matches() {
   jq -e '
     (.registryId // .registry_id) == $registry
     and (.disabled // false) == false
-    and ((.rules.pushRule // .rules.push_rule).disabled // true) == false
+    and ((.rules.pushRule // .rules.push_rule).disabled // false) == false
     and (
       (((.rules.pushRule // .rules.push_rule).repositoryPrefixes
         // (.rules.push_rule.repository_prefixes // []))
