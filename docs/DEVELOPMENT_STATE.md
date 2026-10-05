@@ -1,3 +1,15 @@
+## Phase 7C Live-Gate Diagnostic — Run #8 and Bash Digest Guard Fix — 2026-10-05
+
+- Protected Production Launcher run #8 (`37261796493`) passed state preflight, Terraform init and the corrected Registry image-list parser, then failed before Terraform plan.
+- Exact failure: `test: =~: binary operator expected` at the immutable image digest validation guard.
+- Root cause: Bash regex matching was written as `test "$image_digest" =~ ...`; the `=~` operator is valid with Bash `[[ ... ]]`, not the `test` builtin.
+- The registry image-list compatibility fix from the preceding run therefore worked: Run #8 progressed past the previous `Cannot index array with string "images"` defect.
+- No Terraform plan or Terraform apply occurred in Run #8; the failure remained inside the image-publication/bootstrap gate.
+- Corrective change: digest validation now uses `[[ "$image_digest" =~ ^sha256:[0-9a-f]{64}$ ]]`.
+- Regression coverage: `tests/test_phase7c_live_evidence_contract.py` now rejects the invalid `test "$image_digest" =~` form and requires the Bash regex form.
+- Corrective branch HEAD after this fix: `8ed498b26a3050f06b06f6ed13b4a775dc3ac5d2`.
+- PR #69 remains **OPEN / MERGEABLE / UNMERGED**. Phase 7C remains **IN_PROGRESS**. No production-readiness claim is made until a fresh protected launcher proves the complete plan/apply and live-evidence chain.
+
 ## Phase 7C Live-Gate Diagnostic — Run #7 and Registry Payload Fix — 2026-10-05
 
 - Protected Production Launcher run #7 (`37261087310`) used the corrected Phase 7C workflow and passed state preflight, Terraform init, Registry access and immutable image build.
