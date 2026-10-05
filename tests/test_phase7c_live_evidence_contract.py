@@ -439,7 +439,8 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert 'rescanPeriod: "24h"' in bootstrap
     assert 'repositoryPrefixes: ["*"]' in bootstrap
     assert 'yc iam create-token' in bootstrap
-    assert "yandex_cloudregistry_scan_policy.app" not in contract["execution"]["observability"]["registry_scan_policy"]
+    registry_policy_contract = contract["execution"]["observability"]["registry_scan_policy"]
+    assert "yandex_cloudregistry_scan_policy.app" not in registry_policy_contract
     assert contract["execution"]["observability"]["registry_scan_policy"] == (
         "container_registry_scan_policy_via_official_api"
     )
