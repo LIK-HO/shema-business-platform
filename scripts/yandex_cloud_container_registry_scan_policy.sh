@@ -128,7 +128,7 @@ policy_matches() {
 
     (.registryId // .registry_id) == $registry
     and (.disabled // false) == false
-    and (push_rule.disabled // true) == false
+    and (push_rule.disabled == false)
     and (
       (
         push_rule.repositoryPrefixes
@@ -138,7 +138,7 @@ policy_matches() {
       | index("*")
     ) != null
     and (schedule_rules | length) >= 1
-    and (schedule0.disabled // false) == false
+    and (schedule0.disabled == false)
     and (
       (
         schedule0.repositoryPrefixes
