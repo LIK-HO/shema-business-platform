@@ -39,7 +39,7 @@ desired_policy="$(jq -n   --arg registry_id "$YC_REGISTRY_ID"   --arg name "$pol
       scheduleRules: [
         {
           repositoryPrefixes: ["*"],
-          rescanPeriod: "24h",
+          rescanPeriod: "86400s",
           disabled: false
         }
       ]
@@ -136,7 +136,7 @@ policy_matches() {
     and (
       ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).rescanPeriod
         // ( .rules.schedule_rules // [])[0].rescan_period
-        // "") == "24h")
+        // "") == "86400s")
     )
   ' --arg registry "$YC_REGISTRY_ID" <<<"$policy_json" >/dev/null
 }
