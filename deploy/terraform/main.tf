@@ -125,7 +125,7 @@ resource "terraform_data" "container_registry_pull_access" {
   ])
 
   provisioner "local-exec" {
-    command = "bash scripts/yandex_cloud_container_registry_access.sh ensure"
+    command = "bash ../../scripts/yandex_cloud_container_registry_access.sh ensure"
     environment = {
       YC_REGISTRY_ID = yandex_container_registry.app.id
       YC_PULLER_SERVICE_ACCOUNT_IDS = join(" ", compact([
