@@ -70,6 +70,12 @@ resource "yandex_iam_service_account" "gateway_invoker" {
   description = "Least-privilege identity used only by API Gateway to invoke the private container."
 }
 
+resource "yandex_resourcemanager_folder_iam_member" "deployment_service_account_user" {
+  folder_id = var.folder_id
+  role      = "iam.serviceAccounts.user"
+  member    = "serviceAccount:${var.deployment_service_account_id}"
+}
+
 resource "yandex_iam_service_account" "migration_runner" {
   count       = var.evidence_runner_enabled ? 1 : 0
   name        = var.migration_runner_name
@@ -110,18 +116,32 @@ resource "yandex_container_registry" "app" {
   labels = local.common_labels
 }
 
-resource "yandex_container_registry_iam_binding" "puller" {
-  registry_id = yandex_container_registry.app.id
-  role        = "container-registry.images.puller"
-  members = concat(
-    [
-      "serviceAccount:${yandex_iam_service_account.container_puller.id}",
-      "serviceAccount:${yandex_iam_service_account.container_runtime.id}",
-    ],
-    var.evidence_runner_enabled ? [
-      "serviceAccount:${yandex_iam_service_account.migration_runner[0].id}",
-    ] : [],
-  )
+resource "terraform_data" "container_registry_pull_access" {
+  triggers_replace = compact([
+    yandex_container_registry.app.id,
+    yandex_iam_service_account.container_puller.id,
+    yandex_iam_service_account.container_runtime.id,
+    var.evidence_runner_enabled ? yandex_iam_service_account.migration_runner[0].id : "",
+  ])
+
+  provisioner "local-exec" {
+    command = "bash scripts/yandex_cloud_container_registry_access.sh ensure"
+    environment = {
+      YC_REGISTRY_ID = yandex_container_registry.app.id
+      YC_PULLER_SERVICE_ACCOUNT_IDS = join(" ", compact([
+        yandex_iam_service_account.container_puller.id,
+        yandex_iam_service_account.container_runtime.id,
+        var.evidence_runner_enabled ? yandex_iam_service_account.migration_runner[0].id : "",
+      ]))
+    }
+  }
+
+  depends_on = [
+    yandex_container_registry.app,
+    yandex_iam_service_account.container_puller,
+    yandex_iam_service_account.container_runtime,
+    yandex_iam_service_account.migration_runner,
+  ]
 }
 
 resource "yandex_lockbox_secret" "runtime" {
@@ -345,6 +365,11 @@ resource "yandex_api_gateway" "edge" {
     container_id              = yandex_serverless_container.api.id
     container_service_account = yandex_iam_service_account.gateway_invoker.id
   })
+
+  depends_on = [
+    yandex_serverless_container_iam_member.gateway_invoker,
+    yandex_resourcemanager_folder_iam_member.deployment_service_account_user,
+  ]
 }
 
 resource "yandex_lockbox_secret_iam_member" "migration_runner" {
