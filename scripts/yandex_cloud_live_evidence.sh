@@ -16,7 +16,8 @@ set -Eeuo pipefail
 : "$YC_RUNTIME_LOG_GROUP_ID" >/dev/null 2>&1 || { echo "YC_RUNTIME_LOG_GROUP_ID is required" >&2; exit 1; }
 : "$YC_AUDIT_LOG_GROUP_ID" >/dev/null 2>&1 || { echo "YC_AUDIT_LOG_GROUP_ID is required" >&2; exit 1; }
 : "$YC_AUDIT_TRAIL_ID" >/dev/null 2>&1 || { echo "YC_AUDIT_TRAIL_ID is required" >&2; exit 1; }
-: "$YC_REGISTRY_SCAN_POLICY_ID" >/dev/null 2>&1 || { echo "YC_REGISTRY_SCAN_POLICY_ID is required" >&2; exit 1; }
+: "$YC_REGISTRY_ID" >/dev/null 2>&1 || { echo "YC_REGISTRY_ID is required" >&2; exit 1; }
+: "$APP_NAME" >/dev/null 2>&1 || { echo "APP_NAME is required" >&2; exit 1; }
 
 for command_name in yc jq curl aws; do
   command -v "$command_name" >/dev/null 2>&1 || { echo "missing required command: $command_name" >&2; exit 1; }
@@ -38,7 +39,8 @@ gateway_json="$(yc serverless api-gateway get --id "$YC_API_GATEWAY_ID" --format
 runtime_log_group_json="$(yc logging group get --id "$YC_RUNTIME_LOG_GROUP_ID" --format=json)"
 audit_log_group_json="$(yc logging group get --id "$YC_AUDIT_LOG_GROUP_ID" --format=json)"
 audit_trail_json="$(yc audit-trails trail get --id "$YC_AUDIT_TRAIL_ID" --format=json)"
-scan_policy_json="$(yc cloud-registry registry scan-policy get --id "$YC_REGISTRY_SCAN_POLICY_ID" --format=json)"
+scan_policy_output="$(bash scripts/yandex_cloud_container_registry_scan_policy.sh verify)"
+[[ "$scan_policy_output" == *"REGISTRY_SCAN_POLICY=PASS"* ]]
 
 jq -e --arg id "$YC_CLOUD_ID" '.id == $id' <<<"$cloud_json" >/dev/null
 jq -e --arg id "$YC_FOLDER_ID" '.id == $id' <<<"$folder_json" >/dev/null
@@ -68,9 +70,6 @@ audit_retention_hours="$(retention_to_hours "$audit_retention")"
 awk "BEGIN {exit !($runtime_retention_hours >= 720)}"
 awk "BEGIN {exit !($audit_retention_hours >= 720)}"
 jq -e '.status == "ACTIVE" or .status == "RUNNING"' <<<"$audit_trail_json" >/dev/null
-jq -e '.disabled == false' <<<"$scan_policy_json" >/dev/null
-jq -e '(.rules.push_rule.disabled // true) == false' <<<"$scan_policy_json" >/dev/null
-jq -e '((.rules.schedule_rules // []) | length) >= 1' <<<"$scan_policy_json" >/dev/null
 
 echo "BACKUP_RETENTION=PASS"
 echo "BUDGET_THRESHOLDS=PASS"
