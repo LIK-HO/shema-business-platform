@@ -419,3 +419,45 @@ def test_phase7c_terraform_steps_receive_yandex_provider_key() -> None:
     assert "Terraform plan" in workflow
     assert "Recompute and verify reviewed Terraform plan" in workflow
     assert "Terraform apply reviewed plan" in workflow
+
+
+def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
+    main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
+    outputs = (ROOT / "deploy" / "terraform" / "outputs.tf").read_text(encoding="utf-8")
+    bootstrap = (
+        ROOT / "scripts" / "yandex_cloud_container_registry_scan_policy.sh"
+    ).read_text(encoding="utf-8")
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    contract = read_contract()
+
+    assert 'resource "yandex_container_registry" "app"' in main
+    assert "yandex_cloudregistry_scan_policy" not in main
+    assert "registry_scan_policy_id" not in outputs
+    assert "container-registry.api.cloud.yandex.net/container-registry/v1" in bootstrap
+    assert 'rescanPeriod: "24h"' in bootstrap
+    assert 'repositoryPrefixes: ["*"]' in bootstrap
+    assert 'yc iam create-token' in bootstrap
+    assert "yandex_cloudregistry_scan_policy.app" not in contract["execution"]["observability"]["registry_scan_policy"]
+    assert contract["execution"]["observability"]["registry_scan_policy"] == (
+        "container_registry_scan_policy_via_official_api"
+    )
+    assert "yandex_cloudregistry" not in (
+        ROOT / "scripts" / "yandex_cloud_live_evidence.sh"
+    ).read_text(encoding="utf-8")
+    assert 'bash scripts/yandex_cloud_container_registry_scan_policy.sh ensure' in workflow
+
+
+def test_phase7c_scan_policy_live_evidence_uses_registry_id_not_terraform_policy_output() -> None:
+    workflow = (
+        ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
+    ).read_text(encoding="utf-8")
+    evidence = (
+        ROOT / "scripts" / "yandex_cloud_live_evidence.sh"
+    ).read_text(encoding="utf-8")
+    assert 'output -raw registry_id' in workflow
+    assert 'output -raw registry_scan_policy_id' not in workflow
+    assert 'YC_REGISTRY_ID' in evidence
+    assert 'APP_NAME' in evidence
+    assert 'bash scripts/yandex_cloud_container_registry_scan_policy.sh verify' in evidence
