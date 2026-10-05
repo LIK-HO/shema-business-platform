@@ -107,6 +107,74 @@ fi
 IAM_TOKEN="$(jq -r '.iamToken // .iam_token // empty' "$token_response_file")"
 test -n "$IAM_TOKEN"
 
+desired_policy="$(jq -n   --arg registry_id "$YC_REGISTRY_ID"   --arg name "$policy_name"   --arg description "$policy_description"   '{
+    registryId: $registry_id,
+    name: $name,
+    description: $description,
+    rules: {
+      pushRule: {
+        repositoryPrefixes: ["*"],
+        disabled: false
+      },
+      scheduleRules: [
+        {
+          repositoryPrefixes: ["*"],
+          rescanPeriod: "86400s",
+          disabled: false
+        }
+      ]
+    }
+  }')"
+
+get_policy() {
+  local output_file="$1"
+  local http_code
+  http_code="$(curl -sS --connect-timeout 15 --max-time 30 -o "$output_file" -w "%{http_code}"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Accept: application/json"     "$API_BASE/scanPolicies/$YC_REGISTRY_ID:byRegistry")"
+  if [[ "$http_code" == "400" ]] && grep -qiE     'Scan policy not found for registry|scanPolicyForRegistryNotFoundException'     "$output_file"; then
+    echo "404"
+    return 0
+  fi
+  echo "$http_code"
+}
+
+poll_operation() {
+  local operation_id="$1"
+  local operation_json
+  local done
+  for _ in $(seq 1 60); do
+    operation_json="$(curl -sS --connect-timeout 15 --max-time 30       -H "Authorization: Bearer $IAM_TOKEN"       -H "Accept: application/json"       "$OPERATION_BASE/$operation_id")"
+    done="$(jq -r '.done // false' <<<"$operation_json")"
+    if [[ "$done" == "true" ]]; then
+      if jq -e '.error' <<<"$operation_json" >/dev/null; then
+        jq -r '.error.message // "Container Registry scan policy operation failed."' <<<"$operation_json" >&2
+        return 1
+      fi
+      return 0
+    fi
+    sleep 2
+  done
+  echo "Container Registry scan policy operation timed out." >&2
+  return 1
+}
+
+apply_policy() {
+  local method="$1"
+  local url="$2"
+  local body="$3"
+  local response
+  local operation_id
+
+  response="$(curl -sS --connect-timeout 15 --max-time 30 -X "$method"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Content-Type: application/json"     -H "Accept: application/json"     -d "$body"     "$url")"
+
+  operation_id="$(jq -r '.id // empty' <<<"$response")"
+  if [[ -z "$operation_id" ]]; then
+    echo "Container Registry scan policy API returned no operation id." >&2
+    jq -r '.message // .error.message // "No operation id in API response."' <<<"$response" >&2 || true
+    exit 1
+  fi
+  poll_operation "$operation_id"
+}
+
 tmp_policy="$(mktemp)"
 cleanup() {
   rm -rf "$jwt_workdir"
