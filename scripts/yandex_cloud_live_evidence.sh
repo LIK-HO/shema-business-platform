@@ -60,7 +60,15 @@ container_json="$(yc serverless container get "$YC_CONTAINER_NAME" --format=json
 runner_json="$(yc serverless container get "$YC_MIGRATION_RUNNER_NAME" --format=json)"
 cluster_json="$(yc managed-postgresql cluster get "$YC_CLUSTER_NAME" --format=json)"
 bucket_json="$(yc storage bucket get "$YC_BUCKET_NAME" --format=json)"
-budget_json="$(yc billing v1 budget get "$YC_BUDGET_ID" --format=json)"
+billing_iam_token="$(yc iam create-token)"
+budget_response="$(curl -sS -w "\n%{http_code}"   -H "Authorization: Bearer $billing_iam_token"   -H "Accept: application/json"   "https://billing.api.cloud.yandex.net/billing/v1/budgets/$YC_BUDGET_ID")"
+budget_http_code="$(tail -n1 <<<"$budget_response")"
+budget_json="$(sed '$d' <<<"$budget_response")"
+if [[ "$budget_http_code" != "200" ]]; then
+  echo "BUDGET_READ=FAIL" >&2
+  exit 1
+fi
+echo "BUDGET_READ=PASS"
 gateway_json="$(yc serverless api-gateway get --id "$YC_API_GATEWAY_ID" --format=json)"
 runtime_log_group_json="$(yc logging group get --id "$YC_RUNTIME_LOG_GROUP_ID" --format=json)"
 audit_log_group_json="$(yc logging group get --id "$YC_AUDIT_LOG_GROUP_ID" --format=json)"
