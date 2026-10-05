@@ -3,6 +3,8 @@ set -Eeuo pipefail
 
 : "${YC_REGISTRY_ID:?YC_REGISTRY_ID is required}"
 : "${APP_NAME:?APP_NAME is required}"
+: "${YC_SERVICE_ACCOUNT_KEY_FILE:?YC_SERVICE_ACCOUNT_KEY_FILE is required}"
+test -r "$YC_SERVICE_ACCOUNT_KEY_FILE"
 
 MODE="${1:-ensure}"
 case "$MODE" in
@@ -13,19 +15,7 @@ case "$MODE" in
     ;;
 esac
 
-for command_name in yc jq curl; do
-  command -v "$command_name" >/dev/null 2>&1 || {
-    echo "missing required command: $command_name" >&2
-    exit 1
-  }
-done
-
-API_BASE="https://container-registry.api.cloud.yandex.net/container-registry/v1"
-OPERATION_BASE="https://operation.api.cloud.yandex.net/operations"
-: "${YC_SERVICE_ACCOUNT_KEY_FILE:?YC_SERVICE_ACCOUNT_KEY_FILE is required}"
-test -r "$YC_SERVICE_ACCOUNT_KEY_FILE"
-
-for command_name in openssl python3; do
+for command_name in yc jq curl openssl python3; do
   command -v "$command_name" >/dev/null 2>&1 || {
     echo "missing required command: $command_name" >&2
     exit 1
@@ -38,16 +28,14 @@ test -n "$service_account_id"
 test -n "$key_id"
 
 jwt_workdir="$(mktemp -d)"
+trap 'rm -rf "$jwt_workdir"' EXIT
 jwt_private_key="$jwt_workdir/private-key.pem"
 jq -r '.private_key // empty' "$YC_SERVICE_ACCOUNT_KEY_FILE" > "$jwt_private_key"
 test -s "$jwt_private_key"
 chmod 600 "$jwt_private_key"
 openssl pkey -in "$jwt_private_key" -noout >/dev/null
 
-jwt_unsigned="$jwt_workdir/unsigned"
-jwt_signature="$jwt_workdir/signature.bin"
-
-python3 - "$service_account_id" "$key_id" > "$jwt_unsigned" <<'PY'
+python3 - "$service_account_id" "$key_id" > "$jwt_workdir/unsigned" <<'PY'
 import base64
 import json
 import sys
@@ -66,20 +54,18 @@ payload = {
     "iat": now,
     "exp": now + 3600,
 }
-print(f"{b64url(json.dumps(header, separators=(',', ':')).encode())}.{b64url(json.dumps(payload, separators=(',', ':')).encode())}")
+print(
+    f"{b64url(json.dumps(header, separators=(',', ':')).encode())}."
+    f"{b64url(json.dumps(payload, separators=(',', ':')).encode())}"
+)
 PY
 
-IFS=. read -r jwt_header_part jwt_payload_part < "$jwt_unsigned"
-printf '%s.%s' "$jwt_header_part" "$jwt_payload_part" > "$jwt_workdir/signing_input"
-
-openssl dgst -sha256 \
-  -sign "$jwt_private_key" \
-  -sigopt rsa_padding_mode:pss \
-  -sigopt rsa_pss_saltlen:-1 \
-  -out "$jwt_signature" "$jwt_workdir/signing_input"
+IFS=. read -r jwt_header_part jwt_payload_part < "$jwt_workdir/unsigned"
+printf '%s.%s' "$jwt_header_part" "$jwt_payload_part" > "$jwt_workdir/signing-input"
+openssl dgst -sha256   -sign "$jwt_private_key"   -sigopt rsa_padding_mode:pss   -sigopt rsa_pss_saltlen:-1   -out "$jwt_workdir/signature.bin" "$jwt_workdir/signing-input"
 
 jwt_signature_b64="$(
-  python3 - "$jwt_signature" <<'PY'
+  python3 - "$jwt_workdir/signature.bin" <<'PY'
 import base64
 import pathlib
 import sys
@@ -90,13 +76,7 @@ jwt="$jwt_header_part.$jwt_payload_part.$jwt_signature_b64"
 
 token_response_file="$jwt_workdir/token-response.json"
 token_http_code="$(
-  curl -sS --connect-timeout 15 --max-time 30 \
-    -o "$token_response_file" \
-    -w "%{http_code}" \
-    -H "Content-Type: application/json" \
-    -H "Accept: application/json" \
-    -d "$(jq -cn --arg jwt "$jwt" '{jwt: $jwt}')" \
-    "https://iam.api.cloud.yandex.net/iam/v1/tokens"
+  curl -sS --connect-timeout 15 --max-time 30     -o "$token_response_file"     -w "%{http_code}"     -H "Content-Type: application/json"     -H "Accept: application/json"     -d "$(jq -cn --arg jwt "$jwt" '{jwt: $jwt}')"     "https://iam.api.cloud.yandex.net/iam/v1/tokens"
 )"
 if [[ "$token_http_code" != "200" ]]; then
   echo "IAM JWT exchange failed with HTTP $token_http_code." >&2
@@ -114,131 +94,89 @@ fi
 policy_name="${APP_NAME}-image-scan"
 policy_description="Production vulnerability scanning on push plus daily rescan."
 
-desired_policy="$(jq -n   --arg registry_id "$YC_REGISTRY_ID"   --arg name "$policy_name"   --arg description "$policy_description"   '{
-    registryId: $registry_id,
-    name: $name,
-    description: $description,
-    rules: {
-      pushRule: {
-        repositoryPrefixes: ["*"],
-        disabled: false
-      },
-      scheduleRules: [
-        {
-          repositoryPrefixes: ["*"],
-          rescanPeriod: "86400s",
-          disabled: false
-        }
-      ]
+rules_file="$jwt_workdir/scan-policy-rules.json"
+cat > "$rules_file" <<'JSON'
+{
+  "pushRule": {
+    "repositoryPrefixes": ["*"],
+    "disabled": false
+  },
+  "scheduleRules": [
+    {
+      "repositoryPrefixes": ["*"],
+      "rescanPeriod": "86400s",
+      "disabled": false
     }
-  }')"
+  ]
+}
+JSON
 
 get_policy() {
   local output_file="$1"
-  local http_code
-  http_code="$(curl -sS --connect-timeout 15 --max-time 30 -o "$output_file" -w "%{http_code}"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Accept: application/json"     "$API_BASE/scanPolicies/$YC_REGISTRY_ID:byRegistry")"
-  if [[ "$http_code" == "400" ]] && grep -qiE     'Scan policy not found for registry|scanPolicyForRegistryNotFoundException'     "$output_file"; then
+  local rc
+  set +e
+  yc cloud-registry registry scan-policy get-by-registry "$YC_REGISTRY_ID"     --token "$IAM_TOKEN"     --format=json >"$output_file" 2>&1
+  rc=$?
+  set -e
+  if (( rc == 0 )); then
+    echo "200"
+    return 0
+  fi
+  if grep -qiE 'not found|NOT_FOUND|scanPolicyForRegistryNotFoundException' "$output_file"; then
     echo "404"
     return 0
   fi
-  echo "$http_code"
+  echo "$rc"
 }
 
-poll_operation() {
-  local operation_id="$1"
-  local operation_json
-  local done
-  for _ in $(seq 1 60); do
-    operation_json="$(curl -sS --connect-timeout 15 --max-time 30       -H "Authorization: Bearer $IAM_TOKEN"       -H "Accept: application/json"       "$OPERATION_BASE/$operation_id")"
-    done="$(jq -r '.done // false' <<<"$operation_json")"
-    if [[ "$done" == "true" ]]; then
-      if jq -e '.error' <<<"$operation_json" >/dev/null; then
-        jq -r '.error.message // "Container Registry scan policy operation failed."' <<<"$operation_json" >&2
-        return 1
-      fi
-      return 0
-    fi
-    sleep 2
-  done
-  echo "Container Registry scan policy operation timed out." >&2
-  return 1
+apply_create() {
+  yc cloud-registry registry scan-policy create "$policy_name"     --registry-id "$YC_REGISTRY_ID"     --description "$policy_description"     --rules "$rules_file"     --token "$IAM_TOKEN"     --format=json
 }
 
-apply_policy() {
-  local method="$1"
-  local url="$2"
-  local body="$3"
-  local response
-  local operation_id
-
-  response="$(curl -sS --connect-timeout 15 --max-time 30 -X "$method"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Content-Type: application/json"     -H "Accept: application/json"     -d "$body"     "$url")"
-
-  operation_id="$(jq -r '.id // empty' <<<"$response")"
-  if [[ -z "$operation_id" ]]; then
-    echo "Container Registry scan policy API returned no operation id." >&2
-    jq -r '.message // .error.message // "No operation id in API response."' <<<"$response" >&2 || true
-    exit 1
-  fi
-  poll_operation "$operation_id"
+apply_update() {
+  local policy_id="$1"
+  yc cloud-registry registry scan-policy update "$policy_id"     --new-name "$policy_name"     --new-description "$policy_description"     --new-rules "$rules_file"     --token "$IAM_TOKEN"     --format=json
 }
 
-tmp_policy="$(mktemp)"
-cleanup() {
-  rm -rf "$jwt_workdir"
-  rm -f "$tmp_policy"
-}
-trap cleanup EXIT
-
+tmp_policy="$jwt_workdir/policy.json"
 http_code="$(get_policy "$tmp_policy")"
 case "$http_code" in
   200)
     policy_json="$(cat "$tmp_policy")"
-    policy_id="$(jq -r '.id // empty' <<<"$policy_json")"
-    test -n "$policy_id"
     ;;
   404)
     policy_json=""
-    policy_id=""
     ;;
   *)
-    echo "Container Registry scan policy lookup failed with HTTP $http_code." >&2
+    echo "Container Registry scan policy lookup failed." >&2
     cat "$tmp_policy" >&2 || true
     exit 1
     ;;
 esac
 
 policy_matches() {
-  [[ "$policy_json" != "" ]] || return 1
+  [[ -n "$policy_json" ]] || return 1
   jq -e '
-    def push_rule:
-      (.rules.pushRule // .rules.push_rule // {});
-    def schedule_rules:
-      (.rules.scheduleRules // .rules.schedule_rules // []);
-    def schedule0:
-      (schedule_rules[0] // {});
-
     (.registryId // .registry_id) == $registry
     and (.disabled // false) == false
-    and (push_rule.disabled == false)
+    and ((.rules.pushRule // .rules.push_rule).disabled // true) == false
     and (
-      (
-        push_rule.repositoryPrefixes
-        // push_rule.repository_prefixes
-        // []
-      )
-      | index("*")
-    ) != null
-    and (schedule_rules | length) >= 1
-    and (schedule0.disabled == false)
+      (((.rules.pushRule // .rules.push_rule).repositoryPrefixes
+        // (.rules.push_rule.repository_prefixes // []))
+        | index("*")) != null
+    )
+    and (((.rules.scheduleRules // .rules.schedule_rules // []) | length) >= 1)
+    and ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).disabled // false) == false)
     and (
-      (
-        schedule0.repositoryPrefixes
-        // schedule0.repository_prefixes
-        // []
-      )
-      | index("*")
-    ) != null
-    and (schedule0.rescanPeriod // schedule0.rescan_period // "") == "86400s"
+      ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).repositoryPrefixes
+        // ((.rules.schedule_rules // [])[0].repository_prefixes // []))
+        | index("*")) != null
+    )
+    and (
+      (((.rules.scheduleRules // .rules.schedule_rules // [])[0]).rescanPeriod
+        // ((.rules.schedule_rules // [])[0].rescan_period // ""))
+      == "86400s"
+    )
   ' --arg registry "$YC_REGISTRY_ID" <<<"$policy_json" >/dev/null
 }
 
@@ -248,16 +186,12 @@ if ! policy_matches; then
     exit 1
   }
 
-  if [[ -z "$policy_id" ]]; then
-    apply_policy POST "$API_BASE/scanPolicies" "$desired_policy"
+  if [[ -z "$policy_json" ]]; then
+    apply_create >/dev/null
   else
-    update_body="$(jq -n       --arg name "$policy_name"       --arg description "$policy_description"       --argjson rules "$(jq '.rules' <<<"$desired_policy")"       '{
-        updateMask: "name,description,rules",
-        name: $name,
-        description: $description,
-        rules: $rules
-      }')"
-    apply_policy PATCH "$API_BASE/scanPolicies/$policy_id" "$update_body"
+    policy_id="$(jq -r '.id // empty' <<<"$policy_json")"
+    test -n "$policy_id"
+    apply_update "$policy_id" >/dev/null
   fi
 
   http_code="$(get_policy "$tmp_policy")"
@@ -267,10 +201,10 @@ if ! policy_matches; then
     exit 1
   }
   policy_json="$(cat "$tmp_policy")"
-  policy_id="$(jq -r '.id // empty' <<<"$policy_json")"
-  test -n "$policy_id"
   policy_matches
 fi
 
+policy_id="$(jq -r '.id // empty' <<<"$policy_json")"
+test -n "$policy_id"
 echo "REGISTRY_SCAN_POLICY_ID=$policy_id"
 echo "REGISTRY_SCAN_POLICY=PASS"
