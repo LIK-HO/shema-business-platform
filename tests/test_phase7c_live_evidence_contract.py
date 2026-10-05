@@ -497,6 +497,8 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert "not found" in bootstrap
     assert "yc container registry configure-docker" not in workflow
     assert 'docker login --username iam --password-stdin cr.yandex' in workflow
+    assert 'yc container registry add-access-binding "$registry_id"' in workflow
+    assert '--role container-registry.images.pusher' in workflow
     assert "YC_REGISTRY_IAM_TOKEN_FILE" in workflow
     registry_policy_contract = contract["execution"]["observability"]["registry_scan_policy"]
     assert "yandex_cloudregistry_scan_policy.app" not in registry_policy_contract
