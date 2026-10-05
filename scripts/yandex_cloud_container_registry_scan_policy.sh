@@ -22,10 +22,11 @@ done
 
 API_BASE="https://container-registry.api.cloud.yandex.net/container-registry/v1"
 OPERATION_BASE="https://operation.api.cloud.yandex.net/operations"
+IAM_PROFILE="${YC_IAM_PROFILE:-shema-phase7c}"
 IAM_TOKEN=""
 for attempt in 1 2 3 4; do
   set +e
-  token_output="$(timeout 45s yc iam create-token 2>&1)"
+  token_output="$(timeout 30s yc iam create-token     --profile "$IAM_PROFILE"     --endpoint iam.api.cloud.yandex.net 2>&1)"
   token_rc=$?
   set -e
   if (( token_rc == 0 )) && [[ -n "$token_output" ]]; then
@@ -37,7 +38,7 @@ for attempt in 1 2 3 4; do
   fi
 done
 if [[ -z "$IAM_TOKEN" ]]; then
-  echo "Container Registry scan policy could not obtain an IAM token after 4 attempts." >&2
+  echo "Container Registry scan policy could not obtain an IAM token from iam.api.cloud.yandex.net after 4 attempts." >&2
   exit 1
 fi
 
