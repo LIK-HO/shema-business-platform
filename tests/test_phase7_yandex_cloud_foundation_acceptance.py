@@ -51,8 +51,16 @@ def test_phase7_terraform_is_pinned_and_digest_based() -> None:
     assert 'replica = {' in main
     assert 'port=6432' in main or ':6432/' in main
     assert 'sslmode=verify-full' in main
-    assert 'sslrootcert=/etc/shema/yandex-cloud-ca.pem' in main
+    assert 'sslrootcert=/etc/ssl/certs/yandex-cloud-ca.pem' in main
     assert 'target_session_attrs=read-write' in main
+
+
+def test_phase7_postgres_tls_root_cert_matches_runtime_image() -> None:
+    dockerfile = read("Dockerfile")
+    main = read("deploy/terraform/main.tf")
+    expected_ca = "/etc/ssl/certs/yandex-cloud-ca.pem"
+    assert f"--output {expected_ca}" in dockerfile
+    assert f"sslrootcert={expected_ca}" in main
 
 
 def test_phase7_terraform_separates_runtime_and_artifact_roles() -> None:
