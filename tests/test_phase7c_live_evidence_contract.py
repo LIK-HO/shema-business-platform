@@ -477,12 +477,11 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert 'resource "yandex_container_registry" "app"' in main
     assert "yandex_cloudregistry_scan_policy" not in main
     assert "registry_scan_policy_id" not in outputs
-    assert "yc cloud-registry registry scan-policy get-by-registry" in bootstrap
-    assert "yc cloud-registry registry scan-policy create" in bootstrap
-    assert "yc cloud-registry registry scan-policy update" in bootstrap
-    assert '"paths": ["*"]' in bootstrap
-    assert '"amount": "1"' in bootstrap
-    assert '"intervalUnit": "DAYS"' in bootstrap
+    assert "container-registry.api.cloud.yandex.net/container-registry/v1" in bootstrap
+    assert 'scanPolicies/$YC_REGISTRY_ID:byRegistry' in bootstrap
+    assert 'repositoryPrefixes": ["*"]' in bootstrap
+    assert 'rescanPeriod": "86400s"' in bootstrap
+    assert 'updateMask: "name,description,rules"' in bootstrap
     assert '"alg": "PS256"' in bootstrap
     assert '"aud": "https://iam.api.cloud.yandex.net/iam/v1/tokens"' in bootstrap
     assert 'rsa_padding_mode:pss' in bootstrap
