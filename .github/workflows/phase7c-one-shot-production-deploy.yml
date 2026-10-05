@@ -1,5 +1,6 @@
 name: Phase 7C One-Shot Production Deploy
 # Temporary release trigger; remove after successful production acceptance.
+# Deployment source is a fixed, CI-accepted Phase 7C branch SHA.
 
 on:
   push:
