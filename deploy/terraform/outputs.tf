@@ -51,9 +51,6 @@ output "audit_trail_id" {
   value = yandex_audit_trails_trail.production.id
 }
 
-output "registry_scan_policy_id" {
-  value = yandex_cloudregistry_scan_policy.app.id
-}
 
 output "audit_trail_service_account_id" {
   value = yandex_iam_service_account.audit_trail.id
