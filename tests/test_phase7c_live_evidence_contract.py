@@ -256,7 +256,8 @@ def test_phase7c_live_evidence_requires_mature_observability_controls() -> None:
         "YC_RUNTIME_LOG_GROUP_ID",
         "YC_AUDIT_LOG_GROUP_ID",
         "YC_AUDIT_TRAIL_ID",
-        "YC_REGISTRY_SCAN_POLICY_ID",
+        "YC_REGISTRY_ID",
+        "APP_NAME",
         "RUNTIME_LOG_GROUP=PASS",
         "AUDIT_LOG_GROUP=PASS",
         "AUDIT_TRAIL=PASS",
@@ -291,7 +292,7 @@ def test_phase7c_live_evidence_workflow_passes_dedicated_state_credentials() -> 
     assert 'terraform -chdir=deploy/terraform output -raw runtime_log_group_id' in block
     assert 'terraform -chdir=deploy/terraform output -raw audit_log_group_id' in block
     assert 'terraform -chdir=deploy/terraform output -raw audit_trail_id' in block
-    assert 'terraform -chdir=deploy/terraform output -raw registry_scan_policy_id' in block
+    assert 'terraform -chdir=deploy/terraform output -raw registry_id' in block
 
 def test_phase7c_live_evidence_requires_budget_thresholds_and_runtime_logs() -> None:
     script = (ROOT / "scripts" / "yandex_cloud_live_evidence.sh").read_text(
