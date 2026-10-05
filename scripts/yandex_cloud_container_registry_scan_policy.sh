@@ -49,7 +49,7 @@ desired_policy="$(jq -n   --arg registry_id "$YC_REGISTRY_ID"   --arg name "$pol
 get_policy() {
   local output_file="$1"
   local http_code
-  http_code="$(curl -sS -o "$output_file" -w "%{http_code}"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Accept: application/json"     "$API_BASE/scanPolicies/$YC_REGISTRY_ID:byRegistry")"
+  http_code="$(curl -sS --connect-timeout 15 --max-time 30 -o "$output_file" -w "%{http_code}"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Accept: application/json"     "$API_BASE/scanPolicies/$YC_REGISTRY_ID:byRegistry")"
   if [[ "$http_code" == "400" ]] && grep -qiE     'Scan policy not found for registry|scanPolicyForRegistryNotFoundException'     "$output_file"; then
     echo "404"
     return 0
@@ -62,7 +62,7 @@ poll_operation() {
   local operation_json
   local done
   for _ in $(seq 1 60); do
-    operation_json="$(curl -sS       -H "Authorization: Bearer $IAM_TOKEN"       -H "Accept: application/json"       "$OPERATION_BASE/$operation_id")"
+    operation_json="$(curl -sS --connect-timeout 15 --max-time 30       -H "Authorization: Bearer $IAM_TOKEN"       -H "Accept: application/json"       "$OPERATION_BASE/$operation_id")"
     done="$(jq -r '.done // false' <<<"$operation_json")"
     if [[ "$done" == "true" ]]; then
       if jq -e '.error' <<<"$operation_json" >/dev/null; then
@@ -84,7 +84,7 @@ apply_policy() {
   local response
   local operation_id
 
-  response="$(curl -sS -X "$method"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Content-Type: application/json"     -H "Accept: application/json"     -d "$body"     "$url")"
+  response="$(curl -sS --connect-timeout 15 --max-time 30 -X "$method"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Content-Type: application/json"     -H "Accept: application/json"     -d "$body"     "$url")"
 
   operation_id="$(jq -r '.id // empty' <<<"$response")"
   if [[ -z "$operation_id" ]]; then
