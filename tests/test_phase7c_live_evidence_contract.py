@@ -487,7 +487,7 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert 'rsa_pss_saltlen:-1' in bootstrap
     assert 'private_key // empty' in bootstrap
     assert 'https://iam.api.cloud.yandex.net/iam/v1/tokens' in bootstrap
-    assert 'rescanPeriod: "86400s"' in bootstrap
+    assert '"rescanPeriod": "86400s"' in bootstrap
     assert "not found" in bootstrap
     assert 'yc iam create-token' not in bootstrap
     assert "yc container registry configure-docker" not in workflow
