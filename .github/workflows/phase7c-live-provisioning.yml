@@ -60,7 +60,7 @@ permissions:
 
 concurrency:
   group: phase7c-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   plan:
