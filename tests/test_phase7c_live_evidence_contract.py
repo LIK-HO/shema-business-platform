@@ -482,11 +482,14 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert 'repositoryPrefixes: ["*"]' in bootstrap
     assert 'rescanPeriod: "86400s"' in bootstrap
     assert 'updateMask: "name,description,rules"' in bootstrap
-    assert 'YC_PRIMARY_PROFILE="${YC_PRIMARY_PROFILE:-shema-phase7c}"' in bootstrap
-    assert 'yc --profile="$YC_PRIMARY_PROFILE" iam create-token' in bootstrap
+    assert 'YC_REGISTRY_IAM_TOKEN_FILE is required' in bootstrap
+    assert 'IAM_TOKEN="$(cat "$YC_REGISTRY_IAM_TOKEN_FILE")"' in bootstrap
     assert 'jwt_workdir="$(mktemp -d)"' in bootstrap
     assert 'trap "rm -rf \\"$jwt_workdir\\"" EXIT' in bootstrap
-    assert "iam.api.cloud.yandex.net" not in bootstrap
+    assert "iam.api.cloud.yandex.net" in workflow
+    assert "Create Container Registry API IAM token" in workflow
+    assert '--endpoint iam.api.cloud.yandex.net' in workflow
+    assert '--retry=1' in workflow
     assert "not found" in bootstrap
     assert "yc container registry configure-docker" not in workflow
     assert 'docker login --username iam --password-stdin cr.yandex' in workflow
