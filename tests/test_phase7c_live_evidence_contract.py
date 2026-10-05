@@ -479,7 +479,8 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert "registry_scan_policy_id" not in outputs
     assert "container-registry.api.cloud.yandex.net/container-registry/v1" in bootstrap
     assert 'repositoryPrefixes: ["*"]' in bootstrap
-    assert 'timeout 45s yc iam create-token' in bootstrap
+    assert 'timeout 30s yc iam create-token' in bootstrap
+    assert '--endpoint iam.api.cloud.yandex.net' in bootstrap
     assert 'for attempt in 1 2 3 4' in bootstrap
     assert 'rescanPeriod: "86400s"' in bootstrap
     assert "Scan policy not found for registry" in bootstrap
