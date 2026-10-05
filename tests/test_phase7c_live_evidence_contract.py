@@ -481,6 +481,7 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert 'scanPolicies/$YC_REGISTRY_ID:byRegistry' in bootstrap
     assert 'repositoryPrefixes: ["*"]' in bootstrap
     assert 'rescanPeriod: "86400s"' in bootstrap
+    assert "pushRule // .rules.push_rule).disabled // false" in bootstrap
     assert 'updateMask: "name,description,rules"' in bootstrap
     assert 'YC_REGISTRY_IAM_TOKEN_FILE is required' in bootstrap
     assert 'IAM_TOKEN="$(cat "$YC_REGISTRY_IAM_TOKEN_FILE")"' in bootstrap
