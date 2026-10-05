@@ -279,6 +279,20 @@ jobs:
           YC_REGISTRY_ID="$registry_id" APP_NAME="$APP_NAME" \
             bash scripts/yandex_cloud_container_registry_scan_policy.sh ensure
 
+          deployment_service_account_id="$(jq -r '.service_account_id // empty' "$RUNNER_TEMP/yc/key.json")"
+          test -n "$deployment_service_account_id"
+
+          yc container registry add-access-binding "$registry_id" \
+            --role container-registry.images.pusher \
+            --service-account-id "$deployment_service_account_id" \
+            >/tmp/container-registry-pusher-binding.txt 2>&1 || {
+              if ! grep -qiE 'already exists|already assigned|ALREADY_EXISTS' /tmp/container-registry-pusher-binding.txt; then
+                cat /tmp/container-registry-pusher-binding.txt >&2
+                exit 1
+              fi
+            }
+          echo "CONTAINER_REGISTRY_IMAGES_PUSHER=PASS"
+
           test -s "$YC_REGISTRY_IAM_TOKEN_FILE"
           cat "$YC_REGISTRY_IAM_TOKEN_FILE" | docker login --username iam --password-stdin cr.yandex
 
