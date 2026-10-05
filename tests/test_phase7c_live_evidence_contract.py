@@ -479,8 +479,8 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert "registry_scan_policy_id" not in outputs
     assert "container-registry.api.cloud.yandex.net/container-registry/v1" in bootstrap
     assert 'scanPolicies/$YC_REGISTRY_ID:byRegistry' in bootstrap
-    assert 'repositoryPrefixes": ["*"]' in bootstrap
-    assert 'rescanPeriod": "86400s"' in bootstrap
+    assert 'repositoryPrefixes: ["*"]' in bootstrap
+    assert 'rescanPeriod: "86400s"' in bootstrap
     assert 'updateMask: "name,description,rules"' in bootstrap
     assert '"alg": "PS256"' in bootstrap
     assert '"aud": "https://iam.api.cloud.yandex.net/iam/v1/tokens"' in bootstrap
