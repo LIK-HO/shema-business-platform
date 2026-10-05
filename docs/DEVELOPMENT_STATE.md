@@ -1,3 +1,13 @@
+## Phase 7C Live Apply Diagnostic — RUN #10 and IAM/ACL Hardening — 2026-10-05
+
+- Protected Production Launcher RUN #10 (`37262488424`) successfully completed the full plan job, including state preflight, immutable image publication, Terraform plan, reviewed-plan fingerprint verification and previous-revision capture.
+- Terraform apply then started against the reviewed fingerprint `a10e55464fc24540c7547f0bc381d31bca2155d7adb54e8ac855ed3dba5f3519` and reached real Yandex Cloud resource operations.
+- Apply failed with multiple `PermissionDenied` results for VPC network creation, service-account creation, Cloud Logging group creation, Lockbox secret creation and Object Storage bucket creation. The existing Container Registry modification completed successfully; the scan-policy operation returned `NotFound` for the existing registry and requires separate revalidation after the IAM baseline is corrected.
+- No `Creation complete` event for the newly planned VPC, service accounts, logging groups, Lockbox secret or bounded bucket appeared before the failure; the observed new-resource operations were denied. Terraform released the remote state lock normally.
+- Root cause: the deployment identity behind `YC_SERVICE_ACCOUNT_KEY_JSON` has enough access for Container Registry bootstrap but not the full privileged provisioning surface required by the current Terraform graph.
+- Current corrective action: the production runbook now records the required deployment IAM role matrix and the deployment identity boundary. The bounded Object Storage bucket no longer uses a separate ACL grant resource because Yandex Object Storage buckets are private by default; this removes an unnecessary future `storage.admin` dependency.
+- Phase 7C remains **IN_PROGRESS**. Do not rerun protected apply until the external IAM baseline is corrected and a fresh plan confirms reconciliation of the failed attempt. Rollback/PITR remain unexecuted.
+
 ## Phase 7C Live-Gate Diagnostic — Run #8 and Bash Digest Guard Fix — 2026-10-05
 
 - Protected Production Launcher run #8 (`37261796493`) passed state preflight, Terraform init and the corrected Registry image-list parser, then failed before Terraform plan.
