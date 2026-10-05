@@ -415,7 +415,10 @@ def test_phase7c_terraform_steps_receive_yandex_provider_key() -> None:
     workflow = (
         ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
     ).read_text(encoding="utf-8")
-    assert workflow.count("YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json") == 4
+    assert workflow.count("YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json") == 6
+    assert workflow.count("Verify deployment identity IAM baseline") == 2
+    assert workflow.count("Terraform plan") >= 1
+    assert workflow.count("Terraform apply reviewed plan") == 1
     assert "Bootstrap registry and publish immutable application image" in workflow
     assert "Terraform plan" in workflow
     assert "Recompute and verify reviewed Terraform plan" in workflow
