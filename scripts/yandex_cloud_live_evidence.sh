@@ -85,7 +85,7 @@ jq -e '.status == "ACTIVE" and (.domain // "") != ""' <<<"$gateway_json" >/dev/n
 jq -e '.config.backup_retain_period_days >= 14' <<<"$cluster_json" >/dev/null
 jq -e --arg bucket "$YC_BUCKET_NAME" '.name == $bucket or .id == $bucket' <<<"$bucket_json" >/dev/null
 jq -e '.status == "ACTIVE"' <<<"$budget_json" >/dev/null
-jq -e '((.threshold_rules // .thresholdRules // []) | length) >= 1' <<<"$budget_json" >/dev/null
+jq -e '(((.costBudget // .cost_budget // .expenseBudget // .expense_budget // .balanceBudget // .balance_budget // {}) | (.thresholdRules // .threshold_rules // [])) | length) >= 1' <<<"$budget_json" >/dev/null
 retention_to_hours() {
   local value="$1"
   case "$value" in
