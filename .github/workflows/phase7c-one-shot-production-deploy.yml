@@ -1,7 +1,7 @@
 name: Phase 7C One-Shot Production Deploy
 # Temporary release trigger; remove after successful production acceptance.
 # Deployment source is a fixed, CI-accepted Phase 7C branch SHA.
-# Retry after protobuf-duration scan-policy fix.
+# Retry after documented Container Registry scan-policy schema fix.
 
 on:
   push:
