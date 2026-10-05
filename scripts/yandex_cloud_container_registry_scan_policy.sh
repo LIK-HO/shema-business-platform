@@ -3,8 +3,6 @@ set -Eeuo pipefail
 
 : "${YC_REGISTRY_ID:?YC_REGISTRY_ID is required}"
 : "${APP_NAME:?APP_NAME is required}"
-: "${YC_SERVICE_ACCOUNT_KEY_FILE:?YC_SERVICE_ACCOUNT_KEY_FILE is required}"
-test -r "$YC_SERVICE_ACCOUNT_KEY_FILE"
 
 MODE="${1:-ensure}"
 case "$MODE" in
@@ -15,77 +13,16 @@ case "$MODE" in
     ;;
 esac
 
-for command_name in yc jq curl openssl python3; do
+for command_name in yc jq curl; do
   command -v "$command_name" >/dev/null 2>&1 || {
     echo "missing required command: $command_name" >&2
     exit 1
   }
 done
 
-service_account_id="$(jq -r '.service_account_id // empty' "$YC_SERVICE_ACCOUNT_KEY_FILE")"
-key_id="$(jq -r '.id // .key_id // empty' "$YC_SERVICE_ACCOUNT_KEY_FILE")"
-test -n "$service_account_id"
-test -n "$key_id"
-
-jwt_workdir="$(mktemp -d)"
-trap 'rm -rf "$jwt_workdir"' EXIT
-jwt_private_key="$jwt_workdir/private-key.pem"
-jq -r '.private_key // empty' "$YC_SERVICE_ACCOUNT_KEY_FILE" > "$jwt_private_key"
-test -s "$jwt_private_key"
-chmod 600 "$jwt_private_key"
-openssl pkey -in "$jwt_private_key" -noout >/dev/null
-
-python3 - "$service_account_id" "$key_id" > "$jwt_workdir/unsigned" <<'PY'
-import base64
-import json
-import sys
-import time
-
-sa_id, key_id = sys.argv[1:3]
-
-def b64url(value: bytes) -> str:
-    return base64.urlsafe_b64encode(value).rstrip(b"=").decode("ascii")
-
-now = int(time.time())
-header = {"typ": "JWT", "alg": "PS256", "kid": key_id}
-payload = {
-    "iss": sa_id,
-    "aud": "https://iam.api.cloud.yandex.net/iam/v1/tokens",
-    "iat": now,
-    "exp": now + 3600,
-}
-print(
-    f"{b64url(json.dumps(header, separators=(',', ':')).encode())}."
-    f"{b64url(json.dumps(payload, separators=(',', ':')).encode())}"
-)
-PY
-
-IFS=. read -r jwt_header_part jwt_payload_part < "$jwt_workdir/unsigned"
-printf '%s.%s' "$jwt_header_part" "$jwt_payload_part" > "$jwt_workdir/signing-input"
-openssl dgst -sha256   -sign "$jwt_private_key"   -sigopt rsa_padding_mode:pss   -sigopt rsa_pss_saltlen:-1   -out "$jwt_workdir/signature.bin"   "$jwt_workdir/signing-input"
-
-jwt_signature_b64="$(
-  python3 - "$jwt_workdir/signature.bin" <<'PY'
-import base64
-import pathlib
-import sys
-print(base64.urlsafe_b64encode(pathlib.Path(sys.argv[1]).read_bytes()).rstrip(b"=").decode("ascii"))
-PY
-)"
-jwt="$jwt_header_part.$jwt_payload_part.$jwt_signature_b64"
-
-token_response_file="$jwt_workdir/token-response.json"
-token_http_code="$(
-  curl -sS --connect-timeout 15 --max-time 30     -o "$token_response_file"     -w "%{http_code}"     -H "Content-Type: application/json"     -H "Accept: application/json"     -d "$(jq -cn --arg jwt "$jwt" '{jwt: $jwt}')"     "https://iam.api.cloud.yandex.net/iam/v1/tokens"
-)"
-if [[ "$token_http_code" != "200" ]]; then
-  echo "IAM JWT exchange failed with HTTP $token_http_code." >&2
-  jq -r '.message // .error.message // "IAM JWT exchange failed."' "$token_response_file" >&2 || true
-  exit 1
-fi
-
-IAM_TOKEN="$(jq -r '.iamToken // .iam_token // empty' "$token_response_file")"
+IAM_TOKEN="$(yc iam create-token)"
 test -n "$IAM_TOKEN"
+
 if [[ -n "${YC_REGISTRY_IAM_TOKEN_FILE:-}" ]]; then
   umask 077
   printf "%s" "$IAM_TOKEN" > "$YC_REGISTRY_IAM_TOKEN_FILE"
