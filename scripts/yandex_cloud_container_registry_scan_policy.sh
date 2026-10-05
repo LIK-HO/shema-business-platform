@@ -119,27 +119,35 @@ esac
 policy_matches() {
   [[ "$policy_json" != "" ]] || return 1
   jq -e '
+    def push_rule:
+      (.rules.pushRule // .rules.push_rule // {});
+    def schedule_rules:
+      (.rules.scheduleRules // .rules.schedule_rules // []);
+    def schedule0:
+      (schedule_rules[0] // {});
+
     (.registryId // .registry_id) == $registry
     and (.disabled // false) == false
-    and ((.rules.pushRule // .rules.push_rule).disabled // true) == false
+    and (push_rule.disabled // true) == false
     and (
-      (((.rules.pushRule // .rules.push_rule).repositoryPrefixes
-        // (.rules.push_rule.repository_prefixes // []))
-        | index("*")) != null
-    )
-    and (((.rules.scheduleRules // .rules.schedule_rules // [])) | length) >= 1
-    and ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).disabled // false) == false)
+      (
+        push_rule.repositoryPrefixes
+        // push_rule.repository_prefixes
+        // []
+      )
+      | index("*")
+    ) != null
+    and (schedule_rules | length) >= 1
+    and (schedule0.disabled // false) == false
     and (
-      (((.rules.scheduleRules // .rules.schedule_rules // [])[0]).repositoryPrefixes
-        // (.rules.schedule_rules // .rules.schedule_rules // [])[0].repository_prefixes
-        // [])
-      | index("*")) != null
-    )
-    and (
-      ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).rescanPeriod
-        // (.rules.schedule_rules // .rules.schedule_rules // [])[0].rescan_period
-        // "") == "86400s")
-    )
+      (
+        schedule0.repositoryPrefixes
+        // schedule0.repository_prefixes
+        // []
+      )
+      | index("*")
+    ) != null
+    and (schedule0.rescanPeriod // schedule0.rescan_period // "") == "86400s"
   ' --arg registry "$YC_REGISTRY_ID" <<<"$policy_json" >/dev/null
 }
 
