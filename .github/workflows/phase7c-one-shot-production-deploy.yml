@@ -1,6 +1,6 @@
 name: Phase 7C One-Shot Production Deploy
 # Temporary release trigger; remove after successful production acceptance.
-# Deployment source is the latest CI-accepted Phase 7C branch revision with validated Container Registry policy handling.
+# Deployment source is the exact CI-accepted Phase 7C branch revision 154c8328aed002f776c0040e08d7ec96fd01a83a.
 # Retry after documented Container Registry scan-policy schema fix.
 
 on:
