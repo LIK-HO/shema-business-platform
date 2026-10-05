@@ -479,18 +479,16 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert "registry_scan_policy_id" not in outputs
     assert "container-registry.api.cloud.yandex.net/container-registry/v1" in bootstrap
     assert 'repositoryPrefixes: ["*"]' in bootstrap
-    assert 'timeout 30s yc iam create-token' in bootstrap
     assert '"alg": "PS256"' in bootstrap
     assert '"aud": "https://iam.api.cloud.yandex.net/iam/v1/tokens"' in bootstrap
     assert 'rsa_padding_mode:pss' in bootstrap
     assert 'rsa_pss_saltlen:-1' in bootstrap
     assert 'private_key // empty' in bootstrap
     assert 'https://iam.api.cloud.yandex.net/iam/v1/tokens' in bootstrap
-    assert 'for attempt in 1 2 3 4' not in bootstrap
     assert 'rescanPeriod: "86400s"' in bootstrap
     assert "Scan policy not found for registry" in bootstrap
     assert "scanPolicyForRegistryNotFoundException" in bootstrap
-    assert 'yc iam create-token' in bootstrap
+    assert 'yc iam create-token' not in bootstrap
     registry_policy_contract = contract["execution"]["observability"]["registry_scan_policy"]
     assert "yandex_cloudregistry_scan_policy.app" not in registry_policy_contract
     assert contract["execution"]["observability"]["registry_scan_policy"] == (
