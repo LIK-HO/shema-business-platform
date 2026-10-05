@@ -453,7 +453,7 @@ def test_phase7c_terraform_steps_receive_yandex_provider_key() -> None:
     workflow = (
         ROOT / ".github" / "workflows" / "phase7c-live-provisioning.yml"
     ).read_text(encoding="utf-8")
-    assert workflow.count("YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json") == 7
+    assert workflow.count("YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json") == 8
     assert workflow.count("Verify deployment identity IAM baseline") == 2
     assert workflow.count("Terraform plan") >= 1
     assert workflow.count("Terraform apply reviewed plan") == 1
@@ -486,10 +486,13 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert 'IAM_TOKEN="$(cat "$YC_REGISTRY_IAM_TOKEN_FILE")"' in bootstrap
     assert 'jwt_workdir="$(mktemp -d)"' in bootstrap
     assert 'trap "rm -rf \\"$jwt_workdir\\"" EXIT' in bootstrap
-    assert "iam.api.cloud.yandex.net" in workflow
-    assert "Create Container Registry API IAM token" in workflow
-    assert '--endpoint iam.api.cloud.yandex.net' in workflow
-    assert '--retry=2' in workflow
+    token_helper = (
+        ROOT / "scripts" / "yandex_cloud_service_account_iam_token.sh"
+    ).read_text(encoding="utf-8")
+    assert "https://iam.api.cloud.yandex.net/iam/v1/tokens" in token_helper
+    assert '"alg":"PS256"' in token_helper
+    assert '"aud":"https://iam.api.cloud.yandex.net/iam/v1/tokens"' in token_helper
+    assert "bash scripts/yandex_cloud_service_account_iam_token.sh" in workflow
     assert "not found" in bootstrap
     assert "yc container registry configure-docker" not in workflow
     assert 'docker login --username iam --password-stdin cr.yandex' in workflow
