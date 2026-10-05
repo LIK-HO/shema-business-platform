@@ -98,13 +98,14 @@ rules_file="$jwt_workdir/scan-policy-rules.json"
 cat > "$rules_file" <<'JSON'
 {
   "pushRule": {
-    "repositoryPrefixes": ["*"],
+    "paths": ["*"],
     "disabled": false
   },
   "scheduleRules": [
     {
-      "repositoryPrefixes": ["*"],
-      "rescanPeriod": "86400s",
+      "amount": "1",
+      "intervalUnit": "DAYS",
+      "paths": ["*"],
       "disabled": false
     }
   ]
@@ -161,21 +162,26 @@ policy_matches() {
     and (.disabled // false) == false
     and ((.rules.pushRule // .rules.push_rule).disabled // true) == false
     and (
-      (((.rules.pushRule // .rules.push_rule).repositoryPrefixes
-        // (.rules.push_rule.repository_prefixes // []))
+      (((.rules.pushRule // .rules.push_rule).paths
+        // (.rules.push_rule.paths // []))
         | index("*")) != null
     )
     and (((.rules.scheduleRules // .rules.schedule_rules // []) | length) >= 1)
     and ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).disabled // false) == false)
     and (
-      ((((.rules.scheduleRules // .rules.schedule_rules // [])[0]).repositoryPrefixes
-        // ((.rules.schedule_rules // [])[0].repository_prefixes // []))
+      (((.rules.scheduleRules // .rules.schedule_rules // [])[0]).paths
+        // ((.rules.schedule_rules // [])[0].paths // []))
         | index("*")) != null
     )
     and (
-      (((.rules.scheduleRules // .rules.schedule_rules // [])[0]).rescanPeriod
-        // ((.rules.schedule_rules // [])[0].rescan_period // ""))
-      == "86400s"
+      (((.rules.scheduleRules // .rules.schedule_rules // [])[0]).amount
+        // ((.rules.schedule_rules // [])[0].amount // ""))
+      == "1"
+    )
+    and (
+      (((.rules.scheduleRules // .rules.schedule_rules // [])[0]).intervalUnit
+        // ((.rules.schedule_rules // [])[0].interval_unit // ""))
+      == "DAYS"
     )
   ' --arg registry "$YC_REGISTRY_ID" <<<"$policy_json" >/dev/null
 }
