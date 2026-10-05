@@ -108,6 +108,12 @@ jobs:
           printf "%s" "$YC_SERVICE_ACCOUNT_KEY_JSON" > "$RUNNER_TEMP/yc/key.json"
           yc config profile create shema-phase7c
           yc config set service-account-key "$RUNNER_TEMP/yc/key.json"
+      - name: Verify deployment identity IAM baseline
+        env:
+          YC_CLOUD_ID: ${{ secrets.PHASE7C_CLOUD_ID }}
+          YC_FOLDER_ID: ${{ secrets.PHASE7C_FOLDER_ID }}
+          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
+        run: bash scripts/yandex_cloud_iam_preflight.sh
       - name: Verify persistent Terraform state backend
         env:
           YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
@@ -351,6 +357,12 @@ jobs:
           printf "%s" "$YC_SERVICE_ACCOUNT_KEY_JSON" > "$RUNNER_TEMP/yc/key.json"
           yc config profile create shema-phase7c
           yc config set service-account-key "$RUNNER_TEMP/yc/key.json"
+      - name: Verify deployment identity IAM baseline
+        env:
+          YC_CLOUD_ID: ${{ secrets.PHASE7C_CLOUD_ID }}
+          YC_FOLDER_ID: ${{ secrets.PHASE7C_FOLDER_ID }}
+          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/yc/key.json
+        run: bash scripts/yandex_cloud_iam_preflight.sh
       - name: Verify persistent Terraform state backend
         env:
           YC_TERRAFORM_STATE_BUCKET: ${{ secrets.PHASE7C_TERRAFORM_STATE_BUCKET }}
