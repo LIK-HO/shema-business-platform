@@ -10,6 +10,12 @@ variable "folder_id" {
   sensitive   = true
 }
 
+variable "deployment_service_account_id" {
+  type        = string
+  description = "Service account ID used by the protected deployment workflow."
+  sensitive   = true
+}
+
 variable "zone" {
   type        = string
   description = "Primary availability zone."
