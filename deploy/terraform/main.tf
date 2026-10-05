@@ -110,27 +110,6 @@ resource "yandex_container_registry" "app" {
   labels = local.common_labels
 }
 
-resource "yandex_cloudregistry_scan_policy" "app" {
-  registry_id        = yandex_container_registry.app.id
-  name               = "${var.app_name}-image-scan"
-  description        = "Production vulnerability scanning on push plus daily rescan."
-  disabled           = false
-  scan_lang_packages = true
-
-  rules = {
-    push_rule = {
-      disabled = false
-      paths    = ["*"]
-    }
-    schedule_rules = [{
-      disabled      = false
-      amount        = 1
-      interval_unit = "DAYS"
-      paths         = ["*"]
-    }]
-  }
-}
-
 resource "yandex_container_registry_iam_binding" "puller" {
   registry_id = yandex_container_registry.app.id
   role        = "container-registry.images.puller"
