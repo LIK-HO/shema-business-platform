@@ -307,6 +307,13 @@ def test_phase7c_live_evidence_requires_budget_thresholds_and_runtime_logs() -> 
     assert "runtime_and_task_observability_verified" in required
 
 
+def test_phase7c_bounded_bucket_uses_private_platform_default_without_acl_mutation() -> None:
+    main = (ROOT / "deploy" / "terraform" / "main.tf").read_text(encoding="utf-8")
+    assert 'resource "yandex_storage_bucket" "bounded_objects"' in main
+    assert 'resource "yandex_storage_bucket_grant"' not in main
+    assert 'public-' not in main
+
+
 def test_phase7c_terraform_backend_is_remote_and_locked() -> None:
     versions = (ROOT / "deploy" / "terraform" / "versions.tf").read_text(encoding="utf-8")
     assert 'backend "s3"' in versions
