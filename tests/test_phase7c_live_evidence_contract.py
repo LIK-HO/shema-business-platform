@@ -482,7 +482,8 @@ def test_phase7c_uses_container_registry_scan_policy_contract() -> None:
     assert 'repositoryPrefixes: ["*"]' in bootstrap
     assert 'rescanPeriod: "86400s"' in bootstrap
     assert 'updateMask: "name,description,rules"' in bootstrap
-    assert "yc iam create-token" in bootstrap
+    assert "iam.api.cloud.yandex.net" in bootstrap
+    assert 'config set endpoint iam.api.cloud.yandex.net' in bootstrap
     assert "not found" in bootstrap
     assert "yc container registry configure-docker" not in workflow
     assert 'docker login --username iam --password-stdin cr.yandex' in workflow
