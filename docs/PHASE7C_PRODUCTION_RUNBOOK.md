@@ -72,6 +72,31 @@ The service account behind `YC_SERVICE_ACCOUNT_KEY_JSON` must have `container-re
 
 The runtime and migration identities remain separately scoped to image pulling; they must not inherit the deployment bootstrap role merely for runtime operation.
 
+
+### Deployment service-account IAM prerequisites for Terraform apply
+
+The identity behind `YC_SERVICE_ACCOUNT_KEY_JSON` is the protected Terraform provisioner. It is separate from the Terraform-state identity and from runtime service accounts. The current Terraform graph creates resources and access bindings across multiple services, so `container-registry.editor` alone is insufficient.
+
+Required roles for the current graph, assigned at folder scope unless the service documents a narrower resource scope:
+
+- `container-registry.editor` and `container-registry.admin` where registry IAM bindings are managed;
+- `iam.serviceAccounts.admin` for creating the runtime, gateway, migration and audit-trail service accounts;
+- `iam.serviceAccounts.user` for using those service accounts in managed resources/trails when not already inherited;
+- `vpc.privateAdmin`, `vpc.securityGroups.admin` and `vpc.user` for the private network, subnets, security group and Managed PostgreSQL attachment;
+- `managed-postgresql.editor` for the PostgreSQL cluster, database and user;
+- `logging.editor` for the runtime and audit log groups;
+- `lockbox.admin` for the secret plus its access binding;
+- `audit-trails.editor` for the production trail;
+- `serverless-containers.editor` and `serverless-containers.admin` for container creation and container IAM binding;
+- `api-gateway.editor` for the public edge;
+- `storage.editor` for the bounded object bucket;
+- `resource-manager.admin` because the current Terraform configuration assigns folder-level `audit-trails.viewer` and `logging.writer` bindings through `yandex_resourcemanager_folder_iam_member`;
+- `billing.accounts.viewer` on the billing account used by `YC_BUDGET_ID` so the protected live-evidence stage can verify the active budget and notification thresholds.
+
+Do not replace this set with the primitive `admin` or `editor` roles merely to make apply succeed. Yandex Cloud currently recommends service roles and least privilege; the provisioning identity should be treated as a privileged deployment identity, protected by the GitHub production environment, never used by runtime workloads, and rotated according to the credential policy.
+
+The first successful apply should be retried only after these external IAM prerequisites are corrected and a fresh plan confirms reconciliation of the failed attempt.
+
 ## First-run bootstrap boundary
 
 The first protected run has one deliberate bootstrap side effect before the reviewed production plan: it creates the expected `shema-images` Container Registry when absent, imports that registry into the production Terraform state, and builds/pushes the current Git commit as an immutable digest-pinned image. The workflow never deploys a mutable tag as the runtime authority. With `apply=false`, no production runtime resources are applied; registry/image bootstrap is the only intentional preparation side effect.
