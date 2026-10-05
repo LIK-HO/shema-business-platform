@@ -22,95 +22,87 @@ done
 
 API_BASE="https://container-registry.api.cloud.yandex.net/container-registry/v1"
 OPERATION_BASE="https://operation.api.cloud.yandex.net/operations"
-IAM_PROFILE="${YC_IAM_PROFILE:-shema-phase7c}"
-IAM_TOKEN=""
-for attempt in 1 2 3 4; do
-  set +e
-  token_output="$(timeout 30s yc iam create-token     --profile "$IAM_PROFILE"     --endpoint iam.api.cloud.yandex.net 2>&1)"
-  token_rc=$?
-  set -e
-  if (( token_rc == 0 )) && [[ -n "$token_output" ]]; then
-    IAM_TOKEN="$token_output"
-    break
-  fi
-  if (( attempt < 4 )); then
-    sleep 5
-  fi
+: "${YC_SERVICE_ACCOUNT_KEY_FILE:?YC_SERVICE_ACCOUNT_KEY_FILE is required}"
+test -r "$YC_SERVICE_ACCOUNT_KEY_FILE"
+
+for command_name in openssl python3; do
+  command -v "$command_name" >/dev/null 2>&1 || {
+    echo "missing required command: $command_name" >&2
+    exit 1
+  }
 done
-if [[ -z "$IAM_TOKEN" ]]; then
-  echo "Container Registry scan policy could not obtain an IAM token from iam.api.cloud.yandex.net after 4 attempts." >&2
+
+service_account_id="$(jq -r '.service_account_id // empty' "$YC_SERVICE_ACCOUNT_KEY_FILE")"
+key_id="$(jq -r '.id // .key_id // empty' "$YC_SERVICE_ACCOUNT_KEY_FILE")"
+test -n "$service_account_id"
+test -n "$key_id"
+
+jwt_workdir="$(mktemp -d)"
+cleanup_jwt() { rm -rf "$jwt_workdir"; }
+trap cleanup_jwt EXIT
+
+jwt_unsigned="$jwt_workdir/unsigned"
+jwt_signature="$jwt_workdir/signature.bin"
+
+python3 - "$service_account_id" "$key_id" > "$jwt_unsigned" <<'PY'
+import base64
+import json
+import sys
+import time
+
+sa_id, key_id = sys.argv[1:3]
+
+def b64url(value: bytes) -> str:
+    return base64.urlsafe_b64encode(value).rstrip(b"=").decode("ascii")
+
+now = int(time.time())
+header = {"typ": "JWT", "alg": "PS256", "kid": key_id}
+payload = {
+    "iss": sa_id,
+    "aud": "https://iam.api.cloud.yandex.net/iam/v1/tokens",
+    "iat": now,
+    "exp": now + 3600,
+}
+print(f"{b64url(json.dumps(header, separators=(',', ':')).encode())}.{b64url(json.dumps(payload, separators=(',', ':')).encode())}")
+PY
+
+IFS=. read -r jwt_header_part jwt_payload_part < "$jwt_unsigned"
+printf '%s.%s' "$jwt_header_part" "$jwt_payload_part" > "$jwt_workdir/signing_input"
+
+openssl dgst -sha256 \
+  -sign "$YC_SERVICE_ACCOUNT_KEY_FILE" \
+  -sigopt rsa_padding_mode:pss \
+  -sigopt rsa_pss_saltlen:-1 \
+  -out "$jwt_signature" "$jwt_workdir/signing_input"
+
+jwt_signature_b64="$(
+  python3 - "$jwt_signature" <<'PY'
+import base64
+import pathlib
+import sys
+print(base64.urlsafe_b64encode(pathlib.Path(sys.argv[1]).read_bytes()).rstrip(b"=").decode("ascii"))
+PY
+)"
+jwt="$jwt_header_part.$jwt_payload_part.$jwt_signature_b64"
+
+token_response_file="$jwt_workdir/token-response.json"
+token_http_code="$(
+  curl -sS --connect-timeout 15 --max-time 30 \
+    -o "$token_response_file" \
+    -w "%{http_code}" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d "$(jq -cn --arg jwt "$jwt" '{jwt: $jwt}')" \
+    "https://iam.api.cloud.yandex.net/iam/v1/tokens"
+)"
+if [[ "$token_http_code" != "200" ]]; then
+  echo "IAM JWT exchange failed with HTTP $token_http_code." >&2
+  jq -r '.message // .error.message // "IAM JWT exchange failed."' "$token_response_file" >&2 || true
   exit 1
 fi
 
-policy_name="${APP_NAME}-image-scan"
-policy_description="Production vulnerability scanning on push plus daily rescan."
-desired_policy="$(jq -n   --arg registry_id "$YC_REGISTRY_ID"   --arg name "$policy_name"   --arg description "$policy_description"   '{
-    registryId: $registry_id,
-    name: $name,
-    description: $description,
-    rules: {
-      pushRule: {
-        repositoryPrefixes: ["*"],
-        disabled: false
-      },
-      scheduleRules: [
-        {
-          repositoryPrefixes: ["*"],
-          rescanPeriod: "86400s",
-          disabled: false
-        }
-      ]
-    }
-  }')"
-
-get_policy() {
-  local output_file="$1"
-  local http_code
-  http_code="$(curl -sS --connect-timeout 15 --max-time 30 -o "$output_file" -w "%{http_code}"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Accept: application/json"     "$API_BASE/scanPolicies/$YC_REGISTRY_ID:byRegistry")"
-  if [[ "$http_code" == "400" ]] && grep -qiE     'Scan policy not found for registry|scanPolicyForRegistryNotFoundException'     "$output_file"; then
-    echo "404"
-    return 0
-  fi
-  echo "$http_code"
-}
-
-poll_operation() {
-  local operation_id="$1"
-  local operation_json
-  local done
-  for _ in $(seq 1 60); do
-    operation_json="$(curl -sS --connect-timeout 15 --max-time 30       -H "Authorization: Bearer $IAM_TOKEN"       -H "Accept: application/json"       "$OPERATION_BASE/$operation_id")"
-    done="$(jq -r '.done // false' <<<"$operation_json")"
-    if [[ "$done" == "true" ]]; then
-      if jq -e '.error' <<<"$operation_json" >/dev/null; then
-        jq -r '.error.message // "Container Registry scan policy operation failed."' <<<"$operation_json" >&2
-        return 1
-      fi
-      return 0
-    fi
-    sleep 2
-  done
-  echo "Container Registry scan policy operation timed out." >&2
-  return 1
-}
-
-apply_policy() {
-  local method="$1"
-  local url="$2"
-  local body="$3"
-  local response
-  local operation_id
-
-  response="$(curl -sS --connect-timeout 15 --max-time 30 -X "$method"     -H "Authorization: Bearer $IAM_TOKEN"     -H "Content-Type: application/json"     -H "Accept: application/json"     -d "$body"     "$url")"
-
-  operation_id="$(jq -r '.id // empty' <<<"$response")"
-  if [[ -z "$operation_id" ]]; then
-    echo "Container Registry scan policy API returned no operation id." >&2
-    jq -r '.message // .error.message // "No operation id in API response."' <<<"$response" >&2 || true
-    exit 1
-  fi
-  poll_operation "$operation_id"
-}
+IAM_TOKEN="$(jq -r '.iamToken // .iam_token // empty' "$token_response_file")"
+test -n "$IAM_TOKEN"
 
 tmp_policy="$(mktemp)"
 trap 'rm -f "$tmp_policy"' EXIT
