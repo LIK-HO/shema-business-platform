@@ -28,8 +28,34 @@ echo "TERRAFORM_STATE_BACKEND=PASS"
 
 
 echo "LIVE_EVIDENCE_HEAD=${GITHUB_SHA:-unknown}"
-cloud_json="$(yc resource-manager cloud get "$YC_CLOUD_ID" --format=json)"
+set +e
+cloud_lookup_output="$(yc resource-manager cloud get "$YC_CLOUD_ID" --format=json 2>&1)"
+cloud_lookup_rc=$?
+set -e
 folder_json="$(yc resource-manager folder get "$YC_FOLDER_ID" --format=json)"
+folder_cloud_id="$(jq -r '.cloud_id // .cloudId // empty' <<<"$folder_json")"
+[[ -n "$folder_cloud_id" ]] || {
+  echo "CLOUD_FOLDER_RELATION=FAIL" >&2
+  exit 1
+}
+[[ "$folder_cloud_id" == "$YC_CLOUD_ID" ]] || {
+  echo "CLOUD_FOLDER_RELATION=FAIL" >&2
+  exit 1
+}
+if (( cloud_lookup_rc == 0 )); then
+  cloud_json="$cloud_lookup_output"
+  echo "CLOUD_METADATA_READ=PASS"
+else
+  if grep -qiE 'PermissionDenied|permission denied|PERMISSION_DENIED' <<<"$cloud_lookup_output"; then
+    cloud_json="$(jq -n --arg id "$YC_CLOUD_ID" '{id: $id}')"
+    echo "CLOUD_METADATA_READ=SKIPPED"
+    echo "CLOUD_METADATA_READ_REASON=FOLDER_SCOPE_IS_DEPLOYMENT_AUTHORITY"
+  else
+    echo "CLOUD_METADATA_READ=FAIL" >&2
+    exit 1
+  fi
+fi
+echo "CLOUD_FOLDER_RELATION=PASS"
 container_json="$(yc serverless container get "$YC_CONTAINER_NAME" --format=json)"
 runner_json="$(yc serverless container get "$YC_MIGRATION_RUNNER_NAME" --format=json)"
 cluster_json="$(yc managed-postgresql cluster get "$YC_CLUSTER_NAME" --format=json)"
