@@ -138,7 +138,7 @@ def test_phase7_runtime_and_gateway_identities_are_separated() -> None:
     assert "serviceAccount:${yandex_iam_service_account.container_runtime.id}" in main
     assert "service_account_id = yandex_iam_service_account.container_runtime.id" in main
     assert "container_service_account = yandex_iam_service_account.gateway_invoker.id" in main
-    assert 'service_account_id: "$${container_service_account}"' in spec
+    assert 'service_account_id: "${container_service_account}"' in spec
 
 
 def test_phase7_production_import_uses_production_safe_api_entrypoint() -> None:
