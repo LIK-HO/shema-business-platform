@@ -23,6 +23,8 @@ done
 YC_PRIMARY_PROFILE="${YC_PRIMARY_PROFILE:-shema-phase7c}"
 IAM_TOKEN="$(timeout 45s yc --profile="$YC_PRIMARY_PROFILE" iam create-token)"
 test -n "$IAM_TOKEN"
+jwt_workdir="$(mktemp -d)"
+trap "rm -rf \"$jwt_workdir\"" EXIT
 
 if [[ -n "${YC_REGISTRY_IAM_TOKEN_FILE:-}" ]]; then
   umask 077
