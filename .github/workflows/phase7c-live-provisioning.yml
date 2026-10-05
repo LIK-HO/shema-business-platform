@@ -235,6 +235,9 @@ jobs:
             terraform -chdir=deploy/terraform import -input=false               yandex_container_registry.app "$registry_id"
           fi
 
+          YC_REGISTRY_ID="$registry_id" APP_NAME="$APP_NAME" \
+            bash scripts/yandex_cloud_container_registry_scan_policy.sh ensure
+
           yc container registry configure-docker --profile shema-phase7c
 
           image_tag="${{ steps.source_identity.outputs.source_sha }}"
@@ -462,7 +465,14 @@ jobs:
           export YC_RUNTIME_LOG_GROUP_ID="$(terraform -chdir=deploy/terraform output -raw runtime_log_group_id)"
           export YC_AUDIT_LOG_GROUP_ID="$(terraform -chdir=deploy/terraform output -raw audit_log_group_id)"
           export YC_AUDIT_TRAIL_ID="$(terraform -chdir=deploy/terraform output -raw audit_trail_id)"
-          export YC_REGISTRY_SCAN_POLICY_ID="$(terraform -chdir=deploy/terraform output -raw registry_scan_policy_id)"
+          export YC_REGISTRY_ID="$(terraform -chdir=deploy/terraform output -raw registry_id)"
+          export APP_NAME="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          values = json.loads(Path("deploy/terraform/terraform.tfvars.json").read_text(encoding="utf-8"))
+          print(values.get("app_name", "shema"))
+          PY
+          )"
           export YC_EXPECTED_IMAGE_DIGEST="$(python - <<'PY'
           import json
           from pathlib import Path
