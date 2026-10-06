@@ -17,6 +17,7 @@ All clients share the same command/query semantics, authorization and policy gat
 
 | Endpoint | Purpose |
 |---|---|
+| POST /v1/ai/run | Execute one bounded AI task through the application boundary |
 | POST /v1/search | Canonical company search |
 | POST /v1/discovery/evaluate | Identity resolution and qualification evaluation |
 | POST /v1/intelligence/research | R1-R4 policy-routed research into traceable Evidence |
@@ -42,3 +43,13 @@ HTTP mapping: 400 malformed request; 401 unauthenticated; 403 authorization/poli
 ## Client boundary
 
 Web, PWA and Android use versioned DTOs and canonical application semantics. They may cache projections and drafts locally, but identity, evidence, qualification, commercial action, order and economic state remain authoritative on the server.
+
+## AI execution boundary
+
+POST /v1/ai/run is an experience-layer route only.
+
+The HTTP request may provide task metadata, evidence references and explicit request budgets. It cannot provide provider selection, model identity, actor trust, resource trust or evidence-trust levels, production activation state, or provider credentials.
+
+The route delegates execution to the APIApplication boundary. The application layer remains responsible for constructing the frozen AIGateway inputs, resolving trusted resource/evidence state, applying authorization and policy, invoking the already-composed provider boundary, and persisting the canonical AIRun.
+
+Production YandexGPT traffic remains subject to the separate P28 production activation gate. No provider is implicitly activated by exposing this route.

@@ -11,6 +11,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from shema_platform.adapters.iam.oidc import OIDCConfiguration, OIDCJWTAuthenticator
 from shema_platform.experience.api_models import (
+    AIRunRequest,
+    AIRunResponse,
     CommercialActionCreateRequest,
     CommercialActionResponse,
     CommercialActionSendRequest,
@@ -84,6 +86,12 @@ class APIApplication(Protocol):
         request: ResearchRequest,
         context: RequestContext,
     ) -> ResearchResponse: ...
+
+    def run_ai(
+        self,
+        request: AIRunRequest,
+        context: RequestContext,
+    ) -> AIRunResponse: ...
 
     def create_commercial_action(
         self,
@@ -390,6 +398,13 @@ def create_app(
         payload: SearchRequest,
     ) -> SearchResponse:
         return services(request).search(payload, _context(request, None))
+
+    @router.post("/ai/run", response_model=AIRunResponse)
+    async def run_ai(
+        request: Request,
+        payload: AIRunRequest,
+    ) -> AIRunResponse:
+        return services(request).run_ai(payload, _context(request, None))
 
     @router.post("/discovery/evaluate", response_model=DiscoveryResponse)
     async def discovery(
