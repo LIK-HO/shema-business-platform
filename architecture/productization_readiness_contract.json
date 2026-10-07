@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "status": "v1_5_productization_readiness_audit",
+  "frozen_kernel_impact": false,
+  "assessment": {
+    "ai": [
+      "frozen_kernel",
+      "release_contract_baseline",
+      "ai_promotion",
+      "ai_activation_rehearsal"
+    ],
+    "max": [
+      "max_platform_effect_safety",
+      "max_provider_idempotency",
+      "max_provider_reconciliation",
+      "max_ambiguous_fail_closed",
+      "quarantine_read_model"
+    ],
+    "scope": [
+      "scope_safety"
+    ]
+  },
+  "production_rule": {
+    "requires_all_checks_passed": true,
+    "provider_side_external_effect_safety_is_mandatory": true,
+    "automatic_override": false
+  },
+  "current_expected_blockers": [
+    "MAX provider-side idempotency contract is not documented/certified",
+    "MAX provider-side reconciliation contract is not documented/certified"
+  ],
+  "scope_stop": {
+    "no_new_provider": true,
+    "no_new_execution_path": true,
+    "no_database_migration": true,
+    "no_frozen_kernel_semantic_change": true,
+    "no_automatic_production_activation": true,
+    "no_live_external_traffic": true,
+    "no_merge": true,
+    "no_deploy": true
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "status": "bounded_composition_proof",
+  "frozen_kernel_impact": false,
+  "implementation": "src/shema_platform/adapters/ai/composition.py",
+  "frozen_gateway": "shema_platform.application.ai.AIGateway",
+  "composition": {
+    "entrypoint": "execute_scoped_ai",
+    "bridge": "ScopedAIProvider",
+    "scope_transport": "contextvars.ContextVar",
+    "scope_data": [
+      "evidence_refs",
+      "AIExecutionContext",
+      "AIBudget",
+      "deadline_seconds"
+    ],
+    "correlation_required": true,
+    "finally_reset_required": true,
+    "outside_scope_fail_closed": true,
+    "nested_scope_restores_outer": true,
+    "thread_context_isolation_tested": true
+  },
+  "provider_gate": {
+    "explicit_activation_required": true,
+    "readiness_required": true,
+    "adapter_response_revalidated": true,
+    "provider_owned_persistence": false,
+    "automatic_fallback": false
+  },
+  "observability": {
+    "success_event": "ai.provider.completed",
+    "failure_event": "ai.provider.failed",
+    "allowed_attributes": [
+      "component",
+      "operation",
+      "provider",
+      "error_code",
+      "duration_ms"
+    ],
+    "raw_payload_logging": false,
+    "secrets_logging": false
+  },
+  "persistence_boundary": {
+    "canonical_ai_run_persistence": "frozen AIGateway",
+    "adapter_persistence": false,
+    "audit_authority": "frozen AIGateway"
+  },
+  "activation_policy": {
+    "production_traffic_enabled_by_this_change": false,
+    "provider_selection_is_explicit": true,
+    "implicit_cloud_to_local_fallback": false,
+    "implicit_local_to_cloud_fallback": false
+  },
+  "scope_stop": {
+    "no_change_to_application_ai": true,
+    "no_change_to_gateway_semantics": true,
+    "no_second_provider": true,
+    "no_local_runtime": true,
+    "no_new_persistence_authority": true
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "version": "1.0",
+  "status": "strategic_boundary_contract",
+  "frozen_kernel_impact": false,
+  "product_boundary": {
+    "shema_role": "search_intelligence_evidence_qualification_contact_preparation_public_request_preflight_repeat_orders_counterparty_monitoring_learning",
+    "yandex_cloud_role": "primary_runtime_and_infrastructure_environment",
+    "bitrix24_role_after_maturity": "transaction_business_process_communication_calculation_and_economics_control_plane"
+  },
+  "ownership": {
+    "shema_authoritative": [
+      "source_observations",
+      "identity_resolution",
+      "evidence",
+      "provenance",
+      "freshness",
+      "qualification_evidence",
+      "research_history",
+      "ai_run_lineage",
+      "contact_preparation",
+      "learning_outcomes",
+      "temporary_live_repeat_orders_before_bitrix_cutover",
+      "counterparty_monitoring_snapshots_and_change_events",
+      "raw_public_intake_reference_only"
+    ],
+    "bitrix24_authoritative_after_handoff": [
+      "lead_deal_order_lifecycle",
+      "pricing_for_live_transactions",
+      "invoices_payments_and_business_finance",
+      "commercial_process_stages",
+      "task_assignment_and_team_business_workflows",
+      "customer_communication_history"
+    ],
+    "shared_by_reference_only": [
+      "canonical_identity_reference",
+      "shema_record_reference",
+      "bitrix_entity_reference",
+      "integration_correlation_id"
+    ]
+  },
+  "yandex_cloud": {
+    "runtime_shape": "modular_monolith_first",
+    "api_runtime": "serverless_containers",
+    "edge": "api_gateway",
+    "canonical_database": "managed_postgresql",
+    "secret_store": "lockbox",
+    "artifact_registry": "container_registry",
+    "object_storage_role": "bounded_large_evidence_objects_and_exports_only",
+    "scheduler": "cloud_functions_timer_trigger",
+    "async_transport": "message_queue_only_when_transport_scaling_requires_it",
+    "observability": "monium",
+    "secondary_database_policy": "ydb_only_after_measured_constraint",
+    "kubernetes_policy": "deferred_until_measured_need",
+    "bounded_database_exceptions": [
+      "dedicated_public_intake_database"
+    ]
+  },
+  "ai": {
+    "primary_current_provider": "yandexgpt",
+    "provider_neutral_gateway": true,
+    "allowed_roles": [
+      "research_synthesis",
+      "classification",
+      "evidence_summarization",
+      "contact_preparation",
+      "operator_assistance",
+      "operator_briefing_after_deterministic_counterparty_preflight"
+    ],
+    "not_authoritative_for": [
+      "identity_truth",
+      "legal_truth",
+      "transaction_price",
+      "business_economics",
+      "counterparty_acceptance_decision"
+    ]
+  },
+  "max": {
+    "role": "communication_adapter_and_non_authoritative_notification_channel",
+    "live_outbound_status": "blocked_until_provider_idempotency_or_reconciliation_is_proven",
+    "no_business_truth": true
+  },
+  "integration": {
+    "initial_bitrix_auth": "single_portal_inbound_webhook_for_prototype",
+    "mature_bitrix_auth": "oauth2_application",
+    "sync_direction": "field_ownership_based_event_driven",
+    "shema_to_bitrix": "qualified_context_and_handoff_package",
+    "bitrix_to_shema": "outcome_events_and_minimal_learning_features",
+    "bi_directional_same_field_writes": false,
+    "reconciliation_required": true,
+    "idempotent_outbox_required": true,
+    "repeat_order_cutover": "architecture/repeat_order_transition_contract.json"
+  },
+  "economics_boundary": {
+    "new_shema_transaction_economics_feature_development": false,
+    "historical_frozen_kernel_compatibility": true,
+    "mature_live_economics_owner": "bitrix24",
+    "learning_import": "outcome_features_only_unless_separately_justified"
+  },
+  "deployment_stages": [
+    "cloud_rehearsal_minimal_free_components",
+    "minimal_production_with_managed_postgresql",
+    "production_hardening",
+    "bitrix24_business_plane_integration",
+    "measured_scale"
+  ],
+  "non_goals": [
+    "duplicate_crm_in_shema",
+    "second_finance_system",
+    "executor_personnel_management_platform",
+    "unbounded_confidential_personnel_dataset",
+    "provider_specific_domain_logic",
+    "microservices_for_maturity_signal"
+  ],
+  "business_sequence": {
+    "stage_1": "B2B_process_validation_repeat_orders_and_repeatable_unit_economics",
+    "stage_2": "yandex_cloud_production_shema_intelligence_runtime",
+    "stage_3": "bitrix24_business_control_plane_integration",
+    "stage_4": "outcome_learning_and_measured_scale"
+  },
+  "data_plane": {
+    "shema_yandex_cloud": {
+      "canonical_database": "managed_postgresql",
+      "role": "intelligence_evidence_identity_provenance_handoff_lineage_learning_context",
+      "durable_audit_and_business_history": true
+    },
+    "bitrix24": {
+      "storage_role": "mature_business_plane_database_and_file_storage_owned_by_bitrix24_deployment_model",
+      "authority_after_handoff": "live_business_transactions_and_process_state"
+    },
+    "transition_rule": "do_not_migrate_the_entire_shema_database_into_bitrix24; keep_two_authoritative_domains_with_explicit_handoff_and_reference_lineage",
+    "public_intake": {
+      "database": "dedicated_public_intake_database",
+      "authority": "raw_client_submissions_and_intake_notifications",
+      "projection": "accepted_business_context_into_shema",
+      "no_direct_browser_access": true
+    }
+  },
+  "operator_continuity": {
+    "single_operator_view": "one_workflow_with_context_linkage_not_two_competing_records",
+    "multi_operator_after_bitrix": "Bitrix24_owns_live_assignment_team_workflow_and_transaction_activity_after_handoff",
+    "stable_context_keys": [
+      "shema_identity_ref",
+      "handoff_id",
+      "integration_correlation_id",
+      "bitrix_entity_ref",
+      "mapping_version"
+    ],
+    "no_shadow_copy_of_live_business_state": true,
+    "stale_write_protection": true,
+    "shema_pre_handoff_assignment": "Shema_may_own_preparation_assignment_only_before_handoff"
+  },
+  "experience_surfaces": {
+    "public_web": {
+      "canonical_domain": "схемагрупп.рф",
+      "role": "public_site_and_advanced_client_request_intake",
+      "canonical_api": true,
+      "no_live_business_authority": true,
+      "counterparty_preflight": "deterministic_registry_preflight_without_gpt",
+      "public_submission_is_untrusted": true,
+      "server_authoritative": true,
+      "request_storage": "dedicated_public_intake_database"
+    },
+    "operator_web": {
+      "role": "protected_operator_workspace_on_same_canonical_api",
+      "counterparty_workspace": "separate_Контрагенты_workspace_with_check_monitoring_favorites",
+      "notification_center": true,
+      "interface_contract": "architecture/operator_interface_contract.json"
+    },
+    "pwa": "same_web_semantics_with_bounded_offline_behavior",
+    "max_mini_app": "same_public_web_application_inside_MAX_bot",
+    "source_attribution": [
+      "utm",
+      "referrer",
+      "entry_surface"
+    ],
+    "domain_cutover": "controlled_dns_cutover_from_inSales_after_https_and_health_validation"
+  },
+  "evolution_contract": "architecture/platform_evolution_contract.json"
+}

@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "scope": "external_provider_request_input",
+  "default_max_query_chars": 1024,
+  "hard_max_query_chars": 4096,
+  "default_max_request_url_bytes": 8192,
+  "hard_max_request_url_bytes": 16384,
+  "enforcement": "pre_io_and_transport",
+  "oversize": "fail_closed_before_rate_limit_wait_and_external_io",
+  "canonical_business_state": false
+}

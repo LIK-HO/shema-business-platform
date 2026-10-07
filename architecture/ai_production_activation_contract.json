@@ -1,0 +1,52 @@
+{
+  "version": "1.0",
+  "status": "bounded_production_activation_gate",
+  "frozen_kernel_impact": false,
+  "implementation": "src/shema_platform/adapters/ai/production_activation.py",
+  "provider_id": "yandexgpt",
+  "default_state": "disabled",
+  "environment": "production_only",
+  "activation": {
+    "feature_flag": "ai.yandexgpt.production.enabled",
+    "operator_activation_required": true,
+    "runtime_secret": "YANDEXGPT_API_KEY",
+    "snapshot_values_required": [
+      "ai.yandexgpt.model_uri",
+      "ai.yandexgpt.base_url",
+      "ai.yandexgpt.timeout_seconds",
+      "ai.yandexgpt.max_response_bytes",
+      "ai.yandexgpt.max_input_chars",
+      "ai.yandexgpt.max_output_tokens",
+      "ai.yandexgpt.max_cost",
+      "ai.yandexgpt.configuration_version",
+      "ai.yandexgpt.activation_version"
+    ]
+  },
+  "runtime_gate": {
+    "configuration_version_must_match_scope": true,
+    "max_cost_is_enforced": true,
+    "max_duration_is_enforced": true,
+    "provider_readiness_required": true,
+    "no_implicit_fallback": true
+  },
+  "observability": {
+    "telemetry_required": true,
+    "activation_event": "ai.production.activated",
+    "rollback_event": "ai.production.rolled_back",
+    "secrets_or_raw_payloads_logged": false
+  },
+  "rollback": {
+    "explicit_operator_required": true,
+    "default_after_process_restart": "disabled",
+    "traffic_blocked_after_rollback": true,
+    "business_state_persistence": false
+  },
+  "scope_stop": {
+    "application_ai_unchanged": true,
+    "gateway_semantics_unchanged": true,
+    "database_schema_unchanged": true,
+    "new_provider": false,
+    "local_runtime": false,
+    "production_route_auto_wired": false
+  }
+}

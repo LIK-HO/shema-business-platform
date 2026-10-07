@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "status": "quarantine_read_only_operator_control",
+  "frozen_kernel_impact": false,
+  "storage": {
+    "table": "quarantine_record",
+    "schema_change_required": false,
+    "read_only": true
+  },
+  "inspection": {
+    "lookup_by_object": true,
+    "lookup_by_reason": true,
+    "list_open_with_bounded_limit": true,
+    "returns_payload_for_review": true
+  },
+  "state_change": {
+    "resolve_quarantine": false,
+    "commercial_action_mutation": false,
+    "failed_to_sent_transition": false,
+    "external_send": false
+  },
+  "authorization": {
+    "no_new_permission": true,
+    "operator_experience_boundary": "future",
+    "platform_reader_is_not_a_public_route": true
+  },
+  "scope_stop": {
+    "no_live_max_network": true,
+    "no_credentials": true,
+    "no_new_provider": true,
+    "no_database_migration": true,
+    "no_frozen_kernel_semantic_change": true,
+    "no_automatic_retry": true,
+    "no_http_route_change": true
+  }
+}

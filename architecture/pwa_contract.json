@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "status": "approved_pwa_experience_boundary",
+  "purpose": "Installable Web/PWA access without creating a second business authority.",
+  "same_origin": true,
+  "service_worker": {
+    "scope": "/",
+    "cache_only_public_assets": true,
+    "forbidden_paths": ["/v1/", "/health/", "/docs", "/redoc", "/openapi.json", "/operator"],
+    "network_only_business_api": true,
+    "install_failure_preserves_previous_worker": true,
+    "activation_removes_obsolete_caches": true,
+    "skip_waiting_requires_explicit_user_action": true
+  },
+  "offline": {
+    "public_shell_fallback": true,
+    "business_state_cache": false,
+    "operator_business_api_cache": false,
+    "credential_persistence": false,
+    "memory_only_pending_queue": true,
+    "max_pending_items": 8,
+    "max_item_bytes": 65536,
+    "max_attempts": 3,
+    "max_age_seconds": 86400,
+    "authorization_headers_never_queued": true,
+    "mutation_requires_idempotency_key": true,
+    "conflicts_fail_closed": true
+  },
+  "reconnect": {
+    "automatic_flush": true,
+    "same_idempotency_key_on_replay": true,
+    "unknown_network_outcome_is_replay_safe_only_via_idempotency": true
+  },
+  "security": {
+    "no_local_storage": true,
+    "no_session_storage": true,
+    "no_indexed_db": true,
+    "no_cookie_operator_credentials": true,
+    "no_client_database_access": true
+  },
+  "exit": {
+    "canonical_state_remains_server_authoritative": true,
+    "temporary_network_loss_cannot_create_duplicate_effects": true
+  }
+}

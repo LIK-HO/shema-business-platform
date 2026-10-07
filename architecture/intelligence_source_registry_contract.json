@@ -1,0 +1,162 @@
+{
+  "version": "1.0",
+  "scope": "intelligence_source_registry",
+  "status": "pilot",
+  "policy": {
+    "no_new_kernel_semantics": true,
+    "network_execution_enabled": false,
+    "lawful_access_required": true,
+    "source_provenance_operator_visible": true,
+    "source_reliability_separate_from_claim_confidence": true,
+    "source_registry_is_not_a_global_ranking": true
+  },
+  "source_classes": [
+    "official_registry",
+    "primary_company",
+    "authoritative_public_record",
+    "trusted_structured_dataset",
+    "open_web_signal"
+  ],
+  "reliability_levels": [
+    "authoritative",
+    "primary",
+    "trusted_secondary",
+    "unverified"
+  ],
+  "sources": [
+    {
+      "source_id": "fns_transparent_business",
+      "name": "FNS Transparent Business",
+      "source_class": "official_registry",
+      "default_reliability": "authoritative",
+      "access_mode": "manual_operator_lookup",
+      "network_automation": false,
+      "identifier_types": [
+        "INN",
+        "OGRN",
+        "name"
+      ],
+      "claim_types": [
+        "registration",
+        "legal_status",
+        "tax_identifier"
+      ],
+      "freshness_required": true
+    },
+    {
+      "source_id": "fns_npd_status",
+      "name": "FNS NPD Status",
+      "source_class": "official_registry",
+      "default_reliability": "authoritative",
+      "access_mode": "manual_operator_lookup",
+      "network_automation": false,
+      "identifier_types": [
+        "INN"
+      ],
+      "claim_types": [
+        "npd_status",
+        "status_date"
+      ],
+      "freshness_required": true
+    },
+    {
+      "source_id": "primary_company_site",
+      "name": "Company Primary Site",
+      "source_class": "primary_company",
+      "default_reliability": "primary",
+      "access_mode": "operator_or_approved_adapter",
+      "network_automation": false,
+      "identifier_types": [
+        "name",
+        "domain"
+      ],
+      "claim_types": [
+        "service_offering",
+        "contact_channel",
+        "company_context"
+      ],
+      "freshness_required": true
+    },
+    {
+      "source_id": "authoritative_public_record",
+      "name": "Authoritative Public Record",
+      "source_class": "authoritative_public_record",
+      "default_reliability": "authoritative",
+      "access_mode": "operator_or_approved_adapter",
+      "network_automation": false,
+      "identifier_types": [
+        "name",
+        "identifier",
+        "reference"
+      ],
+      "claim_types": [
+        "registration",
+        "license",
+        "public_status"
+      ],
+      "freshness_required": true
+    },
+    {
+      "source_id": "trusted_structured_dataset",
+      "name": "Trusted Structured Dataset",
+      "source_class": "trusted_structured_dataset",
+      "default_reliability": "trusted_secondary",
+      "access_mode": "approved_adapter_only",
+      "network_automation": false,
+      "identifier_types": [
+        "name",
+        "identifier",
+        "domain"
+      ],
+      "claim_types": [
+        "entity_link",
+        "relationship",
+        "context"
+      ],
+      "freshness_required": true
+    },
+    {
+      "source_id": "open_web_signal",
+      "name": "Open Web Signal",
+      "source_class": "open_web_signal",
+      "default_reliability": "unverified",
+      "access_mode": "operator_or_approved_adapter",
+      "network_automation": false,
+      "identifier_types": [
+        "name",
+        "domain",
+        "reference"
+      ],
+      "claim_types": [
+        "signal",
+        "context"
+      ],
+      "freshness_required": true
+    },
+    {
+      "source_id": "dadata_organization_api",
+      "name": "DaData Organization API",
+      "source_class": "trusted_structured_dataset",
+      "default_reliability": "trusted_secondary",
+      "access_mode": "approved_adapter_only",
+      "network_automation": false,
+      "identifier_types": [
+        "INN",
+        "OGRN",
+        "name"
+      ],
+      "claim_types": [
+        "registration",
+        "legal_status",
+        "tax_identifier",
+        "company_context",
+        "contact_channel",
+        "financial_context"
+      ],
+      "freshness_required": true,
+      "provider_contract": "architecture/dadata_adapter_contract.json",
+      "evidence_record": "architecture/dadata_provider_evidence_2026_09_27.json",
+      "authority_rule": "provider_output_is_evidence_input_not_canonical_truth"
+    }
+  ]
+}

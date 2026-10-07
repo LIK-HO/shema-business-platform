@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "provider_id": "opencorporates",
+  "source_class": "corporate_registry_aggregator",
+  "api_version": "0.4",
+  "transport": "https",
+  "authentication": "api_token",
+  "endpoint": "/v0.4/companies/search",
+  "max_sources_per_call": 50,
+  "requires_source_reference_for_claims": true,
+  "canonical_state_write": false,
+  "production_auto_activation": false,
+  "application_boundary": "shema_platform.adapters.intelligence",
+  "evidence_boundary": "ProviderResult -> Evidence",
+  "failure_policy": {
+    "non_200": "fail_before_json_materialization",
+    "invalid_json": "fail",
+    "missing_provenance_url": "discard_observation",
+    "provenance_host": "require_exact_https_opencorporates_com",
+    "provenance_path": "require_https_opencorporates_company_reference_path",
+    "provenance_canonicalization": "canonical_https_opencorporates_company_url",
+    "observation_fields": {
+      "company_name_max_chars": 512,
+      "jurisdiction_code_max_chars": 32,
+      "company_number_max_chars": 128,
+      "current_status_max_chars": 64,
+      "non_string_identity_fields": "discard_observation"
+    },
+    "observation_identity_consistency": "require_payload_identity_match_provenance_path",
+    "duplicate_provenance": "one_observation_per_canonical_provenance_reference"
+  }
+}

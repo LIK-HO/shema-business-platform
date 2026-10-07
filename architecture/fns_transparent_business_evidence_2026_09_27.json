@@ -1,0 +1,100 @@
+{
+  "version": "1.0",
+  "status": "authoritative_evidence_record",
+  "checked_at": "2026-09-27",
+  "source_id": "fns_transparent_business",
+  "provider": "Federal Tax Service of Russia (FNS)",
+  "service": "FNS Transparent Business",
+  "authoritative_evidence": [
+    {
+      "evidence_id": "fns-donline-2025-08-07",
+      "url": "https://www.nalog.gov.ru/donline/",
+      "claims": [
+        "FNS lists Transparent Business among services for obtaining open taxpayer information in real time",
+        "the service covers legal entities and individual entrepreneurs and provides registration/status and related registry information"
+      ]
+    },
+    {
+      "evidence_id": "fns-pb-2026-09-05",
+      "url": "https://www.nalog.gov.ru/rn77/news/activities_fts/9806177/",
+      "claims": [
+        "FNS states Transparent Business is available online 24/7",
+        "FNS states the service provides a consolidated view for a company or individual entrepreneur",
+        "FNS states the information is available online free of charge",
+        "the page carries an official FNS update date of 2026-09-05"
+      ]
+    },
+    {
+      "evidence_id": "fns-pb-2026-08-10",
+      "url": "https://www.nalog.gov.ru/rn78/news/activities_fts/16641991/",
+      "claims": [
+        "FNS describes the current service as a counterparty-information resource with search and detailed company information",
+        "the publication is dated 2026-08-10"
+      ]
+    },
+    {
+      "evidence_id": "fns-pb-open-data",
+      "url": "https://pb.nalog.ru/od.html",
+      "claims": [
+        "Transparent Business states that it operates with open FNS data",
+        "the service points users to the FNS open-data resource and electronic data formats"
+      ]
+    },
+    {
+      "evidence_id": "fns-open-data-terms",
+      "url": "https://www.nalog.gov.ru/files/tipovye_usloviya_od.pdf",
+      "claims": [
+        "FNS-hosted standard open-data terms define open data as machine-processable information",
+        "the terms allow users to freely search, obtain, transfer and disseminate open data",
+        "the terms require lawful use and attribution to the source",
+        "the terms do not by themselves establish a provider-specific automation API, rate-limit or timeout contract for Transparent Business"
+      ]
+    }
+  ],
+  "verified_provider_contract": {
+    "public_service_exists": true,
+    "official_service_domain": "pb.nalog.ru",
+    "manual_lookup_available": true,
+    "declared_data_refresh": "daily",
+    "declared_availability": "24/7",
+    "open_data_context": true
+  },
+  "not_established": {
+    "public_automation_api_contract": true,
+    "provider_rate_limits_for_automation": true,
+    "provider_timeout_contract_for_automation": true,
+    "provider_machine_error_codes_for_automation": true,
+    "provider_side_idempotency_for_write_effects": true,
+    "provider_side_reconciliation_by_client_operation_key": true
+  },
+  "lawful_access_evidence": {
+    "manual_operator_path": "official public FNS service",
+    "open_data_reuse_basis": "FNS-hosted standard open-data terms",
+    "automated_access_authorization": "PARTIALLY_ESTABLISHED_FOR_OPEN_DATA_REUSE; NOT_ESTABLISHED_FOR_A_TRANSPARENT_BUSINESS_AUTOMATION_ENDPOINT",
+    "conditions": [
+      "use only for lawful purposes",
+      "preserve source attribution",
+      "do not infer service-specific API permissions or operational limits from generic open-data terms"
+    ],
+    "policy": "Public availability and open-data reuse rights do not substitute for a provider-specific automation contract."
+  },
+  "provenance_requirements": {
+    "source_ref": "https://pb.nalog.ru/",
+    "captured_at": "required",
+    "observed_at": "required",
+    "identifier_used": "required",
+    "operator_or_adapter_context": "required",
+    "freshness_state": "required"
+  },
+  "kill_switch_and_rollback": {
+    "network_activation": false,
+    "automatic_fallback": false,
+    "rollback_without_schema_change": true,
+    "historical_evidence_must_remain": true
+  },
+  "decision": "BLOCKED_FOR_LIVE_OR_AUTOMATED_ACTIVATION",
+  "next_evidence_needed": [
+    "authoritative provider-side automation/rate-limit contract, if an automated path is ever proposed",
+    "authoritative provider-side timeout and machine-error semantics, if an automated path is ever proposed"
+  ]
+}

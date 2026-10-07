@@ -1,0 +1,105 @@
+{
+  "version": "1.0",
+  "status": "intelligence_source_policy",
+  "purpose": "Keep external search broad enough for recall but bounded enough to avoid source overload, noise and operator fatigue.",
+  "principle": "Route sources by decision question, not by provider count.",
+  "source_classes": {
+    "authoritative_public": {
+      "role": "identity_status_and_specific_official_fact_verification",
+      "default_depth": "R1",
+      "examples": ["FNS_Transparent_Business_and_official_public_registries"]
+    },
+    "primary_company": {
+      "role": "company_services_contacts_locations_capabilities_and_first_party_context",
+      "default_depth": "R1",
+      "examples": ["company_website", "official_company_pages", "official_company_channels"]
+    },
+    "search_index": {
+      "role": "low_cost_discovery_and_recall",
+      "default_depth": "discovery_only",
+      "examples": ["Yandex_or_other_search_index", "Google_where_available"],
+      "truth_role": "never_canonical_by_itself"
+    },
+    "maps_directories": {
+      "role": "location_contactability_and_business_presence_enrichment",
+      "default_depth": "discovery_or_R1",
+      "truth_role": "secondary_observation"
+    },
+    "public_event_and_market_signal": {
+      "role": "dated_need_activity_event_and_operational_signal",
+      "default_depth": "R1_or_targeted_R2",
+      "examples": ["company_news", "events", "associations", "vacancies", "public_social_channels"]
+    },
+    "structured_secondary": {
+      "role": "identity_enrichment_cross_check_and_change_detection",
+      "default_depth": "R2",
+      "truth_role": "secondary_evidence"
+    },
+    "specialist_investigative": {
+      "role": "R3_R4_targeted_research_only",
+      "examples": ["OpenCorporates", "ICIJ_Offshore_Leaks", "Internet_Archive", "Shodan_where_relevant"],
+      "truth_role": "context_or_signal_not_canonical_truth"
+    }
+  },
+  "starter_source_policy": {
+    "default_discovery": [
+      "search_index",
+      "primary_company",
+      "maps_directories"
+    ],
+    "default_verification": [
+      "authoritative_public",
+      "primary_company"
+    ],
+    "default_need_signal": [
+      "primary_company",
+      "public_event_and_market_signal",
+      "search_index"
+    ],
+    "default_R2": [
+      "authoritative_public",
+      "primary_company",
+      "structured_secondary"
+    ],
+    "R3_R4": [
+      "specialist_investigative"
+    ]
+  },
+  "routing_rules": {
+    "no_global_source_waterfall": true,
+    "no_all_sources_by_default": true,
+    "search_index_is_discovery_not_truth": true,
+    "specialist_sources_are_triggered_not_default": true,
+    "one_missing_question_does_not_trigger_full_research": true,
+    "provider_failure_does_not_trigger_unbounded_fallback": true,
+    "source_expansion_requires_decision_gap": true
+  },
+  "operator_budget": {
+    "default_candidate_discovery_source_classes": 3,
+    "default_verification_source_classes": 2,
+    "deep_research_is_selective": true,
+    "operator_can_request_deeper_mode": true
+  },
+  "ai_role": {
+    "allowed": [
+      "build_bounded_search_plan",
+      "choose_next_source_class_from_allowed_policy",
+      "summarize_evidence",
+      "detect_missing_answer",
+      "propose_deeper_research"
+    ],
+    "forbidden": [
+      "invent_source",
+      "bypass_source_policy",
+      "promote_search_result_to_canonical_truth",
+      "replace_identity_resolution",
+      "replace_operator_authorization_for_critical_action"
+    ]
+  },
+  "operator_modes": {
+    "FAST": "cheap_recall_and_compact_candidates",
+    "VERIFY": "identity_and_material_fact_confirmation",
+    "DEEP": "targeted_R2_R4_research_for_selected_candidates",
+    "MANUAL": "operator_selects_sources_or_rechecks_a_claim"
+  }
+}

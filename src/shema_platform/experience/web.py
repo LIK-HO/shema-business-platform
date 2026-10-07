@@ -1,0 +1,42 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+_WEB_ROOT = Path(__file__).resolve().parent / "web"
+_PUBLIC_ROUTES = ("/", "/request", "/operator", "/max", "/system")
+_PWA_MANIFEST = _WEB_ROOT / "manifest.webmanifest"
+_PWA_SERVICE_WORKER = _WEB_ROOT / "sw.js"
+
+
+def install_web_operator_surface(app: FastAPI) -> None:
+    """Install one same-origin Web/PWA surface without adding business authority."""
+
+    app.mount("/web", StaticFiles(directory=_WEB_ROOT), name="web-assets")
+
+    async def serve_index() -> FileResponse:
+        return FileResponse(_WEB_ROOT / "index.html")
+
+    app.add_api_route(
+        "/sw.js",
+        lambda: FileResponse(_PWA_SERVICE_WORKER, media_type="application/javascript"),
+        methods=["GET"],
+        include_in_schema=False,
+    )
+    app.add_api_route(
+        "/manifest.webmanifest",
+        lambda: FileResponse(_PWA_MANIFEST, media_type="application/manifest+json"),
+        methods=["GET"],
+        include_in_schema=False,
+    )
+
+    for route in _PUBLIC_ROUTES:
+        app.add_api_route(
+            route,
+            serve_index,
+            methods=["GET"],
+            include_in_schema=False,
+        )
