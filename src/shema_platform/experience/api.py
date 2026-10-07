@@ -652,6 +652,15 @@ def create_app(
 
     @app.get("/health/ready")
     async def provider_readiness(request: Request) -> JSONResponse:
+        # A provider-clean shell is not a production-ready application.
+        # Do not advertise readiness until the canonical application is composed.
+        if request.app.state.application is None:
+            return JSONResponse(
+                status_code=503,
+                content={"ready": False},
+                headers={"X-Correlation-Id": request.state.correlation_id},
+            )
+
         registry: ProviderHealthRegistry = request.app.state.provider_health
         payload = {"ready": registry.ready()}
         return JSONResponse(
