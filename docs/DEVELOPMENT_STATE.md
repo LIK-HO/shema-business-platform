@@ -154,7 +154,7 @@
 - Added explicit `architecture/business_plane_boundary_contract.json` for Shema → Bitrix24 handoff, field ownership, retry/reconciliation and outcome return.
 - Corrected YandexGPT configuration so `YANDEXGPT_MAX_COST` is explicitly required and positive; zero/missing cost ceilings now fail closed.
 - Repeat-order boundary correction: Shema owns the bounded temporary local repeat-order mode; Bitrix24 remains the recurring-deal authority after verified cutover.
-- Monium is explicitly operational telemetry; durable audit/business history remains PostgreSQL-owned.
+- Operational telemetry is non-authoritative; durable audit/business history remains PostgreSQL-owned.
 - The functional P47 release gate CI #1600 (`36397100698`) is GREEN: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract all pass.
 - Global adversarial survivability gate is now mandatory for every material strategy change and every element completion; no element may enter VERIFIED/CLOSED without a current-head whole-system adversarial review.
 - Data-plane rule: Managed PostgreSQL remains the canonical Shema database in provider-specific cloud deployment. Bitrix24 receives live business ownership after handoff; the Shema database is not wholesale migrated into Bitrix24.

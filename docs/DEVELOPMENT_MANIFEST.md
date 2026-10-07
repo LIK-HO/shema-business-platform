@@ -276,7 +276,7 @@ Multi-operator: https://learn.microsoft.com/en-us/power-platform/admin/how-recor
 - A single live business field has one owner. Shema and Bitrix24 never perform unconstrained bidirectional writes to the same live field.
 - Temporary Shema repeat orders use the frozen Order/Economics semantics and must not reimplement Bitrix24's recurring-deal engine; after verified handoff Bitrix24 owns live repeat execution.
 - Customer-facing communication after handoff belongs to the business plane. MAX from Shema is not a substitute second communication history; any future direct customer-channel activation requires an explicit reconciliation/ownership contract.
-- Monium is operational observability only; long-lived audit and business history remain PostgreSQL-owned.
+- Operational telemetry is non-authoritative; long-lived audit and business history remain PostgreSQL-owned.
 - YandexGPT cost ceilings are explicit configuration, never an implicit zero default.
 
 ### Strategic product-boundary correction added 2026-09-28

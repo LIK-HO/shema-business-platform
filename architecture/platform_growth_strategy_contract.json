@@ -102,11 +102,6 @@
     "stage_4": "outcome_learning_and_measured_scale"
   },
   "data_plane": {
-    "shema_yandex_cloud": {
-      "canonical_database": "managed_postgresql",
-      "role": "intelligence_evidence_identity_provenance_handoff_lineage_learning_context",
-      "durable_audit_and_business_history": true
-    },
     "bitrix24": {
       "storage_role": "mature_business_plane_database_and_file_storage_owned_by_bitrix24_deployment_model",
       "authority_after_handoff": "live_business_transactions_and_process_state"
@@ -117,6 +112,11 @@
       "authority": "raw_client_submissions_and_intake_notifications",
       "projection": "accepted_business_context_into_shema",
       "no_direct_browser_access": true
+    },
+    "shema_runtime": {
+      "canonical_database": "managed_postgresql",
+      "role": "intelligence_evidence_identity_provenance_handoff_lineage_learning_context",
+      "durable_audit_and_business_history": true
     }
   },
   "operator_continuity": {
