@@ -25,6 +25,8 @@ from shema_platform.foundation.errors import IntegrityViolation
 from shema_platform.platform.migrations import MigrationPlan, MigrationRunner
 from shema_platform.platform.postgres import PostgresUnitOfWork
 
+pytestmark = pytest.mark.integration
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     pytest.skip("DATABASE_URL is not configured", allow_module_level=True)
