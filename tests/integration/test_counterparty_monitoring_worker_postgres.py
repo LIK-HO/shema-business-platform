@@ -165,7 +165,10 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
                 NOW + timedelta(seconds=2),
             )
             monitor_row = conn.execute(
-                "select next_check_at, last_error_code from counterparty_monitor where monitor_id = %s",
+                (
+                    "select next_check_at, last_error_code "
+                    "from counterparty_monitor where monitor_id = %s"
+                ),
                 (monitor.monitor_id,),
             ).fetchone()
             print("MONITOR DEBUG", monitor_row)
