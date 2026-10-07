@@ -157,8 +157,32 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
             ).fetchone()
             assert item == (BatchItemState.RETRYABLE.value, "PROVIDER_UNAVAILABLE")
 
-        recovery = CounterpartyMonitoringWorker(
-            uow_factory,
+            with connection(schema) as conn:
+                raw_claim = conn.execute(
+                    """
+                    select state, attempt
+                    from counterparty_monitoring_batch_item
+                    where batch_id = %s
+                      and monitor_id = %s
+                      and available_at <= %s
+                      and (
+                            state in ('pending', 'retryable')
+                            or (state = 'running' and lease_until < %s)
+                      )
+                    for update skip locked
+                    limit 1
+                    """,
+                    (
+                        first.batch_id,
+                        monitor.monitor_id,
+                        NOW + timedelta(seconds=2),
+                        NOW + timedelta(seconds=2),
+                    ),
+                ).fetchone()
+                print("RAW SKIP LOCKED AFTER COMMIT", raw_claim)
+                conn.rollback()
+
+        recovery = CounterpartyMonitoringWorker(            uow_factory,
             provider,
             worker_id="worker-2",
             permissions=PERMISSIONS,
