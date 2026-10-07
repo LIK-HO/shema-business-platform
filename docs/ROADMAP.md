@@ -527,12 +527,12 @@ Web and PWA provide the complete proven operator workflow without a second busin
 ### Closure evidence — 2026-09-30
 Phase 6 is **CLOSED / VERIFIED** on final implementation HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c` by full seven-job release gate `36637312890` — **7/7 GREEN**. Acceptance: `tests/test_phase6_operator_consolidation_acceptance.py`. Global adversarial review covered the frozen kernel, post-core contracts, runtime, persistence, integrations, operator workflow, security/recovery and migration boundaries. Two trust-boundary findings were required to be fixed before closure: operator navigation now fails closed after capability rejection, and the handoff workspace cannot imply that an external Bitrix transfer was acknowledged when no integration provider is composed. Both are covered by acceptance tests. No frozen-kernel change, second business authority, or external success simulation was introduced.
 
-**Next approved boundary:** Phase 7 — Yandex Cloud Production Foundation.
+**Next approved boundary:** deployment target selection remains deferred until a measured need and an executable, current, cost-validated path are established.
 
 ### Closure evidence — 2026-09-30
 Phase 6 is **CLOSED / VERIFIED** on final HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c` by full seven-job release gate `36637312890` — **7/7 GREEN**. The final adversarial review fixed capability-rejection fail-closed behavior and removed any handoff UI implication of external ACK when no integration provider is composed. SI-27 remains enforced; frozen kernel unchanged.
 
-**Next approved boundary:** Phase 7 — Yandex Cloud Production Foundation.
+**Next approved boundary:** deployment target selection remains deferred until a measured need and an executable, current, cost-validated path are established.
 
 ## 10A. Operator Interface & Multi-Operator Doctrine
 
@@ -563,31 +563,20 @@ From the beginning the system supports growth from one operator to several witho
 
 This is a bounded extension around the frozen core, not a new system-of-record or a premature multi-tenant architecture.
 
-## 11. Phase 7 — Yandex Cloud Production Foundation
+## 11. Deployment target selection and production readiness — DEFERRED
 
 ### Objective
-Move the proven modular monolith into Yandex Cloud without changing domain semantics or creating a second persistence authority.
+Select and validate a production deployment path only when real operating constraints justify it.
 
-### Work
-- containerized canonical API/runtime in Serverless Containers;
-- API Gateway as the explicit external edge;
-- Cloud Functions only for narrow scheduled/triggered work;
-- Lockbox for provider/API credentials;
-- Container Registry for immutable application artifacts;
-- Object Storage for bounded large evidence objects and exports;
-- Monium + Monitoring for observability and operational health;
-- Managed PostgreSQL as the production canonical transactional database;
-- target VPC/private networking for production database access;
-- cost budgets and alerts.
-
-### Free/minimal deployment rule
-The serverless shell can begin inside Yandex Cloud free allowances. Real production data requires Managed PostgreSQL cost; the architecture must not replace PostgreSQL with a second database merely to avoid that cost.
-
-### Queue rule
-The existing PostgreSQL job/outbox model remains the business reliability authority. Yandex Message Queue may be introduced later as transport/fanout when measured workload requires it; it must not become a competing transaction authority.
+### Admission criteria
+- current provider documentation and limits verified from primary sources;
+- minimal executable deployment path proven before adding production infrastructure;
+- total cost and free/quota allowances verified for the actual intended workload;
+- rollback, recovery, security and data-authority boundaries remain provider-neutral;
+- no provider-specific deployment logic enters the canonical domain or frozen kernel.
 
 ### Exit criteria
-The same frozen kernel and canonical API run in Yandex Cloud with verified secrets, database connectivity, backup/recovery, health checks, observability and rollback, without introducing duplicate business state.
+A minimal production deployment can be created, observed, recovered and removed deterministically, with current evidence and without a second business authority.
 
 ## 12. Phase 8 — Production Operations
 
@@ -768,7 +757,7 @@ The practical priority is:
 5. Public Intake Data Plane + Trust Boundary + Counterparty Preflight
 6. Counterparty Verification, Monitoring & Favorites
 7. Web/PWA public client surface + operator workspace + MAX mini-app projection
-8. Yandex Cloud production foundation
+8. Deployment target selection and production readiness
 9. Bitrix24 business-plane configuration + full transaction/history cutover
 10. Production operations and guarded external activation / MAX
 11. Learning loop
