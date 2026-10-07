@@ -157,7 +157,7 @@ class PostgresCounterpartyMonitoringBatchRepository(
             "order by monitor_id",
             (batch_id, now, now),
         ).fetchall()
-        print("CLAIM INTERNAL PLAIN DEBUG", claim_probe)
+        print("CLAIM INTERNAL PLAIN DEBUG", claim_probe, "batch", batch_id, "limit", limit)
         rows = self._connection.execute(
             """
             select
