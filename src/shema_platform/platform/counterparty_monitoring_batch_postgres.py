@@ -90,6 +90,20 @@ class PostgresCounterpartyMonitoringBatchRepository(
         batch = self._get_for_update(batch_id)
         if batch.collection_complete:
             return batch
+        lock_state = self._connection.execute(
+            """
+            select l.pid, l.mode, l.granted, l.page, l.tuple, a.state,
+                   left(a.query, 160)
+            from pg_locks l
+            join pg_class c on c.oid = l.relation
+            join pg_namespace n on n.oid = c.relnamespace
+            left join pg_stat_activity a on a.pid = l.pid
+            where n.nspname = current_schema()
+              and c.relname = 'counterparty_monitoring_batch_item'
+            order by l.pid, l.mode
+            """,
+        ).fetchall()
+        print("CLAIM LOCK STATE DEBUG", lock_state)
         rows = self._connection.execute(
             """
             select monitor_id
