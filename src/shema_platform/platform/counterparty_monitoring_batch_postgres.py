@@ -90,19 +90,6 @@ class PostgresCounterpartyMonitoringBatchRepository(
         batch = self._get_for_update(batch_id)
         if batch.collection_complete:
             return batch
-        if claim_probe:
-            try:
-                nowait_probe = self._connection.execute(
-                    "select batch_id, monitor_id, state, attempt from counterparty_monitoring_batch_item "
-                    "where batch_id = %s and monitor_id = %s for update nowait",
-                    (batch_id, claim_probe[0][1]),
-                ).fetchone()
-                print("CLAIM NOWAIT DEBUG", nowait_probe)
-            except Exception as exc:
-                blockers = self._connection.execute(
-                    "select pg_blocking_pids(pg_backend_pid())",
-                ).fetchone()
-                print("CLAIM NOWAIT ERROR", type(exc).__name__, str(exc), "BLOCKERS", blockers)
         rows = self._connection.execute(
             """
             select monitor_id
@@ -162,29 +149,6 @@ class PostgresCounterpartyMonitoringBatchRepository(
         now: datetime,
         limit: int,
     ) -> tuple[CounterpartyMonitoringBatchItem, ...]:
-        claim_probe = self._connection.execute(
-            "select batch_id, monitor_id, state, attempt, available_at, lease_worker_id, lease_until "
-            "from counterparty_monitoring_batch_item "
-            "where batch_id = %s and available_at <= %s and "
-            "(state in ('pending', 'retryable') or (state = 'running' and lease_until < %s)) "
-            "order by monitor_id",
-            (batch_id, now, now),
-        ).fetchall()
-        print("CLAIM INTERNAL PLAIN DEBUG", claim_probe, "batch", batch_id, "limit", limit)
-        if claim_probe:
-            monitor_id_probe = str(claim_probe[0][1])
-            try:
-                nowait_probe = self._connection.execute(
-                    "select batch_id, monitor_id, state, attempt from counterparty_monitoring_batch_item "
-                    "where batch_id = %s and monitor_id = %s for update nowait",
-                    (batch_id, monitor_id_probe),
-                ).fetchone()
-                print("CLAIM NOWAIT DEBUG", nowait_probe)
-            except Exception as exc:
-                blockers = self._connection.execute(
-                    "select pg_blocking_pids(pg_backend_pid())",
-                ).fetchone()
-                print("CLAIM NOWAIT ERROR", type(exc).__name__, str(exc), "BLOCKERS", blockers)
         rows = self._connection.execute(
             """
             select
