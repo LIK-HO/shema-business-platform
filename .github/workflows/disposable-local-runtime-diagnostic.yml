@@ -1,0 +1,44 @@
+name: Disposable local-runtime diagnostic
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build production image
+        run: docker build --pull -t shema-local-diagnostic:ci .
+      - name: Start production container
+        run: |
+          docker run -d --name shema-local-diagnostic -p 18080:8080             -e APP_ENV=production             -e OIDC_ISSUER=https://issuer.example.com             -e OIDC_AUDIENCE=shema             -e OIDC_JWKS_URL=https://issuer.example.com/.well-known/jwks.json             -e DATABASE_URL='postgresql://shema:password@example.invalid:5432/shema'             shema-local-diagnostic:ci
+      - name: Probe readiness and Web
+        run: |
+          for i in $(seq 1 30); do
+            code="$(curl -sS -o /tmp/ready.json -w '%{http_code}' http://127.0.0.1:18080/health/ready || true)"
+            if [ "$code" = "200" ]; then break; fi
+            sleep 1
+          done
+          test "$code" = "200"
+          cat /tmp/ready.json
+          curl -fsS -D /tmp/root.headers -o /tmp/root.html http://127.0.0.1:18080/
+          grep -qi '^x-content-type-options: nosniff' /tmp/root.headers
+          grep -qi '^x-frame-options: DENY' /tmp/root.headers
+          grep -qi '^x-correlation-id: ' /tmp/root.headers
+          grep -q 'Shema' /tmp/root.html
+      - name: Prove production fails closed without OIDC
+        run: |
+          set +e
+          docker run --rm             -e APP_ENV=production             -e DATABASE_URL='postgresql://shema:password@example.invalid:5432/shema'             shema-local-diagnostic:ci             python -c "from shema_platform.experience.production import app; print(app.title)"
+          rc=$?
+          set -e
+          test "$rc" -ne 0
+      - name: Cleanup
+        if: always()
+        run: docker rm -f shema-local-diagnostic || true
