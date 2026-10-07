@@ -50,3 +50,7 @@ Core completion boundary: after certification, core semantics are frozen; new ca
 This repository is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
 
 The project license applies to the original work in this repository; third-party dependencies retain their applicable licenses.
+
+## Deployment boundary
+
+Cloud-provider infrastructure is intentionally kept outside the canonical product core; this repository contains no provider-specific production deployment module.
