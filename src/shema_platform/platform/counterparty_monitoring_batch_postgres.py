@@ -96,7 +96,7 @@ class PostgresCounterpartyMonitoringBatchRepository(
             from counterparty_monitor
             where status = 'active'
               and next_check_at <= %s
-              and (%s is null or monitor_id > %s)
+              and (%s::text is null or monitor_id > %s)
             order by monitor_id
             limit %s
             """,
