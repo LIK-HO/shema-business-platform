@@ -214,6 +214,19 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
                 ),
             ).fetchone()
             print("CLAIM PREDICATE COUNT DEBUG", predicate_count)
+            try:
+                lock_probe = conn.execute(
+                    """
+                    select state, attempt
+                    from counterparty_monitoring_batch_item
+                    where batch_id = %s and monitor_id = %s
+                    for update nowait
+                    """,
+                    (first.batch_id, monitor.monitor_id),
+                ).fetchone()
+                print("LOCK PROBE DEBUG", lock_probe)
+            except psycopg.errors.LockNotAvailable as exc:
+                print("LOCK PROBE LOCKED", exc)
         second = recovery.run_once(
             scheduled_at=NOW + timedelta(seconds=2),
             batch_key="daily-2026-09-29",
