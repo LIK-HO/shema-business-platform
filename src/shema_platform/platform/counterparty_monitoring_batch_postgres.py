@@ -149,31 +149,14 @@ class PostgresCounterpartyMonitoringBatchRepository(
         now: datetime,
         limit: int,
     ) -> tuple[CounterpartyMonitoringBatchItem, ...]:
-        claim_probe = self._connection.execute(
-            "select txid_current(), pg_backend_pid(), current_setting('transaction_isolation')",
-        ).fetchone()
-        print("CLAIM TX DEBUG", claim_probe)
-        candidate = self._connection.execute(
-            "select monitor_id from counterparty_monitoring_batch_item "
+        plain_probe = self._connection.execute(
+            "select state, attempt from counterparty_monitoring_batch_item "
             "where batch_id = %s and available_at <= %s and "
             "(state in ('pending', 'retryable') or (state = 'running' and lease_until < %s)) "
             "order by monitor_id limit 1",
             (batch_id, now, now),
         ).fetchone()
-        print("CLAIM CANDIDATE DEBUG", candidate)
-        if candidate is not None:
-            try:
-                probe = self._connection.execute(
-                    "select state, attempt from counterparty_monitoring_batch_item "
-                    "where batch_id = %s and monitor_id = %s for update nowait",
-                    (batch_id, str(candidate[0])),
-                ).fetchone()
-                print("CLAIM NOWAIT DEBUG", probe)
-            except Exception as exc:
-                blockers = self._connection.execute(
-                    "select pg_blocking_pids(pg_backend_pid())",
-                ).fetchone()
-                print("CLAIM NOWAIT ERROR", type(exc).__name__, blockers)
+        print("CLAIM PLAIN BEFORE LOCK", plain_probe)
         rows = self._connection.execute(
             """
             select
