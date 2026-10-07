@@ -117,6 +117,18 @@ def test_api_startup_allows_development_environment(monkeypatch) -> None:
     create_app(enable_docs=True)
 
 
+def test_health_ready_is_not_ready_when_application_is_not_composed(monkeypatch) -> None:
+    from fastapi.testclient import TestClient
+
+    from shema_platform.experience.api import create_app
+
+    monkeypatch.setenv("APP_ENV", "development")
+    response = TestClient(create_app(enable_docs=False)).get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {"ready": False}
+
+
 def test_provider_health_registry_fails_closed_until_reachable() -> None:
     from shema_platform.foundation.provider_health import ProviderHealthRegistry
 
