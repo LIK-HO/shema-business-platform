@@ -23,16 +23,12 @@ def test_platform_strategy_keeps_business_ownership_separated() -> None:
     )
 
 
-def test_yandex_cloud_strategy_does_not_create_a_second_transaction_authority() -> None:
+def test_provider_neutral_deployment_does_not_create_a_second_transaction_authority() -> None:
     payload = load("platform_growth_strategy_contract.json")
 
-    assert payload["yandex_cloud"]["canonical_database"] == "managed_postgresql"
-    assert payload["yandex_cloud"]["secondary_database_policy"] == (
-        "ydb_only_after_measured_constraint"
-    )
-    assert payload["yandex_cloud"]["async_transport"] == (
-        "message_queue_only_when_transport_scaling_requires_it"
-    )
+    assert payload["deployment_boundary"]["provider_neutral"] is True
+    assert payload["deployment_boundary"]["canonical_database"] == "postgresql"
+    assert payload["deployment_boundary"]["no_provider_specific_domain_logic"] is True
     assert (
         payload["economics_boundary"]["new_shema_transaction_economics_feature_development"]
         is False
@@ -57,7 +53,7 @@ def test_removed_subsystems_have_no_active_repository_surface() -> None:
 def test_strategy_preserves_two_domains_without_split_brain() -> None:
     payload = load("platform_growth_strategy_contract.json")
 
-    assert payload["data_plane"]["shema_yandex_cloud"]["canonical_database"] == "managed_postgresql"
+    assert payload["data_plane"]["shema_runtime"]["canonical_database"] == "managed_postgresql"
     assert payload["data_plane"]["bitrix24"]["authority_after_handoff"] == (
         "live_business_transactions_and_process_state"
     )
