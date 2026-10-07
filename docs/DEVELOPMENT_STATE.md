@@ -8,7 +8,7 @@
 - **Experience contract:** one Web/PWA surface, canonical API/domain semantics, server-authoritative capability visibility, explicit causal/context links, memory-only personal view state and no second business store/rule layer.
 - **Frozen kernel:** unchanged.
 - **PR #62:** open / draft / unmerged.
-- **Next active boundary:** Phase 7 — Yandex Cloud Production Foundation.
+- **Next active boundary:** deployment target selection remains DEFERRED pending a measured operational need and a current executable deployment path.
 
 # Phase 5 PWA — CLOSED / VERIFIED (2026-09-30)
 
@@ -154,23 +154,12 @@
 - Added explicit `architecture/business_plane_boundary_contract.json` for Shema → Bitrix24 handoff, field ownership, retry/reconciliation and outcome return.
 - Corrected YandexGPT configuration so `YANDEXGPT_MAX_COST` is explicitly required and positive; zero/missing cost ceilings now fail closed.
 - Repeat-order boundary correction: Shema owns the bounded temporary local repeat-order mode; Bitrix24 remains the recurring-deal authority after verified cutover.
-- Monium is explicitly operational telemetry; durable audit/business history remains PostgreSQL-owned.
+- Operational telemetry is non-authoritative; durable audit/business history remains PostgreSQL-owned.
 - The functional P47 release gate CI #1600 (`36397100698`) is GREEN: quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/recovery and release-contract all pass.
 - Global adversarial survivability gate is now mandatory for every material strategy change and every element completion; no element may enter VERIFIED/CLOSED without a current-head whole-system adversarial review.
-- Data-plane rule: Managed PostgreSQL remains the canonical Shema database in Yandex Cloud. Bitrix24 receives live business ownership after handoff; the Shema database is not wholesale migrated into Bitrix24.
+- Data-plane rule: Managed PostgreSQL remains the canonical Shema database in provider-specific cloud deployment. Bitrix24 receives live business ownership after handoff; the Shema database is not wholesale migrated into Bitrix24.
 - Operator continuity rule: every business handoff carries stable Shema identity, handoff, correlation and Bitrix entity references so one or multiple operators can reconstruct the full causal chain without shadow copies.
 
-## Strategic boundary synchronization — 2026-09-28
-
-- A new Yandex Cloud deployment strategy is recorded: Serverless Containers + API Gateway + narrow Cloud Functions/Timers + Lockbox + Container Registry + Object Storage + Monium, with Managed PostgreSQL remaining the canonical production database.
-- Bitrix24 is established as the future mature business control plane for live transactions, pricing, calculations/economics, communications, assignments and process automation. Shema supplies verified context and later receives minimal outcome signals for learning.
-- New Shema development must not expand into a second CRM, accounting, finance or personnel system. Existing frozen Order/Economics semantics remain only for compatibility, lineage and learning.
-- Existing YandexGPT and MAX provider boundaries remain in force. YandexGPT is the bounded AI processing path; MAX live outbound remains fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
-- This synchronization is architecture/experience-contract/test scope only. No Bitrix24 runtime, MAX activation or new persistence authority has been opened.
-- New strategy contracts: architecture/platform_growth_strategy_contract.json, architecture/business_plane_boundary_contract.json, architecture/public_client_experience_contract.json and architecture/operator_interface_contract.json.
-- New executable guards: tests/test_platform_growth_strategy_contract.py, tests/test_business_plane_boundary_contract.py and tests/test_public_client_experience_contract.py.
-- Adversarial review: docs/ADVERSARIAL_ARCHITECTURE_REVIEW_2026_09_28.md.
-- Operator interface blueprint: architecture/operator_interface_contract.json.
 
 ## Current-head boundary closure — 2026-09-28
 

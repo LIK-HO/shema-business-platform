@@ -4,8 +4,8 @@
   "frozen_kernel_impact": false,
   "product_boundary": {
     "shema_role": "search_intelligence_evidence_qualification_contact_preparation_public_request_preflight_repeat_orders_counterparty_monitoring_learning",
-    "yandex_cloud_role": "primary_runtime_and_infrastructure_environment",
-    "bitrix24_role_after_maturity": "transaction_business_process_communication_calculation_and_economics_control_plane"
+    "bitrix24_role_after_maturity": "transaction_business_process_communication_calculation_and_economics_control_plane",
+    "deployment_role": "provider_neutral_production_runtime"
   },
   "ownership": {
     "shema_authoritative": [
@@ -36,23 +36,6 @@
       "shema_record_reference",
       "bitrix_entity_reference",
       "integration_correlation_id"
-    ]
-  },
-  "yandex_cloud": {
-    "runtime_shape": "modular_monolith_first",
-    "api_runtime": "serverless_containers",
-    "edge": "api_gateway",
-    "canonical_database": "managed_postgresql",
-    "secret_store": "lockbox",
-    "artifact_registry": "container_registry",
-    "object_storage_role": "bounded_large_evidence_objects_and_exports_only",
-    "scheduler": "cloud_functions_timer_trigger",
-    "async_transport": "message_queue_only_when_transport_scaling_requires_it",
-    "observability": "monium",
-    "secondary_database_policy": "ydb_only_after_measured_constraint",
-    "kubernetes_policy": "deferred_until_measured_need",
-    "bounded_database_exceptions": [
-      "dedicated_public_intake_database"
     ]
   },
   "ai": {
@@ -97,8 +80,9 @@
     "learning_import": "outcome_features_only_unless_separately_justified"
   },
   "deployment_stages": [
-    "cloud_rehearsal_minimal_free_components",
-    "minimal_production_with_managed_postgresql",
+    "deployment_target_research_and_cost_validation",
+    "minimal_rehearsal_only_after_measured_need",
+    "minimal_production_with_postgresql",
     "production_hardening",
     "bitrix24_business_plane_integration",
     "measured_scale"
@@ -113,16 +97,11 @@
   ],
   "business_sequence": {
     "stage_1": "B2B_process_validation_repeat_orders_and_repeatable_unit_economics",
-    "stage_2": "yandex_cloud_production_shema_intelligence_runtime",
+    "stage_2": "provider_neutral_production_runtime_after_measured_need",
     "stage_3": "bitrix24_business_control_plane_integration",
     "stage_4": "outcome_learning_and_measured_scale"
   },
   "data_plane": {
-    "shema_yandex_cloud": {
-      "canonical_database": "managed_postgresql",
-      "role": "intelligence_evidence_identity_provenance_handoff_lineage_learning_context",
-      "durable_audit_and_business_history": true
-    },
     "bitrix24": {
       "storage_role": "mature_business_plane_database_and_file_storage_owned_by_bitrix24_deployment_model",
       "authority_after_handoff": "live_business_transactions_and_process_state"
@@ -133,6 +112,11 @@
       "authority": "raw_client_submissions_and_intake_notifications",
       "projection": "accepted_business_context_into_shema",
       "no_direct_browser_access": true
+    },
+    "shema_runtime": {
+      "canonical_database": "managed_postgresql",
+      "role": "intelligence_evidence_identity_provenance_handoff_lineage_learning_context",
+      "durable_audit_and_business_history": true
     }
   },
   "operator_continuity": {
@@ -175,5 +159,15 @@
     ],
     "domain_cutover": "controlled_dns_cutover_from_inSales_after_https_and_health_validation"
   },
-  "evolution_contract": "architecture/platform_evolution_contract.json"
+  "evolution_contract": "architecture/platform_evolution_contract.json",
+  "deployment_boundary": {
+    "provider_neutral": true,
+    "target_selection_deferred": true,
+    "canonical_database": "postgresql",
+    "no_provider_specific_domain_logic": true,
+    "no_provider_specific_deployment_module_in_product_core": true,
+    "admission_requires_current_primary_source_evidence": true,
+    "admission_requires_measured_operational_need": true,
+    "admission_requires_cost_and_quota_validation": true
+  }
 }

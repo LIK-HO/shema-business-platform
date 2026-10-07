@@ -12,11 +12,11 @@ def load_json(path: str) -> dict:
     return json.loads(read_text(path))
 
 
-def test_current_strategy_uses_live_repeat_order_and_canonical_ui_model() -> None:
+def test_current_strategy_uses_live_repeat_order_and_provider_neutral_deployment_model() -> None:
     manifest = read_text("docs/DEVELOPMENT_MANIFEST.md").splitlines()[:190]
     roadmap = read_text("docs/ROADMAP.md")
     state = read_text("docs/DEVELOPMENT_STATE.md")
-    growth = read_text("docs/PLATFORM_GROWTH_STRATEGY_2026_09_28.md")
+    growth = load_json("architecture/platform_growth_strategy_contract.json")
 
     assert any("Repeat Orders & Business Continuity" in line for line in manifest)
     assert any(
@@ -26,8 +26,13 @@ def test_current_strategy_uses_live_repeat_order_and_canonical_ui_model() -> Non
     assert "architecture/operator_interface_contract.json" in roadmap
     assert "Repeat Orders & Business Continuity" in state
     assert "architecture/operator_interface_contract.json" in state
-    assert "Repeat Orders & Business Continuity" in growth
-    assert "architecture/operator_interface_contract.json" in growth
+    assert "temporary_live_repeat_orders_before_bitrix_cutover" in growth["ownership"][
+        "shema_authoritative"
+    ]
+    assert growth["experience_surfaces"]["operator_web"]["interface_contract"] == (
+        "architecture/operator_interface_contract.json"
+    )
+    assert growth["deployment_boundary"]["provider_neutral"] is True
 
 
 def test_public_experience_and_adversarial_gate_reference_ui_boundary() -> None:

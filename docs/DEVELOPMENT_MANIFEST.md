@@ -1,4 +1,4 @@
-**Current implementation boundary:** **Phase 6 — Production Web/PWA Consolidation — CLOSED / VERIFIED.** Final implementation HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c` passed full seven-job CI `36637312890` — **7/7 GREEN**. Global adversarial review completed; operator capability rejection and handoff false-readiness were fixed and covered by acceptance tests. Web/PWA remains one experience layer over canonical APIs; no second business authority or frozen-kernel change was introduced. Next active boundary: **Phase 7 — Yandex Cloud Production Foundation**.
+**Current implementation boundary:** **Phase 6 — Production Web/PWA Consolidation — CLOSED / VERIFIED.** Final implementation HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c` passed full seven-job CI `36637312890` — **7/7 GREEN**. Global adversarial review completed; operator capability rejection and handoff false-readiness were fixed and covered by acceptance tests. Web/PWA remains one experience layer over canonical APIs; no second business authority or frozen-kernel change was introduced. **Provider-specific production deployment is currently outside the canonical product core; a deployment target is deferred until there is a measured operational need and a current, executable, cost-validated path.**
 
 **Current implementation boundary:** **Phase 5 — PWA — CLOSED / VERIFIED.** Final implementation HEAD `337b3c3f8465b406d13f6655f8e65910efe4524a` passed full seven-job CI `36635383440` — **7/7 GREEN**. Global adversarial review completed; the PWA public-bootstrap allowlist defect was fixed and covered by HTTP-level acceptance. SI-26 is evidenced by `tests/test_phase5_pwa_acceptance.py`. Next active boundary: Phase 6 — Production Web/PWA Consolidation. No frozen-kernel semantics changed and no second business authority was introduced.
 
@@ -276,22 +276,21 @@ Multi-operator: https://learn.microsoft.com/en-us/power-platform/admin/how-recor
 - A single live business field has one owner. Shema and Bitrix24 never perform unconstrained bidirectional writes to the same live field.
 - Temporary Shema repeat orders use the frozen Order/Economics semantics and must not reimplement Bitrix24's recurring-deal engine; after verified handoff Bitrix24 owns live repeat execution.
 - Customer-facing communication after handoff belongs to the business plane. MAX from Shema is not a substitute second communication history; any future direct customer-channel activation requires an explicit reconciliation/ownership contract.
-- Monium is operational observability only; long-lived audit and business history remain PostgreSQL-owned.
+- Operational telemetry is non-authoritative; long-lived audit and business history remain PostgreSQL-owned.
 - YandexGPT cost ceilings are explicit configuration, never an implicit zero default.
 
 ### Strategic product-boundary correction added 2026-09-28
 
 - **Core role:** Shema is the intelligence, evidence and decision-support system. New development must not turn it into a second CRM/ERP/accounting/personnel platform.
-- **Runtime:** Yandex Cloud is the target deployment environment. Start with serverless components where practical; PostgreSQL remains the canonical production database because the frozen kernel already establishes it as the transaction authority.
-- **Business-plane ownership:** When the business becomes mature enough to require expanded transaction control, Bitrix24 becomes the live business-process/CRM/communication/calculation/economics control plane. Shema hands over a verified context package and later consumes minimal outcome signals for learning.
-- **Data-plane continuity:** On Yandex Cloud, Managed PostgreSQL remains the canonical Shema database. When Bitrix24 is introduced, the Shema database is **not** moved wholesale into Bitrix24. Bitrix24 stores its own live business data and becomes authoritative only for the business domains explicitly handed over. Shema continues to store intelligence/evidence/provenance/handoff lineage/outcome context. The two domains are joined by stable references, handoff IDs, correlation IDs and versioned mappings, not by competing writes to one live field.
-- **Operator continuity:** The operator should experience one causal workflow, not two unrelated databases. Before handoff, Shema owns intelligence and preparation; after handoff, Bitrix24 owns the live business process. Every handoff remains traceable from the Bitrix entity back to the Shema dossier and from Shema outcome context back to the Bitrix entity. For several operators, live assignment/team workflow belongs to Bitrix24 after handoff; Shema does not keep a shadow operational order board.
-- **Economics boundary:** existing frozen Order/Economics semantics remain for compatibility, lineage and learning; no new Shema accounting subsystem is to be developed unless a separately justified architectural exception is approved.
-- **AI:** the existing YandexGPT adapter remains the primary AI path in Yandex Cloud. AI may summarize, classify and prepare; it cannot become canonical identity, legal or economic truth.
-- **MAX:** the adapter remains, but live outbound effects stay fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
-- **Cloud observability:** new Yandex Cloud deployment documentation must target Monium rather than Cloud Logging because Yandex Cloud states Cloud Logging is scheduled for shutdown in Q2 2027.
+- **Deployment boundary:** the canonical repository remains provider-neutral. Production infrastructure is a separate engineering concern and must not introduce a second business authority, provider-specific domain semantics, or deployment logic inside the frozen kernel.
+- **Business-plane ownership:** when the business is mature enough to require expanded transaction control, Bitrix24 becomes the live business-process/CRM/communication/calculation/economics control plane. Shema hands over a verified context package and later consumes minimal outcome signals for learning.
+- **Data-plane continuity:** PostgreSQL remains the canonical Shema transactional database. Bitrix24 owns only explicitly handed-over live business domains. The two domains are connected by stable references, handoff IDs, correlation IDs and versioned mappings, not by competing writes to the same live field.
+- **Operator continuity:** the operator should experience one causal workflow; handoffs remain traceable from the external business entity to the Shema dossier and back.
+- **Economics boundary:** existing frozen Order/Economics semantics remain for compatibility, lineage and learning; no new Shema accounting subsystem is developed without a separately justified exception.
+- **AI:** YandexGPT remains a provider adapter independent of the deployment target. It may summarize, classify and prepare; it cannot become canonical identity, legal or economic truth.
+- **MAX:** live outbound effects remain fail-closed until provider-side idempotency or deterministic reconciliation is evidenced.
 - **Integration principle:** external systems are connected by explicit field ownership. The same live field must never have competing authorities.
-- **Implementation order:** B2B contact preparation → bounded Repeat Orders & Business Continuity → Web/PWA → Yandex Cloud production → Bitrix24 business-plane integration → guarded external communication / MAX → learning → measured scale.
+- **Implementation order:** B2B contact preparation → bounded Repeat Orders & Business Continuity → Web/PWA → deployment-target selection when justified → Bitrix24 business-plane integration → guarded external communication / MAX → learning → measured scale.
 
 ### Критерий допуска новой capability
 
@@ -1505,7 +1504,7 @@ AI Gateway остаётся provider-neutral application boundary. Конкре�
 ### Облачные AI-провайдеры
 
 Разрешены только два облачных AI-класса:
-- **YandexGPT** через Yandex Cloud AI Studio;
+- **YandexGPT** через отдельный provider adapter/API;
 - **GigaChat** через GigaChat API.
 
 Любой другой облачный LLM/AI provider считается **запрещённым по умолчанию** и не может быть активирован без отдельного архитектурного решения и явного изменения этого манифеста.
