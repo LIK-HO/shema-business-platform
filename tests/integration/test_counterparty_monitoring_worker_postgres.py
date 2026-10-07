@@ -149,13 +149,15 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
             ).fetchone() == (0,)
             item = conn.execute(
                 """
-                select state, last_error_code
+                select state, last_error_code, attempt, available_at, lease_until
                 from counterparty_monitoring_batch_item
                 where batch_id = %s and monitor_id = %s
                 """,
                 (first.batch_id, monitor.monitor_id),
             ).fetchone()
-            assert item == (BatchItemState.RETRYABLE.value, "PROVIDER_UNAVAILABLE")
+            assert item[0:2] == (BatchItemState.RETRYABLE.value, "PROVIDER_UNAVAILABLE")
+            print("RETRY DEBUG", item, "NOW", NOW, "RECOVERY NOW", NOW + timedelta(seconds=2))
+            monitor_row = conn.execute(\n                "select next_check_at, last_error_code from counterparty_monitor where monitor_id = %s",\n                (monitor.monitor_id,),\n            ).fetchone()\n            print("MONITOR DEBUG", monitor_row)
 
         recovery = CounterpartyMonitoringWorker(
             uow_factory,
