@@ -156,8 +156,19 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
                 (first.batch_id, monitor.monitor_id),
             ).fetchone()
             assert item[0:2] == (BatchItemState.RETRYABLE.value, "PROVIDER_UNAVAILABLE")
-            print("RETRY DEBUG", item, "NOW", NOW, "RECOVERY NOW", NOW + timedelta(seconds=2))
-            monitor_row = conn.execute(\n                "select next_check_at, last_error_code from counterparty_monitor where monitor_id = %s",\n                (monitor.monitor_id,),\n            ).fetchone()\n            print("MONITOR DEBUG", monitor_row)
+            print(
+                "RETRY DEBUG",
+                item,
+                "NOW",
+                NOW,
+                "RECOVERY NOW",
+                NOW + timedelta(seconds=2),
+            )
+            monitor_row = conn.execute(
+                "select next_check_at, last_error_code from counterparty_monitor where monitor_id = %s",
+                (monitor.monitor_id,),
+            ).fetchone()
+            print("MONITOR DEBUG", monitor_row)
 
         recovery = CounterpartyMonitoringWorker(
             uow_factory,
@@ -172,6 +183,16 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
             materialization_limit=100,
             clock=lambda: NOW + timedelta(seconds=2),
         )
+        with connection(schema) as conn:
+            debug_before = conn.execute(
+                """
+                select state, attempt, available_at, lease_until
+                from counterparty_monitoring_batch_item
+                where batch_id = %s and monitor_id = %s
+                """,
+                (first.batch_id, monitor.monitor_id),
+            ).fetchone()
+            print("BEFORE RECOVERY DEBUG", debug_before)
         second = recovery.run_once(
             scheduled_at=NOW + timedelta(seconds=2),
             batch_key="daily-2026-09-29",
