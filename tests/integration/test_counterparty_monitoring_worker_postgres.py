@@ -199,6 +199,41 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
                 ).fetchone()
                 print("RAW AFTER PARENT LOCK", parent_locked_claim)
 
+            with connection(schema) as conn:
+                conn.execute(
+                    "insert into counterparty_monitoring_batch "
+                    "(batch_id, batch_key, scheduled_at, status, next_cursor, collection_complete, created_at, completed_at) "
+                    "values (%s, %s, %s, 'collecting', null, false, %s, null) "
+                    "on conflict (batch_key) do nothing",
+                    (
+                        first.batch_id,
+                        "daily-2026-09-29",
+                        NOW + timedelta(seconds=2),
+                        NOW + timedelta(seconds=2),
+                    ),
+                )
+                conn.execute(
+                    "select batch_id, collection_complete "
+                    "from counterparty_monitoring_batch where batch_key = %s",
+                    ("daily-2026-09-29",),
+                ).fetchone()
+                seq_after_conflict_insert = conn.execute(
+                    "select state, attempt "
+                    "from counterparty_monitoring_batch_item "
+                    "where batch_id = %s and monitor_id = %s "
+                    "and available_at <= %s "
+                    "and (state in ('pending', 'retryable') "
+                    "or (state = 'running' and lease_until < %s)) "
+                    "for update skip locked limit 1",
+                    (
+                        first.batch_id,
+                        monitor.monitor_id,
+                        NOW + timedelta(seconds=2),
+                        NOW + timedelta(seconds=2),
+                    ),
+                ).fetchone()
+                print("RAW AFTER CONFLICT INSERT", seq_after_conflict_insert)
+
         recovery = CounterpartyMonitoringWorker(
             uow_factory,
             provider,
