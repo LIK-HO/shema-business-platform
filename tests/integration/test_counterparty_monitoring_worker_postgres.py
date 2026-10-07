@@ -196,6 +196,24 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
                 (first.batch_id, monitor.monitor_id),
             ).fetchone()
             print("BEFORE RECOVERY DEBUG", debug_before)
+            predicate_count = conn.execute(
+                """
+                select count(*)
+                from counterparty_monitoring_batch_item
+                where batch_id = %s
+                  and available_at <= %s
+                  and (
+                        state in ('pending', 'retryable')
+                        or (state = 'running' and lease_until < %s)
+                  )
+                """,
+                (
+                    first.batch_id,
+                    NOW + timedelta(seconds=2),
+                    NOW + timedelta(seconds=2),
+                ),
+            ).fetchone()
+            print("CLAIM PREDICATE COUNT DEBUG", predicate_count)
         second = recovery.run_once(
             scheduled_at=NOW + timedelta(seconds=2),
             batch_key="daily-2026-09-29",
