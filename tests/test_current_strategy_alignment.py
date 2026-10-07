@@ -27,7 +27,9 @@ def test_current_strategy_uses_live_repeat_order_and_provider_neutral_deployment
     assert "Repeat Orders & Business Continuity" in state
     assert "architecture/operator_interface_contract.json" in state
     assert "Repeat Orders & Business Continuity" in json.dumps(growth, ensure_ascii=False)
-    assert growth["experience_surfaces"]["operator_web"]["interface_contract"] == "architecture/operator_interface_contract.json"
+    assert growth["experience_surfaces"]["operator_web"]["interface_contract"] == (
+        "architecture/operator_interface_contract.json"
+    )
     assert growth["deployment_boundary"]["provider_neutral"] is True
 
 
