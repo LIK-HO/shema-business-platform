@@ -200,7 +200,6 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
                 print("RAW AFTER PARENT LOCK", parent_locked_claim)
 
         recovery = CounterpartyMonitoringWorker(
-        recovery = CounterpartyMonitoringWorker(
             uow_factory,
             provider,
             worker_id="worker-2",
