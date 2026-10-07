@@ -26,7 +26,9 @@ def test_current_strategy_uses_live_repeat_order_and_provider_neutral_deployment
     assert "architecture/operator_interface_contract.json" in roadmap
     assert "Repeat Orders & Business Continuity" in state
     assert "architecture/operator_interface_contract.json" in state
-    assert "temporary_live_repeat_orders_before_bitrix_cutover" in growth["ownership"]["shema_authoritative"]
+    assert "temporary_live_repeat_orders_before_bitrix_cutover" in growth["ownership"][
+        "shema_authoritative"
+    ]
     assert growth["experience_surfaces"]["operator_web"]["interface_contract"] == (
         "architecture/operator_interface_contract.json"
     )
