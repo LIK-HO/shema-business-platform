@@ -104,6 +104,19 @@ class PostgresCounterpartyMonitoringBatchRepository(
             """,
         ).fetchall()
         print("CLAIM LOCK STATE DEBUG", lock_state)
+        if claim_probe:
+            try:
+                nowait_probe = self._connection.execute(
+                    "select batch_id, monitor_id, state, attempt from counterparty_monitoring_batch_item "
+                    "where batch_id = %s and monitor_id = %s for update nowait",
+                    (batch_id, claim_probe[0][1]),
+                ).fetchone()
+                print("CLAIM NOWAIT DEBUG", nowait_probe)
+            except Exception as exc:
+                blockers = self._connection.execute(
+                    "select pg_blocking_pids(pg_backend_pid())",
+                ).fetchone()
+                print("CLAIM NOWAIT ERROR", type(exc).__name__, str(exc), "BLOCKERS", blockers)
         rows = self._connection.execute(
             """
             select monitor_id
