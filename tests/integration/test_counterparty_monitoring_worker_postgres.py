@@ -202,7 +202,8 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
             with connection(schema) as conn:
                 conn.execute(
                     "insert into counterparty_monitoring_batch "
-                    "(batch_id, batch_key, scheduled_at, status, next_cursor, collection_complete, created_at, completed_at) "
+                    "(batch_id, batch_key, scheduled_at, status, next_cursor, "
+                    "collection_complete, created_at, completed_at) "
                     "values (%s, %s, %s, 'collecting', null, false, %s, null) "
                     "on conflict (batch_key) do nothing",
                     (
