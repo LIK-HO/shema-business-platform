@@ -80,3 +80,63 @@ jobs:
           name: shema-main-source
           path: shema-main-source.tar.gz
           if-no-files-found: error
+
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Package exact source
+        run: tar -C /home/runner/work/shema-business-platform/shema-business-platform -czf /tmp/shema-main-source.tar.gz --exclude=.git .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shema-main-source
+          path: /tmp/shema-main-source.tar.gz
+          if-no-files-found: error
+
+  http-runtime:
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shema
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install
+        run: python -m pip install -e '.[dev]'
+      - name: Compile and lint
+        run: |
+          ruff check .
+          python -m compileall -q src tests
+      - name: Start development HTTP app
+        run: |
+          nohup uvicorn shema_platform.experience.api:app --host 127.0.0.1 --port 8081 > /tmp/shema-api.log 2>&1 &
+          echo $! > /tmp/shema-api.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8081/health/ready >/tmp/ready.json; then
+              cat /tmp/ready.json
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/shema-api.log
+          exit 1
+      - name: Development HTTP smoke
+        run: |
+          set -euxo pipefail
+          curl -fsS http://127.0.0.1:8081/ >/tmp/root.html
+          curl -fsS http://127.0.0.1:8081/openapi.json >/tmp/openapi.json
+          python - <<'PY'
+          import json
+          root = open('/tmp/root.html', encoding='utf-8').read()
+          spec = json.load(open('/tmp/openapi.json', encoding='utf-8'))
+          assert root
+          assert '/health/ready' in spec['paths']
+          assert '/v1/orders' in spec['paths']
+          print('development HTTP smoke: PASS')
+          PY
