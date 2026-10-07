@@ -149,6 +149,15 @@ class PostgresCounterpartyMonitoringBatchRepository(
         now: datetime,
         limit: int,
     ) -> tuple[CounterpartyMonitoringBatchItem, ...]:
+        claim_probe = self._connection.execute(
+            "select batch_id, monitor_id, state, attempt, available_at, lease_worker_id, lease_until "
+            "from counterparty_monitoring_batch_item "
+            "where batch_id = %s and available_at <= %s and "
+            "(state in ('pending', 'retryable') or (state = 'running' and lease_until < %s)) "
+            "order by monitor_id",
+            (batch_id, now, now),
+        ).fetchall()
+        print("CLAIM INTERNAL PLAIN DEBUG", claim_probe)
         rows = self._connection.execute(
             """
             select
