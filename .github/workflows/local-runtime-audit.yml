@@ -160,3 +160,33 @@ jobs:
           name: shema-wheelhouse
           path: /tmp/wheelhouse
           if-no-files-found: error
+
+  retry-focused:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.15-bookworm
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: shema
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d shema"
+          --health-interval 3s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shema
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install
+        run: python -m pip install -e '.[dev]'
+      - name: Run focused retry integration test
+        run: pytest -q tests/integration/test_counterparty_monitoring_worker_postgres.py::test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch -s
