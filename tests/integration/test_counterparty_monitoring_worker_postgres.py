@@ -182,6 +182,22 @@ def test_postgres_checkpointed_monitoring_outage_recovery_and_duplicate_batch():
                 print("RAW SKIP LOCKED AFTER COMMIT", raw_claim)
                 conn.rollback()
 
+                conn.execute(
+                    "select batch_id from counterparty_monitoring_batch where batch_id = %s for update",
+                    (first.batch_id,),
+                )
+                parent_locked_claim = conn.execute(
+                    "select state, attempt "
+                    "from counterparty_monitoring_batch_item "
+                    "where batch_id = %s and monitor_id = %s "
+                    "and available_at <= %s "
+                    "and (state in ('pending', 'retryable') or (state = 'running' and lease_until < %s)) "
+                    "for update skip locked limit 1",
+                    (first.batch_id, monitor.monitor_id, NOW + timedelta(seconds=2), NOW + timedelta(seconds=2)),
+                ).fetchone()
+                print("RAW AFTER PARENT LOCK", parent_locked_claim)
+                conn.rollback()
+
         recovery = CounterpartyMonitoringWorker(            uow_factory,
             provider,
             worker_id="worker-2",
