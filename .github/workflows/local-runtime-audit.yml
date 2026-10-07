@@ -1,0 +1,25 @@
+name: Temporary local runtime audit source
+
+on:
+  push:
+    branches:
+      - audit/local-runtime-20261007
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Package exact checked-out source
+        run: tar -czf shema-main-source.tar.gz --exclude=.git .
+      - name: Upload source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shema-main-source
+          path: shema-main-source.tar.gz
+          if-no-files-found: error
