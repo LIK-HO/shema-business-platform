@@ -90,20 +90,6 @@ class PostgresCounterpartyMonitoringBatchRepository(
         batch = self._get_for_update(batch_id)
         if batch.collection_complete:
             return batch
-        lock_state = self._connection.execute(
-            """
-            select l.pid, l.mode, l.granted, l.page, l.tuple, a.state,
-                   left(a.query, 160)
-            from pg_locks l
-            join pg_class c on c.oid = l.relation
-            join pg_namespace n on n.oid = c.relnamespace
-            left join pg_stat_activity a on a.pid = l.pid
-            where n.nspname = current_schema()
-              and c.relname = 'counterparty_monitoring_batch_item'
-            order by l.pid, l.mode
-            """,
-        ).fetchall()
-        print("CLAIM LOCK STATE DEBUG", lock_state)
         if claim_probe:
             try:
                 nowait_probe = self._connection.execute(
@@ -185,6 +171,20 @@ class PostgresCounterpartyMonitoringBatchRepository(
             (batch_id, now, now),
         ).fetchall()
         print("CLAIM INTERNAL PLAIN DEBUG", claim_probe, "batch", batch_id, "limit", limit)
+        if claim_probe:
+            monitor_id_probe = str(claim_probe[0][1])
+            try:
+                nowait_probe = self._connection.execute(
+                    "select batch_id, monitor_id, state, attempt from counterparty_monitoring_batch_item "
+                    "where batch_id = %s and monitor_id = %s for update nowait",
+                    (batch_id, monitor_id_probe),
+                ).fetchone()
+                print("CLAIM NOWAIT DEBUG", nowait_probe)
+            except Exception as exc:
+                blockers = self._connection.execute(
+                    "select pg_blocking_pids(pg_backend_pid())",
+                ).fetchone()
+                print("CLAIM NOWAIT ERROR", type(exc).__name__, str(exc), "BLOCKERS", blockers)
         rows = self._connection.execute(
             """
             select
