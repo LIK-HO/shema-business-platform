@@ -653,9 +653,12 @@ def create_app(
     @app.get("/health/ready")
     async def provider_readiness(request: Request) -> JSONResponse:
         registry: ProviderHealthRegistry = request.app.state.provider_health
-        payload = {"ready": registry.ready()}
+        application_ready = request.app.state.application is not None
+        providers_ready = registry.ready()
+        ready = application_ready and providers_ready
+        payload = {"ready": ready}
         return JSONResponse(
-            status_code=200 if registry.ready() else 503,
+            status_code=200 if ready else 503,
             content=payload,
             headers={"X-Correlation-Id": request.state.correlation_id},
         )
