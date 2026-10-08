@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from shema_platform.experience.api import ApplicationUnavailable, APIApplication, RequestContext
+from shema_platform.experience.api import APIApplication, ApplicationUnavailable, RequestContext
 from shema_platform.experience.api_models import (
     AIRunRequest,
     AIRunResponse,
@@ -8,8 +8,8 @@ from shema_platform.experience.api_models import (
     CommercialActionResponse,
     CommercialActionSendRequest,
     CommunicationResult,
-    DiagnosticsResponse,
     DiagnosticCheck,
+    DiagnosticsResponse,
     DiscoveryRequest,
     DiscoveryResponse,
     EconomicResponse,
