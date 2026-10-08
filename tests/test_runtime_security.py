@@ -150,6 +150,35 @@ def test_provider_health_does_not_store_error_payload() -> None:
     assert "secret" not in str(state)
 
 
+def test_health_ready_requires_canonical_application_composition(monkeypatch) -> None:
+    from fastapi.testclient import TestClient
+
+    from shema_platform.experience.api import create_app
+
+    monkeypatch.setenv("APP_ENV", "development")
+    response = TestClient(create_app(application=None)).get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {"ready": False}
+
+
+def test_health_ready_is_green_for_composed_provider_neutral_application(monkeypatch) -> None:
+    from fastapi.testclient import TestClient
+
+    from shema_platform.experience.api import create_app
+    from shema_platform.experience.runtime_application import (
+        ProviderNeutralRuntimeApplication,
+    )
+
+    monkeypatch.setenv("APP_ENV", "development")
+    response = TestClient(
+        create_app(application=ProviderNeutralRuntimeApplication())
+    ).get("/health/ready")
+
+    assert response.status_code == 200
+    assert response.json() == {"ready": True}
+
+
 def test_health_ready_endpoint_is_unauthenticated_and_redacted(monkeypatch) -> None:
     from fastapi.testclient import TestClient
 
