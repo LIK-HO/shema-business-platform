@@ -36,6 +36,13 @@
     "telemetry_does_not_store_authorization_headers": true,
     "correlation_id_propagated": true
   },
+  "composition": {
+    "production_entrypoint": "shema_platform.experience.production:app",
+    "application_composition": "shema_platform.experience.runtime_application.ProviderNeutralRuntimeApplication",
+    "provider_neutral": true,
+    "external_provider_activation_on_startup": false,
+    "readiness_requires_application_composition": true
+  },
   "security": {
     "production_docs_disabled": true,
     "enforced_at_runtime_startup": true,
