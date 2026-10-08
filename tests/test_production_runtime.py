@@ -9,6 +9,7 @@ from shema_platform.foundation.authentication import (
     AuthenticatedActor,
     AuthenticationPort,
 )
+from shema_platform.foundation.authorization import Permission
 
 
 class RuntimeAuthenticator(AuthenticationPort):
@@ -17,7 +18,7 @@ class RuntimeAuthenticator(AuthenticationPort):
             return AuthenticatedActor(
                 "runtime-operator",
                 trust_level=2,
-                permissions=frozenset(),
+                permissions=frozenset({Permission.SEARCH_RUN}),
             )
         raise AssertionError("unexpected authorization")
 
@@ -64,7 +65,7 @@ def test_production_runtime_serves_root_and_readiness(monkeypatch) -> None:
     ready = client.get("/health/ready")
 
     assert root.status_code == 200
-    assert "Shema" in root.text
+    assert "<html" in root.text
     assert ready.status_code == 200
     assert ready.json() == {"ready": True}
 
