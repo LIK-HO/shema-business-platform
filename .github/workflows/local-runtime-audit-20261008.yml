@@ -1,0 +1,75 @@
+name: Local Runtime Audit
+
+on:
+  push:
+    branches:
+      - audit/local-runtime-20261008
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact audit branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build production image locally on GitHub runner
+        run: docker build --pull -t shema-local-runtime:${GITHUB_SHA} .
+
+      - name: Start production container
+        run: |
+          docker run -d \
+            --name shema-local-runtime \
+            -p 18080:8080 \
+            -e APP_ENV=production \
+            -e OIDC_ISSUER=https://issuer.example.com/ \
+            -e OIDC_AUDIENCE=shema-business-platform \
+            -e OIDC_JWKS_URL=https://issuer.example.com/.well-known/jwks.json \
+            -e DATABASE_URL=postgresql://app:secret@db.internal:5432/shema \
+            shema-local-runtime:${GITHUB_SHA}
+
+      - name: Wait for HTTP runtime
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sS -o /tmp/root.out -w '%{http_code}' http://127.0.0.1:18080/ | grep -qx '200'; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs shema-local-runtime
+          exit 1
+
+      - name: Exercise readiness endpoint
+        run: |
+          code="$(curl -sS -o /tmp/ready.json -w '%{http_code}' http://127.0.0.1:18080/health/ready)"
+          echo "HTTP $code"
+          cat /tmp/ready.json
+          test "$code" = "200"
+          grep -q '"ready":true' /tmp/ready.json
+
+      - name: Inspect canonical application composition
+        run: |
+          docker exec shema-local-runtime python -c '
+          from shema_platform.experience.production import app
+          assert app.state.application is not None, "FATAL: production runtime has no canonical application composition"
+          print("canonical application composition: PRESENT")
+          '
+
+      - name: Verify runtime remains alive
+        run: |
+          docker ps --filter name=shema-local-runtime --format '{{.Status}}'
+          test "$(docker inspect -f '{{.State.Running}}' shema-local-runtime)" = "true"
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker logs shema-local-runtime
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f shema-local-runtime >/dev/null 2>&1 || true
