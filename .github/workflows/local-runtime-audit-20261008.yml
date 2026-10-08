@@ -57,8 +57,12 @@ jobs:
         run: |
           docker exec shema-local-runtime python -c '
           from shema_platform.experience.production import app
-          assert app.state.application is not None, "FATAL: production runtime has no canonical application composition"
-          print("canonical application composition: PRESENT")
+          from shema_platform.experience.runtime_application import ProviderNeutralRuntimeApplication
+          assert isinstance(app.state.application, ProviderNeutralRuntimeApplication), (
+              "FATAL: unexpected runtime application type: "
+              + type(app.state.application).__name__
+          )
+          print("canonical provider-neutral application composition: PRESENT")
           '
 
       - name: Verify runtime remains alive
