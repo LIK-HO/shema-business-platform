@@ -1,3 +1,9 @@
+# Replit deployment-target evaluation — 2026-10-26
+
+**Experimental branch only; not a roadmap phase closure or production approval.** PR #76 tests a provider-neutral Replit path without reopening the frozen kernel or changing `main`. GitHub Actions run `40397072257` passed Docker image build, production-mode process startup, HTTP readiness, security-header and unauthenticated-operator-denial smoke checks using synthetic configuration. Remaining gates include full CI on the final commit, real isolated PostgreSQL staging, real OIDC configuration, public-intake and protected-operator E2E, lead-search composition, failure/recovery/rollback, global adversarial review, and live Replit staging verification. Until those gates pass, the roadmap's deployment-target decision remains DEFERRED and no production deployment is authorized.
+
+---
+
 # Shema Business Platform — Development Roadmap
 
 ## 1. Purpose
