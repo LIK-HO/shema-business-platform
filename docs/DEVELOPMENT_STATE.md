@@ -2,7 +2,7 @@
 
 - **Status:** EXPERIMENTAL / NOT RELEASE-AUTHORIZED; isolated branch and PR #76 only.
 - **Branch:** `feat/replit-deployment-foundation-20261026`.
-- **Current tested commit:** `1bd270537d903734964362cf6ef02f7408ca82e3`.
+- **Runtime smoke-test commit before documentation-only synchronization:** `1bd270537d903734964362cf6ef02f7408ca82e3`. The branch HEAD moved afterward for documentation synchronization; the final HEAD must pass the full CI gate before acceptance.
 - **Replit foundation workflow:** run `40397072257`; Docker image build and isolated production-mode HTTP smoke checks passed (readiness, security headers, unauthenticated operator denial).
 - **Full CI:** run `40397072254` was still in progress at the time of this note; do not claim a full green gate until it completes.
 - **Not verified:** actual Replit deployment, real staging PostgreSQL connectivity, real OIDC/JWKS, public intake end-to-end, authenticated operator workflow, composed lead search, failure/recovery and rollback against a deployed target.
