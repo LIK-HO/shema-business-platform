@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - ".replit"
+      - "Dockerfile"
       - "docs/REPLIT_DEPLOYMENT_CONTRACT.md"
       - "scripts/validate_replit_config.py"
       - ".github/workflows/replit-deployment-foundation.yml"
@@ -35,3 +36,59 @@ jobs:
         run: python -m pip install --upgrade pip && python -m pip install .
       - name: Compile application
         run: python -m compileall -q src
+      - name: Build deployment container
+        run: docker build --pull --tag shema-replit-smoke:ci .
+      - name: Start isolated production-mode container with non-production test configuration
+        env:
+          APP_ENV: production
+          DATABASE_URL: postgresql://smoke:smoke@127.0.0.1:5432/smoke
+          OIDC_ISSUER: https://identity.example.com
+          OIDC_AUDIENCE: shema-ci-smoke
+          OIDC_JWKS_URL: https://identity.example.com/.well-known/jwks.json
+        run: |
+          set -eu
+          docker run --detach --rm --name shema-replit-smoke \
+            --publish 127.0.0.1:8080:8080 \
+            --env APP_ENV \
+            --env DATABASE_URL \
+            --env OIDC_ISSUER \
+            --env OIDC_AUDIENCE \
+            --env OIDC_JWKS_URL \
+            shema-replit-smoke:ci
+          cleanup() { docker stop shema-replit-smoke >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          python - <<'PY'
+          import time
+          import urllib.error
+          import urllib.request
+
+          base = "http://127.0.0.1:8080"
+          ready = False
+          for attempt in range(30):
+              try:
+                  with urllib.request.urlopen(base + "/health/ready", timeout=2) as response:
+                      if response.status != 200:
+                          raise SystemExit(f"readiness returned unexpected HTTP {response.status}")
+                      if response.headers.get("X-Content-Type-Options") != "nosniff":
+                          raise SystemExit("security headers missing from readiness response")
+                      ready = True
+                      break
+              except (OSError, urllib.error.URLError):
+                  time.sleep(1)
+          if not ready:
+              raise SystemExit("container did not become ready within 30 seconds")
+
+          request = urllib.request.Request(base + "/v1/operator/capabilities")
+          try:
+              urllib.request.urlopen(request, timeout=3)
+          except urllib.error.HTTPError as response:
+              if response.code != 401:
+                  raise SystemExit(f"unauthenticated operator endpoint returned HTTP {response.code}, expected 401")
+          else:
+              raise SystemExit("unauthenticated operator endpoint unexpectedly returned success")
+
+          print("Container boot/readiness: PASS")
+          print("HTTP security headers: PASS")
+          print("Unauthenticated operator access denied: PASS")
+          print("Note: this smoke test does not prove PostgreSQL connectivity or business capability composition.")
+          PY
