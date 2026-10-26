@@ -1,0 +1,8 @@
+entrypoint = "src/shema_platform/experience/production.py"
+
+[run]
+command = "python -m uvicorn shema_platform.experience.production:app --host 0.0.0.0 --port $PORT --proxy-headers"
+
+[deployment]
+build = ["sh", "-c", "python -m pip install --upgrade pip && python -m pip install ."]
+run = ["sh", "-c", "python -m uvicorn shema_platform.experience.production:app --host 0.0.0.0 --port $PORT --proxy-headers"]
