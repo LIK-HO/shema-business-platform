@@ -1,0 +1,37 @@
+name: Replit Deployment Foundation
+
+on:
+  pull_request:
+    paths:
+      - ".replit"
+      - "docs/REPLIT_DEPLOYMENT_CONTRACT.md"
+      - "scripts/validate_replit_config.py"
+      - ".github/workflows/replit-deployment-foundation.yml"
+      - "pyproject.toml"
+      - "src/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: replit-foundation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Validate Replit configuration and release boundaries
+        run: python scripts/validate_replit_config.py
+      - name: Install package
+        run: python -m pip install --upgrade pip && python -m pip install .
+      - name: Compile application
+        run: python -m compileall -q src
