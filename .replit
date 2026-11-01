@@ -1,0 +1,10 @@
+entrypoint = "src/shema_platform/experience/production.py"
+
+[[ports]]
+localPort = 8080
+externalPort = 80
+
+[deployment]
+build = "python -m pip install --no-cache-dir ."
+run = "bash deploy/replit/run.sh"
+ignorePorts = false
