@@ -129,3 +129,28 @@ jobs:
         run: python -m pip install --upgrade pip && pip install -e .
       - name: Validate release contract
         run: python -m shema_platform.platform.release
+
+  delete-canceled-deployment-branch:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'chore: execute canceled deployment cleanup' }}
+    needs:
+      - quality
+      - integration
+      - supply-chain
+      - backup-recovery
+      - release-contract
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Delete and verify only the canceled deployment branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api --method DELETE "repos/${REPOSITORY}/git/refs/heads/feature/replit-deployment-20261101"
+          if gh api "repos/${REPOSITORY}/git/ref/heads/feature/replit-deployment-20261101" >/dev/null 2>&1; then
+            echo "Canceled deployment branch still exists."
+            exit 1
+          fi
+          echo "Canceled deployment branch deleted and verified."
