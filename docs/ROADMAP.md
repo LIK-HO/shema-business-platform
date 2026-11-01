@@ -527,12 +527,12 @@ Web and PWA provide the complete proven operator workflow without a second busin
 ### Closure evidence — 2026-09-30
 Phase 6 is **CLOSED / VERIFIED** on final implementation HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c` by full seven-job release gate `36637312890` — **7/7 GREEN**. Acceptance: `tests/test_phase6_operator_consolidation_acceptance.py`. Global adversarial review covered the frozen kernel, post-core contracts, runtime, persistence, integrations, operator workflow, security/recovery and migration boundaries. Two trust-boundary findings were required to be fixed before closure: operator navigation now fails closed after capability rejection, and the handoff workspace cannot imply that an external Bitrix transfer was acknowledged when no integration provider is composed. Both are covered by acceptance tests. No frozen-kernel change, second business authority, or external success simulation was introduced.
 
-**Next approved boundary:** deployment target selection remains deferred until a measured need and an executable, current, cost-validated path are established.
+**Next boundary:** GitHub-native hosting feasibility is BLOCKED by the absence of a first-party persistent application runtime and database under GitHub Free.
 
 ### Closure evidence — 2026-09-30
 Phase 6 is **CLOSED / VERIFIED** on final HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c` by full seven-job release gate `36637312890` — **7/7 GREEN**. The final adversarial review fixed capability-rejection fail-closed behavior and removed any handoff UI implication of external ACK when no integration provider is composed. SI-27 remains enforced; frozen kernel unchanged.
 
-**Next approved boundary:** deployment target selection remains deferred until a measured need and an executable, current, cost-validated path are established.
+**Next boundary:** GitHub-native hosting feasibility is BLOCKED by the absence of a first-party persistent application runtime and database under GitHub Free.
 
 ## 10A. Operator Interface & Multi-Operator Doctrine
 
@@ -563,20 +563,47 @@ From the beginning the system supports growth from one operator to several witho
 
 This is a bounded extension around the frozen core, not a new system-of-record or a premature multi-tenant architecture.
 
-## 11. Deployment target selection and production readiness — DEFERRED
+## 11. GitHub-native delivery and production hosting — BLOCKED / CAPABILITY GAP
 
 ### Objective
-Select and validate a production deployment path only when real operating constraints justify it.
 
-### Admission criteria
-- current provider documentation and limits verified from primary sources;
-- minimal executable deployment path proven before adding production infrastructure;
-- total cost and free/quota allowances verified for the actual intended workload;
-- rollback, recovery, security and data-authority boundaries remain provider-neutral;
-- no provider-specific deployment logic enters the canonical domain or frozen kernel.
+Keep source control, engineering governance, CI, release evidence and deployment controls in GitHub. A production Web/PWA deployment may use only a GitHub first-party runtime if that runtime actually satisfies the complete application contract and the account's free entitlements.
+
+### Approved GitHub control plane
+
+- GitHub repository and pull requests are the canonical source and review boundary.
+- GitHub Actions performs bounded build, lint, unit/integration, supply-chain, recovery and release-contract jobs.
+- GitHub Environments provide deployment approvals and environment-scoped secrets for supported public-repository configurations.
+- GitHub Packages / Container Registry may store immutable versioned artifacts; they are not execution hosts.
+- Codespaces is for interactive development and diagnostics only.
+
+### Verified first-party hosting limits
+
+- GitHub Pages is static HTML/CSS/JavaScript hosting and does not execute Python/FastAPI. Its published acceptable-use policy excludes using Pages as free hosting for an online business, e-commerce site or commercial SaaS. It is therefore not an approved production host for Shema's commercial intake/operator platform.
+- GitHub Actions runners execute finite jobs; a hosted job has a six-hour execution limit. Actions can build and release to a host but are not a persistent application server.
+- Personal GitHub Free Codespaces usage is quota-limited; the documented default idle timeout is 30 minutes and maximum codespace lifetime is 12 hours. It is a development environment, not production hosting.
+- GitHub Spark was retired on 2026-08-31 and is not an available deployment option.
+
+### Current capability gap
+
+The product needs a persistent FastAPI runtime, canonical PostgreSQL, durable workers/outbox, OIDC/JWT, secrets, backups/PITR, monitoring and a stable HTTPS service identity. GitHub Free's first-party offerings do not provide this complete persistent runtime/database service.
+
+### Non-negotiable rules
+
+- Do not deploy the commercial Web/PWA through GitHub Pages.
+- Do not keep application servers alive on Actions runners or Codespaces.
+- Do not move canonical business state into GitHub repositories, Issues, Projects, artifacts or Packages.
+- Do not reintroduce Replit, Yandex Cloud/Terraform or any other provider-specific deployment layer.
+- Do not add an external runtime/database provider without a new explicit user-approved architecture decision.
+- Do not modify the frozen kernel to compensate for an infrastructure capability gap.
 
 ### Exit criteria
-A minimal production deployment can be created, observed, recovered and removed deterministically, with current evidence and without a second business authority.
+
+The deployment boundary may reopen only when current official documentation proves a GitHub first-party persistent server runtime and a suitable durable database/persistence model under the actual free entitlements, followed by cost/quota, security, recovery, E2E and global adversarial validation.
+
+**Current result: BLOCKED — NOT PRODUCTION-DEPLOYABLE on GitHub Free first-party services alone.**
+
+See `docs/GITHUB_NATIVE_DEPLOYMENT_BOUNDARY.md` for the complete executable boundary and official product references.
 
 ## 12. Phase 8 — Production Operations
 
@@ -757,7 +784,7 @@ The practical priority is:
 5. Public Intake Data Plane + Trust Boundary + Counterparty Preflight
 6. Counterparty Verification, Monitoring & Favorites
 7. Web/PWA public client surface + operator workspace + MAX mini-app projection
-8. Deployment target selection and production readiness
+8. GitHub-native hosting feasibility and production readiness (BLOCKED)
 9. Bitrix24 business-plane configuration + full transaction/history cutover
 10. Production operations and guarded external activation / MAX
 11. Learning loop
