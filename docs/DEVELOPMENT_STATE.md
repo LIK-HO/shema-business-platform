@@ -1,3 +1,17 @@
+# Current development-session synchronization — 2026-11-01
+
+- **Canonical repository:** `LIK-HO/shema-business-platform`.
+- **Baseline branch / HEAD:** `main` / `0cd31520d56f4a11e32e8e99881214ceb00a0f61` at the start of this cleanup.
+- **Last closed product boundary:** Phase 6 — Production Web/PWA Consolidation, CLOSED / VERIFIED on runtime HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c`, full seven-job CI `36637312890`.
+- **Deployment strategy:** GitHub is the approved source-control, CI and release-control ecosystem. Full production hosting on GitHub Free first-party services is BLOCKED: Pages is static-only and not approved for this commercial product; Actions is bounded CI/CD; Codespaces is interactive development only and automatically stops/has a maximum lifetime. The complete platform requires persistent FastAPI + PostgreSQL + durable workers.
+- **Cleanup performed:** PR #76 (Replit foundation) and PR #75 (empty provider-neutral runtime composition experiment) were closed unmerged. Their branch tips were reset to the baseline `main` HEAD. Old Yandex Cloud/Phase 7 deployment branch tips were reset to the same baseline: `phase7/yandex-cloud-foundation-20260930`, `phase7/yandex-cloud-production-20260930`, `phase7/phase7c-live-evidence-20260930`, `fix/phase7c-bootstrap-chain-20261004`, `fix/phase7c-yandex-cloud-production-readiness-20261004`, `phase7c/yandex-cloud-mature-baseline-20261004`, `ops/phase7c-launcher-20261004`.
+- **Not completed:** two obsolete diagnostic branch ref resets (`diagnostic/local-runtime-20261007` and `diagnostic/local-runtime-20261007b`) returned GitHub API errors; their PRs #73 and #74 were already closed. They remain cleanup exceptions and must not be treated as active work.
+- **Main:** not modified by this cleanup branch. The cleanup changes are isolated in `cleanup/github-native-delivery-boundary-20261101` pending full CI and review.
+- **Not approved:** production deployment through Pages, Actions runners or Codespaces; reintroduction of Replit/Yandex Cloud; any external hosting provider without explicit approval.
+- **Next boundary:** close the remaining stale diagnostic branch references where tooling permits, then verify the documentation-cleanup PR on its final HEAD. Production deployment remains BLOCKED until a qualifying GitHub-native persistent runtime/database exists or the hosting constraint is explicitly changed.
+
+---
+
 # Phase 6 Web/PWA Consolidation — CLOSED / VERIFIED (2026-09-30)
 
 - **Boundary:** Phase 6 — Production Web/PWA Consolidation.
