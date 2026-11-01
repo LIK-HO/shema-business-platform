@@ -1,4 +1,6 @@
+import json
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 
@@ -62,3 +64,19 @@ def test_unregistered_provider_cannot_be_updated() -> None:
 
     with pytest.raises(KeyError, match="health is not registered"):
         registry.mark_reachable("missing")
+
+
+
+def test_provider_health_http_contract_is_minimal_and_explicit() -> None:
+    root = Path(__file__).resolve().parents[1]
+    contract = json.loads(
+        (root / "architecture" / "provider_health_contract.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert contract["endpoint"] == "/health/ready"
+    assert contract["response_fields"] == ["ready"]
+    assert contract["provider_details_exposed"] is False
+    assert contract["runtime_composition_required"] is True
+    assert contract["database_connectivity_checked"] is False

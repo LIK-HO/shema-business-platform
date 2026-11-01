@@ -1,16 +1,12 @@
-# Productization State
+# Productization History — Superseded Status Ledger
 
-## Current verified context
+> **Historical record, not current project state.** The former opening snapshot referred to the productization branch `v1.5/production-yandexgpt-route`, PRs #8/#40 and P30 as an active workstream. Those branch, PR and phase values are historical and must not be used to resume development.
+>
+> Current source of truth: `main`, `docs/DEVELOPMENT_MANIFEST.md`, `docs/ROADMAP.md` and `docs/DEVELOPMENT_STATE.md`. The current verified product boundary is Phase 6 (closed). The production deployment module and target environment are **not implemented**; production operations remain blocked by the hosting capability decision. This file is retained only for historical implementation evidence.
 
-- Repository: `LIK-HO/shema-business-platform`
-- Productization branch: v1.5/production-yandexgpt-route
-- Frozen core baseline: a3eec47ea68882631ebf24b3998b431f2dc83600
-- Current productization HEAD: live from this branch; never treated as a static manifest fact
-- Core PR: #8 — open, draft, unmerged
-- Productization PR: #40 — open, draft, unmerged
-- Active productization phase: P30 — concrete YandexGPT application composition — NOT_STARTED
-- v1.4 kernel semantics: frozen
-- v1.5 core maturity: certified
+---
+
+## Historical implementation ledger (preserved; not current status)
 
 ## P1 — PRODUCTION IAM BOOTSTRAP — CLOSED / VERIFIED
 
