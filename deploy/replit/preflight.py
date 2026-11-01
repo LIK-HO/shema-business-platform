@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import os
-import sys
 from collections.abc import Callable, Mapping
+import os
 from pathlib import Path
+import sys
 from urllib.parse import urlsplit
 
 from shema_platform.platform.migrations import MigrationPlan
