@@ -1,0 +1,76 @@
+{
+  "contract_version": "1.0",
+  "deployment_id": "replit-reserved-vm",
+  "status": "implemented_guarded_runtime_not_production_ready",
+  "approved_scope": {
+    "source_control": "github",
+    "canonical_repository": "LIK-HO/shema-business-platform",
+    "canonical_branch": "main",
+    "runtime_host": "replit_reserved_vm",
+    "kernel_changes_allowed": false,
+    "database_authority": "postgresql"
+  },
+  "service": {
+    "kind": "persistent_http_api",
+    "runtime": "fastapi_uvicorn",
+    "python_minimum": "3.12",
+    "bind_host": "0.0.0.0",
+    "port_environment_variable": "PORT",
+    "default_internal_port": 8080,
+    "external_ports_maximum": 1,
+    "external_port": 80,
+    "background_worker_composition": "not_yet_implemented"
+  },
+  "delivery": {
+    "deployment_type": "reserved_vm",
+    "build_command": "python -m pip install --no-cache-dir .",
+    "run_command": "bash deploy/replit/run.sh",
+    "automatic_database_migrations_on_startup": false,
+    "github_ci_required": true,
+    "manual_publish_from_approved_main_commit": true
+  },
+  "database": {
+    "engine": "postgresql",
+    "canonical_business_authority": true,
+    "production_database_must_be_separate_from_development": true,
+    "development_data_copy_to_production": false,
+    "migration_ledger_checksum_validation": true,
+    "migration_application": "explicit_one_off_command_only",
+    "startup_requires_latest_migration": true,
+    "local_or_ephemeral_database_forbidden": true
+  },
+  "security": {
+    "app_env": "production",
+    "openapi_docs_disabled": true,
+    "oidc_issuer_https_required": true,
+    "oidc_jwks_https_required": true,
+    "oidc_audience_required": true,
+    "database_credentials_in_source_or_logs": false,
+    "startup_fails_closed": true,
+    "runtime_composition_required": true,
+    "resource_read_authorizer_required": true
+  },
+  "data_residency": {
+    "replit_region_in_russian_federation_available": false,
+    "region_selection_irreversible_after_first_publish": true,
+    "allowed_data_mode_for_this_contract": "synthetic_only",
+    "real_russian_personal_data_allowed": false,
+    "legal_review_required_before_reopening": true
+  },
+  "operations": {
+    "durable_database_backups_and_restore_drill_required": true,
+    "independent_backup_copy_required": true,
+    "durable_worker_plane_required": true,
+    "cost_limit_and_machine_tier_review_required": true,
+    "stable_https_hostname_required": true,
+    "health_readiness_does_not_replace_end_to_end_acceptance": true
+  },
+  "production_blockers": [
+    "production_application_composition_missing",
+    "durable_worker_process_not_composed",
+    "russian_personal_data_localization_and_cross_border_review_not_closed",
+    "replit_database_backup_and_restore_drill_not_evidenced",
+    "production_account_region_plan_machine_tier_and_cost_limit_not_confirmed",
+    "production_end_to_end_and_failure_recovery_tests_not_run"
+  ]
+}
