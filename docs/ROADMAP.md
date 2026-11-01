@@ -582,7 +582,6 @@ Keep source control, engineering governance, CI, release evidence and deployment
 - GitHub Pages is static HTML/CSS/JavaScript hosting and does not execute Python/FastAPI. Its published acceptable-use policy excludes using Pages as free hosting for an online business, e-commerce site or commercial SaaS. It is therefore not an approved production host for Shema's commercial intake/operator platform.
 - GitHub Actions runners execute finite jobs; a hosted job has a six-hour execution limit. Actions can build and release to a host but are not a persistent application server.
 - Personal GitHub Free Codespaces usage is quota-limited; the documented default idle timeout is 30 minutes and maximum codespace lifetime is 12 hours. It is a development environment, not production hosting.
-- GitHub Spark was retired on 2026-08-31 and is not an available deployment option.
 
 ### Current capability gap
 
