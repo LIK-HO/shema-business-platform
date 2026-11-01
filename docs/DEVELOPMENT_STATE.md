@@ -1,3 +1,19 @@
+# Active development boundary — Replit deployment control plane — 2026-11-01
+
+- **Decision source:** explicit user instruction in this session reverses the earlier GitHub-only hosting decision for this bounded workstream. Replit Reserved VM is selected as the runtime target; GitHub remains canonical for source, PR review, CI and release history.
+- **Repository:** LIK-HO/shema-business-platform.
+- **Base branch / baseline:** main at 8b62c3480299946d527b07b76da6981569c62c4b.
+- **Working branch:** feature/replit-deployment-20261101. Runtime source, database schema and frozen kernel are unchanged by this workstream.
+- **Implementation commit before this state synchronization:** aec1e3c385c3e55d1a0d877ae0c33130a260de9f.
+- **Implemented in this boundary:** root .replit configuration; single-port Reserved VM mapping; fail-closed startup script and environment/runtime/database-ledger preflight; explicit guarded migration command; machine-readable deployment contract; unit tests; operating, secrets, release, rollback, cost and legal/data-location documentation; README, Manifest and Roadmap synchronization.
+- **Verification state:** tests are written but have not yet been executed in this session. A local clone/test run was attempted but blocked because the execution environment could not resolve github.com. GitHub PR CI is the next verification step. No actual Replit build or deployment has been performed.
+- **Current runtime finding:** src/shema_platform/experience/production.py calls create_app without an APIApplication or resource-read authorizer. The Replit preflight deliberately rejects this incomplete production composition; removing the rejection is prohibited.
+- **Production blockers:** durable worker/outbox process is not composed; Russian personal-data localization and cross-border transfer review is open; Replit PostgreSQL independent backup/restore has not been tested; plan, region, machine tier and spend limit have not been confirmed; Replit E2E/failure/recovery acceptance has not run.
+- **Data safety boundary:** REPLIT_DATA_MODE must be synthetic_only. Real Russian personal data must not be uploaded, migrated, submitted or processed in Replit under the current contract.
+- **Next safe action:** open a draft PR, execute the full seven-job GitHub CI and fix every failure; then perform the global adversarial review. Keep production publishing blocked until every listed blocker is closed with evidence.
+
+---
+
 # Current development-session synchronization — 2026-11-01
 
 - **Canonical repository:** `LIK-HO/shema-business-platform`.
