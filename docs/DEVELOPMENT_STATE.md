@@ -1,3 +1,11 @@
+## Cancellation and repository cleanup — 2026-11-01
+
+- A draft deployment experiment was canceled before merge. PR #78 was closed unmerged; its feature branch reference was deleted after the full existing CI gate succeeded. The live branch list contains only `main`.
+- The temporary one-time cleanup workflow and temporary CI job were removed after execution. The canonical `.github/workflows/ci.yml` is restored; no deployment configuration, provider module, runtime code or database migration from the canceled workstream is present on `main`.
+- No production deployment, external database provisioning, secret creation or business-data transfer occurred. The closed PR and Actions history remain as immutable GitHub audit records; they are not active code or deployment resources.
+
+---
+
 # Current development-session synchronization — 2026-11-01
 
 - **Canonical repository:** `LIK-HO/shema-business-platform`.
