@@ -563,7 +563,7 @@ Migration 0009 state_ownership_invariants добавляет PostgreSQL constrai
 - Shema не зеркалит эти поля как вторую истину, а хранит reference/correlation и минимальные outcome signals required for learning;
 - MAX remains a communication adapter and is not a business system of record;
 - AI providers and intelligence providers never become canonical truth;
-- UI, Airtable and Replit never become canonical truth.
+- UI and client-side storage never become canonical business truth.
 
 Таким образом, нет двух систем, редактирующих одну и ту же canonical field. Есть **domain ownership**, explicit handoff и reconciliation между границами.
 
