@@ -41,7 +41,8 @@ Database foundation migration: db/migrations/0001_foundation.sql
 Durable execution plane: docs/V1.4_EXECUTION_PLANE.md
 
 Development manifesto: docs/DEVELOPMENT_MANIFEST.md
-Current maturity stage: v1.5 Core Maturity Integration & Certification
+Kernel maturity baseline: v1.5 Core Maturity Certified
+Current product boundary: Phase 6 — Production Web/PWA Consolidation — CLOSED / VERIFIED. Production Operations (Phase 8), including the deployment module and target-environment integration, remain NOT STARTED / BLOCKED.
 Core completion boundary: after certification, core semantics are frozen; new capabilities stay outside the kernel unless a proven invariant, security/data-integrity, or fundamental scalability/reliability defect requires change.
 
 
