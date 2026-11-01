@@ -45,6 +45,10 @@ Current maturity stage: v1.5 Core Maturity Integration & Certification
 Core completion boundary: after certification, core semantics are frozen; new capabilities stay outside the kernel unless a proven invariant, security/data-integrity, or fundamental scalability/reliability defect requires change.
 
 
+## Replit deployment boundary
+
+The deployment module for Replit Reserved VM is defined in [deploy/replit](deploy/replit/README.md) and [architecture/replit_deployment_contract.json](architecture/replit_deployment_contract.json). GitHub remains the canonical source and CI control plane. The Replit module is fail-closed and currently allows synthetic-data validation only; it is not production-ready until runtime composition, durable workers, data-residency review, database recovery and live acceptance are verified.
+
 ## License
 
 This repository is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
