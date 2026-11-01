@@ -183,7 +183,6 @@
   ],
   "legacy": {
     "airtable": "transition_data_only",
-    "replit_migration_frozen_until": "2026-10-13",
     "bitrix24_migration": "frozen_without_date"
   }
 }
