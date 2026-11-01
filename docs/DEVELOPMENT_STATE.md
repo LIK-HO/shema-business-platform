@@ -1,5 +1,11 @@
 ## Cancellation and repository cleanup — 2026-11-01
 
+## Deployment module status — 2026-11-01
+
+- The production deployment module and target environment integration are **NOT IMPLEMENTED**. This is an acknowledged unfinished roadmap boundary, not a retired component and not an item to reconstruct from historical deployment experiments.
+- Current repository inventory contains 432 tracked files and one active workflow (`.github/workflows/ci.yml`); no deployment workflow or provider-specific infrastructure module is present on `main`.
+- Production operations remain blocked until a qualifying runtime and durable database capability are explicitly selected and approved. GitHub remains the canonical source, review, CI and release-control ecosystem; no external provider is implied by this record.
+
 - A draft deployment experiment was canceled before merge. PR #78 was closed unmerged; its feature branch reference was deleted after the full existing CI gate succeeded. The live branch list contains only `main`.
 - The temporary one-time cleanup workflow and temporary CI job were removed after execution. The canonical `.github/workflows/ci.yml` is restored; no deployment configuration, provider module, runtime code or database migration from the canceled workstream is present on `main`.
 - No production deployment, external database provisioning, secret creation or business-data transfer occurred. The closed PR and Actions history remain as immutable GitHub audit records; they are not active code or deployment resources.
