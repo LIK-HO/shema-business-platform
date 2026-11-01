@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from urllib.parse import urlsplit
-from collections.abc import Callable, Mapping
 
 from shema_platform.platform.migrations import MigrationPlan
 
