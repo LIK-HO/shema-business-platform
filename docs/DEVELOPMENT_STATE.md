@@ -6,9 +6,9 @@
 - **Deployment strategy:** GitHub is the approved source-control, CI and release-control ecosystem. GitHub Free first-party services do not provide the complete persistent FastAPI + PostgreSQL + worker runtime. Pages is static-only and not approved for this commercial application; Actions is bounded CI/CD; Codespaces is interactive development only. Full production hosting remains **BLOCKED**.
 - **Cleanup performed:** obsolete PR #75 and PR #76 were closed unmerged. Their branch refs, plus the abandoned provider-specific deployment and local-runtime experiment refs, were reset to the baseline `main` commit. No unmerged deployment implementation from those experiments remains at the branch tips.
 - **GitHub branch check:** branch listing confirms the cleaned runtime/deployment/diagnostic refs now resolve to the baseline `main` commit. Historical PR records remain closed and unmerged; the canonical `main` history was not rewritten.
-- **Main:** not modified by this cleanup branch. Documentation changes are isolated in `cleanup/github-native-delivery-boundary-20261101` pending full CI and review.
+- **Main:** PR #77 was squash-merged as `b9ebe5d34ffbbc0d52e0bd92c83d89dc68c109bc` after final-head CI run `41315987939` passed **7/7 GREEN**. The merge changes documentation only; application runtime, database schema, frozen kernel and business semantics are unchanged.
 - **Not approved:** production hosting through Pages, Actions runners or Codespaces; any external runtime/database without a new explicit architecture decision.
-- **Next boundary:** verify the documentation cleanup on its final HEAD. Production deployment remains blocked until an approved GitHub-native persistent runtime and database exist, or the hosting constraint is explicitly changed.
+- **Next boundary:** production deployment remains BLOCKED until a qualifying GitHub-native persistent runtime and durable database exist under the approved free entitlements, or the hosting constraint is explicitly changed. Do not treat Pages, Actions runners or Codespaces as production application hosting.
 
 ---
 
