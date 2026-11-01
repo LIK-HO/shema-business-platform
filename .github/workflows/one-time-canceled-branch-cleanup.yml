@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   delete-canceled-branch:
-    if: github.event.head_commit.message == 'chore: remove canceled deployment branch'
+    if: ${{ github.event.head_commit.message == 'chore: remove canceled deployment branch' }}
     runs-on: ubuntu-latest
     steps:
       - name: Delete the exact canceled feature ref
