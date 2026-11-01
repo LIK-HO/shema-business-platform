@@ -830,3 +830,13 @@ def test_runtime_api_provider_rollback_uses_path_provider_identity() -> None:
     )
     assert rolled_back.status_code == 200
     assert rolled_back.json()["enabled"] is False
+
+
+
+def test_health_ready_requires_composed_application() -> None:
+    app = create_app(FakeApplication())
+
+    response = TestClient(app).get("/health/ready")
+
+    assert response.status_code == 200
+    assert response.json() == {"ready": True}
