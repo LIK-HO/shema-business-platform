@@ -593,7 +593,7 @@ The product needs a persistent FastAPI runtime, canonical PostgreSQL, durable wo
 - Do not deploy the commercial Web/PWA through GitHub Pages.
 - Do not keep application servers alive on Actions runners or Codespaces.
 - Do not move canonical business state into GitHub repositories, Issues, Projects, artifacts or Packages.
-- Do not reintroduce Replit, Yandex Cloud/Terraform or any other provider-specific deployment layer.
+- Do not reintroduce superseded app-hosting configurations, infrastructure-as-code modules or any unapproved provider-specific deployment layer.
 - Do not add an external runtime/database provider without a new explicit user-approved architecture decision.
 - Do not modify the frozen kernel to compensate for an infrastructure capability gap.
 
