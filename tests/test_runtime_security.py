@@ -173,7 +173,6 @@ def test_health_ready_endpoint_is_unauthenticated_and_redacted(monkeypatch) -> N
     assert "Authorization" not in response.text
 
 
-
 def test_health_ready_fails_closed_when_no_runtime_service_is_composed(monkeypatch) -> None:
     from fastapi.testclient import TestClient
 
