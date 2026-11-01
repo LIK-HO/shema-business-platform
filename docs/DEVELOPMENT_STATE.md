@@ -6,11 +6,23 @@
 - Current repository inventory contains 432 tracked files and one active workflow (`.github/workflows/ci.yml`); no deployment workflow or provider-specific infrastructure module is present on `main`.
 - Production operations remain blocked until a qualifying runtime and durable database capability are explicitly selected and approved. GitHub remains the canonical source, review, CI and release-control ecosystem; no external provider is implied by this record.
 
-- A draft deployment experiment was canceled before merge. PR #78 was closed unmerged; its feature branch reference was deleted after the full existing CI gate succeeded. The live branch list contains only `main`.
+- A draft deployment experiment was canceled before merge. PR #78 was closed unmerged; its feature branch reference was deleted after the full existing CI gate succeeded. At the completion of that cleanup, `main` was the only branch; the temporary `audit/repository-integrity-20261101` branch was later created solely for PR #79 and contains no product/deployment feature work.
 - The temporary one-time cleanup workflow and temporary CI job were removed after execution. The canonical `.github/workflows/ci.yml` is restored; no deployment configuration, provider module, runtime code or database migration from the canceled workstream is present on `main`.
 - No production deployment, external database provisioning, secret creation or business-data transfer occurred. The closed PR and Actions history remain as immutable GitHub audit records; they are not active code or deployment resources.
 
 ---
+
+## Repository integrity audit — 2026-11-01 (PR #79)
+
+- **Audited baseline:** `main` at `909e29d7d2b3571501826f156f06e64edc02acd1`; audit branch `audit/repository-integrity-20261101` is a temporary review branch only.
+- **Current inventory:** 432 tracked files on baseline `main`: 245 Python, 80 Markdown, 71 JSON, 19 SQL, one GitHub Actions workflow and the remaining project/configuration/web assets. The one active workflow is `.github/workflows/ci.yml`.
+- **Git history:** 2,223 commits enumerated across 23 GitHub API pages. All commit subjects were scanned. Historical Yandex Cloud / Phase 7C deployment and recovery activity is retained in immutable Git history; it is not an active module. Replit work was not merged; PR #78 remains a closed unmerged audit record.
+- **Pull requests:** PRs #1–#78 are closed; #68, #70, #71, #72 and #77 are merged, the rest are closed unmerged. PR #79 is the only open PR and remains draft. The repository has no open issues, tags or releases.
+- **Branches:** at present `main` and the temporary PR #79 audit branch are visible. No old feature/deployment branch refs remain. The audit branch must be removed after PR disposition.
+- **Governance blocker:** GitHub reports `protected: false` for `main`; the repository rulesets endpoint returns an empty list. The branch-protection detail endpoint is inaccessible to the connected integration (HTTP 403), and available tools cannot create or edit branch protection. **Do not merge PR #79 or any other change to `main` until an administrator enables required PR reviews and required status checks.**
+- **Deployment boundary:** no deploy workflow, target-environment integration, infrastructure module or production rollout is implemented. `Dockerfile` and `experience/production.py` are only a generic container/HTTP entrypoint scaffold; neither constitutes a composed production runtime. Phase 8 remains NOT STARTED / BLOCKED.
+- **Verification:** PR #79 initial document/CI reconciliation passed all seven jobs on `4f85cbc207ebf9ac9bd5f24319901781efbc203a` in run `41329712821`. Subsequent audit fixes are subject to a new full seven-job run.
+- **Audit limitation:** this inventory and history review does not certify a manual line-by-line review of every historical diff or all 245 Python files. GitHub API pagination and CI provided structural, documentary, test and release-gate evidence; the local clone attempt was blocked by DNS resolution. No claim of production readiness is made.
 
 # Current development-session synchronization — 2026-11-01
 
@@ -19,7 +31,7 @@
 - **Last closed product boundary:** Phase 6 — Production Web/PWA Consolidation, CLOSED / VERIFIED on runtime HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c`, full seven-job CI `36637312890`.
 - **Deployment decision:** GitHub is the canonical source-control, CI and release-control ecosystem. Full production hosting on GitHub Free first-party services remains **BLOCKED** because a persistent FastAPI runtime and durable PostgreSQL/worker plane are not provided. Pages, Actions runners and Codespaces are not production application hosts.
 - **Stale pull-request cleanup:** 45 obsolete open draft PRs (#6–#58, selected legacy productization/runtime chains) were closed without merging after checking their branch/file relationships against current `main`. No product code from those stale PRs was merged as part of cleanup. Closed PR records remain as audit history.
-- **Branch-reference cleanup:** GitHub Actions one-time cleanup run `41323299988` completed **success**. It removed all 84 non-main branch refs using a fixed branch-name/SHA allowlist and a main-HEAD guard. The one-time maintenance branch deleted itself after verification. Live GitHub branch listing returns exactly one branch: `main`; no other branch refs remain.
+- **Branch-reference cleanup:** GitHub Actions one-time cleanup run `41323299988` completed **success**. It removed all 84 non-main branch refs using a fixed branch-name/SHA allowlist and a main-HEAD guard. The one-time maintenance branch deleted itself after verification. At cleanup completion the live branch listing returned exactly one branch, `main`; the subsequently created audit-only PR #79 branch is separately identified below.
 - **Repository archives and release objects:** current `main` tree contains no archive/obsolete/deprecated/legacy directories or superseded deployment/provider-infrastructure paths. GitHub release list is empty; tag refs are empty. No attached artifacts were found on the sampled superseded deployment/runtime workflow runs.
 - **Audit preservation:** Git commit history, closed PR discussions/reviews, and historical GitHub Actions run records are retained as audit evidence. They are not active branches or modules and were not rewritten/deleted.
 - **Main:** deployment-boundary cleanup PR #77 remains merged (squash commit `b9ebe5d34ffbbc0d52e0bd92c83d89dc68c109bc`). The present cleanup has not changed runtime code, database schema, frozen kernel or business semantics.
@@ -38,7 +50,7 @@
 - **Adversarial review:** completed over the full approved architecture. Findings fixed: operator route fails closed after capability rejection; handoff state is explicitly `NOT_COMPOSED` and cannot imply external acknowledgement/success.
 - **Experience contract:** one Web/PWA surface, canonical API/domain semantics, server-authoritative capability visibility, explicit causal/context links, memory-only personal view state and no second business store/rule layer.
 - **Frozen kernel:** unchanged.
-- **PR #62:** open / draft / unmerged.
+- **PR #62:** closed / draft / unmerged on 2026-11-01 as part of obsolete PR cleanup; historical record retained.
 - **Next active boundary:** deployment target selection remains DEFERRED pending a measured operational need and a current executable deployment path.
 
 # Phase 5 PWA — CLOSED / VERIFIED (2026-09-30)
@@ -52,7 +64,7 @@
 - **Safety properties:** public-only service-worker cache; business APIs/protected state network-only; pending public mutations are bounded and memory-only, require Idempotency-Key, reject Authorization-bearing entries, and fail closed on conflicts.
 - **Frozen kernel:** unchanged.
 - **Next active boundary:** Phase 6 — Production Web/PWA Consolidation.
-- **PR #61:** open / draft / unmerged.
+- **PR #61:** closed / draft / unmerged on 2026-11-01 as part of obsolete PR cleanup; historical record retained.
 
 # Phase 5 PWA — IN_PROGRESS (2026-09-30)
 
@@ -77,8 +89,8 @@
 - Final global acceptance full seven-job gate: `36588002294` — **7/7 GREEN**.
 - No runtime code changes were made after that gate; the present synchronization commit is documentation/security-contract only.
 - Final global acceptance contract: `tests/test_phase4_global_acceptance.py`.
-- **PR #60:** open / draft / unmerged.
-- **PR #59:** open / draft / unmerged; untouched by Phase 4 work.
+- **PR #60:** closed / draft / unmerged on 2026-11-01 as part of obsolete PR cleanup; historical record retained.
+- **PR #59:** closed / draft / unmerged on 2026-11-01 as part of obsolete PR cleanup; historical record retained.
 
 # Current Phase 4-4D closure — 2026-09-29
 
@@ -108,7 +120,7 @@
 - Contract evidence: `architecture/operator_interface_contract.json`, `architecture/public_client_experience_contract.json`, `architecture/security_invariants_contract.json`.
 - Tests: Web route/assets contract tests, client-state/direct-DB negative tests, protected-operator adversarial test, visual-structure contract tests.
 - **CI:** run `36581452677` — quality 3.12/3.13, integration 3.12/3.13, supply-chain, backup/PITR and release-contract all **GREEN**.
-- PR #60 remains **OPEN / DRAFT / UNMERGED**. PR #59 remains untouched and **OPEN / DRAFT / UNMERGED**.
+- PR #59 and #60 were later closed unmerged on 2026-11-01; their historical review records remain preserved.
 - **Next active boundary:** Phase 4-4B — Public Client Intake + Attribution + MAX projection hardening.
 
 # Current Phase 3C-1 closure — 2026-09-29
