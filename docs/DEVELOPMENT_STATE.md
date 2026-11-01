@@ -1,14 +1,16 @@
-## Cancellation and repository cleanup — 2026-11-01
+## Repository cleanup and canceled deployment experiment — 2026-11-01
+
+- PR #78 (Replit Reserved VM experiment) was closed unmerged. Its feature branch reference was deleted after the full existing CI gate succeeded.
+- At completion of that cleanup, the live branch list contained only `main`. The later `audit/repository-integrity-20261101` branch exists solely for PR #79 and contains no product or deployment feature work.
+- The temporary one-time cleanup workflow and CI job were removed. The canonical `.github/workflows/ci.yml` was restored. No production deployment, database provisioning, secret creation or business-data transfer occurred.
+- Closed PR and Actions records remain immutable audit history; they are not active code or deployment resources.
 
 ## Deployment module status — 2026-11-01
 
-- The production deployment module and target environment integration are **NOT IMPLEMENTED**. This is an acknowledged unfinished roadmap boundary, not a retired component and not an item to reconstruct from historical deployment experiments.
-- Current repository inventory contains 432 tracked files and one active workflow (`.github/workflows/ci.yml`); no deployment workflow or provider-specific infrastructure module is present on `main`.
-- Production operations remain blocked until a qualifying runtime and durable database capability are explicitly selected and approved. GitHub remains the canonical source, review, CI and release-control ecosystem; no external provider is implied by this record.
-
-- A draft deployment experiment was canceled before merge. PR #78 was closed unmerged; its feature branch reference was deleted after the full existing CI gate succeeded. At the completion of that cleanup, `main` was the only branch; the temporary `audit/repository-integrity-20261101` branch was later created solely for PR #79 and contains no product/deployment feature work.
-- The temporary one-time cleanup workflow and temporary CI job were removed after execution. The canonical `.github/workflows/ci.yml` is restored; no deployment configuration, provider module, runtime code or database migration from the canceled workstream is present on `main`.
-- No production deployment, external database provisioning, secret creation or business-data transfer occurred. The closed PR and Actions history remain as immutable GitHub audit records; they are not active code or deployment resources.
+- The production deployment module and target-environment integration are **NOT IMPLEMENTED**. This is an acknowledged unfinished roadmap boundary, not a retired component and not an item to reconstruct from historical deployment experiments.
+- The current `main` baseline contains 432 tracked files and one active workflow (`.github/workflows/ci.yml`). No deployment workflow, target-environment integration, provider-specific infrastructure module or production rollout is present.
+- `Dockerfile` and `src/shema_platform/experience/production.py` are generic packaging/HTTP-entrypoint scaffolding, not a complete or composed production runtime. Their presence does not mean deployment is implemented.
+- Production operations remain blocked until a qualifying runtime and durable database capability are explicitly selected and approved. GitHub remains the canonical source, review, CI and release-control ecosystem; no external provider is implied.
 
 ---
 
@@ -20,9 +22,10 @@
 - **Pull requests:** PRs #1–#78 are closed; #68, #70, #71, #72 and #77 are merged, the rest are closed unmerged. PR #79 is the only open PR and remains draft. The repository has no open issues, tags or releases.
 - **Branches:** at present `main` and the temporary PR #79 audit branch are visible. No old feature/deployment branch refs remain. The audit branch must be removed after PR disposition.
 - **Governance blocker:** GitHub reports `protected: false` for `main`; the repository rulesets endpoint returns an empty list. The branch-protection detail endpoint is inaccessible to the connected integration (HTTP 403), and available tools cannot create or edit branch protection. **Do not merge PR #79 or any other change to `main` until an administrator enables required PR reviews and required status checks.**
-- **Deployment boundary:** no deploy workflow, target-environment integration, infrastructure module or production rollout is implemented. `Dockerfile` and `experience/production.py` are only a generic container/HTTP entrypoint scaffold; neither constitutes a composed production runtime. Phase 8 remains NOT STARTED / BLOCKED.
-- **Verification:** PR #79 initial document/CI reconciliation passed all seven jobs on `4f85cbc207ebf9ac9bd5f24319901781efbc203a` in run `41329712821`. Subsequent audit fixes are subject to a new full seven-job run.
+- **Verification:** PR #79 initial document/CI reconciliation passed all seven jobs on `4f85cbc207ebf9ac9bd5f24319901781efbc203a` in run `41329712821`. A subsequent health-readiness regression fix is under the full seven-job gate.
 - **Audit limitation:** this inventory and history review does not certify a manual line-by-line review of every historical diff or all 245 Python files. GitHub API pagination and CI provided structural, documentary, test and release-gate evidence; the local clone attempt was blocked by DNS resolution. No claim of production readiness is made.
+
+---
 
 # Current development-session synchronization — 2026-11-01
 
