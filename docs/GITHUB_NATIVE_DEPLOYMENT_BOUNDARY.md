@@ -77,8 +77,8 @@ The GitHub Free first-party services listed above do not provide this complete p
 
 ## 7. Explicit prohibitions
 
-- No Replit files, workflows, contracts or deployment assumptions.
-- No Yandex Cloud, Terraform, cloud-specific launchers, state buckets, cloud logging or provider-specific production deployment assumptions.
+- No superseded app-hosting files, workflows, contracts or deployment assumptions.
+- No infrastructure-as-code deployment modules, provider-specific launchers, cloud state or logging resources, or provider-specific production deployment assumptions.
 - No production hosting through GitHub Actions runners or Codespaces.
 - No production Web/PWA publishing through GitHub Pages for this business platform.
 - No external host, database or edge provider without explicit user approval and a new architecture decision.
