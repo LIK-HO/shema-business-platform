@@ -609,6 +609,9 @@ See `docs/GITHUB_NATIVE_DEPLOYMENT_BOUNDARY.md` for the complete executable boun
 ### Objective
 Turn the developed system into a safely operated long-lived system.
 
+
+**Status: NOT STARTED / BLOCKED.** The production deployment module, target environment integration and rollout path are not implemented. This is a planned future capability, not an obsolete module to be recreated from historical provider experiments. Phase 8 may proceed only after the hosting boundary above is reopened by an explicit, evidence-backed architecture decision; its implementation must remain within the approved GitHub-centered source, review, CI and release-control ecosystem.
+
 ### Work
 - staging/production environments;
 - protected deployment;
