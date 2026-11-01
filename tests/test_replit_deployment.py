@@ -3,13 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
-from shema_platform.platform.migrations import Migration, MigrationPlan
-
 from deploy.replit.preflight import (
     validate_environment,
     validate_migration_ledger,
     validate_runtime_application,
 )
+from shema_platform.platform.migrations import Migration, MigrationPlan
 
 
 ROOT = Path(__file__).resolve().parents[1]
