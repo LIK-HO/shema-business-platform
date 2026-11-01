@@ -3,13 +3,7 @@
   "endpoint": "/health/ready",
   "authentication": "none",
   "response_fields": [
-    "ready",
-    "providers.providerId",
-    "providers.enabled",
-    "providers.configured",
-    "providers.reachable",
-    "providers.lastCheckedAt",
-    "providers.lastErrorCode"
+    "ready"
   ],
   "secret_fields": [],
   "provider_payloads": false,
@@ -18,5 +12,9 @@
   "status_codes": {
     "ready": 200,
     "not_ready": 503
-  }
+  },
+  "provider_details_exposed": false,
+  "runtime_composition_required": true,
+  "database_connectivity_checked": false,
+  "provider_registry_scope": "enabled_registered_providers"
 }
