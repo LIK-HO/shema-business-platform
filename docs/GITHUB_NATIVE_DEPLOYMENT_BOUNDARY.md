@@ -96,3 +96,14 @@ A new deployment proposal must demonstrate, using current official product docum
 - no conflict with the provider's acceptable-use rules.
 
 Until every applicable item is evidenced, the result is **BLOCKED — NOT PRODUCTION-DEPLOYABLE**.
+
+## 9. Official GitHub references checked on 2026-11-01
+
+- GitHub Pages availability and static/server-side hosting boundary: https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site
+- GitHub Pages acceptable-use and usage limits: https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits
+- Custom GitHub Pages Actions workflows: https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
+- GitHub Actions billing and included usage: https://docs.github.com/en/actions/concepts/billing-and-usage
+- GitHub Actions job and workflow limits: https://docs.github.com/en/actions/reference/limits
+- GitHub Codespaces billing and free personal-account quotas: https://docs.github.com/en/billing/concepts/product-billing/github-codespaces
+- GitHub Codespaces lifecycle and maximum lifetime: https://docs.github.com/en/codespaces/about-codespaces/understanding-the-codespace-lifecycle
+- GitHub Codespaces default idle timeout: https://docs.github.com/en/codespaces/setting-your-user-preferences/setting-your-timeout-period-for-github-codespaces
