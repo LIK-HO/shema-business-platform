@@ -7,7 +7,7 @@
 
 The canonical repository, source history, pull requests, CI, release evidence, environment controls and deployment approvals remain in GitHub.
 
-No Replit configuration, Yandex Cloud/Terraform infrastructure, or other provider-specific production deployment module is part of the approved product baseline. No external runtime or database provider may be added without an explicit architecture decision and user approval.
+No superseded app-hosting configuration, infrastructure-as-code deployment module or unapproved provider-specific production deployment target is part of the approved baseline. No external runtime or database provider may be added without an explicit architecture decision and user approval.
 
 This decision does not authorize describing a static preview, a successful CI run, or an open port as a production deployment.
 
@@ -21,7 +21,6 @@ This decision does not authorize describing a static preview, a successful CI ru
 | GitHub Packages / Container Registry | Store versioned packages and container images where plan limits permit | Stores artifacts; does not execute containers |
 | GitHub Pages | Static project/documentation hosting where the use case and policy permit | HTML/CSS/JavaScript static hosting only; no Python/FastAPI server or PostgreSQL |
 | GitHub Codespaces | Interactive development, debugging and bounded manual diagnostics | Development environment; it idles/stops and has a maximum codespace lifetime |
-| GitHub Spark | Not an available option | Retired on 2026-08-31; do not plan against it |
 
 For a personal GitHub Free account, the documented Codespaces allowance is 120 core-hours and 15 GB-month storage. The default idle timeout is 30 minutes and a codespace has a 12-hour maximum lifetime. These are development allowances, not a production SLA.
 
@@ -83,8 +82,6 @@ The GitHub Free first-party services listed above do not provide this complete p
 - No production Web/PWA publishing through GitHub Pages for this business platform.
 - No external host, database or edge provider without explicit user approval and a new architecture decision.
 - No change to the frozen v1.4 kernel or v1.5 core semantics to compensate for a hosting limitation.
-
-The independent YandexGPT adapter remains governed by its own provider contract; it is not Yandex Cloud infrastructure and is not removed by this deployment cleanup.
 
 ## 8. Evidence required to reopen the deployment boundary
 
