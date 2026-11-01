@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
 from pathlib import Path
+import sys
 
 import psycopg
 
@@ -53,7 +53,10 @@ def main() -> int:
         print("Migration blocked: REPLIT_DATA_MODE must be synthetic_only.", file=sys.stderr)
         return 78
     if os.getenv("REPLIT_MIGRATION_APPROVED") != "YES":
-        print("Migration blocked: explicit REPLIT_MIGRATION_APPROVED=YES is required.", file=sys.stderr)
+        print(
+            "Migration blocked: explicit REPLIT_MIGRATION_APPROVED=YES is required.",
+            file=sys.stderr,
+        )
         return 78
 
     database_url = os.getenv("DATABASE_URL", "").strip()
