@@ -152,7 +152,7 @@ Current implementation sequence:
 ## Legacy and continuity rules
 
 - Airtable is legacy/transition data, not the system of record or business-rule engine.
-- Replit migration remains frozen until 2026-10-13.
+- No deployment provider or production runtime module is currently approved or implemented; production hosting remains a separate blocked boundary governed by `docs/GITHUB_NATIVE_DEPLOYMENT_BOUNDARY.md`.
 - Bitrix24 migration remains frozen without a scheduled date; Bitrix24 is a reference/integration target, not the core platform.
 - MAX is included in the adapter boundary from the first integration design.
 - Proven mature patterns are preferred over bespoke infrastructure.
