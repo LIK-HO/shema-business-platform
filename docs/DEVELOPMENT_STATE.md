@@ -1,14 +1,16 @@
 # Current development-session synchronization — 2026-11-01
 
 - **Canonical repository:** `LIK-HO/shema-business-platform`.
-- **Baseline:** `main` / `0cd31520d56f4a11e32e8e99881214ceb00a0f61`.
+- **Current main HEAD before this state synchronization:** `b80943db5828c7202fa92eb58d138bbd54e8cdac`.
 - **Last closed product boundary:** Phase 6 — Production Web/PWA Consolidation, CLOSED / VERIFIED on runtime HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c`, full seven-job CI `36637312890`.
-- **Deployment strategy:** GitHub is the approved source-control, CI and release-control ecosystem. GitHub Free first-party services do not provide the complete persistent FastAPI + PostgreSQL + worker runtime. Pages is static-only and not approved for this commercial application; Actions is bounded CI/CD; Codespaces is interactive development only. Full production hosting remains **BLOCKED**.
-- **Cleanup performed:** obsolete PR #75 and PR #76 were closed unmerged. Their branch refs, plus the abandoned provider-specific deployment and local-runtime experiment refs, were reset to the baseline `main` commit. No unmerged deployment implementation from those experiments remains at the branch tips.
-- **GitHub branch check:** branch listing confirms the cleaned runtime/deployment/diagnostic refs now resolve to the baseline `main` commit. Historical PR records remain closed and unmerged; the canonical `main` history was not rewritten.
-- **Main:** PR #77 was squash-merged as `b9ebe5d34ffbbc0d52e0bd92c83d89dc68c109bc` after final-head CI run `41315987939` passed **7/7 GREEN**. The merge changes documentation only; application runtime, database schema, frozen kernel and business semantics are unchanged.
-- **Not approved:** production hosting through Pages, Actions runners or Codespaces; any external runtime/database without a new explicit architecture decision.
-- **Next boundary:** production deployment remains BLOCKED until a qualifying GitHub-native persistent runtime and durable database exist under the approved free entitlements, or the hosting constraint is explicitly changed. Do not treat Pages, Actions runners or Codespaces as production application hosting.
+- **Deployment decision:** GitHub is the canonical source-control, CI and release-control ecosystem. Full production hosting on GitHub Free first-party services remains **BLOCKED** because a persistent FastAPI runtime and durable PostgreSQL/worker plane are not provided. Pages, Actions runners and Codespaces are not production application hosts.
+- **Stale pull-request cleanup:** 45 obsolete open draft PRs (#6–#58, selected legacy productization/runtime chains) were closed without merging after checking their branch/file relationships against current `main`. No product code from those stale PRs was merged as part of cleanup. Closed PR records remain as audit history.
+- **Branch-reference cleanup:** GitHub Actions one-time cleanup run `41323299988` completed **success**. It removed all 84 non-main branch refs using a fixed branch-name/SHA allowlist and a main-HEAD guard. The one-time maintenance branch deleted itself after verification. Live GitHub branch listing now returns exactly one branch: `main` at `b80943db5828c7202fa92eb58d138bbd54e8cdac`.
+- **Repository archives and release objects:** current `main` tree contains no archive/obsolete/deprecated/legacy directories or superseded deployment/provider-infrastructure paths. GitHub release list is empty; tag refs are empty. No attached artifacts were found on the sampled superseded deployment/runtime workflow runs.
+- **Audit preservation:** Git commit history, closed PR discussions/reviews, and historical GitHub Actions run records are retained as audit evidence. They are not active branches or modules and were not rewritten/deleted.
+- **Main:** deployment-boundary cleanup PR #77 remains merged (squash commit `b9ebe5d34ffbbc0d52e0bd92c83d89dc68c109bc`). The present cleanup has not changed runtime code, database schema, frozen kernel or business semantics.
+- **Not approved:** production hosting through Pages, Actions runners or Codespaces; adding any unapproved external runtime/database; reintroducing retired deployment modules.
+- **Next boundary:** production deployment remains BLOCKED until a qualifying GitHub-native persistent runtime and durable database exist under approved free entitlements, or the hosting constraint is explicitly changed. Continue development only from `main` and the active Manifest/Roadmap boundaries.
 
 ---
 
