@@ -1,3 +1,18 @@
+# Current development-session synchronization — 2026-11-01
+
+- **Canonical repository:** `LIK-HO/shema-business-platform`.
+- **Baseline:** `main` / `0cd31520d56f4a11e32e8e99881214ceb00a0f61`.
+- **Last closed product boundary:** Phase 6 — Production Web/PWA Consolidation, CLOSED / VERIFIED on runtime HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c`, full seven-job CI `36637312890`.
+- **Deployment strategy:** GitHub is the approved source-control, CI and release-control ecosystem. GitHub Free first-party services do not provide the complete persistent FastAPI + PostgreSQL + worker runtime. Pages is static-only and not approved for this commercial application; Actions is bounded CI/CD; Codespaces is interactive development only. Full production hosting remains **BLOCKED**.
+- **Cleanup performed:** obsolete PR #75 and PR #76 were closed unmerged. Their branch refs, plus the abandoned provider-specific deployment and local-runtime experiment refs, were reset to the baseline `main` commit. No unmerged deployment implementation from those experiments remains at the branch tips.
+- **GitHub branch check:** branch listing confirms the cleaned runtime/deployment/diagnostic refs now resolve to the baseline `main` commit. Historical PR records remain closed and unmerged; the canonical `main` history was not rewritten.
+- **Main:** not modified by this cleanup branch. Documentation changes are isolated in `cleanup/github-native-delivery-boundary-20261101` pending full CI and review.
+- **Not approved:** production hosting through Pages, Actions runners or Codespaces; any external runtime/database without a new explicit architecture decision.
+- **Next boundary:** verify the documentation cleanup on its final HEAD. Production deployment remains blocked until an approved GitHub-native persistent runtime and database exist, or the hosting constraint is explicitly changed.
+
+---
+
+
 # Phase 6 Web/PWA Consolidation — CLOSED / VERIFIED (2026-09-30)
 
 - **Boundary:** Phase 6 — Production Web/PWA Consolidation.

@@ -53,4 +53,8 @@ The project license applies to the original work in this repository; third-party
 
 ## Deployment boundary
 
-Cloud-provider infrastructure is intentionally kept outside the canonical product core; this repository contains no provider-specific production deployment module.
+GitHub is the canonical source-control, CI and release-control plane. GitHub Actions builds and verifies immutable releases; GitHub Environments govern deployment approvals and secrets; GitHub Packages may store release/container artifacts.
+
+The full application requires persistent FastAPI and PostgreSQL services. GitHub Free first-party services do not provide that complete production runtime. GitHub Pages is static-only and is not approved for this commercial business platform; Actions runners and Codespaces are not persistent application hosts.
+
+Production deployment is **BLOCKED** until a qualifying GitHub-native runtime/database capability is available and verified. No superseded hosting configuration, provider-specific infrastructure module or unapproved external host is authorized by this baseline. See [GitHub-native delivery and hosting boundary](docs/GITHUB_NATIVE_DEPLOYMENT_BOUNDARY.md).
