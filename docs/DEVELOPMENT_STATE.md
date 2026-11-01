@@ -23,22 +23,22 @@
 - **Branches:** at present `main` and the temporary PR #79 audit branch are visible. No old feature/deployment branch refs remain. The audit branch must be removed after PR disposition.
 - **Repository exposure:** GitHub repository visibility is `public`; the declared repository license is Apache-2.0. Source, architecture and documentation are publicly accessible under that license. Visibility/license were not changed; confirm that this is intentional before adding proprietary material.
 - **Governance blocker:** GitHub reports `protected: false` for `main`; the repository rulesets endpoint returns an empty list. The branch-protection detail endpoint is inaccessible to the connected integration (HTTP 403), and available tools cannot create or edit branch protection. **Do not merge PR #79 or any other change to `main` until an administrator enables required PR reviews and required status checks.**
-- **Verification:** PR #79 initial document/CI reconciliation passed all seven jobs on `4f85cbc207ebf9ac9bd5f24319901781efbc203a` in run `41329712821`. A subsequent health-readiness regression fix is under the full seven-job gate.
+- **Verification:** Final PR #79 HEAD `9ba1dcd0e32c48959ed87173d1eaf7c808b6bfbe` passed the full seven-job GitHub Actions gate in run `41332400149` on 2026-11-01: quality Python 3.12/3.13, PostgreSQL integration Python 3.12/3.13, supply-chain, backup/PITR and release-contract. All seven jobs completed successfully.
 - **Audit limitation:** this inventory and history review does not certify a manual line-by-line review of every historical diff or all 245 Python files. GitHub API pagination and CI provided structural, documentary, test and release-gate evidence; the local clone attempt was blocked by DNS resolution. No claim of production readiness is made.
 
 ---
 
-# Current development-session synchronization — 2026-11-01
+# Historical development-session synchronization — 2026-11-01 (pre-audit snapshot)
 
 - **Canonical repository:** `LIK-HO/shema-business-platform`.
-- **Current main HEAD before this state synchronization:** `b80943db5828c7202fa92eb58d138bbd54e8cdac`.
+- **Main HEAD recorded during that earlier synchronization:** `b80943db5828c7202fa92eb58d138bbd54e8cdac`.
 - **Last closed product boundary:** Phase 6 — Production Web/PWA Consolidation, CLOSED / VERIFIED on runtime HEAD `1b75bfb46f73309597420b4e1b7762c1477a1e8c`, full seven-job CI `36637312890`.
 - **Deployment decision:** GitHub is the canonical source-control, CI and release-control ecosystem. Full production hosting on GitHub Free first-party services remains **BLOCKED** because a persistent FastAPI runtime and durable PostgreSQL/worker plane are not provided. Pages, Actions runners and Codespaces are not production application hosts.
 - **Stale pull-request cleanup:** 45 obsolete open draft PRs (#6–#58, selected legacy productization/runtime chains) were closed without merging after checking their branch/file relationships against current `main`. No product code from those stale PRs was merged as part of cleanup. Closed PR records remain as audit history.
 - **Branch-reference cleanup:** GitHub Actions one-time cleanup run `41323299988` completed **success**. It removed all 84 non-main branch refs using a fixed branch-name/SHA allowlist and a main-HEAD guard. The one-time maintenance branch deleted itself after verification. At cleanup completion the live branch listing returned exactly one branch, `main`; the subsequently created audit-only PR #79 branch is separately identified below.
 - **Repository archives and release objects:** current `main` tree contains no archive/obsolete/deprecated/legacy directories or superseded deployment/provider-infrastructure paths. GitHub release list is empty; tag refs are empty. No attached artifacts were found on the sampled superseded deployment/runtime workflow runs.
 - **Audit preservation:** Git commit history, closed PR discussions/reviews, and historical GitHub Actions run records are retained as audit evidence. They are not active branches or modules and were not rewritten/deleted.
-- **Main:** deployment-boundary cleanup PR #77 remains merged (squash commit `b9ebe5d34ffbbc0d52e0bd92c83d89dc68c109bc`). The present cleanup has not changed runtime code, database schema, frozen kernel or business semantics.
+- **Main baseline at that time:** deployment-boundary cleanup PR #77 was merged (squash commit `b9ebe5d34ffbbc0d52e0bd92c83d89dc68c109bc`). PR #79 adds a narrow `/health/ready` guard: at least one runtime service must be composed and every enabled registered provider must be ready; the response remains limited to `{"ready": true|false}`. No database schema, frozen-kernel semantics or canonical business rules changed.
 - **Not approved:** production hosting through Pages, Actions runners or Codespaces; adding any unapproved external runtime/database; reintroducing retired deployment modules.
 - **Next boundary:** production deployment remains BLOCKED until a qualifying GitHub-native persistent runtime and durable database exist under approved free entitlements, or the hosting constraint is explicitly changed. Continue development only from `main` and the active Manifest/Roadmap boundaries.
 
@@ -55,7 +55,7 @@
 - **Experience contract:** one Web/PWA surface, canonical API/domain semantics, server-authoritative capability visibility, explicit causal/context links, memory-only personal view state and no second business store/rule layer.
 - **Frozen kernel:** unchanged.
 - **PR #62:** closed / draft / unmerged on 2026-11-01 as part of obsolete PR cleanup; historical record retained.
-- **Next active boundary:** deployment target selection remains DEFERRED pending a measured operational need and a current executable deployment path.
+- **Next boundary recorded at the time:** production deployment target selection was DEFERRED pending a measured operational need. The current status is Phase 8 — Production Operations — NOT STARTED / BLOCKED (see the deployment-module status above).
 
 # Phase 5 PWA — CLOSED / VERIFIED (2026-09-30)
 
