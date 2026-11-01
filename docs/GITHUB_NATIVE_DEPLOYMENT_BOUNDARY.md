@@ -1,3 +1,5 @@
+> **Historical decision — superseded 2026-11-01:** The GitHub-only production-hosting decision below has been superseded by the user's explicit decision to select Replit Reserved VM as the runtime target. GitHub remains the canonical source-control, CI and release-control plane. The Replit deployment module is guarded and does not authorize production use until its documented blockers are closed. This supersession does not approve any other host, alter the frozen kernel, or authorize real Russian personal data in a non-Russian region. See [Replit deployment module](REPLIT_DEPLOYMENT.md).
+
 # GitHub-native delivery and hosting boundary
 
 **Decision date:** 2026-11-01  
