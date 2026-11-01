@@ -1,3 +1,5 @@
+**Active deployment workstream — 2026-11-01:** Replit Reserved VM deployment control plane, opened by explicit user decision after deployment-platform research. Scope is limited to declarative Replit configuration, startup/security/data gates, explicit migration tooling, release/rollback procedure and acceptance tests. GitHub remains canonical for code and CI; frozen kernel semantics remain unchanged. Production release is blocked until the current production API composition exists, the durable worker plane is deployed, Russian personal-data localization/cross-border review is complete, database backup/restore is proven and full Replit E2E/failure acceptance passes. Current implementation contract: architecture/replit_deployment_contract.json. Detailed procedure: deploy/replit/README.md.
+
 # Shema Business Platform — Development Roadmap
 
 ## 1. Purpose
